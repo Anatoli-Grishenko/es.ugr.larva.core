@@ -134,7 +134,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     @Override
     protected boolean Confirm(String message) {
         if (isSwing()) {
-            int op = JOptionPane.showConfirmDialog(null,
+            int op = JOptionPane.showConfirmDialog(this.myFrame,
                     message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
 
             return op == JOptionPane.YES_OPTION;
@@ -146,7 +146,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     @Override
     protected void Alert(String message) {
         if (isSwing()) {
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(this.myFrame,
                     message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
         } else {
             Info(message);
@@ -157,6 +157,15 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected String inputLine(String message) {
         if (isSwing()) {
             String res = JOptionPane.showInputDialog(null, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE);
+            return res;
+        } else {
+            return super.inputLine(message);
+        }
+    }
+
+    protected String inputSelect(String message, String [] options, String value) {
+        if (isSwing()) {
+            String res = (String) JOptionPane.showInputDialog(myFrame, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE, null, options,value );
             return res;
         } else {
             return super.inputLine(message);
