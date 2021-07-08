@@ -265,7 +265,7 @@ public class OleDataBase implements ReportableObject {
 
     public boolean DBObjectUpdate(String table, OleQuery find, OleQuery update) {
         SentenceBuilder sb = new SentenceBuilder(this);
-        if (DBObjectQuery(table, find).size()==0) {
+        if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
             sb.Op(INSERT).Table(table);
             update.getNetFieldList().forEach(f -> {
                 sb.Pair(f, update.getOle(f).getField("value"));

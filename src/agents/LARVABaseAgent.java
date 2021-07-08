@@ -63,11 +63,6 @@ public class LARVABaseAgent extends Agent {
     protected final long WAITANSWERMS = 5000;
 
     /**
-     * Support for reading, storing and transmission of Passports. See
-     * {@link OlePassport}
-     */
-    protected OlePassport olep;
-    /**
      * Default, repetitive behaviour. It ends when the variable exit equals true
      */
     public Behaviour defaultBehaviour;
@@ -87,14 +82,28 @@ public class LARVABaseAgent extends Agent {
      */
     protected boolean exit;
 
+    /**
+     * It is true only when the checkin has been succesful
+     */
     protected boolean checkedin;
 
-    protected ACLMessage inbox, outbox, checkin, checkout;
+    /**
+     * Geeneral variables for messaging
+     */
+    protected ACLMessage inbox, outbox;
+
+    private ACLMessage checkin, checkout;
 
     private String IdentityManager;
 
+    /**
+     * To store the personal passport
+     */
     protected String mypassport;
 
+    /**
+     * Counter of cycles of the method Execute()
+     */
     protected int ncycles;
 
     /**
@@ -352,7 +361,7 @@ public class LARVABaseAgent extends Agent {
         return res;
     }
 
-    protected AMSAgentDescription[] AMSQuery(String agentname) {
+    private AMSAgentDescription[] AMSQuery(String agentname) {
         AMSAgentDescription amsd = new AMSAgentDescription(), amsdlist[] = null;
         if (!agentname.equals("")) {
             amsd.setName(new AID(agentname, AID.ISLOCALNAME));
@@ -393,6 +402,13 @@ public class LARVABaseAgent extends Agent {
         Info(message);
     }
 
+    /**
+     * This method ask the user for confirmation (yes=true, no = false) in front
+     * of a given message
+     *
+     * @param message The question asked to the user
+     * @return true if the user select yes or false if the user selects no
+     */
     protected boolean Confirm(String message) {
         String line = inputLine(message);
         if (line.length() == 0 || line.toUpperCase().charAt(0) == 'Y') {
@@ -402,6 +418,12 @@ public class LARVABaseAgent extends Agent {
         }
     }
 
+    /**
+     * It asks the user to input a String
+     *
+     * @param message The message shown to the user
+     * @return The string typed by the user
+     */
     protected String inputLine(String message) {
         System.out.println("\n\n" + message + " ");
         return new Scanner(System.in).nextLine();
@@ -420,9 +442,10 @@ public class LARVABaseAgent extends Agent {
     // LARVA
     //
     /**
-     * It connects to the identity manager and register its passport
+     * It connects to the identity manager and register its passport, previously
+     * stored in the variable mypassport with either method loadMyPassport()
+     * setMyPassport()
      *
-     * @param passport
      * @return
      */
     protected boolean doLARVACheckin() {
@@ -460,6 +483,11 @@ public class LARVABaseAgent extends Agent {
         return false;
     }
 
+    /**
+     * It contacts the Identity Manager and send a cancelation of the checkin, that it
+     * it checks out the agent from the platform
+     * @return true if it has suceeded, false otherwise
+     */
     protected boolean doLARVACheckout() {
         Info("Checking-out from LARVA");
         if (checkout == null) {
@@ -509,7 +537,13 @@ public class LARVABaseAgent extends Agent {
         this.IdentityManager = IdentityManager;
     }
 
-    public boolean loadPassport(String passportFileName) {
+    /**
+     * It loads the passport from a disk file
+     *
+     * @param passportFileName The file that contains the passport
+     * @return true if it has been loaded false otherwise
+     */
+    public boolean loadMyPassport(String passportFileName) {
         try {
             FileReader fmypassport = new FileReader(passportFileName);
             mypassport = new Scanner(fmypassport).useDelimiter("\\Z").next();
@@ -521,6 +555,10 @@ public class LARVABaseAgent extends Agent {
         }
     }
 
+    /**
+     * It directly sets the passport from a  given String
+     * @param mypassport The passport to be assigned
+     */
     public void setMypassport(String mypassport) {
         this.mypassport = mypassport;
     }

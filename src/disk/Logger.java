@@ -222,7 +222,8 @@ public class Logger {
             heading = String.format("%-10s %-10s", _owner, _qualifier);
         }
         if (_tabular) {
-            res = String.format("%-20s %-8s %s", heading, TimeHandler.Now().substring(11), s);
+//            res = String.format("%-20s %-20s %s", heading, TimeHandler.Now().substring(11), s);
+            res = String.format("%-20s %-20s %s", heading, TimeHandler.Now(), s);
         } else {
             res = _owner + ": " + s;
         }

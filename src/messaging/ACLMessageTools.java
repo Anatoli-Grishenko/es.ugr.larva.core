@@ -84,30 +84,36 @@ public class ACLMessageTools {
         return res;
     }
 
-    public static String fancyWriteACLM(ACLMessage original) {
+    public static String fancyWriteACLM(ACLMessage original, boolean simple) {
         String res = "";
         ACLMessage msg = (ACLMessage) original.clone();
-        res += "|PFM:" + ACLMessage.getPerformative(msg.getPerformative())
-                + (msg.getSender() == null ? _NULLVAL : "|SND:" + msg.getSender().getLocalName());
+        res += (msg.getSender() == null ? _NULLVAL : "|SND:" + msg.getSender().getLocalName());
         Iterator it;
         it = msg.getAllReceiver();
         res += "|RCV:";
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        it = msg.getAllReplyTo();
-        res += "|RPT:";
-        while (it.hasNext()) {
-            res += ((AID) it.next()).getLocalName() + " ";
+        res = res + "|CNT:" + (isJsonACLM(msg) ? trimString(msg.getContent(), 3000) : msg.getContent()) + "|";
+        if (!simple) {
+            it = msg.getAllReplyTo();
+            res = "|PFM:" + ACLMessage.getPerformative(msg.getPerformative())+res;
+            res += "|RPT:";
+            while (it.hasNext()) {
+                res += ((AID) it.next()).getLocalName() + " ";
+            }
+            res += (msg.getProtocol() == null ? _NULLVAL : "|PRT:" + msg.getProtocol())
+                    + (msg.getConversationId() == null ? _NULLVAL : "|CNV:" + msg.getConversationId())
+                    + (msg.getEncoding() == null ? _NULLVAL : "|ENC:" + msg.getEncoding())
+                    + (msg.getReplyWith() == null ? _NULLVAL : "|RPW:" + msg.getReplyWith())
+                    + (msg.getInReplyTo() == null ? _NULLVAL : "|IRT:" + msg.getInReplyTo())
+                    + (msg.getLanguage() == null ? _NULLVAL : "|LAN:" + trimString(msg.getLanguage(), 10)+"|");
         }
-        res += (msg.getProtocol() == null ? _NULLVAL : "|PRT:" + msg.getProtocol())
-                + (msg.getConversationId() == null ? _NULLVAL : "|CNV" + msg.getConversationId())
-                + (msg.getEncoding() == null ? _NULLVAL : "|ENC:" + msg.getEncoding())
-                + (msg.getReplyWith() == null ? _NULLVAL : "|RPW:" + msg.getReplyWith())
-                + (msg.getInReplyTo() == null ? _NULLVAL : "|IRT:" + msg.getInReplyTo())
-                + (msg.getLanguage() == null ? _NULLVAL : "|LAN:" + trimString(msg.getLanguage(),10))
-                + "|CNT:" + (isJsonACLM(msg) ? trimString(msg.getContent(), 3000) : msg.getContent()) + "|";
         return res;
+    }
+
+    public static String fancyWriteACLM(ACLMessage original) {
+        return fancyWriteACLM(original, false);
     }
 
     public static String getDetailsLARVA(ACLMessage msg) {

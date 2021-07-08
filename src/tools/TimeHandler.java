@@ -33,6 +33,16 @@ public class TimeHandler {
         _theTime =_baseTime._theTime.plusSeconds(l);
     }
     
+    public TimeHandler plusSeconds(long s) {
+        _theTime = _theTime.plusSeconds(s);
+        return this;
+    }
+    
+    public TimeHandler minusSeconds(long s) {
+        _theTime = _theTime.minusSeconds(s);
+        return this;
+    }
+    
     public TimeHandler(String stime) {
         try {
             _theTime = LocalDateTime.parse(stime, inputdateformat);

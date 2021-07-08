@@ -1,6 +1,5 @@
 /**
- *
- * @author lcv
+ * @author Anatoli.Grishenko@gmail.com
  */
 package appboot;
 
@@ -18,11 +17,8 @@ import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
@@ -30,7 +26,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import static javax.swing.JOptionPane.showConfirmDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -48,7 +43,7 @@ import tools.emojis;
  */
 public class LARVABoot {
 
-    protected boolean _connected = false, _echo = false, _debug=false;
+    protected boolean _connected = false, _echo = false, _debug = false;
     protected String _title, _subtitile, _version = "1.0";
     Object _args[];
     protected ArrayList<String> _tasks, _achieved;
@@ -76,21 +71,26 @@ public class LARVABoot {
         Start, Shutdown
     };
 
-    LARVAFrame fMain;
-    JScrollPane pScroll;
-    JTextArea taMessages;
-    String title;
-    JPanel pControl;
-    JPanel pMain;
-    JButton bStart, bExit;
-    int width = 800, height = 400;
-    int nlog;
-    String who, name;
-    String sResult;
-    boolean bResult;
-    String sMessages;
-    Semaphore sShutdown;
+    protected LARVAFrame fMain;
+    protected JScrollPane pScroll;
+    protected JTextArea taMessages;
+    protected String title;
+    protected JPanel pControl;
+    protected JPanel pMain;
+    protected JButton bStart, bExit;
+    protected int width = 800, height = 400;
+    protected int nlog;
+    protected String who, name;
+    protected String sResult;
+    protected boolean bResult;
+    protected String sMessages;
+    protected Semaphore sShutdown;
 
+    /**
+     * Main constructor. Initializes the variables and prepare the list of task
+     * to complete: Parsing arguments (if any), configure options (if any),
+     * connect to JADE and launch agents
+     */
     public LARVABoot() {
         _firstContainer = null;
         _containerName = "";
@@ -113,7 +113,7 @@ public class LARVABoot {
         initGUI();
     }
 
-    public void initGUI() {
+    protected void initGUI() {
         fMain = new LARVAFrame(e -> this.jadebootListener(e));
         pMain = new JPanel();
         BoxLayout pHBox = new BoxLayout(pMain, BoxLayout.Y_AXIS);
@@ -160,6 +160,14 @@ public class LARVABoot {
 //        taMessages.repaint();
     }
 
+    /**
+     * Starts the booting process and connect to JADE according to the
+     * paramenters
+     *
+     * @param host Where JADE plaform is running
+     * @param port Where JADE plaform is running
+     * @return The own instance
+     */
     public LARVABoot Boot(String host, int port) {
         return this.selectConnection(host, port);
     }
@@ -329,7 +337,7 @@ public class LARVABoot {
 
     /**
      * Analyzes the inet connection and sets upa a LARVABoot or jade.Microboot
- conection, the most appropriate one
+     * conection, the most appropriate one
      *
      * @param host The target host
      * @param port The target port
@@ -358,6 +366,15 @@ public class LARVABoot {
         return selectConnection(_host, _port);
     }
 
+    /**
+     * Given a class c which inherits, either directly or not, from JADE Agent
+     * it opens a container (the same for all launched agents) and launch the
+     * agent
+     *
+     * @param name Name of the agent. It must be unique
+     * @param c Class which extends Agent
+     * @return The own instance
+     */
     public LARVABoot launchAgent(String name, Class c) {
         Info("Launching agent " + name);
         if (!isCompleted("CONNECT")) {
@@ -375,7 +392,7 @@ public class LARVABoot {
                 ag = MicroRuntime.getAgent(name);
                 _controllers.put(name, ag);
             } catch (Exception ex) {
-                Error("ERROR CREATING AGENT " + name);
+                Error("Error creating Agent " + name);
                 Exception(ex);
             }
         } else {
@@ -404,8 +421,9 @@ public class LARVABoot {
         logger.logMessage(s);
         taMessages.append(logger.getLastlog()); //logger.getLastlog());
         refreshGUI();
-        if (_debug)
+        if (_debug) {
             Alert(s);
+        }
     }
 
     protected void Error(String s) {
@@ -421,6 +439,18 @@ public class LARVABoot {
         refreshGUI();
     }
 
+    public LARVABoot WaitToClose() {
+        boolean somealive;
+        String alive;
+        Info("Waiting for agents to close");
+        while (!isEmpty() && !isShutDown()) {
+            try {
+                Thread.sleep(2500);
+            } catch (Exception e) {
+            }
+        }
+        return this;
+    }
 //    public LARVABoot WaitToClose() {
 //        boolean somealive;
 //        String alive;
@@ -449,17 +479,22 @@ public class LARVABoot {
 //                } catch (Exception e) {
 //                }
 //            }
-//        } while (somealive);
+//        } while (somealive && !this.sShutdown.tryAcquire());
 //        return this;
 //    }
 
+    /**
+     * It kills all agents which could have been running in the predefined
+     * container
+     *
+     * @return The own instance
+     */
     public LARVABoot Close() {
         // Kill all agents
         try {
             this.sShutdown.acquire();
         } catch (Exception ex) {
         };
-        Info("Shutting down");
         Info("Killing all remaining agents");
         this._achieved.remove("LAUNCH");
         AgentController agc;
@@ -478,13 +513,14 @@ public class LARVABoot {
         return this;
     }
 
-    public LARVABoot WaitAndShutDown() {
-        Close();
-        ShutDown();
-        return this;
-    }
-
+    /**
+     * Once all agents have been terminated, the container is killed and the
+     * application exits
+     *
+     * @return The own instance
+     */
     public LARVABoot ShutDown() {
+        Info("Shutting down");
         Info("Turning off JadeBoot");
         try {
             Thread.sleep(5000);
@@ -494,6 +530,19 @@ public class LARVABoot {
         turnOff(_firstContainer);
         fMain.dispatchEvent(new WindowEvent(fMain, WindowEvent.WINDOW_CLOSING));
 //        System.exit(0);
+        return this;
+    }
+
+    /**
+     * It kills all agents which could have been running in the predefined
+     * container. Once all agents have been terminated, the container is killed
+     * and the application exits
+     *
+     * @return The own instance
+     */
+    public LARVABoot WaitAndShutDown() {
+        Close();
+        ShutDown();
         return this;
     }
 
@@ -515,7 +564,7 @@ public class LARVABoot {
         Info("Container " + _containerName + " shut down");
     }
 
-    public void doSwingLater(Runnable what) {
+    protected void doSwingLater(Runnable what) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> {
                 what.run();
@@ -525,7 +574,7 @@ public class LARVABoot {
         }
     }
 
-    public void doSwingWait(Runnable what) {
+    protected void doSwingWait(Runnable what) {
         if (!SwingUtilities.isEventDispatchThread()) {
             try {
                 SwingUtilities.invokeAndWait(() -> {
@@ -538,7 +587,7 @@ public class LARVABoot {
         }
     }
 
-    public void jadebootListener(ActionEvent e) {
+    protected void jadebootListener(ActionEvent e) {
         if (e.getActionCommand().equals(Buttons.Shutdown.name())) {
             if (Confirm("Kill all agents and exit?")) {
                 this.sShutdown.release();
@@ -571,6 +620,34 @@ public class LARVABoot {
         return _platformType == PLATFORM.MICROJADE;
     }
 
+    public boolean isShutDown() {
+        return this.sShutdown.availablePermits()>0;
+    }
+
+    public boolean isEmpty() {
+        boolean somealive = false;
+
+        if (isMicroBoot()) {
+            try {
+                somealive = MicroRuntime.size() > 0;
+            } catch (Exception Ex) {
+            }
+        } else {
+            for (String sname : _agentNames) {
+                try {
+                    _firstContainer.getAgent(sname);
+                    somealive = true;
+                } catch (Exception ex) {
+                    _controllers.remove(name);
+                }
+                if (somealive) {
+                    break;
+                }
+            }
+        }
+        return !somealive;
+    }
+
     protected void Abort(String s) {
         Error(s);
         Exit();
@@ -594,15 +671,15 @@ public class LARVABoot {
         return pScroll;
     }
 
-    public JTextArea getMessages() {
+    protected JTextArea getMessages() {
         return taMessages;
     }
 
-    public boolean isDebug() {
+    protected boolean isDebug() {
         return _debug;
     }
 
-    public void setDebug(boolean _debug) {
+    protected void setDebug(boolean _debug) {
         this._debug = _debug;
     }
 

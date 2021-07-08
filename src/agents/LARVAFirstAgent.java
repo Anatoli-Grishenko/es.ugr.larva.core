@@ -1,5 +1,5 @@
 /**
- * @file LARVABaseAgent.java
+ * @file LARVAFirstAgent.java
  * @author Anatoli.Grishenko@gmail.com
  *
  */
@@ -7,11 +7,14 @@ package agents;
 
 import swing.LARVAFrame;
 import disk.Logger;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import messaging.ACLMessageTools;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -109,7 +112,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             myText.append(logger.getLastlog());
             myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
             refreshGUI();
-            JOptionPane.showMessageDialog(myFrame,
+            JOptionPane.showMessageDialog(null,
                     logger.getLastlog(), "Agent " + getLocalName(),
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -131,10 +134,56 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
     }
 
+    protected void LARVAsend(ACLMessage msg) {
+        this.send(msg);
+        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, true));
+    }
+
+    protected ACLMessage LARVAblockingReceive() {
+        ACLMessage res;
+        res = blockingReceive();
+        Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+        return res;
+    }
+
+    protected ACLMessage LARVAblockingReceive(long milis) {
+        ACLMessage res;
+        res = blockingReceive(milis);
+        if (res != null) {
+            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+        }
+        return res;
+    }
+
+    protected ACLMessage LARVAblockingReceive(MessageTemplate t) {
+        ACLMessage res;
+        res = blockingReceive(t);
+        if (res != null) {
+            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+        }
+        return res;
+    }
+
+    protected ACLMessage LARVAblockingReceive(MessageTemplate t, long milis) {
+        ACLMessage res;
+        res = blockingReceive(t, milis);
+        if (res != null) {
+            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+        }
+        return res;
+    }
+
+    /**
+     * This method ask the user for confirmation (yes=true, no = false) in front
+     * of a given message
+     *
+     * @param message The question asked to the user
+     * @return true if the user select yes or false if the user selects no
+     */
     @Override
     protected boolean Confirm(String message) {
         if (isSwing()) {
-            int op = JOptionPane.showConfirmDialog(this.myFrame,
+            int op = JOptionPane.showConfirmDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
 
             return op == JOptionPane.YES_OPTION;
@@ -143,16 +192,28 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
     }
 
+    /**
+     * It shows a message to the user and waits until the user confirms it has
+     * read it
+     *
+     * @param message
+     */
     @Override
     protected void Alert(String message) {
         if (isSwing()) {
-            JOptionPane.showMessageDialog(this.myFrame,
+            JOptionPane.showMessageDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
         } else {
             Info(message);
         }
     }
 
+    /**
+     * It asks the user to input a String
+     *
+     * @param message The message shown to the user
+     * @return The string typed by the user
+     */
     @Override
     protected String inputLine(String message) {
         if (isSwing()) {
@@ -163,9 +224,18 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
     }
 
-    protected String inputSelect(String message, String [] options, String value) {
+    /**
+     * It asks the user to select an input String only from a set of allowed
+     * options
+     *
+     * @param message The message shown to the user
+     * @param options An array of Strings as the set of possible selections
+     * @param value The default selection
+     * @return The string selected by the user
+     */
+    protected String inputSelect(String message, String[] options, String value) {
         if (isSwing()) {
-            String res = (String) JOptionPane.showInputDialog(myFrame, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE, null, options,value );
+            String res = (String) JOptionPane.showInputDialog(null, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE, null, options, value);
             return res;
         } else {
             return super.inputLine(message);
@@ -178,13 +248,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         });
     }
 
-    public void doSwingLater(Runnable what) {
+    protected void doSwingLater(Runnable what) {
         SwingUtilities.invokeLater(() -> {
             what.run();
         });
     }
 
-    public void doSwingWait(Runnable what) {
+    protected void doSwingWait(Runnable what) {
         try {
             SwingUtilities.invokeAndWait(() -> {
                 what.run();
