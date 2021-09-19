@@ -10,11 +10,11 @@ package glossary;
  */
 
 public enum ole {BITMAP, FILE, ACLM, PASSPORT, ADMINPASSPORT, REPORT,DBQUERY, LIST, NOTIFICATION,
-            SENSOR,REQUEST,ANSWER, OPTIONS, POINT, VECTOR, ENTITY,TABLE, OLE, QUERY};
+            SENSOR,REQUEST,ANSWER, RECORD, POINT, VECTOR, ENTITY,TABLE, OLE, QUERY, DIALOG, INTEGER, DOUBLE, STRING, ARRAY, BOOLEAN};
 
 //public class ole {
 //    public static final String BITMAP="bitmap", FILE="file", ACLM="ACLMessage", 
 //            PASSPORT="cardid", REPORT="report",DBQUERY="dbquery",
-//            SENSOR="sensor",REQUEST="request",ANSWER="answer", OPTIONS="options",
+//            SENSOR="sensor",REQUEST="request",ANSWER="answer", RECORD="options",
 //            ARRAY="array";
 //}

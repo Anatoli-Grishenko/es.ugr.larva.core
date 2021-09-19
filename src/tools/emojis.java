@@ -5,6 +5,7 @@
  */
 package tools;
 
+import data.OleList;
 import static data.TokenList.countTokens;
 
 /**
@@ -15,6 +16,7 @@ import static data.TokenList.countTokens;
 public class emojis {
 
     public static final String ROBOT = "🤖",
+            KEYBOARD = "⌨️",
             STOP = "🛑",
             ERROR = "🚫",
             REPLY = "↩️",
@@ -84,39 +86,77 @@ public class emojis {
             BROADCAST = SPEAKER,
             LOGIN = KEY,
             PROBLEM = GEAR,
-            SOLVED = DIRECTHIT,
+            SOLVED = OK,
             CALENDAR = "📅",
             ASSIGNMENT = "📝",
             LUDWIG = "\uD83D\udc68";
 
-    public static String showProgress(String done, String total) {
+    public static String showProgress(OleList total, OleList done) {
         String res = "";
         int idone = 0, itotal = 0;
-        idone = countTokens(done);
-        itotal = countTokens(total);
+        idone = done.size();
+        itotal = total.size();
         res += String.format("%2d/%2d", idone, itotal);
         return res;
 
     }
+//    public static String showProgress(String done, String total) {
+//        String res = "";
+//        int idone = 0, itotal = 0;
+//        idone = countTokens(done);
+//        itotal = countTokens(total);
+//        res += String.format("%2d/%2d", idone, itotal);
+//        return res;
+//
+//    }
 
-    public static String showProgressBar(int width, String done, String total) {
+    public static String showProgressBar(int width, OleList total, OleList done, String color) {
         String res = "";
         int idone = 0, itotal = 0;
-        idone += countTokens(done);
-        itotal += countTokens(total);
+        idone = done.size();
+        itotal = total.size();
         if (itotal <= width) {
             width = itotal;
         }
         for (int k = 0; k < width; k++) {
-            if (k < idone *width / itotal) {
-                res += emojis.BLUESQUARE;
+            if (k < idone * width / itotal) {
+                switch (color.toUpperCase()) {
+                    case "GREEN":
+                        res += emojis.GREENSQUARE;
+                        break;
+                    case "ORANGE":
+                        res += emojis.ORANGESQUARE;
+                        break;
+                    case "BLUE":
+                    default:
+                        res += emojis.BLUESQUARE;
+                }
             } else {
                 res += emojis.WHITESQUARE;
 
             }
         }
-        res += showProgress(done,total);
+        res += showProgress(total, done);
         return res;
     }
+//    public static String showProgressBar(int width, String done, String total) {
+//        String res = "";
+//        int idone = 0, itotal = 0;
+//        idone += countTokens(done);
+//        itotal += countTokens(total);
+//        if (itotal <= width) {
+//            width = itotal;
+//        }
+//        for (int k = 0; k < width; k++) {
+//            if (k < idone *width / itotal) {
+//                res += emojis.BLUESQUARE;
+//            } else {
+//                res += emojis.WHITESQUARE;
+//
+//            }
+//        }
+//        res += showProgress(done,total);
+//        return res;
+//    }
 
 }

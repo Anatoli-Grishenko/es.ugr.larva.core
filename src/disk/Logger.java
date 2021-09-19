@@ -29,10 +29,10 @@ import tools.TimeHandler;
  *
  */
 public class Logger {
-    
+
     protected static String _indent; /// Indentation of messages
     protected final String _cindent = "|   ";
-    
+
     protected String _filename, /// Name of the file  to store the log on disk
             _lastlog, /// Record last log
             _default, /// Default filename    
@@ -53,7 +53,7 @@ public class Logger {
     public Logger() {
         _filename = _default;
         _validFile = false;
-        _echo = true;
+        _echo = false;
         _tabular = false;
         _owner = null;
         _outTo = System.out;
@@ -73,63 +73,67 @@ public class Logger {
     public String getLoggerFileName() {
         return _filename;
     }
-    
+
     public Logger setOwner(String name) {
         _owner = name;
         return this;
     }
-    
+
     public Logger setOwnerQualifier(String s) {
         _qualifier = s;
         return this;
     }
-    
+
     public Logger setLoggerFileName(String fname) {
         if (initRecord(fname)) {
             _filename = fname;
         }
         return this;
     }
-    
+
     public Logger setOutputTo(PrintStream out) {
         _outTo = out;
         _errTo = out;
         return this;
     }
-    
+
     public Logger setTextColor(int color) {
         _textColor = color;
         return this;
     }
-    
+
     public Logger onTabular() {
         _tabular = true;
         return this;
     }
-    
+
     public Logger offTabular() {
         _tabular = false;
         return this;
     }
-    
+
     public Logger setEcho(boolean e) {
         _echo = e;
         return this;
     }
-    
+
     public Logger onEcho() {
         _echo = true;
         return this;
     }
-    
+
     public Logger offEcho() {
         _echo = false;
         return this;
     }
-    
+
+    public boolean isEcho() {
+        return _echo;
+    }
+
     protected boolean initRecord(String filename) {
         File file;
-        
+
         file = new File(filename);
         if (filename != null) {
             if (file.exists()) {
@@ -151,7 +155,7 @@ public class Logger {
             return (_validFile = false);            // null
         }
     }
-    
+
     protected JsonObject addRecord(JsonObject o) {
         String timeStamp = new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime());
         JsonObject json = new JsonObject(), record = new JsonObject();
@@ -175,44 +179,44 @@ public class Logger {
             } catch (IOException ex) {
                 logException(ex);
             }
-            
+
         }
         return json;
     }
-    
+
     public JsonObject logMessage(String message) {
         Output(message);
         return addRecord(new JsonObject().add("info", message));
     }
-    
+
     public JsonObject logMessage(JsonObject details) {
         Output(details.toString());
         return addRecord(details);
     }
-    
+
     public JsonObject logError(String message) {
         Error(message);
         return addRecord(new JsonObject().add("info", message));
     }
-    
+
     public JsonObject logError(JsonObject details) {
         Error(details.toString());
         return addRecord(details);
-        
+
     }
-    
+
     public JsonObject logException(Exception ex) {
         StringWriter sexc = new StringWriter();
         PrintWriter psexc = new PrintWriter(sexc);
         ex.printStackTrace(psexc);
         return logError(new JsonObject().add("uncaught-exception", ex.toString()).
                 add("info", sexc.toString()));
-        
+
     }
-    
+
     protected String formatOutput(String s) {
         String res;
-        if (this._maxLength > 0 && s.length() > _maxLength) {
+        if (this._maxLength > 0 && s.length() > _maxLength || s.contains("filedata")) {
             s = trimString(s, _maxLength);
         }
         String heading;
@@ -235,36 +239,38 @@ public class Logger {
         }
         return res;
     }
-    
+
     public void incIndent() {
         _indent += _cindent;
     }
-    
+
     public void decIndent() {
         if (_indent.length() > 0) {
             _indent = _indent.substring(_cindent.length());
         }
     }
-    
+
     protected void Output(String s) {
-        if (_echo) {
-            s = _indent + s;
-            try {
-                _lastlog = formatOutput(s) + "\n";
+        s = _indent + s;
+        try {
+            _lastlog = formatOutput(s) + "\n";
+            if (_echo) {
                 _outTo.printf(_lastlog);
-            } catch (Exception Ex) {
-                _lastlog = s.substring(0, 10) + "\n";
-                _outTo.printf(_lastlog);
-                
             }
+        } catch (Exception Ex) {
+            _lastlog = s.substring(0, 10) + "\n";
+            if (_echo) {
+                _outTo.printf(_lastlog);
+            }
+
         }
     }
-    
+
     protected void Error(String s) {
-        _lastlog = formatOutput(s) +"\n";
+        _lastlog = formatOutput(s) + "\n";
         _errTo.printf(_lastlog);
     }
-    
+
     public static String trimString(String original, int max) {
         String s = original.toString();
         if (s.length() > max) {
@@ -279,5 +285,5 @@ public class Logger {
     public String getLastlog() {
         return _lastlog;
     }
-    
+
 }

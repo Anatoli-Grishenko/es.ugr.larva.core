@@ -11,6 +11,7 @@ import static disk.Logger.trimString;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.Iterator;
+import swing.LARVADash;
 
 /**
  *
@@ -98,7 +99,7 @@ public class ACLMessageTools {
         if (!simple) {
             it = msg.getAllReplyTo();
             res = "|PFM:" + ACLMessage.getPerformative(msg.getPerformative())+res;
-            res += "|RPT:";
+            res += "RPT:";
             while (it.hasNext()) {
                 res += ((AID) it.next()).getLocalName() + " ";
             }
@@ -107,7 +108,9 @@ public class ACLMessageTools {
                     + (msg.getEncoding() == null ? _NULLVAL : "|ENC:" + msg.getEncoding())
                     + (msg.getReplyWith() == null ? _NULLVAL : "|RPW:" + msg.getReplyWith())
                     + (msg.getInReplyTo() == null ? _NULLVAL : "|IRT:" + msg.getInReplyTo())
-                    + (msg.getLanguage() == null ? _NULLVAL : "|LAN:" + trimString(msg.getLanguage(), 10)+"|");
+                    + (msg.getLanguage() == null ? _NULLVAL : "|LAN:" + trimString(msg.getLanguage(), 10))
+                    + (msg.getOntology() == null ? _NULLVAL : "|ONT:" + msg.getOntology());
+            res +="|";
         }
         return res;
     }
@@ -170,4 +173,23 @@ public class ACLMessageTools {
         incoming.setProtocol((incoming.getProtocol() == null ? _NULLVAL : incoming.getProtocol()));
         return incoming;
     }
+    
+
+    public static boolean isDashACL(ACLMessage msg) {
+        return msg.getReplyWith()!= null && msg.getReplyWith().contains(LARVADash.MARK);
+    }
+    
+    public static ACLMessage cleanDashMark(ACLMessage msg) {
+        msg.setReplyWith(msg.getReplyWith().replace(LARVADash.MARK, ""));
+        return msg;
+    }
+    
+    public static ACLMessage addDashMark(ACLMessage msg) {
+        if (msg.getReplyWith()==null)
+            msg.setReplyWith("");
+        msg.setReplyWith(msg.getReplyWith()+" "+LARVADash.MARK);
+        return msg;
+    }
+        
+    
 }

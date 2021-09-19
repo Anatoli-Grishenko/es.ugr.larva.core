@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import org.apache.commons.io.FilenameUtils;
 
 /**
@@ -63,9 +64,8 @@ public class OleFile extends Ole {
      */
     @Override
     public OleFile loadFile(String fullfilename) {
-        JsonObject res = new JsonObject();
         try {
-            JsonArray arraydata = new JsonArray();
+            ArrayList <Integer> arraydata = new ArrayList();
             Path path = Paths.get(fullfilename);
             // Read all bytes
             byte[] bytedata = Files.readAllBytes(path);
@@ -80,11 +80,12 @@ public class OleFile extends Ole {
             for (int i = 0; i < bytedata.length; i++) {
                 arraydata.add((int) bytedata[i]);
             }
-            res = new JsonObject().add("filename", path.getFileName().toString()).
-                    add("filedata", arraydata);
+            setField("filename", path.getFileName().toString());
+            setField("filedata", new ArrayList(arraydata));
+//            System.out.println(this.toString());
         } catch (IOException ex) {
+            System.err.println(ex.toString());
         }
-        data = res;
         return this;
     }
 
@@ -99,7 +100,7 @@ public class OleFile extends Ole {
      */
     public boolean saveFile(String outputfolder) {
         boolean res = false;
-        if (getType().equals(glossary.ole.FILE)) {
+        if (getType().equals(glossary.ole.FILE.name())) {
             String filename = data.get("filename").asString();
             JsonArray content = data.get("filedata").asArray();
             byte[] bytedata = new byte[content.size()];
@@ -151,6 +152,10 @@ public class OleFile extends Ole {
         } catch (Exception ex) {
         }
         return res;
+    }
+    
+    public String getFileName() {
+        return getField("filename");
     }
 
 }

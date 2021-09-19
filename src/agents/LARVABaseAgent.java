@@ -92,9 +92,7 @@ public class LARVABaseAgent extends Agent {
      */
     protected ACLMessage inbox, outbox;
 
-    private ACLMessage checkin, checkout;
 
-    private String IdentityManager;
 
     /**
      * To store the personal passport
@@ -438,77 +436,7 @@ public class LARVABaseAgent extends Agent {
         logger.logException(ex);
     }
 
-    //
-    // LARVA
-    //
-    /**
-     * It connects to the identity manager and register its passport, previously
-     * stored in the variable mypassport with either method loadMyPassport()
-     * setMyPassport()
-     *
-     * @return
-     */
-    protected boolean doLARVACheckin() {
-        Info("Checking-in to LARVA");
-        if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
-            Error("Sorry, no identity manager service has been found");
-        } else {
-            ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
-            IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
-            Info("Found agent " + IdentityManager + " as Identity Manager");
-            AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
-            outbox.setSender(getAID());
-            outbox.addReceiver(IM);
-            outbox.setContent(mypassport);
-            Info("Sending passport to " + IdentityManager);
-            this.send(outbox);
-            checkin = this.blockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
-            if (checkin == null) {
-                Error("Agent " + IdentityManager + " does not answer. Not checked in");
-            } else {
-                checkout = checkin.createReply();
-                if (checkin.getPerformative() == ACLMessage.CONFIRM) {
-                    checkedin = true;
-                    Info(checkin.getContent());
-                    return true;
-                } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
-                    Error("Check in to LARVA refused.\nDetails: " + checkin.getContent());
-                } else {
-                    Error("Could not check in to LARVA.\nDetails: " + checkin.getContent());
-                }
-            }
-            return false;
-        }
-
-        return false;
-    }
-
-    /**
-     * It contacts the Identity Manager and send a cancelation of the checkin, that it
-     * it checks out the agent from the platform
-     * @return true if it has suceeded, false otherwise
-     */
-    protected boolean doLARVACheckout() {
-        Info("Checking-out from LARVA");
-        if (checkout == null) {
-            return false;
-        }
-        checkout.setPerformative(ACLMessage.CANCEL);
-        this.send(checkout);
-        inbox = this.blockingReceive(MessageTemplate.MatchSender(new AID(IdentityManager, AID.ISLOCALNAME)), WAITANSWERMS);
-        if (inbox == null) {
-            Error("Agent " + IdentityManager + " does not answer. Not checked out");
-        } else {
-            if (checkin.getPerformative() == ACLMessage.CONFIRM) {
-                Info(inbox.getContent());
-                return true;
-            } else {
-                Error(inbox.getContent());
-            }
-        }
-        return false;
-    }
-
+  
     protected void BehaviourDefaultSetup() {
         defaultBehaviour = new Behaviour() {
             @Override
@@ -529,39 +457,7 @@ public class LARVABaseAgent extends Agent {
         this.addBehaviour(defaultBehaviour);
     }
 
-    public String getIdentityManager() {
-        return IdentityManager;
-    }
 
-    public void setIdentityManager(String IdentityManager) {
-        this.IdentityManager = IdentityManager;
-    }
-
-    /**
-     * It loads the passport from a disk file
-     *
-     * @param passportFileName The file that contains the passport
-     * @return true if it has been loaded false otherwise
-     */
-    public boolean loadMyPassport(String passportFileName) {
-        try {
-            FileReader fmypassport = new FileReader(passportFileName);
-            mypassport = new Scanner(fmypassport).useDelimiter("\\Z").next();
-            return true;
-        } catch (Exception ex) {
-            Error("Unable to load passport file " + passportFileName);
-            mypassport = "";
-            return false;
-        }
-    }
-
-    /**
-     * It directly sets the passport from a  given String
-     * @param mypassport The passport to be assigned
-     */
-    public void setMypassport(String mypassport) {
-        this.mypassport = mypassport;
-    }
 
     public boolean isCheckedin() {
         return checkedin;
@@ -571,7 +467,7 @@ public class LARVABaseAgent extends Agent {
         this.checkedin = checkedin;
     }
 
-    public int getNcycles() {
+    public int getNCycles() {
         return ncycles;
     }
 

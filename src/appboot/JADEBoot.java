@@ -5,7 +5,7 @@
 package appboot;
 
 import data.Ole;
-import data.OleOptions;
+import data.OleRecord;
 import disk.Logger;
 import jade.core.MicroRuntime;
 import jade.core.Profile;
@@ -43,7 +43,7 @@ public class JADEBoot {
     protected FileWriter _lockCloseSession, _lockReboot;
     protected int _port;
     protected double _progress;
-    protected OleOptions config;
+    protected OleRecord config;
     protected String configfilename;
     protected Logger logger;
 
@@ -156,7 +156,7 @@ public class JADEBoot {
         } else {
 
         }
-        config = new OleOptions();
+        config = new OleRecord();
         if (configfilename != null && !new File(configfilename).exists()) {
             configfilename = null;
         }
@@ -177,7 +177,7 @@ public class JADEBoot {
         }
         Info("Configuring boot:");
         if (configfilename != null) {
-            OleOptions cfgbasic = new OleOptions(new Ole(config.getField("basic")));
+            OleRecord cfgbasic = new OleRecord(new Ole(config.getField("basic")));
             if (cfgbasic.getFullFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
                 if (cfgbasic.getFullFieldList().contains("logfile")) {
                     logger.setLoggerFileName(cfgbasic.getString("logfile"));

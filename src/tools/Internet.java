@@ -48,4 +48,8 @@ public class Internet {
         }
         return res;
     }
+    
+    public static boolean isBehindRouter() {
+        return !getExtIPAddress().equals(getLocalIPAddress());
+    }
 }

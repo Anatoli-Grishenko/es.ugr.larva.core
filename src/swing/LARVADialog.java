@@ -9,17 +9,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.util.function.Consumer;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 /**
  *
  * @author lcv
  */
-public class LARVAFrame extends JFrame implements ActionListener {
+public class LARVADialog extends JDialog implements ActionListener {
 
     Consumer<ActionEvent> myListener;
 
-    public LARVAFrame(Consumer<ActionEvent> listener) {
+    public LARVADialog(Consumer<ActionEvent> listener) {
         super();
         myListener = listener;
         this.setTitle("LARVA");

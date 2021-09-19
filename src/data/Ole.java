@@ -7,6 +7,7 @@ package data;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
 import crypto.Cryptor;
 import crypto.Keygen;
@@ -16,13 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -106,8 +101,8 @@ public class Ole {
         setID(Keygen.getAlphaNumKey());
         setType(ole.OLE.name());
         setFields(new ArrayList());
-        setField("description", "Object Linked and Embeded");
-        setField("ole", true);
+        Meta("description", "Object Linked and Embeded");
+        Meta("ole", true);
     }
 
     public Ole checkField(String fieldname) {
@@ -118,19 +113,62 @@ public class Ole {
         return this;
     }
 
+    public Ole Meta(String key, String value) {
+        data.set(key, value);
+        return this;
+    }
+
+    public Ole Meta(String key, int value) {
+        data.set(key, value);
+        return this;
+    }
+
+    public Ole Meta(String key, double value) {
+        data.set(key, value);
+        return this;
+    }
+
+    public Ole Meta(String key, boolean value) {
+        data.set(key, value);
+        return this;
+    }
+
+    public Ole Meta(String key, Ole value) {
+        data.set(key, value.toJson());
+        return this;
+    }
+
+    public Ole Meta(String key, ArrayList<Object> value) {
+        data.set(key, Transform.toJsonArray(value));
+        return this;
+    }
+
     public Ole setID(String id) {
-        data.set("id", id);
+        Meta("id", id);
         return this;
     }
 
     public Ole setType(String type) {
-        data.set("type", type);
+        Meta("type", type);
         return this;
     }
 
     public Ole setFields(List<String> fields) {
-        data.set("fields", Transform.toJsonArray(new ArrayList(fields)));
+        Meta("fields", new ArrayList(fields));
         return this;
+    }
+    
+    public String getFieldType(String field) {
+        JsonValue jsv =data.get(field);
+        if (jsv.isBoolean())
+            return ole.BOOLEAN.name();
+        else if (jsv.isString())
+            return ole.STRING.name();
+        else if (jsv.isNumber()) {
+            return ole.DOUBLE.name();
+        } else if (jsv.isArray())
+            return ole.ARRAY.name();
+        else return getOle(field).getType();
     }
 
     /**
@@ -162,8 +200,28 @@ public class Ole {
         JsonObject ole = Json.parse(jsole.toString()).asObject();
         if (ole.getBoolean("ole", false)) {
             this.data = ole;
+        } else {
+            this.data = parseJson(jsole);
         }
         return this;
+    }
+
+    private JsonObject parseJson(JsonObject jsk) {
+        Ole res = new Ole();
+        for (String name : jsk.names()) {
+            if (jsk.get(name).isBoolean()) {
+                res.setField(name, jsk.getBoolean(name, true));
+            } else if (jsk.get(name).isNumber()) {
+                res.setField(name, jsk.getDouble(name, -1));
+            } else if (jsk.get(name).isString()) {
+                res.setField(name, jsk.getString(name, ""));
+            } else if (jsk.get(name).isArray()) {
+                res.setField(name, new ArrayList(Transform.toArrayList(jsk.get(name).asArray())));
+            } else {
+                res.setField(name, new Ole().set(jsk.get(name).asObject()));
+            }
+        }
+        return res.toJson();
     }
 
     /**
@@ -521,10 +579,10 @@ public class Ole {
     @Override
     public String toString() {
         if (enigma == null) {
-            String aux = toJson().toString(WriterConfig.PRETTY_PRINT);
+            String aux = toJson().toString();
             return aux;
         } else {
-            return enigma.enCrypt(toJson().toString(WriterConfig.PRETTY_PRINT));
+            return enigma.enCrypt(toJson().toString());
         }
     }
 

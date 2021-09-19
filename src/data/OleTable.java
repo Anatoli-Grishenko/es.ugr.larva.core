@@ -63,6 +63,12 @@ public class OleTable extends Ole {
                                 key = "" + rs.getInt(name);
                             }
                             break;
+                        case java.sql.Types.TINYINT:
+                            aux.setField(name, rs.getBoolean(name));
+                            if (i == 1) {
+                                key = "" + rs.getBoolean(name);
+                            }
+                            break;
                         case java.sql.Types.DOUBLE:
                         case java.sql.Types.DECIMAL:
                             aux.setField(name, rs.getInt(name));
@@ -220,6 +226,34 @@ public class OleTable extends Ole {
 
     public int size() {
         return rows.size();
+    }
+    
+    public String prettyprint() {
+        String res ="";
+        ArrayList<String> names = new ArrayList<>();
+        int i = 0;
+        for (Ole orow : getAllRows()) {
+            if (i == 0) {
+                res+="|";
+                names = new ArrayList(getNetFieldList());
+                for (String col : names) {
+                    res += String.format("%15s|", col);
+                }
+                res+="\n+";
+                for (String col : names) {
+                    res+="---------------+";
+                }
+            }
+            res+="\n|";
+            for (String key : names) {
+                String value = orow.getField(key);
+                res+=String.format("%15s|", value.substring(0, Math.min(15, value.length())));
+            }
+            i++;
+        }
+        res += "\n";
+        
+        return res;
     }
 }
 ///*

@@ -10,6 +10,8 @@ package glossary;
  */
 public enum direction {NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,
             SOUTHWEST, WEST, NORTHWEST, UP, DOWN, FORWARD,BACKWARD,LEFT,RIGTH};    
+//public enum direction {NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,
+//            SOUTHWEST, WEST, NORTHWEST, UP, DOWN, FORWARD,BACKWARD,LEFT,RIGTH};    
 
 
 //public class direction {

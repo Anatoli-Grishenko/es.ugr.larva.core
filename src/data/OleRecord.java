@@ -12,16 +12,16 @@ import glossary.ole;
  * {@link Ole} to get to know the different options that may be represented.
  * 
  */
-public class OleOptions extends Ole {
+public class OleRecord extends Ole {
 
-    public OleOptions() {
+    public OleRecord() {
         super();
-        setType(ole.OPTIONS.name());
+        setType(ole.RECORD.name());
     }
     
-    public OleOptions(Ole o) {
+    public OleRecord(Ole o) {
         super(o);
-        setType(ole.OPTIONS.name());
+        setType(ole.RECORD.name());
     }
 
 }

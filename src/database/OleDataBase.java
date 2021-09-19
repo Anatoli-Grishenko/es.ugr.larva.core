@@ -224,23 +224,23 @@ public class OleDataBase implements ReportableObject {
     // SentenceBuilder
     //
     //
-    public SentenceBuilder sentence(SQLOP o) {
+    protected SentenceBuilder sentence(SQLOP o) {
         return _sb.Op(o);
     }
 
-    public OleTable DBSBquery(SentenceBuilder s) {
+    protected OleTable DBSBquery(SentenceBuilder s) {
         return DBquery(s.toString());
     }
 
-    public boolean DBSBupdate(SentenceBuilder s) {
+    protected boolean DBSBupdate(SentenceBuilder s) {
         return DBupdate(s.toString());
     }
 
-    public boolean DBSBinsert(SentenceBuilder s) {
+    protected boolean DBSBinsert(SentenceBuilder s) {
         return DBinsert(s.toString());
     }
 
-    public boolean DBSBdelete(SentenceBuilder s) {
+    protected boolean DBSBdelete(SentenceBuilder s) {
         return DBdelete(s.toString());
     }
 
@@ -281,6 +281,18 @@ public class OleDataBase implements ReportableObject {
             });
             return this.DBSBupdate(sb);
         }
+    }
+
+    public boolean DBObjectUpdateUnique(String table, OleQuery find, OleQuery update) {
+        SentenceBuilder sb = new SentenceBuilder(this);
+        if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
+            sb.Op(INSERT).Table(table);
+            update.getNetFieldList().forEach(f -> {
+                sb.Pair(f, update.getOle(f).getField("value"));
+            });
+            return this.DBSBinsert(sb);
+        } 
+        return false;
     }
 
     //
@@ -365,11 +377,11 @@ public class OleDataBase implements ReportableObject {
         return _oleResultSet == null || _oleResultSet.size() == 0;
     }
 
-    public ResultSet getResult() {
+    protected ResultSet getResult() {
         return rs;
     }
 
-    public OleTable getOleTable() {
+    protected OleTable getOleTable() {
         return new OleTable(_oleResultSet);
     }
 

@@ -3,8 +3,11 @@
  */
 package appboot;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import data.Ole;
-import data.OleOptions;
+import data.OleList;
+import data.OleRecord;
 import disk.Logger;
 import jade.core.MicroRuntime;
 import jade.core.Profile;
@@ -22,6 +25,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -31,8 +35,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import swing.LARVAFrame;
+import swing.OleDialog;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
@@ -43,7 +49,7 @@ import tools.emojis;
  */
 public class LARVABoot {
 
-    protected boolean _connected = false, _echo = false, _debug = false;
+    protected boolean _connected = false, _echo = false, _debug = false, _quickshutdown = false;
     protected String _title, _subtitile, _version = "1.0";
     Object _args[];
     protected ArrayList<String> _tasks, _achieved;
@@ -54,11 +60,11 @@ public class LARVABoot {
     protected HashMap<String, AgentController> _controllers;
     protected ArrayList<String> _agentNames;
     protected String _host, _virtualhost, _containerName, _platformId, _username, _password;
-    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock";
+    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock", _configFileName = "./config/config.json";
     protected FileWriter _lockCloseSession, _lockReboot;
     protected int _port;
     protected double _progress;
-    protected OleOptions config;
+    protected OleRecord config;
     protected String configfilename;
     protected Logger logger;
 
@@ -68,7 +74,7 @@ public class LARVABoot {
     PLATFORM _platformType;
 
     enum Buttons {
-        Start, Shutdown
+        Start, Shutdown, Configure
     };
 
     protected LARVAFrame fMain;
@@ -77,14 +83,16 @@ public class LARVABoot {
     protected String title;
     protected JPanel pControl;
     protected JPanel pMain;
-    protected JButton bStart, bExit;
+    protected JButton bStart, bExit, bConfig;
     protected int width = 800, height = 400;
     protected int nlog;
     protected String who, name;
     protected String sResult;
     protected boolean bResult;
     protected String sMessages;
-    protected Semaphore sShutdown;
+    protected Semaphore sShutdown, sStart;
+    protected Ole oleConfig;
+    protected OleDialog Settings;
 
     /**
      * Main constructor. Initializes the variables and prepare the list of task
@@ -110,10 +118,24 @@ public class LARVABoot {
         _achieved = new ArrayList<>();
         _args = new Component[0];
         sShutdown = new Semaphore(0);
+        sStart = new Semaphore(0);
+        if (new File(_configFileName).exists()) {
+            oleConfig = new Ole();
+            if (oleConfig.loadFile(_configFileName).isEmpty()) {
+                oleConfig = null;
+            }
+        }
+
         initGUI();
     }
 
     protected void initGUI() {
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize LaF");
+        }
+
         fMain = new LARVAFrame(e -> this.jadebootListener(e));
         pMain = new JPanel();
         BoxLayout pHBox = new BoxLayout(pMain, BoxLayout.Y_AXIS);
@@ -128,6 +150,17 @@ public class LARVABoot {
         pControl.setPreferredSize(new Dimension(width, 32));
         bExit = new JButton(Buttons.Shutdown.name());
         bExit.addActionListener(fMain);
+        bStart = new JButton(Buttons.Start.name());
+        bStart.addActionListener(fMain);
+        bConfig = new JButton(Buttons.Configure.name());
+        bConfig.addActionListener(fMain);
+        if (this.oleConfig != null) {
+            pControl.add(bConfig);
+            pControl.add(bStart);
+            sStart.drainPermits();
+        } else {
+            sStart.release();
+        }
         pControl.add(bExit);
         pScroll = new JScrollPane(taMessages);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -139,6 +172,7 @@ public class LARVABoot {
         fMain.setVisible(true);
         fMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         fMain.show();
+
     }
 
     protected void refreshGUI() {
@@ -169,7 +203,23 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot Boot(String host, int port) {
-        return this.selectConnection(host, port);
+        if (oleConfig == null) {
+            return this.selectConnection(host, port);
+        } else {
+            return Boot();
+        }
+    }
+
+    public LARVABoot Boot() {
+        if (oleConfig == null) {
+            this.Abort("Sorry, method Boot() without argumentes requires a configuration fle");
+        }
+        try {
+            sStart.acquire();
+        } catch (InterruptedException ex) {
+        }
+        return this.selectConnection(new OleList(oleConfig.getOle("Jade").getOle("Host")).getItem(0),
+                oleConfig.getOle("Jade").getInt("Port"));
     }
 
     protected LARVABoot doCompleted(String task) {
@@ -206,7 +256,7 @@ public class LARVABoot {
         } else {
 
         }
-        config = new OleOptions();
+        config = new OleRecord();
         if (configfilename != null && !new File(configfilename).exists()) {
             configfilename = null;
         }
@@ -227,7 +277,7 @@ public class LARVABoot {
         }
         Info("Configuring boot:");
         if (configfilename != null) {
-            OleOptions cfgbasic = new OleOptions(new Ole(config.getField("basic")));
+            OleRecord cfgbasic = new OleRecord(new Ole(config.getField("basic")));
             if (cfgbasic.getFullFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
                 if (cfgbasic.getFullFieldList().contains("logfile")) {
                     logger.setLoggerFileName(cfgbasic.getString("logfile"));
@@ -522,11 +572,12 @@ public class LARVABoot {
     public LARVABoot ShutDown() {
         Info("Shutting down");
         Info("Turning off JadeBoot");
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {
+        if (!this._quickshutdown) {
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+            }
         }
-
         turnOff(_firstContainer);
         fMain.dispatchEvent(new WindowEvent(fMain, WindowEvent.WINDOW_CLOSING));
 //        System.exit(0);
@@ -541,6 +592,7 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot WaitAndShutDown() {
+        this._quickshutdown = false; //true;
         Close();
         ShutDown();
         return this;
@@ -593,19 +645,38 @@ public class LARVABoot {
                 this.sShutdown.release();
             }
         }
+        if (e.getActionCommand().equals(Buttons.Start.name())) {
+            sStart.release();
+            this.bConfig.setEnabled(false);
+            this.bStart.setEnabled(false);
+            if (Settings != null) {
+                oleConfig = Settings.getDialogResult();
+                if (oleConfig != null && !oleConfig.isEmpty()) {
+                    oleConfig.saveAsFile("./config/", "config.json");
+                }
+            }
+        }
+        if (e.getActionCommand().equals(Buttons.Configure.name())) {
+            Settings = new OleDialog(this.fMain, oleConfig);
+        }
     }
 
-    protected void Alert(String message) {
+    public void Alert(String message) {
         JOptionPane.showMessageDialog(this.fMain,
                 message, "LARVA Boot", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    protected String inputLine(String message) {
+    public String inputLine(String message) {
         sResult = JOptionPane.showInputDialog(this.fMain, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE);
         return sResult;
     }
 
-    protected boolean Confirm(String message) {
+    public String inputSelect(String message, String[] options, String value) {
+        String res = (String) JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE, null, options, value);
+        return res;
+    }
+
+    public boolean Confirm(String message) {
         bResult = JOptionPane.showConfirmDialog(this.fMain,
                 message, "LARVA Boot", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
         return bResult;
@@ -621,7 +692,7 @@ public class LARVABoot {
     }
 
     public boolean isShutDown() {
-        return this.sShutdown.availablePermits()>0;
+        return this.sShutdown.availablePermits() > 0;
     }
 
     public boolean isEmpty() {

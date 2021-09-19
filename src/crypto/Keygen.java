@@ -13,7 +13,10 @@ import java.math.BigInteger;
  */
 public class Keygen {
 
-    public static final String HEXATOMS = "0123456789ABCDEF";
+    public static final String HEXATOMS = "0123456789ABCDEF", 
+            VOWELS = "aaaeeioou",
+            CLINK="rsnlm",
+            CONSONANTS = CLINK+"bcdfghjklmnprstvwz";
     public static final String ALPHANUMATOMS = " abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-";
     public static final int KOFF = 10;
 
@@ -34,7 +37,38 @@ public class Keygen {
         String newkey = "";
         final int len = length;
         for (int i = 0; i < len; i++) {
-            newkey = newkey + ALPHANUMATOMS.charAt(1+(int) (Math.random() * (ALPHANUMATOMS.length()-1)));
+            newkey = newkey + ALPHANUMATOMS.charAt(1 + (int) (Math.random() * (ALPHANUMATOMS.length() - 1)));
+        }
+        return newkey;
+    }
+
+    public static String getWordo(int length) {
+        String newkey = "";
+        final int len = length / 2 + (int) (length * Math.random() / 2);
+        for (int i = 0; i < len;) {
+            if (i == 0) {
+                newkey = newkey + ("" + CONSONANTS.charAt(1 + (int) (Math.random() * (CONSONANTS.length() - 1)))).toUpperCase();
+                i += 2;
+            } else {
+                newkey = newkey + VOWELS.charAt(1 + (int) (Math.random() * (VOWELS.length() - 1)));
+                i++;
+                double d = Math.random();
+                if (d < 0.5) {
+                    newkey = newkey + CONSONANTS.charAt(1 + (int) (Math.random() * (CONSONANTS.length() - 1)));
+                    i++;
+                } else if (d < 0.75) {
+                    newkey = newkey + VOWELS.charAt(1 + (int) (Math.random() * (VOWELS.length() - 1)));
+                    i++;
+                    newkey = newkey + CLINK.charAt(1 + (int) (Math.random() * (CLINK.length() - 1)));
+                    i++;
+
+                } else {
+                    newkey = newkey + CONSONANTS.charAt(1 + (int) (Math.random() * (CONSONANTS.length() - 1)));
+                    i++;
+                    newkey = newkey + CONSONANTS.charAt(1 + (int) (Math.random() * (CONSONANTS.length() - 1)));
+                    i++;
+                }
+            }
         }
         return newkey;
     }
