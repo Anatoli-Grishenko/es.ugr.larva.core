@@ -6,7 +6,7 @@
 package glossary;
 
 /**
- * Main commands that an agent can request in every session with the server. The syntax will be defined in a separate document<p>
+ * Main commands that an agent can request in every session with the server. The syntax will be defined in a separate document
  * <ul>
  * <li> <b>login</b> Open a session. All the members of the team can join it later.
  * <li> <b>join</b> Connects to a previously open session.

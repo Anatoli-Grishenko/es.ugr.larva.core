@@ -45,7 +45,7 @@ import java.util.Scanner;
  * <li>{@link OleFile} A wrapper for reading, writing and sending any file
  * through messages. Files are read as a byte sequence, encoded as a string and
  * transferred as such.
- * <li>{@link OleOptions} A wrapper for managing configurations or a set of
+ * <li>{@link OleRecord} A wrapper for managing configurations or a set of
  * options. Every option can be a number, a string, a boolean or another Ole
  * Object, or an array of all the previous types.
  * </ul>

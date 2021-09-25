@@ -284,7 +284,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             outbox.addReceiver(IM);
             outbox.setContent(mypassport);
             Info("Sending passport to " + IdentityManager);
-            this.LARVAsend(outbox);
+            this.send(outbox);
 //            checkin = this.blockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
             checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
             if (checkin == null) {
@@ -346,6 +346,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         if (traceRunSteps) {
             addRunStep("MILES10");
         }
+//        if (myDashboard != null && msg.getContent() != null
         if (myDashboard != null && msg.getContent() != null
                 && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
                 || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
@@ -568,6 +569,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      */
     public void doActivateLARVADash(Layout l) {
         myDashboard = new LARVADash(l, this);
+        myDashboard.setActivated(true);
     }
 
     /**
@@ -589,9 +591,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It looks thee  Df andd returns the naames of alal lageennts thaat provide 
-     * any type of service at LAARVAAs
-     * @return 
+     * It looks the  Df and returns the names of all agents that provide 
+     * any type of service at LARVA
+     * @return  An ArrayList of agent names
      */
     @Override
     public ArrayList<String> DFGetProviderList() {
@@ -601,6 +603,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return super.DFGetProviderList();
     }
 
+    /**
+     * It provides the full list of services provided by all agents in 
+     * the platform
+     * @return An ArrayList of names of services
+     */
     @Override
     public ArrayList<String> DFGetServiceList() {
         if (traceRunSteps) {
@@ -610,6 +617,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return super.DFGetServiceList();
     }
 
+    /**
+     * It provides the names of all agents which are known to provide a given service
+     * @param service The name of a service
+     * @return An arrayList of agent names who provide that service
+     */
     @Override
     public ArrayList<String> DFGetAllProvidersOf(String service) {
         if (traceRunSteps) {
@@ -618,6 +630,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return super.DFGetAllProvidersOf(service);
     }
 
+    /**
+     * It provides the names of the services provided by an agent
+     * @param agentName The provider agent
+     * @return An ArrayList of service names provided by that agent
+     */
     @Override
     public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
         if (traceRunSteps) {
@@ -626,6 +643,12 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
+    /**
+     * It simply checks whether or not this agent provides this service
+     * @param agentName The agent name
+     * @param service The service name
+     * @return True if the agent provides that service, false otherwise
+     */
     @Override
     public boolean DFHasService(String agentName, String service) {
         if (traceRunSteps) {
@@ -634,7 +657,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return super.DFHasService(agentName, service);
     }
 
-    protected void addRunStep(String step) {
+    private void addRunStep(String step) {
         if (stepsSent.size() == 0 && stepsDone.findItem(step)) {
             return;
         }

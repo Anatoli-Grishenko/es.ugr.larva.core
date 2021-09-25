@@ -210,6 +210,12 @@ public class LARVABoot {
         }
     }
 
+    /**
+     * Starts the booting process and connect to JADE according to the
+     * paramenters given in a JSON config file
+     *
+     * @return The own instance
+     */
     public LARVABoot Boot() {
         if (oleConfig == null) {
             this.Abort("Sorry, method Boot() without argumentes requires a configuration fle");
@@ -489,6 +495,10 @@ public class LARVABoot {
         refreshGUI();
     }
 
+    /**
+     * This method waits until all launched agents are dead. 
+     * @return The own instance
+     */
     public LARVABoot WaitToClose() {
         boolean somealive;
         String alive;
@@ -534,12 +544,12 @@ public class LARVABoot {
 //    }
 
     /**
-     * It kills all agents which could have been running in the predefined
-     * container
+     * It immediately kills all agents which could have been running in the predefined
+     * container without waiting for them to exit properly
      *
      * @return The own instance
      */
-    public LARVABoot Close() {
+    protected LARVABoot Close() {
         // Kill all agents
         try {
             this.sShutdown.acquire();
@@ -564,7 +574,7 @@ public class LARVABoot {
     }
 
     /**
-     * Once all agents have been terminated, the container is killed and the
+     * The container of the agent is killed and the
      * application exits
      *
      * @return The own instance
@@ -591,7 +601,7 @@ public class LARVABoot {
      *
      * @return The own instance
      */
-    public LARVABoot WaitAndShutDown() {
+    public LARVABoot WaitToShutDown() {
         this._quickshutdown = false; //true;
         Close();
         ShutDown();
