@@ -84,25 +84,7 @@ public class SensorDecoder {
     public Map2DColor getWorldMap() {
         return hMap;
     }
-
-//    public int[][] getWorldMapData() {
-//        if (this.hMap != null) {
-//            int[][] res = new int[hMap.getHeight()][hMap.getWidth()];
-//            for (int i = 0; i < hMap.getHeight(); i++) {
-//                for (int j = 0; j < hMap.getWidth(); j++) {
-//                    if (hMap.getColor(i, j) == cBad) {
-//                        res[i][j] = NULLREAD;
-//                    } else {
-//                        res[i][j] = hMap.getStepLevel(i, j);
-//                    }
-//                }
-//            }
-//            return res;
-//        } else {
-//            return new int[0][0];
-//        }
-//    }
-    
+  
     public boolean hasSensor(String sensorname) {
         return isReady() && this.indexperception.keySet().contains(sensorname.toLowerCase());
     }
@@ -332,9 +314,6 @@ public class SensorDecoder {
     }
 
     public void feedPerception(String content) {
-//        Ole operceptions = new Ole(content);
-//        name = operceptions.getField("name");
-//        fromOle(new ArrayList(operceptions.getArray("perceptions")));
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");

@@ -500,12 +500,11 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot WaitToClose() {
-        boolean somealive;
-        String alive;
+        this._quickshutdown=true;
         Info("Waiting for agents to close");
         while (!isEmpty() && !isShutDown()) {
             try {
-                Thread.sleep(2500);
+                Thread.sleep(1000);
             } catch (Exception e) {
             }
         }

@@ -41,7 +41,8 @@ public class Logger {
     protected boolean /// Parameters
             _validFile, /// The selected file is not available
             _echo, /// If true, it echoes everything on screen, otherwise is silent
-            _tabular;               /// If true, the echo is arranged as a tabulated output
+            _tabular, /// If true, the echo is arranged as a tabulated output
+            _overwrite;         /// If true, the log file on disk contains only the last run, otherwise it appends run after run
     protected int _maxLength, /// If the logged message exceeds this length, it is trimmed
             _textColor;             /// Color of the echoed texts
     protected PrintStream _outTo, ///  Default output stream for echoing messages. Std.out
@@ -63,6 +64,7 @@ public class Logger {
         _owner = "";
         _qualifier = "";
         _indent = "";
+        _overwrite = false;
     }
 
     /**
@@ -112,6 +114,16 @@ public class Logger {
         return this;
     }
 
+    public Logger onOverwrite() {
+        this._overwrite = true;
+        return this;
+    }
+
+    public Logger onAppend() {
+        _overwrite = false;
+        return this;
+    }
+
     public Logger setEcho(boolean e) {
         _echo = e;
         return this;
@@ -138,6 +150,9 @@ public class Logger {
         if (filename != null) {
             if (file.exists()) {
                 if (file.isFile()) {
+                    if (_overwrite) {
+                        file.delete();
+                    }
                     return (_validFile = true);    // Fichero existe
                 } else {
                     return (_validFile = false);   // Es Directorio
@@ -157,7 +172,7 @@ public class Logger {
     }
 
     protected JsonObject addRecord(JsonObject o) {
-        String timeStamp = new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime());
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(Calendar.getInstance().getTime());
         JsonObject json = new JsonObject(), record = new JsonObject();
         if (!_owner.equals("")) {
             record.add("agent", _owner);
@@ -172,6 +187,7 @@ public class Logger {
         if (_validFile) {
             PrintWriter outfile;
             try {
+                // save log
                 outfile = new PrintWriter(new BufferedWriter(new FileWriter(_filename, true)));
                 BufferedWriter out = new BufferedWriter(outfile);
                 outfile.println(toRecord);
@@ -272,11 +288,9 @@ public class Logger {
     }
 
     public static String trimString(String original, int max) {
-        String s = original.toString();
+        String s = original + "";
         if (s.length() > max) {
             return s.substring(0, Math.min(max, s.length())) + "...";
-//            return s.substring(0, Math.min(max, s.length())) + "..."
-//                    + s.substring(s.length() - 5, s.length());
         } else {
             return s;
         }

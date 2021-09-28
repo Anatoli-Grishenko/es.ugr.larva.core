@@ -16,16 +16,21 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
+import static messaging.ACLMessageTools.getAllReceivers;
+import messaging.SequenceDiagram;
 import swing.LARVADash;
 import swing.LARVADash.Layout;
 
@@ -72,6 +77,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     private ACLMessage checkin, checkout;
     private String IdentityManager;
 
+    // Its known sequence diagram
+    SequenceDiagram sd;
     //
     protected String title, mySessionmanager = "", problemName;
 
@@ -79,21 +86,16 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected boolean traceRunSteps;
     protected Ole oleConfig;
 
-    /**
-     * Main constructor
-     */
-    public LARVAFirstAgent() {
-        super();
-        stepsDone = new OleList();
-        stepsSent = new OleList();
-        traceRunSteps = false;
-    }
 
     /**
      * Main JADE setup
      */
     @Override
     public void setup() {
+        stepsDone = new OleList();
+        stepsSent = new OleList();
+        sd = new SequenceDiagram();
+        traceRunSteps = false;
         super.setup();
         addRunStep("MILES00");
         addRunStep("MILES01");
@@ -131,11 +133,12 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 }
             }
         }
-
+        myDashboard = new LARVADash(Layout.DASHBOARD, this);
     }
 
     /**
      * It detects if the ouput is graphical (swing) or text (console)
+     *
      * @return true when SWING is active, false otherwise
      */
     protected boolean isSwing() {
@@ -143,9 +146,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It allows a deep analysis of the changes of state of the agents that inherit
-     * from this class. It produces a hihgh traffic of messages, therefore, it must be used
-     * only upon teacher instruction.
+     * It allows a deep analysis of the changes of state of the agents that
+     * inherit from this class. It produces a hihgh traffic of messages,
+     * therefore, it must be used only upon teacher instruction.
      */
     protected void enableDeepLARVAMonitoring() {
         this.traceRunSteps = true;
@@ -153,14 +156,15 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     /**
      * Only for use with external configuration files-
+     *
      * @return The set of sensors configured in the external configuration file
      */
     protected String[] getConfiguredSensors() {
         String res[] = new String[0];
-        ArrayList<String>sensorList= new ArrayList();
+        ArrayList<String> sensorList = new ArrayList();
         if (oleConfig != null && !oleConfig.isEmpty()) {
             Ole sensors = oleConfig.getOle("LARVA").getOle("Sensors");
-            for (String sensor: sensors.getNetFieldList()) {
+            for (String sensor : sensors.getNetFieldList()) {
                 if (sensors.getBoolean(sensor)) {
                     sensorList.add(sensor.toUpperCase());
                 }
@@ -170,7 +174,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return res;
     }
 
-    
     @Override
     public void takeDown() {
         if (traceRunSteps) {
@@ -257,7 +260,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It returns the passport previoulsy set by setMyPassport() or loadMyPassport()
+     * It returns the passport previoulsy set by setMyPassport() or
+     * loadMyPassport()
+     *
      * @return The string of the passport
      */
     public String getMypassport() {
@@ -284,7 +289,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             outbox.addReceiver(IM);
             outbox.setContent(mypassport);
             Info("Sending passport to " + IdentityManager);
-            this.send(outbox);
+            this.LARVAsend(outbox);
 //            checkin = this.blockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
             checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
             if (checkin == null) {
@@ -319,6 +324,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             return false;
         }
         checkout.setPerformative(ACLMessage.CANCEL);
+        checkout.setContent("Request checkout");
         this.LARVAsend(checkout);
         inbox = this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(IdentityManager, AID.ISLOCALNAME)), WAITANSWERMS);
         if (inbox == null) {
@@ -335,11 +341,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It is a substitute of Agent.send() taht encapsulates two extra behaviours.
-     * On the one hand, it is linked with DeepLARVAMonitoring and tells the server
-     * if a message is trying to be sent (milestone MILES10). On the other hand, it 
-     * monitorizes the sending of several messages to the server so that the agent may
-     * their answer and ease the processing of sensors through LARVADash
+     * It is a substitute of Agent.send() taht encapsulates two extra
+     * behaviours. On the one hand, it is linked with DeepLARVAMonitoring and
+     * tells the server if a message is trying to be sent (milestone MILES10).
+     * On the other hand, it monitorizes the sending of several messages to the
+     * server so that the agent may their answer and ease the processing of
+     * sensors through LARVADash
+     *
      * @param msg The ACL message to be sent
      */
     protected void LARVAsend(ACLMessage msg) {
@@ -353,14 +361,18 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             msg = ACLMessageTools.addDashMark(msg);
         }
         this.send(msg);
-        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
+        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, true));
+        sd.addSequence(msg.getSender().getLocalName(),
+                getAllReceivers(msg), msg.getContent());
     }
 
     /**
-     * For the same purposes that LARVAsend, LARVAblocking receive() encapsulates 
-     * Agent.blockingReceive() and to ease the reception of extra information
-     * from the server in order to make the UI more usable and easy to understand
-     * @return 
+     * For the same purposes that LARVAsend, LARVAblocking receive()
+     * encapsulates Agent.blockingReceive() and to ease the reception of extra
+     * information from the server in order to make the UI more usable and easy
+     * to understand
+     *
+     * @return
      */
     protected ACLMessage LARVAblockingReceive() {
         ACLMessage res;
@@ -375,6 +387,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
         } while (repeat);
         Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+        sd.addSequence(res.getSender().getLocalName(),
+                getAllReceivers(res), res.getContent());
         this.checkReceivedMessage(res);
         return res;
     }
@@ -437,6 +451,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         } while (repeat);
         if (res != null) {
             Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+            sd.addSequence(res.getSender().getLocalName(),
+                    getAllReceivers(res), res.getContent());
         }
         this.checkReceivedMessage(res);
         return res;
@@ -445,8 +461,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     /**
      * Internal to DeepLarvaMonitoring to check the achievement of several
      * internal milestones
-     * @param res The message received by the agent which is monitored to
-     * detect several milestones
+     *
+     * @param res The message received by the agent which is monitored to detect
+     * several milestones
      */
     private void checkReceivedMessage(ACLMessage res) {
         if (traceRunSteps) {
@@ -565,17 +582,19 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     /**
      * It activates the SWING dashboard
+     *
      * @param l the type of dashboard, initially only DASHBOARD is allowed
      */
-    public void doActivateLARVADash(Layout l) {
-        myDashboard = new LARVADash(l, this);
+    public void doActivateLARVADash() {
         myDashboard.setActivated(true);
+        myDashboard.initGUI();
     }
 
     /**
-     * It reports the name of the Identity Manager found automatically by the 
+     * It reports the name of the Identity Manager found automatically by the
      * Checkin Method
-     * @return 
+     *
+     * @return
      */
     public String getIdentityManager() {
         return IdentityManager;
@@ -583,17 +602,18 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     /**
      * It sets the name of the Identity Manager
+     *
      * @param IdentityManager The knwon name of the IM
      */
-    
     public void setIdentityManager(String IdentityManager) {
         this.IdentityManager = IdentityManager;
     }
 
     /**
-     * It looks the  Df and returns the names of all agents that provide 
-     * any type of service at LARVA
-     * @return  An ArrayList of agent names
+     * It looks the Df and returns the names of all agents that provide any type
+     * of service at LARVA
+     *
+     * @return An ArrayList of agent names
      */
     @Override
     public ArrayList<String> DFGetProviderList() {
@@ -604,8 +624,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It provides the full list of services provided by all agents in 
-     * the platform
+     * It provides the full list of services provided by all agents in the
+     * platform
+     *
      * @return An ArrayList of names of services
      */
     @Override
@@ -618,7 +639,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     /**
-     * It provides the names of all agents which are known to provide a given service
+     * It provides the names of all agents which are known to provide a given
+     * service
+     *
      * @param service The name of a service
      * @return An arrayList of agent names who provide that service
      */
@@ -632,6 +655,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     /**
      * It provides the names of the services provided by an agent
+     *
      * @param agentName The provider agent
      * @return An ArrayList of service names provided by that agent
      */
@@ -645,6 +669,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     /**
      * It simply checks whether or not this agent provides this service
+     *
      * @param agentName The agent name
      * @param service The service name
      * @return True if the agent provides that service, false otherwise
@@ -670,6 +695,19 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             outgoing.setContent(stepsSent.prettyprint());
             this.send(outgoing);
             stepsSent = new OleList();
+        }
+    }
+
+    private String getSequenceDiagram() {
+        return sd.printSequenceDiagram();
+    }
+    
+    public void saveSequenceDiagram(String filename) {
+        try {
+            PrintStream out= new PrintStream(new File(filename));
+            out.println(getSequenceDiagram());
+        } catch (FileNotFoundException ex) {
+            Error("Unable to save Sequence Diagram into file "+filename);
         }
     }
 

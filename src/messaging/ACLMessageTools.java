@@ -1,6 +1,6 @@
 /*
  * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
+ * To change this template file, choose Tools || Templates
  * and open the template in the editor.
  */
 package messaging;
@@ -25,6 +25,16 @@ public class ACLMessageTools {
 
     public static final String _NULLVAL = "";
 
+    public static String getAllReceivers(ACLMessage msg) {
+        String res="";
+        for (Iterator iterator = msg.getAllReceiver();
+                iterator.hasNext();) {
+            AID r = (AID) iterator.next();
+            res += r.getLocalName() + " ";
+        }
+        
+        return res;
+    }
     public static JsonObject getJsonContentACLM(ACLMessage m) {
         JsonObject res = new JsonObject();
         if (isJsonACLM(m)) {
@@ -59,14 +69,14 @@ public class ACLMessageTools {
 
     public static JsonObject toJsonACLM(ACLMessage msg) {
         JsonObject res = null;
-        String receivers = "";
+        String receivers = getAllReceivers(msg);
 
 //        ArrayList <AID> receivers = msg.getAllReceiver()
-        for (Iterator iterator = msg.getAllReceiver();
-                iterator.hasNext();) {
-            AID r = (AID) iterator.next();
-            receivers += r.getLocalName() + " ";
-        }
+//        for (Iterator iterator = msg.getAllReceiver();
+//                iterator.hasNext();) {
+//            AID r = (AID) iterator.next();
+//            receivers += r.getLocalName() + " ";
+//        }
         res = new JsonObject().add(
                 "performative", ACLMessage.getPerformative(msg.getPerformative())).add(
                 "sender", (msg.getSender() == null ? _NULLVAL : msg.getSender().getLocalName())).add(
@@ -86,31 +96,31 @@ public class ACLMessageTools {
     }
 
     public static String fancyWriteACLM(ACLMessage original, boolean simple) {
-        String res = "";
+        String res = "", sep="|";
         ACLMessage msg = (ACLMessage) original.clone();
-        res += (msg.getSender() == null ? _NULLVAL : "|SND:" + msg.getSender().getLocalName());
+        res += (msg.getSender() == null ? _NULLVAL : "||SND"+sep+ msg.getSender().getLocalName());
         Iterator it;
         it = msg.getAllReceiver();
-        res += "|RCV:";
+        res += "||RCV"+sep;
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "|CNT:" + (isJsonACLM(msg) ? trimString(msg.getContent(), 3000) : msg.getContent()) + "|";
+        res = res + "||CNT"+sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) + "||";
         if (!simple) {
             it = msg.getAllReplyTo();
-            res = "|PFM:" + ACLMessage.getPerformative(msg.getPerformative())+res;
-            res += "RPT:";
+            res = "||PFM"+sep + ACLMessage.getPerformative(msg.getPerformative())+res;
+            res += "RPT"+sep;
             while (it.hasNext()) {
                 res += ((AID) it.next()).getLocalName() + " ";
             }
-            res += (msg.getProtocol() == null ? _NULLVAL : "|PRT:" + msg.getProtocol())
-                    + (msg.getConversationId() == null ? _NULLVAL : "|CNV:" + msg.getConversationId())
-                    + (msg.getEncoding() == null ? _NULLVAL : "|ENC:" + msg.getEncoding())
-                    + (msg.getReplyWith() == null ? _NULLVAL : "|RPW:" + msg.getReplyWith())
-                    + (msg.getInReplyTo() == null ? _NULLVAL : "|IRT:" + msg.getInReplyTo())
-                    + (msg.getLanguage() == null ? _NULLVAL : "|LAN:" + trimString(msg.getLanguage(), 10))
-                    + (msg.getOntology() == null ? _NULLVAL : "|ONT:" + msg.getOntology());
-            res +="|";
+            res += (msg.getProtocol() == null ? _NULLVAL : "||PRT"+sep + msg.getProtocol())
+                    + (msg.getConversationId() == null ? _NULLVAL : "||CNV"+sep + msg.getConversationId())
+                    + (msg.getEncoding() == null ? _NULLVAL : "||ENC"+sep + msg.getEncoding())
+                    + (msg.getReplyWith() == null ? _NULLVAL : "||RPW"+sep + msg.getReplyWith())
+                    + (msg.getInReplyTo() == null ? _NULLVAL : "||IRT"+sep + msg.getInReplyTo())
+                    + (msg.getLanguage() == null ? _NULLVAL : "||LAN"+sep + trimString(msg.getLanguage(), 10))
+                    + (msg.getOntology() == null ? _NULLVAL : "||ONT"+sep + msg.getOntology());
+            res +="||";
         }
         return res;
     }

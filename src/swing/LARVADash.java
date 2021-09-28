@@ -145,17 +145,6 @@ public class LARVADash {
         this.showsplash = !f.exists();
 
         this.whenExecute(s -> this.doExecute(s));
-        initGUI();
-        preLayout();
-        this.fDashboard.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                disableDashBoard();
-            }
-        });
-
-//        smAllowAgent.release(1);
-//        smContinue.release(1);
-//        smStart.release(1);
     }
 
     public boolean preProcessACLM(ACLMessage msg) {
@@ -165,33 +154,33 @@ public class LARVADash {
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
             enablesimulation = ocontent.getBoolean("simulator");
-            bGame.setEnabled(enablesimulation);
-            try {
-                smStart.acquire();
-            } catch (Exception ex) {
-            }
-
-            SwingTools.doSwingWait(() -> {
-                fullLayout();
-            });
-            setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
-            res = true;
-        }
-        if (msg.getContent().contains("perceptions")) {
-            if (!exitdashboard) {
+            if (isActivated()) {
+                bGame.setEnabled(enablesimulation);
                 try {
                     smStart.acquire();
                 } catch (Exception ex) {
                 }
-                dashInbox = msg;
-                this.feedPerception(msg.getContent());
+
+                SwingTools.doSwingWait(() -> {
+                    fullLayout();
+                });
+                setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
             }
+            res = true;
+        }
+        if (msg.getContent().contains("perceptions")) {
+            if (isActivated()) {
+                if (!exitdashboard) {
+                    try {
+                        smStart.acquire();
+                    } catch (Exception ex) {
+                    }
+                    dashInbox = msg;
+                }
+            }
+            this.feedPerception(msg.getContent());
             res = false;
         }
-//        try {
-//            smReadyFX.acquire();
-//        } catch (Exception ex) {
-//        }
         return res;
     }
 
@@ -238,11 +227,12 @@ public class LARVADash {
         if (!perception.equals(sperception)) {
             feedPerceptionLocal(perception);
             sperception = perception;
-
-            try {
-                smAllowAgent.acquire(1);
-                smContinue.acquire(1);
-            } catch (Exception ex) {
+            if (isActivated()) {
+                try {
+                    smAllowAgent.acquire(1);
+                    smContinue.acquire(1);
+                } catch (Exception ex) {
+                }
             }
         }
     }
@@ -250,8 +240,14 @@ public class LARVADash {
     protected void feedPerceptionLocal(String perception) {
         try {
             lastPerception.feedPerception(perception);
-//        System.err.println("\n\n" + perception + "\n\n");
+            String [] trace = lastPerception.getTrace();
+            if (trace != null && iIter > trace.length && trace.length>0) {
+                this.addAction(trace[trace.length-1]);
+            }
             name = lastPerception.getName();
+            if (!isActivated()) {
+                return;
+            }
             if (lastPerception.hasSensor("GPS")) {
                 gps = lastPerception.getGPS();
                 lastx = (int) gps[0];
@@ -434,7 +430,7 @@ public class LARVADash {
         smStart.release(2);
     }
 
-    protected void initGUI() {
+    public void initGUI() {
         // Define panels
         fDashboard = new LARVAFrame(e -> this.DashListener(e));
         pMain = new JPanel();
@@ -598,6 +594,14 @@ public class LARVADash {
         pal.addWayPoint(100, new Color(0, 10, 0));
         pal.fillWayPoints(256);
         Palettes.put("Lidar", pal);
+
+        preLayout();
+        this.fDashboard.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                disableDashBoard();
+            }
+        });
+
 
     }
 
@@ -1050,7 +1054,7 @@ public class LARVADash {
         }
     }
 
-    public void addAction(String action) {
+    private void addAction(String action) {
         tpLog.setBackground(cStatus);
         StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet aset1 = sc.addAttribute(SimpleAttributeSet.EMPTY,
@@ -1637,7 +1641,7 @@ public class LARVADash {
         if (mySentence.isNext("INFORM")) {
             doReadPerceptions();
             //
-            this.printSensors();
+            //this.printSensors();
         } else {
             doReadPerceptions();
             JOptionPane.showMessageDialog(null,
@@ -1666,8 +1670,8 @@ public class LARVADash {
     public void setActivated(boolean activated) {
         this.activated = activated;
     }
-    
-    private void printSensors() {
+
+    public String printSensors() {
         String message = "";
         double reading;
         double row[];
@@ -1747,7 +1751,7 @@ public class LARVADash {
             }
             message += "\n";
         }
-        System.err.println(message);
+        return message;
     }
 
 }
