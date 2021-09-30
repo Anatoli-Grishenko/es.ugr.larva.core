@@ -93,6 +93,7 @@ public class LARVABoot {
     protected Semaphore sShutdown, sStart;
     protected Ole oleConfig;
     protected OleDialog Settings;
+    private String markdowns = "*_`#~";
 
     /**
      * Main constructor. Initializes the variables and prepare the list of task
@@ -432,6 +433,8 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot launchAgent(String name, Class c) {
+        /// Issue #2 https://github.com/Anatoli-Grishenko/es.ugr.larva.core/issues/2
+        name=this.clearMarkDowns(name);
         Info("Launching agent " + name);
         if (!isCompleted("CONNECT")) {
             Abort("Please configure the connection first");
@@ -762,5 +765,15 @@ public class LARVABoot {
     protected void setDebug(boolean _debug) {
         this._debug = _debug;
     }
-
+    protected String clearMarkDowns(String original) {
+        String res= "";
+        for (int i=0; i<original.length(); i++) {
+            if (markdowns.contains(""+original.charAt(i))) {
+                res+=".";
+            }
+            else 
+                res += ""+original.charAt(i);
+        }
+        return res;
+    }
 }
