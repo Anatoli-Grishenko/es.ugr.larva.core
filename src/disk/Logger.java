@@ -172,7 +172,7 @@ public class Logger {
     }
 
     protected JsonObject addRecord(JsonObject o) {
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(Calendar.getInstance().getTime());
+        String timeStamp = TimeHandler.Now();//new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS").format(Calendar.getInstance().getTime());
         JsonObject json = new JsonObject(), record = new JsonObject();
         if (!_owner.equals("")) {
             record.add("agent", _owner);
@@ -202,7 +202,8 @@ public class Logger {
 
     public JsonObject logMessage(String message) {
         Output(message);
-        return addRecord(new JsonObject().add("info", message));
+        JsonObject jso = new JsonObject().add("info", message);
+        return addRecord(jso);
     }
 
     public JsonObject logMessage(JsonObject details) {

@@ -113,12 +113,12 @@ public class SequenceDiagram {
 
     public void printArrow(Sequence s) {
         int from = indexPlayer(s.sender), to = indexPlayer(s.receiver);
-        String head = ">", tail = "*";
+        String head = ">", tail = "O";
         if (from > to) {
             int aux = from;
             from = to;
             to = aux;
-            head = "*";
+            head = "O";
             tail = "<";
         }
         for (int i = 0; i < players.size(); i++) {

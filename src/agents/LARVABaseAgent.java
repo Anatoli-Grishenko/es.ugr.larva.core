@@ -467,6 +467,10 @@ public class LARVABaseAgent extends Agent {
         this.checkedin = checkedin;
     }
 
+    /**
+     * It gives the number of consecutive executions of the method Execute()
+     * @return The number of iterations of the agent
+     */
     public int getNCycles() {
         return ncycles;
     }

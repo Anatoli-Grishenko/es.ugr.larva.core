@@ -17,8 +17,8 @@ import java.time.temporal.ChronoUnit;
  */
 public class TimeHandler {
 
-    public static final DateTimeFormatter inputdateformat = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss"),
-            outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("dd/MM/uuuu_kk:mm:ss"),
+    public static final DateTimeFormatter inputdateformat = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss:SSS"),
+            outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("dd/MM/uuuu kk:mm:ss:SSS"),
             outputolddateformat = inputdateformat;
     public static final TimeHandler _baseTime=new TimeHandler("2020-01-01 00:00:00");
     public static String Now(){return new TimeHandler().toString();}
