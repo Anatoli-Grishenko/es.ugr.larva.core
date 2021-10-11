@@ -4,7 +4,6 @@
 package appboot;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import data.Ole;
 import data.OleList;
 import data.OleRecord;
@@ -25,7 +24,6 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;

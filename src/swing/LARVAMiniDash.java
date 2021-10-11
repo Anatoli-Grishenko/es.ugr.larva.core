@@ -72,7 +72,7 @@ import static world.liveBot.MAXFLIGHT;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class LARVADash {
+public class LARVAMiniDash {
 
     public static enum Layout {
         COMPACT, EXTENDED, DASHBOARD
@@ -89,11 +89,11 @@ public class LARVADash {
     protected MyPlainButton bRecharge, bRescue, bUp, bDown, bLeft, bRight, bForward, bCapture;
     protected JTextArea taLog, taStatuses;
     protected JTextPane tpLog;
-    protected int iLeft = 400, iRight = 650, iX, iY, iW, iH, iButton = 48,
+    protected int iLeft = 400, iRightW = 650, iRightH=250,iX, iY, iW, iH, iButton = 48,
             iLog = 350, iStatus = 250, iset = 0, iIter = 0, iTrace=0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
             iFlightw, iFlighth, worldw, worldh, iPalette, lastx = -1, lasty = -1;
     protected JCheckBox cbShowSplash;
-    protected MyMapPalPane mpMap, mpVisual, mpLidar, mpThermal;
+
     protected Layout myLayout;
     protected double dZoom = 3.0;
     protected ImageIcon map;
@@ -128,8 +128,8 @@ public class LARVADash {
     boolean simulation = false, showsplash, enablesimulation, fulllayout = false, exitdashboard = false, activated = false;
     String splashlock = "./dont.show";
 
-    public LARVADash( Agent a) {
-        myLayout = Layout.DASHBOARD;
+    public LARVAMiniDash(Layout layout, Agent a) {
+        myLayout = layout;
         lastPerception = new SensorDecoder();
         Palettes = new HashMap();
         myAgent = a;
@@ -202,7 +202,6 @@ public class LARVADash {
                 }
             }
         }
-        mpMap.setMap(mMap, p);
         OleFile ofile = new OleFile();
         ofile.set(olefile);
         this.fDashboard.setTitle("| MAP: " + ofile.getFileName() + "|");
@@ -253,9 +252,7 @@ public class LARVADash {
                 gps = lastPerception.getGPS();
                 lastx = (int) gps[0];
                 lasty = (int) gps[1];
-                if (lastx >= 0) {
-                    mpMap.setTrail(lastx, lasty, this.getAltitude());
-                }
+
                 lastx = (int) gps[0];
                 lasty = (int) gps[1];
                 int shft = 30;
@@ -289,88 +286,6 @@ public class LARVADash {
             if (getNsteps() == 1) {
                 this.fDashboard.setTitle("| Session: " + this.lastPerception.getSession()
                         + " |Agent: " + name + " " + fDashboard.getTitle());
-            }
-            int[][] sensor;
-            int rangex, rangey;
-            Palette palette;
-            if (lastPerception.hasSensor("VISUAL") || lastPerception.hasSensor("VISUALHQ")) {
-                iVisual = lastPerception.getVisualData();
-                sensor = iVisual;
-                rangex = sensor[0].length;
-                rangey = sensor.length;
-                palette = getPalette("Visual");
-                if (cVisual
-                        == null) {
-                    cVisual = new Color[rangex][rangey];
-                    for (int i = 0; i < rangex; i++) {
-                        for (int j = 0; j < rangey; j++) {
-                            cVisual[i][j] = palette.getColor(0);
-                        }
-                    }
-                    mpVisual.setMap(cVisual, palette);
-                }
-                for (int i = 0;
-                        i < rangex;
-                        i++) {
-                    for (int j = 0; j < rangey; j++) {
-                        if (sensor[j][i] > lastPerception.getMaxlevel()) {
-                            cVisual[i][j] = cBad;
-                        } else {
-                            cVisual[i][j] = palette.getColor(sensor[j][i]);
-                        }
-                    }
-                }
-            }
-            if (lastPerception.hasSensor("LIDAR") || lastPerception.hasSensor("LIDARHQ")) {
-                sensor = lastPerception.getLidarData();
-                rangex = sensor[0].length;
-                rangey = sensor.length;
-                palette = getPalette("Lidar");
-                if (cLidar
-                        == null) {
-                    cLidar = new Color[rangex][rangey];
-                    for (int i = 0; i < rangex; i++) {
-                        for (int j = 0; j < rangey; j++) {
-                            cLidar[i][j] = palette.getColor(0);
-                        }
-                    }
-                    mpLidar.setMap(cLidar, palette);
-                }
-                for (int i = 0;
-                        i < rangex;
-                        i++) {
-                    for (int j = 0; j < rangey; j++) {
-                        if (sensor[j][i] < 0) {
-                            cLidar[i][j] = cBad;
-                        } else {
-                            cLidar[i][j] = palette.getColor(sensor[j][i]);
-                        }
-                    }
-                }
-            }
-            if (lastPerception.hasSensor("THERMAL") || lastPerception.hasSensor("THERMALHQ")) {
-                sensor = lastPerception.getThermalData();
-                iThermal = lastPerception.getThermalData();
-                if (sensor.length
-                        > 0) {
-                    rangex = sensor[0].length;
-                    rangey = sensor.length;
-                    palette = getPalette("Thermal");
-                    if (cThermal == null) {
-                        cThermal = new Color[rangex][rangey];
-                        for (int i = 0; i < rangex; i++) {
-                            for (int j = 0; j < rangey; j++) {
-                                cThermal[i][j] = palette.getColor(0);
-                            }
-                        }
-                        mpThermal.setMap(cThermal, palette);
-                    }
-                    for (int i = 0; i < rangex; i++) {
-                        for (int j = 0; j < rangey; j++) {
-                            cThermal[i][j] = palette.getColor(sensor[j][i]);
-                        }
-                    }
-                }
             }
 
             addStatus(lastPerception.getStatus());
@@ -460,20 +375,6 @@ public class LARVADash {
         dpMap = new MyDrawPane(null);
         dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         dpMap.setBackground(cBackgr);
-
-        mpMap = new MyMapPalPane(null);
-        mpMap.addRuler();
-        mpMap.addTrail();
-//        mpMap.addShadow(32);
-        mpVisual = new MyMapPalPane(null);
-        mpVisual.addRuler();
-        mpVisual.addHotSpot();
-        mpLidar = new MyMapPalPane(null);
-        mpLidar.addRuler();
-        mpLidar.addHotSpot();
-        mpThermal = new MyMapPalPane(null);
-        mpThermal.addRuler();
-        mpThermal.addHotSpot();
 
         bZoomIn = new MyPlainButton("ZoomIn", "zoom_in.png", this.fDashboard);
         bZoomOut = new MyPlainButton("ZoomOut", "zoom_out.png", fDashboard);
@@ -614,25 +515,26 @@ public class LARVADash {
                 // Define sizes
                 iLeft = 450;
                 iLog = iLeft / 3;
-                iRight = 600;
+                iRightW = 600;
+                this.iRightH=150;
                 iButton = 64;
                 iStatus = iLeft;
-                iFlightw = iRight - factor;
+                iFlightw = iRightW - factor;
                 iFlighth = 125;
 
-                pMain.setPreferredSize(new Dimension(iLeft + iRight + iLog, iLeft + iButton));
+                pMain.setPreferredSize(new Dimension(iRightW + iLog, iRightH + iButton));
                 pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
 
                 pLeft.setPreferredSize(new Dimension(iLeft, iLeft));
                 pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
 
-                pRight.setPreferredSize(new Dimension(iRight, iLeft));
+                pRight.setPreferredSize(new Dimension(iRightW, iRightH));
                 pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
 
-                pMiddle.setPreferredSize(pMain.getPreferredSize());//new Dimension(iLeft + iRight + iLog, iLeft));
+                pMiddle.setPreferredSize(pMain.getPreferredSize());//new Dimension(iLeft + iRightW + iLog, iLeft));
                 pMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, iset, iset));
 
-                pButton.setPreferredSize(new Dimension(pMain.getPreferredSize().width, iButton)); //iLeft + iRight + iLog, iButton));
+                pButton.setPreferredSize(new Dimension(pMain.getPreferredSize().width, iButton)); //iLeft + iRightW + iLog, iButton));
                 pButton.setLayout(new FlowLayout(FlowLayout.CENTER));
 
                 // Mount panels
@@ -645,7 +547,7 @@ public class LARVADash {
                 cbShowSplash.setText("Don't show this again");
                 pButton.add(this.cbShowSplash);
 
-                pMiddle.add(pLeft);
+//                pMiddle.add(pLeft);
                 pMiddle.add(pRight);
 
                 pMain.add(pMiddle);
@@ -658,59 +560,13 @@ public class LARVADash {
 
             case COMPACT:
             default:
-                // Define sizes
-//                family = "phos";
-//                iLeft = 300;
-//                iRight = 300;
-//                iButton = 64;
-//                iStatus = 200;
-//                iLog = iLeft + iButton;
-//                iFlightw = iLeft + iRight - factor;
-//                iFlighth = 101;
-//
-//                pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
-//
-//                pLeft.setPreferredSize(new Dimension(iLeft, iLeft + iButton));
-//                pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
-//
-//                pMiddle.setPreferredSize(new Dimension(iLeft + iRight, iLeft + iButton));
-//                pMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, iset, iset));
-//
-//                dpMap.setPreferredSize(new Dimension(iLeft, iLeft));
-//
-//                pButton.setPreferredSize(new Dimension(iLeft, iButton));
-//                pButton.setLayout(new FlowLayout(FlowLayout.LEFT));
-//
-//                dpMyStatus.setPreferredSize(new Dimension(iLeft + iRight, iStatus));
-//                dpMyStatus.setLayout(null);
-//
-//                tpLog.setPreferredSize(new Dimension(iRight, iLog));
-//
-//                spLog = new JScrollPane(tpLog);
-//                spLog.setPreferredSize(new Dimension(iRight, iLog));
-//
-//                // Mount panels
-//                pButton.add(bPlay);
-//                pButton.add(bGame);
-//
-//                pLeft.add(dpMap);
-//                pLeft.add(pButton);
-//
-//                pMiddle.add(pLeft);
-//                pMiddle.add(spLog);
-//
-//                pMain.add(pMiddle);
-//                pMain.add(dpMyStatus);
-//                fDashboard.add(pMain);
-//                fDashboard.pack();
-//                fDashboard.show();
-                break;
         }
         if (showsplash) {
-//            this.pLeft.getGraphics().drawImage(SwingTools.toIcon("./images/black/" + splash1 + ".png", iStatus, iStatus).getImage(), iRight / 2 - iStatus / 2, 0, null);
-            this.pLeft.getGraphics().drawImage(SwingTools.toIcon("./images/neg/neg-logougr.png", iLeft, iLeft).getImage(), 0, 0, null);
+//            this.pLeft.getGraphics().drawImage(SwingTools.toIcon("./images/black/" + splash1 + ".png", iStatus, iStatus).getImage(), iRightW / 2 - iStatus / 2, 0, null);
+//            this.pLeft.getGraphics().drawImage(SwingTools.toIcon("./images/neg/neg-logougr.png", iLeft, iLeft).getImage(), 0, 0, null);
             this.fDashboard.setTitle("XUI: eXternal User Interface v 1.0");
-            this.pRight.getGraphics().drawImage(SwingTools.toIcon("./images/black/" + splash2 + ".png", iLeft, iLeft).getImage(), 0, 0, null);
+            this.pRight.getGraphics().drawImage(SwingTools.toIcon("./images/neg/neg-logougr.png", iRightH, iRightH).getImage(), 200, 0, null);
+            this.pRight.getGraphics().drawImage(SwingTools.toIcon("./images/black/" + splash2 + ".png", iRightH, iRightH).getImage(), 200+iRightH, 0, null);
         } else {
             goReal();
             fullLayout();
@@ -734,25 +590,17 @@ public class LARVADash {
                 }
                 pLeft.removeAll();
                 pRight.removeAll();
-                dpMyStatus.setPreferredSize(new Dimension(iRight, iStatus));
+                dpMyStatus.setPreferredSize(new Dimension(iRightW, iRightH));
                 dpMyStatus.setLayout(null);
-                mpVisual.setBounds(10, 150, 185, 150);
-                dpMyStatus.add(mpVisual);
-                mpLidar.setBounds(210, 150, 185, 150);
-                dpMyStatus.add(mpLidar);
-                mpThermal.setBounds(410, 150, 185, 150);
-                dpMyStatus.add(mpThermal);
 
                 // Mount panels
-                spLog.setPreferredSize(new Dimension(iLog, iLeft));
+                spLog.setPreferredSize(new Dimension(iLog, iRightH));
 
-                dpMap.add(mpMap);
                 pLeft.add(dpMap);
 
-                mpMap.setBounds(0, 0, iLeft - 4, iLeft - 4);///////
                 pRight.add(dpMyStatus);
 
-                pMiddle.add(pLeft);
+//                pMiddle.add(pLeft);
                 pMiddle.add(pRight);
                 pMiddle.add(spLog);
 
@@ -765,52 +613,6 @@ public class LARVADash {
 
             case COMPACT:
             default:
-                // Define sizes
-//                family = "phos";
-//                iLeft = 300;
-//                iRight = 300;
-//                iButton = 64;
-//                iStatus = 200;
-//                iLog = iLeft + iButton;
-//                iFlightw = iLeft + iRight - factor;
-//                iFlighth = 101;
-//
-//                pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
-//
-//                pLeft.setPreferredSize(new Dimension(iLeft, iLeft + iButton));
-//                pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
-//
-//                pMiddle.setPreferredSize(new Dimension(iLeft + iRight, iLeft + iButton));
-//                pMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, iset, iset));
-//
-//                dpMap.setPreferredSize(new Dimension(iLeft, iLeft));
-//
-//                pButton.setPreferredSize(new Dimension(iLeft, iButton));
-//                pButton.setLayout(new FlowLayout(FlowLayout.LEFT));
-//
-//                dpMyStatus.setPreferredSize(new Dimension(iLeft + iRight, iStatus));
-//                dpMyStatus.setLayout(null);
-//
-//                tpLog.setPreferredSize(new Dimension(iRight, iLog));
-//
-//                spLog = new JScrollPane(tpLog);
-//                spLog.setPreferredSize(new Dimension(iRight, iLog));
-//
-//                // Mount panels
-//                pButton.add(bPlay);
-//                pButton.add(bGame);
-//
-//                pLeft.add(dpMap);
-//                pLeft.add(pButton);
-//
-//                pMiddle.add(pLeft);
-//                pMiddle.add(spLog);
-//
-//                pMain.add(pMiddle);
-//                pMain.add(dpMyStatus);
-//                fDashboard.add(pMain);
-//                fDashboard.pack();
-//                fDashboard.show();
                 break;
         }
         refresh();
@@ -825,48 +627,39 @@ public class LARVADash {
                 // Define sizes
                 iLeft = 450;
                 iLog = iLeft / 3;
-                iRight = 600;
+                iRightW = 600;
                 iButton = 64;
                 iStatus = iLeft;
-                iFlightw = iRight - factor;
+                iFlightw = iRightW - factor;
                 iFlighth = 100;
 
-                pMain.setPreferredSize(new Dimension(iLeft + iRight + iLog, iLeft + iButton));
+                pMain.setPreferredSize(new Dimension(iLeft + iRightW + iLog, iRightH+ iButton));
                 pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
 
                 pLeft.setPreferredSize(new Dimension(iLeft, iLeft));
                 pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
 
-                pRight.setPreferredSize(new Dimension(iRight, iLeft));
+                pRight.setPreferredSize(new Dimension(iRightW, iRightH));
                 pRight.setLayout(new BoxLayout(pRight, BoxLayout.Y_AXIS));
 
-                pMiddle.setPreferredSize(pMain.getPreferredSize());//new Dimension(iLeft + iRight + iLog, iLeft));
+                pMiddle.setPreferredSize(pMain.getPreferredSize());//new Dimension(iLeft + iRightW + iLog, iLeft));
                 pMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, iset, iset));
 
-                pButton.setPreferredSize(new Dimension(pMain.getPreferredSize().width, iButton)); //iLeft + iRight + iLog, iButton));
+                pButton.setPreferredSize(new Dimension(pMain.getPreferredSize().width, iButton)); //iLeft + iRightW + iLog, iButton));
                 pButton.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-                dpMyStatus.setPreferredSize(new Dimension(iRight, iStatus));
+                dpMyStatus.setPreferredSize(new Dimension(iRightW, iRightH));
                 dpMyStatus.setLayout(null);
-                mpVisual.setBounds(10, 150, 185, 150);
-                dpMyStatus.add(mpVisual);
-                mpLidar.setBounds(210, 150, 185, 150);
-                dpMyStatus.add(mpLidar);
-                mpThermal.setBounds(410, 150, 185, 150);
-                dpMyStatus.add(mpThermal);
 
                 // Mount panels
-                spLog.setPreferredSize(new Dimension(iLog, iLeft));
+                //spLog.setPreferredSize(new Dimension(iLog, iLeft));
 
                 pButton.add(new JLabel(SwingTools.toIcon("./images/gray/gray-TieFighter.png", iButton, iButton)));
 
                 pButton.add(bAgent);
                 pButton.add(bGame);
 
-                dpMap.add(mpMap);
-                pLeft.add(dpMap);
 
-                mpMap.setBounds(0, 0, iLeft - 2, iLeft - 2);
                 pRight.add(dpMyStatus);
 
                 pMiddle.add(pLeft);
@@ -882,52 +675,6 @@ public class LARVADash {
 
             case COMPACT:
             default:
-                // Define sizes
-                family = "phos";
-                iLeft = 300;
-                iRight = 300;
-                iButton = 64;
-                iStatus = 200;
-                iLog = iLeft + iButton;
-                iFlightw = iLeft + iRight - factor;
-                iFlighth = 101;
-
-                pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
-
-                pLeft.setPreferredSize(new Dimension(iLeft, iLeft + iButton));
-                pLeft.setLayout(new BoxLayout(pLeft, BoxLayout.Y_AXIS));
-
-                pMiddle.setPreferredSize(new Dimension(iLeft + iRight, iLeft + iButton));
-                pMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, iset, iset));
-
-                dpMap.setPreferredSize(new Dimension(iLeft, iLeft));
-
-                pButton.setPreferredSize(new Dimension(iLeft, iButton));
-                pButton.setLayout(new FlowLayout(FlowLayout.LEFT));
-
-                dpMyStatus.setPreferredSize(new Dimension(iLeft + iRight, iStatus));
-                dpMyStatus.setLayout(null);
-
-                tpLog.setPreferredSize(new Dimension(iRight, iLog));
-
-                spLog = new JScrollPane(tpLog);
-                spLog.setPreferredSize(new Dimension(iRight, iLog));
-
-                // Mount panels
-                pButton.add(bPlay);
-                pButton.add(bGame);
-
-                pLeft.add(dpMap);
-                pLeft.add(pButton);
-
-                pMiddle.add(pLeft);
-                pMiddle.add(spLog);
-
-                pMain.add(pMiddle);
-                pMain.add(dpMyStatus);
-                fDashboard.add(pMain);
-                fDashboard.pack();
-                fDashboard.show();
                 break;
         }
 
@@ -984,7 +731,7 @@ public class LARVADash {
             return;
         }
 
-        g.drawImage(hFlight.getMap(), null, x, y);
+        //g.drawImage(hFlight.getMap(), null, x, y);
     }
 
     protected void showMyStatus(Graphics2D g) {
@@ -1046,9 +793,6 @@ public class LARVADash {
                 this.showAngularPB(g, 4, 1, 4);
                 this.showDistancePB(g, 5, 1, 4);
 
-                showMiniVisual(g, 1, 6);
-                showMiniLidar(g, 2, 6);
-                showMiniThermal(g, 3, 6);
                 this.showTerrain(g, 0, 13);
             } catch (Exception ex) {
 
@@ -1426,60 +1170,6 @@ public class LARVADash {
         g.drawString(String.format(" %03d s", getTimerSecs()), x + factor, y + stringskip);
     }
 
-    protected void showMiniVisual(Graphics2D g, int px, int py) {
-        if (!lastPerception.isReady() || cVisual == null) {
-            return;
-        }
-        if (!lastPerception.hasSensor(sensors.VISUAL.name()) && !lastPerception.hasSensor(sensors.VISUALHQ.name())) {
-            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), px, py, null);
-            return;
-        }
-        for (int y = 0; y < cVisual.length; y++) {
-            for (int x = 0; x < cVisual[0].length; x++) {
-                mpVisual.setColor(x, y, cVisual[x][y]);
-            }
-        }
-
-        mpVisual.validate();
-        mpVisual.repaint();
-    }
-
-    protected void showMiniLidar(Graphics2D g, int px, int py) {
-        if (!lastPerception.isReady() || cLidar == null) {
-            return;
-        }
-
-        if (!lastPerception.hasSensor(sensors.LIDAR.name()) && !lastPerception.hasSensor(sensors.LIDARHQ.name())) {
-            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), px, py, null);
-            return;
-        }
-        for (int y = 0; y < cLidar.length; y++) {
-            for (int x = 0; x < cLidar[0].length; x++) {
-                mpLidar.setColor(x, y, cLidar[x][y]);
-            }
-        }
-
-        mpLidar.validate();
-        mpLidar.repaint();
-    }
-
-    protected void showMiniThermal(Graphics2D g, int px, int py) {
-        if (!lastPerception.isReady() || cThermal == null) {
-            return;
-        }
-        if (!lastPerception.hasSensor(sensors.THERMAL.name()) && !lastPerception.hasSensor(sensors.THERMALHQ.name())) {
-            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), px, py, null);
-            return;
-        }
-        for (int y = 0; y < cThermal.length; y++) {
-            for (int x = 0; x < cThermal[0].length; x++) {
-                mpThermal.setColor(x, y, cThermal[x][y]);
-            }
-        }
-
-        mpThermal.validate();
-        mpThermal.repaint();
-    }
 
     protected double[] fromJsonArray(JsonArray jsa) {
         double res[] = new double[jsa.size()];

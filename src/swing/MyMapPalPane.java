@@ -204,6 +204,7 @@ public class MyMapPalPane extends MyDrawPane {
     }
 
     public MyMapPalPane setMap(Color m[][], Palette p) {
+        this.removeAll();
         mapwidth = (m[0].length);
         mapheight = (m.length);
         map = new Color[getMapWidth()][this.getMapHeight()];
@@ -230,12 +231,6 @@ public class MyMapPalPane extends MyDrawPane {
         paintMap((Graphics2D) dpMap.getGraphics());
     }
 
-//    @Override
-//    public void paintComponent(Graphics g) {
-////        super.paintComponent(g);
-////        Graphics2D g2D = (Graphics2D) g;
-//        paintMap(((Graphics2D)this.dpMap.getGraphics()));
-//    }
     protected void paintPalette(Graphics2D g) {
         int ph = 10, h = (int) this.getBounds().getHeight(),
                 pt = (2 * palw) / 3, n = (h - 2 * ph) / ph;
