@@ -18,7 +18,7 @@ import tools.TimeHandler;
 
 /**
  *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+ * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class SequenceDiagram {
 

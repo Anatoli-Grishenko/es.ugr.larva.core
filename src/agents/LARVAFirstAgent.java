@@ -588,7 +588,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     /**
      * It activates the SWING dashboard
      *
-     * @param l the type of dashboard, initially only DASHBOARD is allowed
      */
     public void doActivateLARVADash() {
         myDashboard.setActivated(true);

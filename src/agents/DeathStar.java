@@ -15,7 +15,7 @@ import swing.LARVAMiniDash;
 
 /**
  *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+ * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class DeathStar extends LARVAFirstAgent {
 
