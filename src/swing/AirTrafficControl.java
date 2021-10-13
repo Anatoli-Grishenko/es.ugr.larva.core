@@ -156,7 +156,7 @@ public class AirTrafficControl extends MyDrawPane {
 
     public void addTrail(String ID, int x, int y, int z) {
         if (!trails.keySet().contains(ID)) {
-            trails.put(ID, new ATC_Trail(ID, colors[trails.keySet().size()]));
+            trails.put(ID, new ATC_Trail(ID, colors[0])); //colors[trails.keySet().size()]));
         }
         trails.get(ID).pushTrail(new Point(x, y, z));
         redecorate = false;
@@ -279,15 +279,19 @@ public class AirTrafficControl extends MyDrawPane {
 
     protected void paintTrailPos(Graphics2D g, String ID, int pos) {
         Point p = trails.get(ID).getPoint(pos), p2;
+        int diam1=10,diam2=5;
+            g.setColor(trails.get(ID).c);
         if (pos == 0) {
-            paintPoint(g, p.clone().plus(new Point(-1, 0)), trails.get(ID).c);
-            paintPoint(g, p.clone().plus(new Point(1, 0)), trails.get(ID).c);
-            paintPoint(g, p.clone().plus(new Point(0, 1)), trails.get(ID).c);
-            paintPoint(g, p.clone().plus(new Point(0, -1)), trails.get(ID).c);
-            p2 = p.clone().plus(new Point(0,-1));
-            g.drawString(ID, offsetimg + zoom * (int)p2.getX(), offsetimg + zoom * (int)p2.getY());
+//            paintPoint(g, p.clone().plus(new Point(-1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(0, 1)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(0, -1)), trails.get(ID).c);
+
+            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam1/2, diam1, diam1);
+//            p2 = p.clone().plus(new Point(0,-1));
+            g.drawString(ID, offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY());
         } else {
-            paintPoint(g, p, trails.get(ID).c);
+            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam2/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam2/2, diam2, diam2);
         }
 
     }

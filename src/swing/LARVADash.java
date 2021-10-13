@@ -6,13 +6,9 @@ https://docs.oracle.com/javase/tutorial/uiswing/layout/visual.html
  */
 package swing;
 
-import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
 import data.Ole;
 import data.OleFile;
-import data.Transform;
 import glossary.sensors;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
@@ -22,24 +18,16 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Line2D;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.Action;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -50,7 +38,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
-import static javax.swing.SwingConstants.VERTICAL;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -64,7 +51,6 @@ import messaging.Sentence;
 import tools.TimeHandler;
 import static world.Perceptor.NULLREAD;
 import world.SensorDecoder;
-import static world.SensorDecoder.cBad;
 import static world.liveBot.MAXENERGY;
 import static world.liveBot.MAXFLIGHT;
 
@@ -90,7 +76,7 @@ public class LARVADash {
     protected JTextArea taLog, taStatuses;
     protected JTextPane tpLog;
     protected int iLeft = 400, iRight = 650, iX, iY, iW, iH, iButton = 48,
-            iLog = 350, iStatus = 250, iset = 0, iIter = 0, iTrace=0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
+            iLog = 350, iStatus = 250, iset = 0, iIter = 0, iTrace = 0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
             iFlightw, iFlighth, worldw, worldh, iPalette, lastx = -1, lasty = -1;
     protected JCheckBox cbShowSplash;
     protected MyMapPalPane mpMap, mpVisual, mpLidar, mpThermal;
@@ -128,7 +114,7 @@ public class LARVADash {
     boolean simulation = false, showsplash, enablesimulation, fulllayout = false, exitdashboard = false, activated = false;
     String splashlock = "./dont.show";
 
-    public LARVADash( Agent a) {
+    public LARVADash(Agent a) {
         myLayout = Layout.DASHBOARD;
         lastPerception = new SensorDecoder();
         Palettes = new HashMap();
@@ -164,8 +150,8 @@ public class LARVADash {
                 SwingTools.doSwingWait(() -> {
                     fullLayout();
                 });
-                setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
             }
+            setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
             res = true;
         }
         if (msg.getContent().contains("perceptions")) {
@@ -188,24 +174,34 @@ public class LARVADash {
         this.lastPerception.setWorldMap(olefile, maxlevel);
         iMaxLevel = maxlevel;
         this.palMap = spalette;
-        Palette p = this.getPalette(this.palMap);
+        Palette p;
 
         worldw = lastPerception.getWorldMap().getWidth();
         worldh = lastPerception.getWorldMap().getHeight();
-        mMap = new Color[worldw][worldh];
-        for (int i = 0; i < worldw; i++) {
-            for (int j = 0; j < worldh; j++) {
-                if (lastPerception.getWorldMap().getStepLevel(i, j) > maxlevel) {
-                    mMap[i][j] = cBad;
-                } else {
-                    mMap[i][j] = p.getColor(lastPerception.getWorldMap().getStepLevel(i, j));
+        if (isActivated()) {
+            p = this.getPalette(this.palMap);
+            mMap = new Color[worldw][worldh];
+            for (int i = 0; i < worldw; i++) {
+                for (int j = 0; j < worldh; j++) {
+                    if (lastPerception.getWorldMap().getStepLevel(i, j) > maxlevel) {
+                        mMap[i][j] = cBad;
+                    } else {
+                        mMap[i][j] = p.getColor(lastPerception.getWorldMap().getStepLevel(i, j));
+                    }
                 }
             }
+            mpMap.setMap(mMap, p);
         }
-        mpMap.setMap(mMap, p);
         OleFile ofile = new OleFile();
         ofile.set(olefile);
-        this.fDashboard.setTitle("| MAP: " + ofile.getFileName() + "|");
+        tinit = new TimeHandler();
+        iMaxDistance = worldw + worldh;
+        if (isActivated()) {
+            this.fDashboard.setTitle("| MAP: " + ofile.getFileName() + "|");
+            rpbDistance.setMaxValue(iMaxDistance);
+        }
+        iFlightw = iRight - factor;
+        iFlighth = 125;
         hFlight = new Map2DColor(iFlightw, iFlighth, Color.BLACK);
         for (int i = 0; i < hFlight.getWidth(); i++) {
             for (int j = 0; j < hFlight.getHeight(); j++) {
@@ -216,11 +212,27 @@ public class LARVADash {
                 }
             }
         }
-        tinit = new TimeHandler();
-        iMaxDistance = worldw + worldh;
-        rpbDistance.setMaxValue(iMaxDistance);
+
         refresh();
         return true;
+//        OleFile ofile = new OleFile();
+//        ofile.set(olefile);
+//        this.fDashboard.setTitle("| MAP: " + ofile.getFileName() + "|");
+//        hFlight = new Map2DColor(iFlightw, iFlighth, Color.BLACK);
+//        for (int i = 0; i < hFlight.getWidth(); i++) {
+//            for (int j = 0; j < hFlight.getHeight(); j++) {
+//                if (j % 10 == 0 || i % 10 == 0) {
+//                    hFlight.setColor(i, j, Color.DARK_GRAY);
+//                } else {
+//                    hFlight.setColor(i, j, Color.GRAY);
+//                }
+//            }
+//        }
+//        tinit = new TimeHandler();
+//        iMaxDistance = worldw + worldh;
+//        rpbDistance.setMaxValue(iMaxDistance);
+//        refresh();
+//        return true;
     }
 
     public void feedPerception(String perception) {
@@ -240,24 +252,22 @@ public class LARVADash {
     protected void feedPerceptionLocal(String perception) {
         try {
             lastPerception.feedPerception(perception);
-            String [] trace = lastPerception.getTrace();
-            if (trace != null ) { //&& iIter > trace.length && trace.length>0) {
-                for(;iTrace<trace.length; iTrace++)
-                this.addAction(trace[iTrace]);
+            String[] trace = lastPerception.getTrace();
+            if (trace != null && isActivated()) { //&& iIter > trace.length && trace.length>0) {
+                for (; iTrace < trace.length; iTrace++) {
+                    this.addAction(trace[iTrace]);
+                }
             }
             name = lastPerception.getName();
-            if (!isActivated()) {
-                return;
-            }
+
             if (lastPerception.hasSensor("GPS")) {
                 gps = lastPerception.getGPS();
                 lastx = (int) gps[0];
                 lasty = (int) gps[1];
-                if (lastx >= 0) {
+                if (lastx >= 0 && isActivated()) {
                     mpMap.setTrail(lastx, lasty, this.getAltitude());
                 }
-                lastx = (int) gps[0];
-                lasty = (int) gps[1];
+
                 int shft = 30;
                 if (hFlight.getWidth() - shft - 1 == iIter - baseFlight) {
                     hFlight.shiftLeft(shft);
@@ -286,95 +296,97 @@ public class LARVADash {
                 }
             }
 
-            if (getNsteps() == 1) {
+            if (getNsteps() == 1 && isActivated()) {
                 this.fDashboard.setTitle("| Session: " + this.lastPerception.getSession()
                         + " |Agent: " + name + " " + fDashboard.getTitle());
             }
-            int[][] sensor;
-            int rangex, rangey;
-            Palette palette;
-            if (lastPerception.hasSensor("VISUAL") || lastPerception.hasSensor("VISUALHQ")) {
-                iVisual = lastPerception.getVisualData();
-                sensor = iVisual;
-                rangex = sensor[0].length;
-                rangey = sensor.length;
-                palette = getPalette("Visual");
-                if (cVisual
-                        == null) {
-                    cVisual = new Color[rangex][rangey];
-                    for (int i = 0; i < rangex; i++) {
-                        for (int j = 0; j < rangey; j++) {
-                            cVisual[i][j] = palette.getColor(0);
-                        }
-                    }
-                    mpVisual.setMap(cVisual, palette);
-                }
-                for (int i = 0;
-                        i < rangex;
-                        i++) {
-                    for (int j = 0; j < rangey; j++) {
-                        if (sensor[j][i] > lastPerception.getMaxlevel()) {
-                            cVisual[i][j] = cBad;
-                        } else {
-                            cVisual[i][j] = palette.getColor(sensor[j][i]);
-                        }
-                    }
-                }
-            }
-            if (lastPerception.hasSensor("LIDAR") || lastPerception.hasSensor("LIDARHQ")) {
-                sensor = lastPerception.getLidarData();
-                rangex = sensor[0].length;
-                rangey = sensor.length;
-                palette = getPalette("Lidar");
-                if (cLidar
-                        == null) {
-                    cLidar = new Color[rangex][rangey];
-                    for (int i = 0; i < rangex; i++) {
-                        for (int j = 0; j < rangey; j++) {
-                            cLidar[i][j] = palette.getColor(0);
-                        }
-                    }
-                    mpLidar.setMap(cLidar, palette);
-                }
-                for (int i = 0;
-                        i < rangex;
-                        i++) {
-                    for (int j = 0; j < rangey; j++) {
-                        if (sensor[j][i] < 0) {
-                            cLidar[i][j] = cBad;
-                        } else {
-                            cLidar[i][j] = palette.getColor(sensor[j][i]);
-                        }
-                    }
-                }
-            }
-            if (lastPerception.hasSensor("THERMAL") || lastPerception.hasSensor("THERMALHQ")) {
-                sensor = lastPerception.getThermalData();
-                iThermal = lastPerception.getThermalData();
-                if (sensor.length
-                        > 0) {
+            if (isActivated()) {
+                int[][] sensor;
+                int rangex, rangey;
+                Palette palette;
+                if (lastPerception.hasSensor("VISUAL") || lastPerception.hasSensor("VISUALHQ")) {
+                    iVisual = lastPerception.getVisualData();
+                    sensor = iVisual;
                     rangex = sensor[0].length;
                     rangey = sensor.length;
-                    palette = getPalette("Thermal");
-                    if (cThermal == null) {
-                        cThermal = new Color[rangex][rangey];
+                    palette = getPalette("Visual");
+                    if (cVisual
+                            == null) {
+                        cVisual = new Color[rangex][rangey];
                         for (int i = 0; i < rangex; i++) {
                             for (int j = 0; j < rangey; j++) {
-                                cThermal[i][j] = palette.getColor(0);
+                                cVisual[i][j] = palette.getColor(0);
                             }
                         }
-                        mpThermal.setMap(cThermal, palette);
+                        mpVisual.setMap(cVisual, palette);
                     }
-                    for (int i = 0; i < rangex; i++) {
+                    for (int i = 0;
+                            i < rangex;
+                            i++) {
                         for (int j = 0; j < rangey; j++) {
-                            cThermal[i][j] = palette.getColor(sensor[j][i]);
+                            if (sensor[j][i] > lastPerception.getMaxlevel()) {
+                                cVisual[i][j] = cBad;
+                            } else {
+                                cVisual[i][j] = palette.getColor(sensor[j][i]);
+                            }
                         }
                     }
                 }
-            }
+                if (lastPerception.hasSensor("LIDAR") || lastPerception.hasSensor("LIDARHQ")) {
+                    sensor = lastPerception.getLidarData();
+                    rangex = sensor[0].length;
+                    rangey = sensor.length;
+                    palette = getPalette("Lidar");
+                    if (cLidar
+                            == null) {
+                        cLidar = new Color[rangex][rangey];
+                        for (int i = 0; i < rangex; i++) {
+                            for (int j = 0; j < rangey; j++) {
+                                cLidar[i][j] = palette.getColor(0);
+                            }
+                        }
+                        mpLidar.setMap(cLidar, palette);
+                    }
+                    for (int i = 0;
+                            i < rangex;
+                            i++) {
+                        for (int j = 0; j < rangey; j++) {
+                            if (sensor[j][i] < 0) {
+                                cLidar[i][j] = cBad;
+                            } else {
+                                cLidar[i][j] = palette.getColor(sensor[j][i]);
+                            }
+                        }
+                    }
+                }
+                if (lastPerception.hasSensor("THERMAL") || lastPerception.hasSensor("THERMALHQ")) {
+                    sensor = lastPerception.getThermalData();
+                    iThermal = lastPerception.getThermalData();
+                    if (sensor.length
+                            > 0) {
+                        rangex = sensor[0].length;
+                        rangey = sensor.length;
+                        palette = getPalette("Thermal");
+                        if (cThermal == null) {
+                            cThermal = new Color[rangex][rangey];
+                            for (int i = 0; i < rangex; i++) {
+                                for (int j = 0; j < rangey; j++) {
+                                    cThermal[i][j] = palette.getColor(0);
+                                }
+                            }
+                            mpThermal.setMap(cThermal, palette);
+                        }
+                        for (int i = 0; i < rangex; i++) {
+                            for (int j = 0; j < rangey; j++) {
+                                cThermal[i][j] = palette.getColor(sensor[j][i]);
+                            }
+                        }
+                    }
+                }
 
-            addStatus(lastPerception.getStatus());
-            refresh();
+                addStatus(lastPerception.getStatus());
+                refresh();
+            }
             iIter++;
         } catch (Exception ex) {
             System.err.println("Error processing perceptions");
@@ -434,6 +446,8 @@ public class LARVADash {
     public void initGUI() {
         // Define panels
         fDashboard = new LARVAFrame(e -> this.DashListener(e));
+        fDashboard.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
         pMain = new JPanel();
         pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
 
@@ -602,7 +616,6 @@ public class LARVADash {
                 disableDashBoard();
             }
         });
-
 
     }
 
@@ -1056,7 +1069,7 @@ public class LARVADash {
         }
     }
 
-    private void addAction(String action) {
+    protected void addAction(String action) {
         tpLog.setBackground(cStatus);
         StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet aset1 = sc.addAttribute(SimpleAttributeSet.EMPTY,
@@ -1065,7 +1078,7 @@ public class LARVADash {
         AttributeSet aset = sc.addAttributes(aset1, aset2);
         StyledDocument doc = tpLog.getStyledDocument();
         try {
-            doc.insertString(doc.getLength(), (this.getNsteps() ) + ". " + action + "\n", aset);
+            doc.insertString(doc.getLength(), (this.getNsteps()) + ". " + action + "\n", aset);
         } catch (BadLocationException ex) {
         }
         tpLog.setCaretPosition(doc.getLength());
@@ -1611,7 +1624,7 @@ public class LARVADash {
 
     public String getName() {
         if (lastPerception.isReady()) {
-            return lastPerception.getStatus();
+            return lastPerception.getName();
         }
         return "";
     }

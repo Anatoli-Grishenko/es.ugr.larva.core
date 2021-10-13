@@ -11,6 +11,7 @@ import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
@@ -19,11 +20,13 @@ import java.io.File;
 import java.util.HashMap;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 import map2D.Palette;
 import tools.TimeHandler;
@@ -34,7 +37,7 @@ import static world.liveBot.MAXENERGY;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class LARVAAirTrafficControl {
+public class LARVAAirTrafficControlTiles {
 
     public static enum Layout {
         COMPACT, EXTENDED, DASHBOARD
@@ -44,13 +47,12 @@ public class LARVAAirTrafficControl {
 
     // Layout GUI
     protected LARVAFrame fDashboard;
-    protected JPanel pMain, pMap;
-    protected MyDrawPane dpMap;
-    protected JScrollPane spMap;
-    protected int iLeft = 400, iRight = 650, iX, iY, iW, iH, iButton = 48,
-            iLog = 350, iStatus = 250, iset = 0, iIter = 0, iTrace = 0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
-            iFlightw, iFlighth, worldw, worldh, iPalette, lastx = -1, lasty = -1;
-    protected JCheckBox cbShowSplash;
+    protected JPanel pMain;
+    protected MyDrawPane dpMap, dpTiles;
+    protected JScrollPane spTiles;
+    protected int iRight, iButton, iTiles,
+             iset = 0, iIter = 0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
+             worldw, worldh, iPalette, lastx = -1, lasty = -1;
     protected AirTrafficControl mpMap;
     protected double dZoom = 3.0;
     protected ImageIcon map;
@@ -77,10 +79,10 @@ public class LARVAAirTrafficControl {
     boolean simulation = false, showsplash, enablesimulation, fulllayout = false, exitdashboard = false, activated = false;
     String splashlock = "./dont.show";
 
-    HashMap<String, LARVAMiniDash> Dashboards;
+    HashMap<String, LARVAEmbeddedDash> Dashboards;
     OleFile ofile;
 
-    public LARVAAirTrafficControl() {
+    public LARVAAirTrafficControlTiles() {
         lastPerception = new SensorDecoder();
         Palettes = new HashMap();
         File f = new File(splashlock);
@@ -102,10 +104,10 @@ public class LARVAAirTrafficControl {
         ofile.loadFile("./images/neg/defaultMap2.png");
         this.setWorldMap(ofile.toString(), 256, "WB");
 //        this.mpMap.setZoom(this.mpMap.zoom + 1);
-        this.mpMap.trails = new HashMap();
         for (String s : Dashboards.keySet()) {
-            Dashboards.get(s).fDashboard.closeLARVAFrame();
+            this.dpTiles.remove(Dashboards.get(s));
         }
+        this.mpMap.trails = new HashMap();
         Dashboards = new HashMap();
     }
 
@@ -140,8 +142,11 @@ public class LARVAAirTrafficControl {
             lastPerception.feedPerception(perception);
             name = lastPerception.getName();
             if (!Dashboards.keySet().contains(name)) {
-                LARVAMiniDash aux = new LARVAMiniDash(this.myAgent);
+                LARVAEmbeddedDash aux = new LARVAEmbeddedDash(null);
                 aux.setWorldMap(this.ofile.toString(), iMaxLevel, null);
+                this.dpTiles.add(aux);
+                aux.refresh();
+                this.refresh();
                 Dashboards.put(name, aux);
             }
 
@@ -165,18 +170,55 @@ public class LARVAAirTrafficControl {
         fDashboard = new LARVAFrame(e -> this.DashListener(e));
         pMain = new JPanel();
         pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+        pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
 
         dpMap = new MyDrawPane(null);
         dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         dpMap.setBackground(cBackgr);
 
+        dpTiles = new MyDrawPane(null);
+        dpTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+        dpTiles.setBackground(cBackgr);
+        dpTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
+
         mpMap = new AirTrafficControl(null);
         mpMap.addRuler();
         mpMap.addTrail();
+        
+        spTiles = new JScrollPane(dpTiles);
+        spTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+        spTiles.setBackground(cBackgr);
+        spTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        spTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        
+        // Define sizes
+        iRight = 610;
+        iButton=48;
+        iTiles=455;
+        pMain.setPreferredSize(new Dimension(iRight+iTiles, iRight));
+        mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
+        dpTiles.setPreferredSize(new Dimension(iTiles, iRight - 2));
+//        spTiles.setBounds(0, 0, iTiles, iRight - 2);
+
+        // Mount panes
+        dpMap.add(mpMap);
+        pMain.add(dpMap);
+        pMain.add(spTiles);
+
+        this.fDashboard.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                disableDashBoard();
+            }
+        });
+
 
         fDashboard.setVisible(true);
         fDashboard.setResizable(false);
-        fDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        fDashboard.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        fDashboard.add(pMain);
+        fDashboard.pack();
+        fDashboard.show();
+        refresh();
 
         // Palettes
         Palette pal = new Palette();
@@ -259,25 +301,6 @@ public class LARVAAirTrafficControl {
         pal.fillWayPoints(256);
         Palettes.put("Lidar", pal);
 
-        this.fDashboard.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                disableDashBoard();
-            }
-        });
-
-        // Define sizes
-        iRight = 610;
-
-        pMain.setPreferredSize(new Dimension(iRight, iRight));
-        dpMap.add(mpMap);
-        mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
-        pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
-        pMain.add(dpMap);
-
-        fDashboard.add(pMain);
-        fDashboard.pack();
-        fDashboard.show();
-        refresh();
     }
 
     protected void DashListener(ActionEvent e) {

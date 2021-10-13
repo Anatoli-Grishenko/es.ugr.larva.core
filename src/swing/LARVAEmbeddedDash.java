@@ -7,44 +7,16 @@ https://docs.oracle.com/javase/tutorial/uiswing/layout/visual.html
 package swing;
 
 import com.eclipsesource.json.JsonArray;
-import data.Ole;
-import data.OleFile;
 import glossary.sensors;
-import jade.core.Agent;
-import jade.lang.acl.ACLMessage;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.BorderFactory;
+import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
-import map2D.Map2DColor;
-import map2D.Palette;
-import messaging.Sentence;
 import tools.TimeHandler;
 import static world.Perceptor.NULLREAD;
 import world.SensorDecoder;
@@ -54,42 +26,39 @@ import static world.liveBot.MAXFLIGHT;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class LARVAMiniDash extends LARVADash {
+public class LARVAEmbeddedDash extends MyDrawPane {
 
-    protected int iRightW, iRightH;
+    protected int iRightW, iRightH, factor, space, skip, stringskip, zoomSensors,
+            iMaxLevel, worldw, worldh, iMaxDistance, iMaxEnergy, lastx, lasty, iIter = 0;
+    protected SensorDecoder lastPerception;
+    protected double[] gps;
+    protected RoundProgressBar rpbEnergy, rpbAltimeter, rpbDistance;
+    protected JProgressBar pbDistance, pbAltitude, pbMaxlevel;
+    protected Angular rpbCompass, rpbAngular;
+    protected TimeHandler tinit, tnow;
+    protected Color cBackgr = new Color(25, 25, 25), cGreen = new Color(32, 178, 170),
+            cTrace = new Color(0, 255, 0), cSky = new Color(100, 100, 100),
+            cSoil = new Color(204, 102, 0), cDodgerB = new Color(0, 102, 204),
+            cStatus = new Color(0, 50, 0), cTextStatus = new Color(0, 200, 0);
+    Color[][] mMap;
+    String sperception = "", name = "", family;
+    protected MyDrawPane dpPane;
 
-    public LARVAMiniDash(Agent a) {
-        super(a);
-        
-        myLayout = Layout.DASHBOARD;
+    public LARVAEmbeddedDash(Consumer<Graphics2D> function) {
+        super(function);
+        this.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        this.setVisible(true);
+        this.setPreferredSize(new Dimension(450, 100));
+        this.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+        setBackground(this.cBackgr);
+
         lastPerception = new SensorDecoder();
-        Palettes = new HashMap();
-        myAgent = a;
-        File f = new File(splashlock);
-        this.showsplash = !f.exists();
         factor = 13;
         space = 3;
         skip = 3;
         stringskip = 12;
         zoomSensors = 25;
         this.initGUI();
-    }
-
-    public boolean preProcessACLM(ACLMessage msg) {
-        boolean res = false;
-        if (msg.getContent().contains("filedata")) {
-            Ole ocontent = new Ole().set(msg.getContent());
-            OleFile ofile = new OleFile(ocontent.getOle("surface"));
-            int maxlevel = ocontent.getInt("maxflight");
-            setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
-            res = true;
-        }
-        if (msg.getContent().contains("perceptions")) {
-            dashInbox = msg;
-            this.feedPerception(msg.getContent());
-            res = false;
-        }
-        return res;
     }
 
     protected boolean setWorldMap(String olefile, int maxlevel, String spalette) {
@@ -127,11 +96,6 @@ public class LARVAMiniDash extends LARVADash {
 
             }
 
-            if (getNsteps() == 1) {
-                this.fDashboard.setTitle("| Session: " + this.lastPerception.getSession()
-                        + " |Agent: " + name + " " + fDashboard.getTitle());
-            }
-
             refresh();
             iIter++;
         } catch (Exception ex) {
@@ -141,63 +105,21 @@ public class LARVAMiniDash extends LARVADash {
     }
 
     public void initGUI() {
-        if (isActivated())
-            return;
-        // Define panels
-        fDashboard = new LARVAFrame(e -> this.DashListener(e));
-        fDashboard.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//        fDashboard.setUndecorated(true);
-        pMain = new JPanel();
-        pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-
-        dpMyStatus = new MyDrawPane(g -> showMyStatus(g));
-        dpMyStatus.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        dpMyStatus.setBackground(cBackgr);
-
+        dpPane = new MyDrawPane(g -> this.showMyStatus(g));
+        dpPane.setPreferredSize(new Dimension(450,100));
+        dpPane.setBackground(this.cBackgr);
+        dpPane.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+        this.add(dpPane);
+        this.setVisible(true);
         rpbEnergy = new RoundProgressBar(0, iMaxEnergy);
         rpbAltimeter = new RoundProgressBar(0, 256);
         rpbDistance = new RoundProgressBar(0, 256);
         rpbCompass = new Angular();
         rpbAngular = new Angular();
-
-//        fDashboard.setVisible(true);
-        fDashboard.setResizable(false);
-        fDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        preLayout();
-        this.fDashboard.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                disableDashBoard();
-            }
-        });
-
-    }
-
-    protected void preLayout() {
         family = "blue";
         // Define sizes
-        iRightW = 450;
-        this.iRightH = 100  ;
-        pMain.setPreferredSize(new Dimension(iRightW, iRightH));
-        pMain.setLayout(new BoxLayout(pMain, BoxLayout.Y_AXIS));
-
-        // Mount panels
-        pMain.add(dpMyStatus);
-        fDashboard.add(pMain);
-        fDashboard.pack();
-        fDashboard.show();
-        dpMyStatus.setPreferredSize(new Dimension(iRightW, iRightH));
-        dpMyStatus.setLayout(null);
 
         refresh();
-        fulllayout = true;
-    }
-
-    protected void initLayout() {
-
-    }
-
-    protected void DashListener(ActionEvent e) {
     }
 
     protected void showMyStatus(Graphics2D g) {
@@ -213,8 +135,9 @@ public class LARVAMiniDash extends LARVADash {
     protected void DashBoardLayout(Graphics2D g) {
         if (lastPerception.isReady()) {
             try {
-                g.setColor(cDodgerB);
+                g.setColor(cTrace);
                 showName(g, 0, 0);
+                g.setColor(cDodgerB);
 
                 showAlive(g, 0, 1);
                 showOnTarget(g, 0, 2);
@@ -230,7 +153,6 @@ public class LARVAMiniDash extends LARVADash {
                 this.showAngularPB(g, 8, 1, 4);
                 this.showDistancePB(g, 10, 1, 4);
 
-                this.showTerrain(g, 0, 13);
             } catch (Exception ex) {
 
             }
@@ -238,12 +160,9 @@ public class LARVAMiniDash extends LARVADash {
     }
 
     protected void refresh() {
-        String trace = "";
-        int n = 0, k = 2;
-
         SwingTools.doSwingWait(() -> {
-            fDashboard.validate();
-            this.fDashboard.repaint();
+            this.validate();
+            this.repaint();
         });
     }
 
@@ -700,32 +619,6 @@ public class LARVAMiniDash extends LARVADash {
             return lastPerception.getStatus();
         }
         return "";
-    }
-
-    protected String doReadPerceptions() {
-        ACLMessage outbox = dashInbox.createReply();
-        outbox.setContent("Query sensors session " + dashInbox.getConversationId());
-        myAgent.send(outbox);
-        dashInbox = myAgent.blockingReceive();
-        this.feedPerceptionLocal(dashInbox.getContent());
-        return dashInbox.getContent();
-    }
-
-    public boolean isOpen() {
-        return !exitdashboard;
-    }
-
-    protected void disableDashBoard() {
-        exitdashboard = true;
-        refresh();
-    }
-
-    public boolean isActivated() {
-        return activated;
-    }
-
-    public void setActivated(boolean activated) {
-        this.activated = activated;
     }
 
     public String printSensors() {

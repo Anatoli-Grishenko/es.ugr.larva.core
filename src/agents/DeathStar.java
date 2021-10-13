@@ -10,6 +10,7 @@ import data.OleFile;
 import java.util.HashMap;
 import messaging.ACLMessageTools;
 import swing.LARVAAirTrafficControl;
+import swing.LARVAAirTrafficControlTiles;
 import swing.LARVAMiniDash;
 
 /**
@@ -24,7 +25,7 @@ public class DeathStar extends LARVAFirstAgent {
     Status myStatus;
 
     protected HashMap<String, LARVAMiniDash> AgentDash;
-    protected LARVAAirTrafficControl TheMap;
+    protected LARVAAirTrafficControlTiles TheMap;
     protected String sessionKey="";
 
     @Override
@@ -33,7 +34,7 @@ public class DeathStar extends LARVAFirstAgent {
         logger.offEcho();
         logger.onTabular();
         myStatus = Status.CHECKIN;
-        TheMap = new LARVAAirTrafficControl();
+        TheMap = new LARVAAirTrafficControlTiles();
         TheMap.setTitle("DEATH STAR");
         Info("Setting Death Star up");
         exit = false;
