@@ -18,6 +18,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -35,21 +36,22 @@ import map2D.Palette;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class MyMapPalPane extends MyDrawPane {
+public class AirTrafficControl extends MyDrawPane {
 
     protected Color map[][];
     protected Map2DColor m2dMap;
-    protected ImageIcon imgs[][];
     protected MyDrawPane dpMap, dpPalette;
     protected JScrollPane spMap;
     protected Palette palMap;
-    protected int mapwidth, mapheight, zoom, x, y, width, height, offsetimg = 0;
+    protected int mapwidth, mapheight, zoom, x, y, width, height, offsetimg=18;
     protected int palw = 35, cellw = 20, shadow = 0;
     protected MyPopup mPopup;
     protected boolean ruler, trail, hotspot, redecorate = true, paintpalette = true;
-    protected ArrayList<Point> thetrail;
+    protected HashMap<String, ATC_Trail> trails;
+    protected Color colors[] = {new Color(0, 255, 0), new Color(1, 0, 0), new Color(0, 0, 1),
+        new Color(1, 1, 0), new Color(1, 0, 1), new Color(0, 1, 1)};
 
-    public MyMapPalPane(Consumer<Graphics2D> function) {
+    public AirTrafficControl(Consumer<Graphics2D> function) {
         super(function);
         this.setLayout(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         this.setVisible(false);
@@ -63,7 +65,7 @@ public class MyMapPalPane extends MyDrawPane {
         mapwidth = -1;
         mapheight = -1;
         zoom = 1;
-        thetrail = new ArrayList();
+        trails = new HashMap();
 
         spMap.addMouseWheelListener(new MouseWheelListener() {
             @Override
@@ -130,13 +132,12 @@ public class MyMapPalPane extends MyDrawPane {
 
     public void addRuler() {
         ruler = true;
-//        offsetimg = 10;
     }
 
     public void addTrail() {
         trail = true;
         shadow = 0;
-        offsetimg = 0;
+        offsetimg = 18;
     }
 
     public void addShadow(int s) {
@@ -153,15 +154,11 @@ public class MyMapPalPane extends MyDrawPane {
         return (Graphics2D) dpMap.getGraphics();
     }
 
-    public void setImage(ImageIcon i, int x, int y) {
-        imgs[x][y] = i;
-        m2dMap.setColor(x, y, Color.GREEN);
-        validate();
-        repaint();
-    }
-
-    public void setTrail(int x, int y, int z) {
-        thetrail.add(new Point(x, y, z));
+    public void addTrail(String ID, int x, int y, int z) {
+        if (!trails.keySet().contains(ID)) {
+            trails.put(ID, new ATC_Trail(ID, colors[0])); //colors[trails.keySet().size()]));
+        }
+        trails.get(ID).pushTrail(new Point(x, y, z));
         redecorate = false;
         validate();
         repaint();
@@ -203,13 +200,12 @@ public class MyMapPalPane extends MyDrawPane {
         setZoom(1);
     }
 
-    public MyMapPalPane setMap(Color m[][], Palette p) {
+    public AirTrafficControl setMap(Color m[][], Palette p) {
         this.removeAll();
         mapwidth = (m[0].length);
         mapheight = (m.length);
         map = new Color[getMapWidth()][this.getMapHeight()];
         m2dMap = new Map2DColor(getMapWidth(), this.getMapHeight());
-        imgs = new ImageIcon[getMapWidth()][this.getMapHeight()];
         for (int i = 0; i < getMapWidth(); i++) {
             for (int j = 0; j < getMapHeight(); j++) {
                 setColor(i, j, m[i][j]);
@@ -261,55 +257,49 @@ public class MyMapPalPane extends MyDrawPane {
             g.drawImage(m2dMap.getMap(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
             postDecorateMap(g);
         }
-        if (trail) {
-            this.paintTrail(g);
-        } else {
-            if (thetrail.size() > 1) {
-                hideTrailPos(g, thetrail.size() - 2);
-            }
-            if (thetrail.size() > 0) {
-                paintTrailPos(g, thetrail.size() - 1);
-            }
-        }
-        if (shadow > 0) {
-            Point p1, p2;
-            Color c;
-            int level;
-            if (thetrail.size() > 0 && palMap != null) {
-                if (thetrail.size() > 1) {
-                    p1 = thetrail.get(thetrail.size() - 2);
-                    level = shadow*(int) p1.getZ()/256;
-                    hidePoint(g, p1);
-                    p2 = p1.clone().minus(new Point(level, level, 0));
-                    hidePoint(g, p2);
-                }
-                p1 = thetrail.get(thetrail.size() - 1);
-                level = shadow*(int) p1.getZ()/256;
-                p2 = p1.clone().minus(new Point(level, level, 0));
-                paintPoint(g, p1, Color.BLACK);
-                paintPoint(g, p2, Color.GREEN);
-            }
+        for (String s : trails.keySet()) {
+            paintTrail(g, s);
+//            if (trails.get(s).size() > 1) {
+//                hideTrailPos(g, s,trails.get(s).size() - 2);
+//            }
+//            if (trails.get(s).size() > 0) {
+//                paintTrailPos(g, s, 0);
+//            }
         }
         redecorate = true;
 
     }
 
-    protected void paintTrail(Graphics2D g) {
-        for (int i = 0; i < thetrail.size(); i++) {
-            paintTrailPos(g, i);
+    protected void paintTrail(Graphics2D g, String ID) {
+        for (int i = 0; i < trails.get(ID).size(); i++) {
+            paintTrailPos(g, ID, i);
         }
+
     }
 
-    protected void paintTrailPos(Graphics2D g, int pos) {
-        Point p = thetrail.get(pos);
-        paintPoint(g, p, new Color(0, 256 * pos / thetrail.size(), 0));
-        framePoint(g, p, Color.GREEN);
+    protected void paintTrailPos(Graphics2D g, String ID, int pos) {
+        Point p = trails.get(ID).getPoint(pos), p2;
+        int diam1=10,diam2=5;
+            g.setColor(trails.get(ID).c);
+        if (pos == 0) {
+//            paintPoint(g, p.clone().plus(new Point(-1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(0, 1)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point(0, -1)), trails.get(ID).c);
+
+            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam1/2, diam1, diam1);
+//            p2 = p.clone().plus(new Point(0,-1));
+            g.drawString(ID, offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY());
+        } else {
+            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam2/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam2/2, diam2, diam2);
+        }
 
     }
 
     protected void paintPoint(Graphics2D g, Point p, Color c) {
         g.setColor(c);
         g.fillRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
+        System.err.println("X " + +zoom * (int) p.getX() + "   Y " + offsetimg + zoom * (int) p.getY());
     }
 
     protected void framePoint(Graphics2D g, Point p, Color c) {
@@ -317,8 +307,8 @@ public class MyMapPalPane extends MyDrawPane {
         g.drawRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
     }
 
-    protected void hideTrailPos(Graphics2D g, int pos) {
-        Point p = thetrail.get(pos);
+    protected void hideTrailPos(Graphics2D g, String ID, int pos) {
+        Point p = trails.get(ID).getPoint(pos);
         hidePoint(g, p);
     }
 
@@ -404,31 +394,32 @@ public class MyMapPalPane extends MyDrawPane {
         return mapheight;
     }
 
-//    public void setMapWidth(int width) {
-//        this.mapwidth = width;
-//        dpMap.setPreferredSize(new Dimension(getMapWidth() * zoom, getMapHeight() * zoom));
-//        this.setViewportView(dpMap);
-//        this.validate();
-//    }
-//
-//    public void setMapHeight(int height) {
-//        this.mapheight = height;
-//        dpMap.setPreferredSize(new Dimension(getMapWidth() * zoom, getMapHeight() * zoom));
-//        this.setViewportView(dpMap);
-//        this.validate();
-//    }
-//    public void mouseWheelMoved(MouseWheelEvent e) {
-//        int steps = e.getWheelRotation();
-//        if (1 <= zoom+steps && zoom+steps<10) {
-//            setZoom(zoom+steps);
-//        }
-//    }
-//    @Override
-//    public void actionPerformed(ActionEvent e) {
-//        System.out.println(new Object(){}.getClass().getEnclosingMethod().getName()+": "+e.getActionCommand()+" Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//    }
-//    @Override
-//    public void mouseWheelMoved(MouseWheelEvent e) {
-//        System.out.println(new Object(){}.getClass().getEnclosingMethod().getName()+": "+e.getWheelRotation()+" Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//    }
+}
+
+class ATC_Trail {
+
+    protected final int TRAILSIZE = 10;
+    String id;
+    Color c;
+    ArrayList<Point> trail = new ArrayList();
+
+    public ATC_Trail(String id, Color nc) {
+        this.id = id;
+        c = nc;
+    }
+
+    public void pushTrail(Point p) {
+        if (size() == TRAILSIZE) {
+            trail.remove(0);
+        }
+        trail.add(p);
+    }
+
+    public int size() {
+        return trail.size();
+    }
+
+    public Point getPoint(int i) {
+        return trail.get(size() - 1 - i);
+    }
 }

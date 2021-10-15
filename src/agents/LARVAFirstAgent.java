@@ -31,6 +31,7 @@ import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.getAllReceivers;
 import messaging.SequenceDiagram;
+import swing.LARVACompactDash;
 import swing.LARVADash;
 import swing.LARVADash.Layout;
 
@@ -76,6 +77,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected LARVADash myDashboard;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
+    
+    protected int userID=-1;
+    protected String userName="";
 
     // Its known sequence diagram
     SequenceDiagram sd;
@@ -133,7 +137,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 }
             }
         }
-        myDashboard = new LARVADash(Layout.DASHBOARD, this);
+//        myDashboard = new LARVACompactDash(this);
     }
 
     /**
@@ -299,6 +303,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
                     Info(checkin.getContent());
+                    this.getUserData(checkin.getContent());
                     return true;
                 } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
                     Error("Check in to LARVA refused.\nDetails: " + checkin.getContent());
@@ -583,7 +588,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     /**
      * It activates the SWING dashboard
      *
-     * @param l the type of dashboard, initially only DASHBOARD is allowed
      */
     public void doActivateLARVADash() {
         myDashboard.setActivated(true);
@@ -711,4 +715,21 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
     }
 
+    public void getUserData(String welcome) {
+        userID=-1; userName="";
+        String tokens[] = welcome.split(" ");
+        int i;
+        for (i=0; !tokens[i].equals("user") && i<tokens.length; i++);
+        if (i<tokens.length) {
+            i++;
+            try  {
+                userID   = Integer.parseInt(tokens[i]);
+                i++;
+                while (i<tokens.length) {
+                    userName += tokens[i++]+" ";
+                }
+            }
+            catch(Exception ex) {}
+        }
+    }
 }

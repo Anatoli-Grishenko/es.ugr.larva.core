@@ -71,7 +71,7 @@ public class OleDataBase implements ReportableObject {
     public OleDataBase() {
         _dlogger = new Logger();
         _dlogger.setOwner("DataBase API");
-        _dlogger.setLoggerFileName("databaselog.json");
+//        _dlogger.setLoggerFileName("databaselog.json");
         _dlogger.offEcho();
         _dlogger.onTabular();
         _immediateClose = false;
