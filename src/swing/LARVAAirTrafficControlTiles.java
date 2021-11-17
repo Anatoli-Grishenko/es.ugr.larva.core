@@ -6,6 +6,9 @@ https://docs.oracle.com/javase/tutorial/uiswing/layout/visual.html
  */
 package swing;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import data.OleFile;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
@@ -51,8 +54,8 @@ public class LARVAAirTrafficControlTiles {
     protected MyDrawPane dpMap, dpTiles;
     protected JScrollPane spTiles;
     protected int iRight, iButton, iTiles,
-             iset = 0, iIter = 0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
-             worldw, worldh, iPalette, lastx = -1, lasty = -1;
+            iset = 0, iIter = 0, iMaxLevel, iMaxDistance, iMaxEnergy = MAXENERGY,
+            worldw, worldh, iPalette, lastx = -1, lasty = -1;
     protected AirTrafficControl mpMap;
     protected double dZoom = 3.0;
     protected ImageIcon map;
@@ -81,6 +84,8 @@ public class LARVAAirTrafficControlTiles {
 
     HashMap<String, LARVAEmbeddedDash> Dashboards;
     OleFile ofile;
+    protected int nFrames, maxFrames = 5;
+
 
     public LARVAAirTrafficControlTiles() {
         lastPerception = new SensorDecoder();
@@ -109,6 +114,7 @@ public class LARVAAirTrafficControlTiles {
         }
         this.mpMap.trails = new HashMap();
         Dashboards = new HashMap();
+        nFrames = 0;
     }
 
     public boolean setWorldMap(String olefile, int maxlevel, String spalette) {
@@ -137,17 +143,27 @@ public class LARVAAirTrafficControlTiles {
         return true;
     }
 
+    public void feedGoals(String goals) {
+        try {
+            JsonObject jso = Json.parse(goals).asObject();
+            this.mpMap.setGoals(jso);
+        } catch (Exception ex) {
+
+        }
+    }
+
     public void feedPerception(String perception) {
         try {
+            nFrames++;
             lastPerception.feedPerception(perception);
             name = lastPerception.getName();
             if (!Dashboards.keySet().contains(name)) {
                 LARVAEmbeddedDash aux = new LARVAEmbeddedDash(null);
                 aux.setWorldMap(this.ofile.toString(), iMaxLevel, null);
                 this.dpTiles.add(aux);
-                aux.refresh();
-                this.refresh();
+//                aux.refresh();
                 Dashboards.put(name, aux);
+//                this.refresh();
             }
 
             if (lastPerception.hasSensor("GPS")) {
@@ -158,8 +174,8 @@ public class LARVAAirTrafficControlTiles {
                     mpMap.addTrail(name, lastx, lasty, 0);
                 }
             }
-            refresh();
-            Dashboards.get(name).feedPerception(perception);
+//            Dashboards.get(name).feedPerception(perception);
+            // new panel
         } catch (Exception ex) {
             System.err.println(ex.toString());
         }
@@ -182,35 +198,33 @@ public class LARVAAirTrafficControlTiles {
         dpTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
 
         mpMap = new AirTrafficControl(null);
-        mpMap.addRuler();
-        mpMap.addTrail();
-        
+//        mpMap.addRuler();
+//        mpMap.addTrail();
+
         spTiles = new JScrollPane(dpTiles);
         spTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         spTiles.setBackground(cBackgr);
         spTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         spTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        
+
         // Define sizes
-        iRight = 610;
-        iButton=48;
-        iTiles=455;
-        pMain.setPreferredSize(new Dimension(iRight+iTiles, iRight));
+        iRight = 710;
+        iButton = 48;
+        iTiles = 0;//455;
+        pMain.setPreferredSize(new Dimension(iRight + iTiles, iRight));
         mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
-        dpTiles.setPreferredSize(new Dimension(iTiles, iRight - 2));
-//        spTiles.setBounds(0, 0, iTiles, iRight - 2);
+//        dpTiles.setPreferredSize(new Dimension(iTiles, iRight - 2));
 
         // Mount panes
         dpMap.add(mpMap);
         pMain.add(dpMap);
-        pMain.add(spTiles);
+//        pMain.add(spTiles);
 
         this.fDashboard.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 disableDashBoard();
             }
         });
-
 
         fDashboard.setVisible(true);
         fDashboard.setResizable(false);
@@ -339,4 +353,17 @@ public class LARVAAirTrafficControlTiles {
         return res;
     }
 
+    public HashMap<String, LARVAEmbeddedDash> getDashboards() {
+        return Dashboards;
+    }
+
+    public int getWidth() {
+        int res = this.fDashboard.getWidth();
+        return res;
+    }
+
+    public int getHeight() {
+        int res = this.fDashboard.getHeight();
+        return res;
+    }
 }

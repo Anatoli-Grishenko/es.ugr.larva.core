@@ -14,6 +14,7 @@ import data.Ole;
 import data.OleFile;
 import data.Transform;
 import geometry.Point;
+import geometry.Vector;
 import glossary.sensors;
 import java.awt.Color;
 import java.io.File;
@@ -38,7 +39,7 @@ public class SensorDecoder {
     protected Map2DColor hMap;
     protected int maxlevel;
     protected boolean ready, filterreading;
-    protected String name, sessionID;
+    protected String name, sessionID, commitment;
 
     public SensorDecoder() {
         clear();
@@ -177,7 +178,30 @@ public class SensorDecoder {
 
     public double getAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
-            int v = (int) getSensor("angular").get(0).asDouble();
+            double v = getSensor("angular").get(0).asDouble();
+            v = 360+90-v;   
+            if (v>=360)
+                return v-360;            
+            else 
+                return v;
+        }
+        return -1;
+//        if (isReady() && hasSensor("ANGULAR")) {
+//            int v = (int) getSensor("angular").get(0).asDouble();
+//            v = 360+90-v;   
+//            return v%360;            
+//        }
+//        return -1;
+    }
+
+    public double getAngular(Point p) {
+        if (isReady() && hasSensor("ANGULAR")) {
+            Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
+            Point me = new Point(getGPS()[0], getGPS()[1], getGPS()[2]);
+            Vector Busca = new Vector(me, p);
+
+            
+            int v = (int) Norte.angleXYTo(Busca);;
             v = 360+90-v;   
             return v%360;            
         }
@@ -201,6 +225,13 @@ public class SensorDecoder {
     public String[] getTrace() {
         if (isReady() && hasSensor("TRACE")) {
             return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("trace"))));
+        }
+        return new String[0];
+    }
+    
+    public String[] getCargo() {
+        if (isReady() && hasSensor("CARGO")) {
+            return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("cargo"))));
         }
         return new String[0];
     }
@@ -317,8 +348,18 @@ public class SensorDecoder {
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
+        commitment = jsoperception.getString("commitment", "");
         fromJson(jsoperception.get("perceptions").asArray());
     }
+
+    public String getCommitment() {
+        return commitment;
+    }
+
+    public void setCommitment(String commitment) {
+        this.commitment = commitment;
+    }
+    
     
     public String [] getSensorList() {
         return this.indexperception.keySet().toArray(new String[this.indexperception.keySet().size()]);

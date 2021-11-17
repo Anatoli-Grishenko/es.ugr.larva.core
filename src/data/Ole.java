@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import tools.TimeHandler;
 
 /**
  * Generic class for exchanging complex objects and disk files by using JSon as
@@ -98,9 +99,10 @@ public class Ole {
     private void Init() {
         data = new JsonObject();
         enigma = null;
-        setID(Keygen.getAlphaNumKey());
+        setID(Keygen.getAlphaNumKey(16));
         setType(ole.OLE.name());
         setFields(new ArrayList());
+        Meta("oledate", TimeHandler.Now());
         Meta("description", "Object Linked and Embeded");
         Meta("ole", true);
     }
@@ -275,6 +277,7 @@ public class Ole {
         netlist.remove("id");
         netlist.remove("type");
         netlist.remove("description");
+        netlist.remove("oledate");
         netlist.remove("fields");
         return netlist;
     }

@@ -46,6 +46,32 @@ public class Point {
         setX(x);
     }
 
+    public Point(String spoint) {
+        clear();
+        String parts[]=spoint.split(",");
+        _dim = parts.length;
+        switch(_dim) {
+            case 3:
+                try{
+                    this.setZ(Double.parseDouble(parts[2]));
+                }catch(Exception ex) {
+                    this.setZ(0);
+                }
+            case 2:
+                try{
+                    this.setY(Double.parseDouble(parts[1]));
+                }catch(Exception ex) {
+                    this.setY(0);
+                }
+            case 1:
+                try{
+                    this.setX(Double.parseDouble(parts[0]));
+                }catch(Exception ex) {
+                    this.setX(0);
+                }
+        }
+    }
+
     public Point(Ole o) {
         if (o.getType().equals(ole.POINT.name())) {
             clear();
@@ -288,19 +314,20 @@ public class Point {
 
     @Override
     public String toString() {
-        String s = ")";
+        String s = "";
         switch (_dim) {
             case 3:
-                s = String.format("|" + TEMPLATE, (int) getZ()) + s;
+                s = String.format("," + TEMPLATE, (int) getZ()) + s;
             case 2:
-                s = String.format("|" + TEMPLATE, (int) getY()) + s;
+                s = String.format("," + TEMPLATE, (int) getY()) + s;
             case 1:
                 s = String.format(TEMPLATE, (int) getX()) + s;
                 break;
         }
-        s = "(" + s;
+        s = "" + s;
         return s;
     }
+    
 
     public JsonArray toJson() {
         JsonArray res = new JsonArray();
@@ -399,5 +426,9 @@ public class Point {
         }
 
         return res;
+    }
+    
+    public java.awt.Point getAWTPoint(){
+        return new java.awt.Point((int) this.getX(), (int) this.getY());        
     }
 }

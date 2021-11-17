@@ -9,7 +9,6 @@ import data.Ole;
 import data.OleFile;
 import java.util.HashMap;
 import messaging.ACLMessageTools;
-import swing.LARVAAirTrafficControl;
 import swing.LARVAAirTrafficControlTiles;
 import swing.LARVAMiniDash;
 
@@ -99,9 +98,12 @@ public class DeathStar extends LARVAFirstAgent {
             TheMap.clear();
             TheMap.setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));            
             this.setTitle();
-        }
+        }else
         if (inbox.getContent().contains("perceptions")) {
-            TheMap.feedPerception(inbox.getContent());
+            TheMap.feedPerception(inbox.getContent());            
+        }else
+        if (inbox.getContent().contains("goals")) {
+            TheMap.feedGoals(inbox.getContent());            
         }
         return Status.IDLE;
     }

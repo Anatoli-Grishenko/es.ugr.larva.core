@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 public class MyDrawPane extends JPanel {
 
     Consumer<Graphics2D> painter;
+    protected Graphics2D myg;
 
     public MyDrawPane(Consumer<Graphics2D> function) {
         setPainter(function);
@@ -30,6 +31,8 @@ public class MyDrawPane extends JPanel {
         super.paintComponent(g);
         Graphics2D g2D = (Graphics2D) g;
         if (painter != null) {
+            if (myg == null)
+                myg = g2D;
             painter.accept(g2D);
         }
     }
