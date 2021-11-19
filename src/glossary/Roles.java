@@ -9,6 +9,6 @@ package glossary;
  * List of all the capabilities an agent might have.<p>
  */
 
-public enum roles{FLY, BIRD, HAWK, RESCUE, NONE}
+public enum Roles{FIGHTER, CORELLIAN, DESTROYER, RAZOR, NONE}
 
 

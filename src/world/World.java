@@ -42,6 +42,7 @@ public class World {
     protected OleRecord cfg;
     protected String[][] filter, filterHQ, filterDLX;
     static int range = 41, cx = range / 2, cy = cx;
+    int maxflight;
 
     public World(String name) {
         this.name = name;
@@ -155,8 +156,10 @@ public class World {
                 res.setY(0);
                 break;
             default:
-                res.setX((int) (Math.random() * width));
-                res.setY((int) (Math.random() * height));
+                do {
+                    res.setX((int) (Math.random() * width));
+                    res.setY((int) (Math.random() * height));
+                } while (this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()) > this.maxflight);
         }
         if (0 <= res.getX() && res.getX() < width && 0 <= res.getY() && res.getY() < height) {
             res.setZ(this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()));
@@ -174,6 +177,8 @@ public class World {
         if (!cfg.isEmpty()) {
             try {
                 this.name = cfg.getField("name");
+                oaux = cfg.getOle("drones");
+                this.maxflight = oaux.getInt("maxflight");
                 oaux = cfg.getOle("types");
                 for (String oclass : oaux.getNetFieldList()) {
                     this.getOntology().add(oclass, oaux.getField(oclass));

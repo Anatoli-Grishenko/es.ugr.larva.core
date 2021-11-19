@@ -20,6 +20,7 @@ import javax.swing.border.EmptyBorder;
 import tools.TimeHandler;
 import static world.Perceptor.NULLREAD;
 import world.SensorDecoder;
+import static world.liveBot.MAXENERGY;
 import static world.liveBot.MAXFLIGHT;
 
 /**
@@ -29,7 +30,7 @@ import static world.liveBot.MAXFLIGHT;
 public class LARVAEmbeddedDash extends MyDrawPane {
 
     protected int iRightW, iRightH, factor, space, skip, stringskip, zoomSensors,
-            iMaxLevel, worldw, worldh, iMaxDistance, iMaxEnergy, lastx, lasty, iIter = 0;
+            iMaxLevel, worldw, worldh, iMaxDistance, iMaxEnergy = MAXENERGY, lastx, lasty, iIter = 0;
     protected SensorDecoder lastPerception;
     protected double[] gps;
     protected RoundProgressBar rpbEnergy, rpbAltimeter, rpbDistance;
@@ -41,7 +42,7 @@ public class LARVAEmbeddedDash extends MyDrawPane {
             cSoil = new Color(204, 102, 0), cDodgerB = new Color(0, 102, 204),
             cStatus = new Color(0, 50, 0), cTextStatus = new Color(0, 200, 0);
     Color[][] mMap;
-    String sperception = "", name = "", family;
+    String sperception = "", name = "", family, myCommitment = "";
     protected MyDrawPane dpPane;
 
     public LARVAEmbeddedDash(Consumer<Graphics2D> function) {
@@ -53,10 +54,10 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         setBackground(this.cBackgr);
 
         lastPerception = new SensorDecoder();
-        factor = 13;
-        space = 3;
-        skip = 3;
-        stringskip = 12;
+        factor = 18;
+        space = 10;
+        skip = 4;
+        stringskip = 18;
         zoomSensors = 25;
         this.initGUI();
     }
@@ -106,7 +107,7 @@ public class LARVAEmbeddedDash extends MyDrawPane {
 
     public void initGUI() {
         dpPane = new MyDrawPane(g -> this.showMyStatus(g));
-        dpPane.setPreferredSize(new Dimension(450,100));
+        dpPane.setPreferredSize(new Dimension(450, 100));
         dpPane.setBackground(this.cBackgr);
         dpPane.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         this.add(dpPane);
@@ -135,29 +136,54 @@ public class LARVAEmbeddedDash extends MyDrawPane {
     protected void DashBoardLayout(Graphics2D g) {
         if (lastPerception.isReady()) {
             try {
-                g.setColor(cTrace);
+                g.setColor(Color.GREEN);
                 showName(g, 0, 0);
-                g.setColor(cDodgerB);
 
                 showAlive(g, 0, 1);
+                showEnergy(g, 1, 1);
+                showCompass(g, 2, 1);
+                showAltimeter(g, 3, 1);
+                showGPS(g, 4, 1);
+
                 showOnTarget(g, 0, 2);
-                showPayLoad(g, 0, 3);
-                showAltimeter(g, 0, 4);
-                showGPS(g, 0, 5);
-                showNSteps(g, 3, 5);
-                showTimer(g, 5, 5);
+                showPayLoad(g, 1, 2);
+                showAngular(g, 2, 2);
+                showDistance(g, 3, 2);
 
-                this.showEnergyPB(g, 2, 1, 4);
-                this.showCompassPB(g, 4, 1, 4);
-                this.showAltimeterPB(g, 6, 1, 4);
-                this.showAngularPB(g, 8, 1, 4);
-                this.showDistancePB(g, 10, 1, 4);
-
+                showNSteps(g, 4, 2);
+                showTimer(g, 5, 2);
             } catch (Exception ex) {
 
             }
         }
     }
+//    protected void DashBoardLayout(Graphics2D g) {
+//        if (lastPerception.isReady()) {
+//            try {
+//                g.setColor(cTrace);
+//                showName(g, 0, 0);
+//                g.setColor(cDodgerB);
+//                showCargo(g, 0, 6);
+////
+//                showAlive(g, 0, 1);
+////                showOnTarget(g, 0, 2);
+////                showPayLoad(g, 0, 3);
+////                showAltimeter(g, 0, 4);
+//                showGPS(g, 0, 5);
+//                showNSteps(g, 3, 5);
+////                showTimer(g, 5, 5);
+////
+//                this.showEnergyPB(g, 2, 1, 4);
+////                this.showCompassPB(g, 4, 1, 4);
+////                this.showAltimeterPB(g, 6, 1, 4);
+////                this.showAngularPB(g, 8, 1, 4);
+////                this.showDistancePB(g, 10, 1, 4);
+////
+//            } catch (Exception ex) {
+//
+//            }
+//        }
+//    }
 
     protected void refresh() {
         SwingTools.doSwingWait(() -> {
@@ -166,9 +192,31 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         });
     }
 
+//    protected void showName(Graphics2D g, int px, int py) {
+//        int x = space + px * skip * factor, y = py * factor;
+//        g.drawString(name, x, y + stringskip);
+//    }
     protected void showName(Graphics2D g, int px, int py) {
+        String msg = getName();
+        if (getMyCommitment() != null && getMyCommitment().length() > 0) {
+            msg = "▶️️ " + msg; //+" { "+getMyCommitment()+" }";
+        }
+        if (getMyCommitment() != null && getMyCommitment().length() < 1) {
+            msg = "⏸ " + msg;
+        }
+//        msg +=" " +getStatus();
         int x = space + px * skip * factor, y = py * factor;
-        g.drawString(name, x, y + stringskip);
+        g.drawString(msg, x, y + stringskip);
+    }
+
+    protected void showCargo(Graphics2D g, int px, int py) {
+        int x = space + px * skip * factor, y = py * factor;
+        String cargo = "";
+        for (String s : lastPerception.getCargo()) {
+            cargo += s + ", ";
+        }
+        cargo = "" + lastPerception.getCargo().length + "x " + cargo;
+        g.drawString(cargo, x, y + stringskip);
     }
 
     protected void showAlive(Graphics2D g, int px, int py) {
@@ -254,7 +302,7 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         this.rpbEnergy.setBackground(Color.DARK_GRAY);
         this.rpbEnergy.setColor(cDodgerB);
         this.rpbEnergy.setThick(20);
-        rpbAltimeter.setUnits("W");
+        rpbEnergy.setUnits("W");
         rpbEnergy.setValue((int) energy);
         rpbEnergy.showProgressBar(g);
         g.setColor(Color.WHITE);
@@ -616,7 +664,7 @@ public class LARVAEmbeddedDash extends MyDrawPane {
 
     public String getName() {
         if (lastPerception.isReady()) {
-            return lastPerception.getStatus();
+            return lastPerception.getName();
         }
         return "";
     }
@@ -702,6 +750,10 @@ public class LARVAEmbeddedDash extends MyDrawPane {
             message += "\n";
         }
         return message;
+    }
+
+    public String getMyCommitment() {
+        return lastPerception.getCommitment();
     }
 
 }

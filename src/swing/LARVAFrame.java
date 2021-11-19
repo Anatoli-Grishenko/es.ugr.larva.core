@@ -25,7 +25,17 @@ public class LARVAFrame extends JFrame implements ActionListener {
         this.setTitle("LARVA");
 
     }
+    
+    public LARVAFrame() {
+        super();
+        this.setTitle("LARVA");
 
+    }
+
+    public void setListener(Consumer<ActionEvent> listener) {
+        myListener = listener;        
+    }
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         myListener.accept(e);
@@ -36,6 +46,10 @@ public class LARVAFrame extends JFrame implements ActionListener {
 //        dispose();
         this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
 
+    }
+    
+    public void defaultListener(ActionEvent e) {
+        
     }
 
 }

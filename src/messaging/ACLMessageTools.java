@@ -26,15 +26,16 @@ public class ACLMessageTools {
     public static final String _NULLVAL = "";
 
     public static String getAllReceivers(ACLMessage msg) {
-        String res="";
+        String res = "";
         for (Iterator iterator = msg.getAllReceiver();
                 iterator.hasNext();) {
             AID r = (AID) iterator.next();
-            res += r.getLocalName() + " ";
+            res += r.getLocalName() + ",";
         }
-        
+
         return res;
     }
+
     public static JsonObject getJsonContentACLM(ACLMessage m) {
         JsonObject res = new JsonObject();
         if (isJsonACLM(m)) {
@@ -96,31 +97,31 @@ public class ACLMessageTools {
     }
 
     public static String fancyWriteACLM(ACLMessage original, boolean simple) {
-        String res = "", sep="|";
+        String res = "", sep = "|";
         ACLMessage msg = (ACLMessage) original.clone();
-        res += (msg.getSender() == null ? _NULLVAL : "||SND"+sep+ msg.getSender().getLocalName());
+        res += (msg.getSender() == null ? _NULLVAL : "||SND" + sep + msg.getSender().getLocalName());
         Iterator it;
         it = msg.getAllReceiver();
-        res += "||RCV"+sep;
+        res += "||RCV" + sep;
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "||CNT"+sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) + "||";
+        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) + "||";
         if (!simple) {
             it = msg.getAllReplyTo();
-            res = "||PFM"+sep + ACLMessage.getPerformative(msg.getPerformative())+res;
-            res += "RPT"+sep;
+            res = "||PFM" + sep + ACLMessage.getPerformative(msg.getPerformative()) + res;
+            res += "RPT" + sep;
             while (it.hasNext()) {
                 res += ((AID) it.next()).getLocalName() + " ";
             }
-            res += (msg.getProtocol() == null ? _NULLVAL : "||PRT"+sep + msg.getProtocol())
-                    + (msg.getConversationId() == null ? _NULLVAL : "||CNV"+sep + msg.getConversationId())
-                    + (msg.getEncoding() == null ? _NULLVAL : "||ENC"+sep + msg.getEncoding())
-                    + (msg.getReplyWith() == null ? _NULLVAL : "||RPW"+sep + msg.getReplyWith())
-                    + (msg.getInReplyTo() == null ? _NULLVAL : "||IRT"+sep + msg.getInReplyTo())
-                    + (msg.getLanguage() == null ? _NULLVAL : "||LAN"+sep + trimString(msg.getLanguage(), 10))
-                    + (msg.getOntology() == null ? _NULLVAL : "||ONT"+sep + msg.getOntology());
-            res +="||";
+            res += (msg.getProtocol() == null ? _NULLVAL : "||PRT" + sep + msg.getProtocol())
+                    + (msg.getConversationId() == null ? _NULLVAL : "||CNV" + sep + msg.getConversationId())
+                    + (msg.getEncoding() == null ? _NULLVAL : "||ENC" + sep + msg.getEncoding())
+                    + (msg.getReplyWith() == null ? _NULLVAL : "||RPW" + sep + msg.getReplyWith())
+                    + (msg.getInReplyTo() == null ? _NULLVAL : "||IRT" + sep + msg.getInReplyTo())
+                    + (msg.getLanguage() == null ? _NULLVAL : "||LAN" + sep + trimString(msg.getLanguage(), 10))
+                    + (msg.getOntology() == null ? _NULLVAL : "||ONT" + sep + msg.getOntology());
+            res += "||";
         }
         return res;
     }
@@ -183,23 +184,32 @@ public class ACLMessageTools {
         incoming.setProtocol((incoming.getProtocol() == null ? _NULLVAL : incoming.getProtocol()));
         return incoming;
     }
-    
 
     public static boolean isDashACL(ACLMessage msg) {
-        return msg.getReplyWith()!= null && msg.getReplyWith().contains(LARVADash.MARK);
+        return msg.getReplyWith() != null && msg.getReplyWith().contains(LARVADash.MARK);
     }
-    
+
     public static ACLMessage cleanDashMark(ACLMessage msg) {
         msg.setReplyWith(msg.getReplyWith().replace(LARVADash.MARK, ""));
         return msg;
     }
-    
+
     public static ACLMessage addDashMark(ACLMessage msg) {
-        if (msg.getReplyWith()==null)
+        if (msg.getReplyWith() == null) {
             msg.setReplyWith("");
-        msg.setReplyWith(msg.getReplyWith()+" "+LARVADash.MARK);
+        }
+        msg.setReplyWith(msg.getReplyWith() + " " + LARVADash.MARK);
         return msg;
     }
-        
-    
+
+    public static AID getMainReceiver(ACLMessage msg) {
+        Iterator it;
+        it = msg.getAllReceiver();
+        if (it.hasNext()) {
+            return ((AID) it.next());
+        } else {
+            return null;
+        }
+    }
+
 }

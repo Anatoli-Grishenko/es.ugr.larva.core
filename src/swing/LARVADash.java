@@ -9,6 +9,8 @@ package swing;
 import com.eclipsesource.json.JsonArray;
 import data.Ole;
 import data.OleFile;
+import geometry.Point;
+import geometry.Vector;
 import glossary.sensors;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
@@ -98,6 +100,7 @@ public class LARVADash {
             cSoil = new Color(204, 102, 0), cDodgerB = new Color(0, 102, 204),
             cStatus = new Color(0, 50, 0), cTextStatus = new Color(0, 200, 0);
     Color[][] mMap, cVisual, cLidar, cThermal;
+    int[][] uploadedMap = null;
     HashMap<String, Palette> Palettes;
     protected Semaphore smContinue, smPlay, smStart, smReady;
     protected Semaphore smReadyData, smReadyFX, smAllowAgent;
@@ -105,7 +108,7 @@ public class LARVADash {
     int factor = 24, space = 10, skip = 4, stringskip = 18, zoomSensors = 25;
 
     String family = "phos", splash1 = "TieFighterHelmet", splash2 = "RealTieFighter", name = "unknown",
-            palMap, sperception = "";
+            palMap, sperception = "", myMission;
 
     // Remote operation
     protected Consumer<String> externalExecutor;
@@ -168,6 +171,33 @@ public class LARVADash {
             res = false;
         }
         return res;
+    }
+
+    public boolean uploadFullMap(ACLMessage msg) {
+        try {
+            if (msg.getContent().contains("filedata")) {
+                SensorDecoder sdecAux = new SensorDecoder();
+                OleFile mapa = new OleFile();
+                mapa.set(msg.getContent());
+                mapa.setField("filename", "downloaded"+mapa.getField("filename"));
+                mapa.saveFile("./maps/");
+                sdecAux.setWorldMap(msg.getContent(), 255);
+                int w = sdecAux.getWorldMap().getWidth();
+                int h = sdecAux.getWorldMap().getHeight();
+                this.uploadedMap = new int[w][h];
+                for (int i = 0; i < w; i++) {
+                    for (int j = 0; j < h; j++) {
+                        uploadedMap[i][j] = sdecAux.getWorldMap().getStepLevel(i, j);
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception ex) {
+            return false;
+        }
+
     }
 
     protected boolean setWorldMap(String olefile, int maxlevel, String spalette) {
@@ -250,6 +280,7 @@ public class LARVADash {
     }
 
     protected void feedPerceptionLocal(String perception) {
+        String stepbystep="";
         try {
             lastPerception.feedPerception(perception);
             String[] trace = lastPerception.getTrace();
@@ -261,13 +292,14 @@ public class LARVADash {
             name = lastPerception.getName();
 
             if (lastPerception.hasSensor("GPS")) {
+                stepbystep += "{GPS";
                 gps = lastPerception.getGPS();
                 lastx = (int) gps[0];
                 lasty = (int) gps[1];
                 if (lastx >= 0 && isActivated()) {
                     mpMap.setTrail(lastx, lasty, this.getAltitude());
                 }
-
+                stepbystep+="}{FLIGHT";
                 int shft = 30;
                 if (hFlight.getWidth() - shft - 1 == iIter - baseFlight) {
                     hFlight.shiftLeft(shft);
@@ -305,6 +337,7 @@ public class LARVADash {
                 int rangex, rangey;
                 Palette palette;
                 if (lastPerception.hasSensor("VISUAL") || lastPerception.hasSensor("VISUALHQ")) {
+                    stepbystep+="}{VISUAL";
                     iVisual = lastPerception.getVisualData();
                     sensor = iVisual;
                     rangex = sensor[0].length;
@@ -333,6 +366,7 @@ public class LARVADash {
                     }
                 }
                 if (lastPerception.hasSensor("LIDAR") || lastPerception.hasSensor("LIDARHQ")) {
+                    stepbystep+="}{LIDAR";
                     sensor = lastPerception.getLidarData();
                     rangex = sensor[0].length;
                     rangey = sensor.length;
@@ -360,6 +394,7 @@ public class LARVADash {
                     }
                 }
                 if (lastPerception.hasSensor("THERMAL") || lastPerception.hasSensor("THERMALHQ")) {
+                    stepbystep+="}{THERMAL";
                     sensor = lastPerception.getThermalData();
                     iThermal = lastPerception.getThermalData();
                     if (sensor.length
@@ -389,7 +424,7 @@ public class LARVADash {
             }
             iIter++;
         } catch (Exception ex) {
-            System.err.println("Error processing perceptions");
+            System.err.println("Error processing perceptions "+ex.toString());
 
         }
     }
@@ -1120,8 +1155,15 @@ public class LARVADash {
     }
 
     protected void showName(Graphics2D g, int px, int py) {
+        String msg=getName();
+        if (getMyMission() != null && getMyMission().length() >0) {
+            msg="▶️️ "+msg+" { "+getMyMission()+" }";
+        }
+        if (getMyMission() != null && getMyMission().length()<1) {       
+            msg+="⏸ "+msg;
+        }
         int x = space + px * skip * factor, y = py * factor;
-        g.drawString(name, x, y + stringskip);
+        g.drawString(msg, x, y + stringskip);
     }
 
     protected void showAlive(Graphics2D g, int px, int py) {
@@ -1596,9 +1638,25 @@ public class LARVADash {
 
     }
 
+    public double getDistance(Point p) {
+        if (lastPerception.isReady()) {
+            Point me = new Point(getGPS()[0], getGPS()[1]);
+            return me.fastDistanceXYTo(p.to2D());
+        }
+        return -1;
+
+    }
+
     public double getAngular() {
         if (lastPerception.isReady()) {
             return lastPerception.getAngular();
+        }
+        return -1;
+    }
+
+    public double getAngular(Point p) {
+        if (lastPerception.isReady()) {
+            return lastPerception.getAngular(p);
         }
         return -1;
     }
@@ -1622,13 +1680,22 @@ public class LARVADash {
         return lastPerception.getThermalData();
     }
 
+    public int getMapLevel(int x, int y) {
+        if (uploadedMap == null || x < 0 || y < 0 || x>= uploadedMap.length || y>= uploadedMap[0].length ) {
+            return Integer.MAX_VALUE;
+        } else 
+            return uploadedMap[x][y];
+    }
     public String getName() {
         if (lastPerception.isReady()) {
+                  
             return lastPerception.getName();
         }
         return "";
     }
-
+    public String[] getCargo() {
+        return lastPerception.getCargo();
+    }
     protected Palette getPalette(String name) {
         Palette res = Palettes.get(name);
         if (res == null) {
@@ -1684,6 +1751,14 @@ public class LARVADash {
 
     public void setActivated(boolean activated) {
         this.activated = activated;
+    }
+
+    public String getMyMission() {
+        return myMission;
+    }
+
+    public void setMyMission(String myMission) {
+        this.myMission = myMission;
     }
 
     public String printSensors() {

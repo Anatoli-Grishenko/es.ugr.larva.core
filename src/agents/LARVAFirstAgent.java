@@ -77,9 +77,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected LARVADash myDashboard;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
-    
-    protected int userID=-1;
-    protected String userName="";
+
+    protected int userID = -1;
+    protected String userName = "";
 
     // Its known sequence diagram
     SequenceDiagram sd;
@@ -89,7 +89,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleList stepsDone, stepsSent;
     protected boolean traceRunSteps;
     protected Ole oleConfig;
-
 
     /**
      * Main JADE setup
@@ -360,15 +359,32 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             addRunStep("MILES10");
         }
 //        if (myDashboard != null && msg.getContent() != null
+        if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
+            String skey = msg.getConversationId(), sman;
+            if (skey != null && !this.DFGetAllProvidersOf("SESSION MANAGER " + skey).isEmpty()) {
+//                ACLMessage aux = new ACLMessage(msg.getPerformative());
+//                aux.setSender(msg.getSender());
+//                aux.setConversationId(msg.getConversationId());
+//                aux.setReplyWith(msg.getReplyWith());
+//                aux.setInReplyTo(msg.getInReplyTo());
+//                aux.setOntology(msg.getOntology());
+//                aux.setProtocol(msg.getProtocol());
+                sman = this.DFGetAllProvidersOf("SESSION MANAGER " + skey).get(0);
+                msg.addReceiver(new AID(sman,AID.ISLOCALNAME));
+//                aux.addReceiver(new AID(sman, AID.ISLOCALNAME));
+//                this.send(aux);
+//                Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(aux, false));
+//                sd.addSequence(aux);
+            }
+        }
         if (myDashboard != null && msg.getContent() != null
                 && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
                 || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
             msg = ACLMessageTools.addDashMark(msg);
         }
         this.send(msg);
-        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, true));
-        sd.addSequence(msg.getSender().getLocalName(),
-                getAllReceivers(msg), msg.getContent());
+        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
+        sd.addSequence(msg);
     }
 
     /**
@@ -391,9 +407,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 repeat = false;
             }
         } while (repeat);
-        Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
-        sd.addSequence(res.getSender().getLocalName(),
-                getAllReceivers(res), res.getContent());
+        Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+        sd.addSequence(res);
         this.checkReceivedMessage(res);
         return res;
     }
@@ -419,7 +434,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return res;
     }
 
-    private ACLMessage LARVAblockingReceive(MessageTemplate t) {
+    public ACLMessage LARVAblockingReceive(MessageTemplate t) {
         ACLMessage res;
         boolean repeat = false;
         if (traceRunSteps) {
@@ -434,9 +449,10 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
         } while (repeat);
         if (res != null) {
-//            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
         }
         this.checkReceivedMessage(res);
+        sd.addSequence(res);
         return res;
     }
 
@@ -456,8 +472,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         } while (repeat);
         if (res != null) {
             Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
-            sd.addSequence(res.getSender().getLocalName(),
-                    getAllReceivers(res), res.getContent());
+            sd.addSequence(res);
         }
         this.checkReceivedMessage(res);
         return res;
@@ -705,31 +720,32 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     private String getSequenceDiagram() {
         return sd.printSequenceDiagram();
     }
-    
+
     public void saveSequenceDiagram(String filename) {
         try {
-            PrintStream out= new PrintStream(new File(filename));
+            PrintStream out = new PrintStream(new File(filename));
             out.println(getSequenceDiagram());
         } catch (FileNotFoundException ex) {
-            Error("Unable to save Sequence Diagram into file "+filename);
+            Error("Unable to save Sequence Diagram into file " + filename);
         }
     }
 
     public void getUserData(String welcome) {
-        userID=-1; userName="";
+        userID = -1;
+        userName = "";
         String tokens[] = welcome.split(" ");
         int i;
-        for (i=0; !tokens[i].equals("user") && i<tokens.length; i++);
-        if (i<tokens.length) {
+        for (i = 0; !tokens[i].equals("user") && i < tokens.length; i++);
+        if (i < tokens.length) {
             i++;
-            try  {
-                userID   = Integer.parseInt(tokens[i]);
+            try {
+                userID = Integer.parseInt(tokens[i]);
                 i++;
-                while (i<tokens.length) {
-                    userName += tokens[i++]+" ";
+                while (i < tokens.length) {
+                    userName += tokens[i++] + " ";
                 }
+            } catch (Exception ex) {
             }
-            catch(Exception ex) {}
         }
     }
 }

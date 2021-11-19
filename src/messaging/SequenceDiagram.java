@@ -6,6 +6,7 @@
 package messaging;
 
 import static disk.Logger.trimString;
+import jade.lang.acl.ACLMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,7 +36,7 @@ public class SequenceDiagram {
     public int size() {
         return sequences.size();
     }
-    
+
     public int getNPlayers() {
         return players.size();
     }
@@ -101,36 +102,76 @@ public class SequenceDiagram {
             }
         }
     }
+
     public void printContent(Sequence s) {
         for (int i = 0; i < players.size(); i++) {
             if (i != indexPlayer(s.sender)) {
                 nextline += "|" + String.format(template, fillField("", ' '));
             } else {
-                nextline += "|" + String.format(template, fillField(s.content, ' '));
+                nextline += "|" + String.format(template, fillField("CNT:" + s.content.replaceAll("\n", " "), ' '));
+            }
+        }
+    }
+
+    public void printRW(Sequence s) {
+        for (int i = 0; i < players.size(); i++) {
+            if (i != indexPlayer(s.sender)) {
+                nextline += "|" + String.format(template, fillField("", ' '));
+            } else {
+                nextline += "|" + String.format(template, fillField("RW:" + s.replywith.replaceAll("\n", " "), ' '));
+            }
+        }
+    }
+
+    public void printIRT(Sequence s) {
+        for (int i = 0; i < players.size(); i++) {
+            if (i != indexPlayer(s.sender)) {
+                nextline += "|" + String.format(template, fillField("", ' '));
+            } else {
+                nextline += "|" + String.format(template, fillField("IRT:" + s.inreplyto.replaceAll("\n", " "), ' '));
+            }
+        }
+    }
+
+    public void printPerformative(Sequence s) {
+        for (int i = 0; i < players.size(); i++) {
+            if (i != indexPlayer(s.sender)) {
+                nextline += "|" + String.format(template, fillField("", ' '));
+            } else {
+                nextline += "|" + String.format(template, fillField(ACLMessage.getPerformative(s.performative), ' '));
             }
         }
     }
 
     public void printArrow(Sequence s) {
-        int from = indexPlayer(s.sender), to = indexPlayer(s.receiver);
+        int from = indexPlayer(s.sender), to = indexPlayer(s.receiver), nreceivers = 0;
         String head = ">", tail = "O";
-        if (from > to) {
-            int aux = from;
-            from = to;
-            to = aux;
-            head = "O";
-            tail = "<";
-        }
-        for (int i = 0; i < players.size(); i++) {
-            if (i == from) {
-                nextline += fillField(tail, '-')+"-";
-            } else if (i == to) {
-                nextline += fillField(head, ' ')+' ';
-            } else if (from < i && i < to) {
-                nextline += "-"+fillField("", '-');
-            } else {
-                nextline += "|" + fillField("", ' ');
+        for (String ireceiver : s.receiver.split(",")) {
+            if (nreceivers > 0 && ireceiver.startsWith("S.M."))
+                continue;
+            if (nreceivers > 0) {
+                nextline += "\n";
             }
+            to = indexPlayer(ireceiver.trim());
+            if (from > to) {
+                int aux = from;
+                from = to;
+                to = aux;
+                head = "O";
+                tail = "<";
+            }
+            for (int i = 0; i < players.size(); i++) {
+                if (i == from) {
+                    nextline += fillField(tail, '-') + "-";
+                } else if (i == to) {
+                    nextline += fillField(head, ' ') + ' ';
+                } else if (from < i && i < to) {
+                    nextline += "-" + fillField("", '-');
+                } else {
+                    nextline += "|" + fillField("", ' ');
+                }
+            }
+            nreceivers++;
         }
     }
 
@@ -163,6 +204,23 @@ public class SequenceDiagram {
         addPlayer(ns.receiver);
     }
 
+    public void addSequence(ACLMessage msg) {
+
+        Sequence ns = new Sequence();
+        ns.sender = msg.getSender().getLocalName().trim();
+        ns.replywith = msg.getReplyWith();
+        ns.inreplyto = msg.getInReplyTo();
+        ns.receiver = ACLMessageTools.getAllReceivers(msg).trim();
+        ns.content = msg.getContent() == null ? "" : msg.getContent().trim();
+        ns.date = TimeHandler.Now();
+        ns.performative = msg.getPerformative();
+        sequences.add(ns);
+        addPlayer(ns.sender);
+        for (String ireceiver : ns.receiver.split(",")) {
+            addPlayer(ireceiver);
+        }
+    }
+
     public String printSequenceDiagram() {
         this.blackboard = "\n";
         this.nextline = "";
@@ -174,6 +232,18 @@ public class SequenceDiagram {
         for (int i = 0; i < size(); i++) {
             this.printDate(sequences.get(i));
             nextLine();
+            this.printPerformative(sequences.get(i));
+            nextLine();
+            if (sequences.get(i).replywith != null) {
+                this.printRW(sequences.get(i));
+                nextLine();
+
+            }
+            if (sequences.get(i).inreplyto != null) {
+                this.printIRT(sequences.get(i));
+                nextLine();
+
+            }
             this.printContent(sequences.get(i));
             nextLine();
             this.printArrow(sequences.get(i));
@@ -187,5 +257,6 @@ public class SequenceDiagram {
 
 class Sequence {
 
-    String date, sender, receiver, content;
+    String date, sender, receiver, content, replywith, inreplyto;
+    int performative;
 }

@@ -11,7 +11,7 @@ import world.World;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import glossary.roles;
+import glossary.Roles;
 import java.awt.Color;
 import java.util.ArrayList;
 
@@ -24,7 +24,7 @@ public class liveBot extends Thing {
     public static final int MAXFLIGHT = 256, MAXENERGY = 3500;
     
      String groupname;
-     glossary.roles role;
+     glossary.Roles role;
      int energylevel, burnmovement, burnsensor, compass, altitude, order;
      double distance, angle;
      Point origin;
@@ -37,6 +37,7 @@ public class liveBot extends Thing {
      public String lastEvent, relpywith;
      int initialDistance = -1, currentDistance;
     int energyBurnt = -1, numSteps = -1, timeSecs = 0;
+    String myCommitment="";
 
     public liveBot(String name) {
         super(name);
@@ -178,11 +179,11 @@ public class liveBot extends Thing {
         }
     }
 
-    public roles getRole() {
+    public Roles getRole() {
         return role;
     }
 
-    public void setRole(roles role) {
+    public void setRole(Roles role) {
         this.role = role;
     }
 
@@ -285,6 +286,15 @@ public class liveBot extends Thing {
     public void setCurrentDistance(int currentDistance) {
         this.currentDistance = currentDistance;
     }
+
+    public String getMyCommitment() {
+        return myCommitment;
+    }
+
+    public void setMyCommitment(String myCommitment) {
+        this.myCommitment = myCommitment;
+    }
+
     
 
 }

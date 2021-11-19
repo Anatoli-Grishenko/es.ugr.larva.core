@@ -5,6 +5,8 @@
  */
 package swing;
 
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import geometry.Point;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -43,13 +45,14 @@ public class AirTrafficControl extends MyDrawPane {
     protected MyDrawPane dpMap, dpPalette;
     protected JScrollPane spMap;
     protected Palette palMap;
-    protected int mapwidth, mapheight, zoom, x, y, width, height, offsetimg=18;
+    protected int mapwidth, mapheight, zoom, x, y, width, height, offsetimg = 18;
     protected int palw = 35, cellw = 20, shadow = 0;
     protected MyPopup mPopup;
     protected boolean ruler, trail, hotspot, redecorate = true, paintpalette = true;
     protected HashMap<String, ATC_Trail> trails;
     protected Color colors[] = {new Color(0, 255, 0), new Color(1, 0, 0), new Color(0, 0, 1),
         new Color(1, 1, 0), new Color(1, 0, 1), new Color(0, 1, 1)};
+    protected JsonArray jsaGoals=new JsonArray();
 
     public AirTrafficControl(Consumer<Graphics2D> function) {
         super(function);
@@ -154,9 +157,21 @@ public class AirTrafficControl extends MyDrawPane {
         return (Graphics2D) dpMap.getGraphics();
     }
 
+    public void setGoals(JsonObject jsgoals) {
+        try {
+            jsaGoals = jsgoals.get("goals").asArray();
+        } catch (Exception ex) {
+
+        }
+    }
+
     public void addTrail(String ID, int x, int y, int z) {
         if (!trails.keySet().contains(ID)) {
-            trails.put(ID, new ATC_Trail(ID, colors[0])); //colors[trails.keySet().size()]));
+            if (ID.startsWith("FIGHTER")) {
+                trails.put(ID, new ATC_Trail(ID, Color.GREEN)); //colors[trails.keySet().size()]));
+            } else {
+                trails.put(ID, new ATC_Trail(ID, Color.RED)); //colors[trails.keySet().size()]));
+            }
         }
         trails.get(ID).pushTrail(new Point(x, y, z));
         redecorate = false;
@@ -214,6 +229,9 @@ public class AirTrafficControl extends MyDrawPane {
         palMap = p;
         setPainter(g -> paintMpMap(g));
         defLayout();
+        jsaGoals = new JsonArray();
+
+//        setZoom(5);
         setZoom(Math.max((int) spMap.getPreferredSize().getWidth() / getMapWidth(),
                 (int) spMap.getPreferredSize().getHeight()) / getMapHeight());
         return this;
@@ -266,6 +284,9 @@ public class AirTrafficControl extends MyDrawPane {
 //                paintTrailPos(g, s, 0);
 //            }
         }
+        for (int i = 0; i < jsaGoals.size(); i++) {
+            paintGoal(g, jsaGoals.get(i).asObject());
+        }
         redecorate = true;
 
     }
@@ -277,22 +298,37 @@ public class AirTrafficControl extends MyDrawPane {
 
     }
 
+    protected void paintHotSpots(Graphics2D g, String ID) {
+        for (int i = 0; i < trails.get(ID).size(); i++) {
+            paintTrailPos(g, ID, i);
+        }
+
+    }
+
     protected void paintTrailPos(Graphics2D g, String ID, int pos) {
         Point p = trails.get(ID).getPoint(pos), p2;
-        int diam1=10,diam2=5;
-            g.setColor(trails.get(ID).c);
+        int diam1 = 10, diam2 = 5;
+        g.setColor(trails.get(ID).c);
         if (pos == 0) {
 //            paintPoint(g, p.clone().plus(new Point(-1, 0)), trails.get(ID).c);
 //            paintPoint(g, p.clone().plus(new Point(1, 0)), trails.get(ID).c);
 //            paintPoint(g, p.clone().plus(new Point(0, 1)), trails.get(ID).c);
 //            paintPoint(g, p.clone().plus(new Point(0, -1)), trails.get(ID).c);
 
-            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam1/2, diam1, diam1);
+            g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam1 / 2, diam1, diam1);
 //            p2 = p.clone().plus(new Point(0,-1));
-            g.drawString(ID, offsetimg + zoom * (int)p.getX()+ zoom/2-diam1/2, offsetimg + zoom * (int) p.getY());
+            g.drawString(ID, offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY());
         } else {
-            g.fillOval(offsetimg + zoom * (int)p.getX()+ zoom/2-diam2/2, offsetimg + zoom * (int) p.getY()+ zoom/2-diam2/2, diam2, diam2);
+            g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam2 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam2 / 2, diam2, diam2);
         }
+
+    }
+
+    protected void paintGoal(Graphics2D g, JsonObject jsgoal) {
+        Point p = new Point(jsgoal.getString("position", ""));
+        int diam1 = 10, diam2 = 5;
+        g.setColor(Color.YELLOW);
+        g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam1 / 2, diam1, diam1);
 
     }
 
@@ -398,7 +434,7 @@ public class AirTrafficControl extends MyDrawPane {
 
 class ATC_Trail {
 
-    protected final int TRAILSIZE = 10;
+    protected final int TRAILSIZE = 1;
     String id;
     Color c;
     ArrayList<Point> trail = new ArrayList();
