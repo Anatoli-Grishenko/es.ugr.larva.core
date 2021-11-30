@@ -167,10 +167,16 @@ public class AirTrafficControl extends MyDrawPane {
 
     public void addTrail(String ID, int x, int y, int z) {
         if (!trails.keySet().contains(ID)) {
-            if (ID.startsWith("FIGHTER")) {
+            if (ID.startsWith("F")) {
                 trails.put(ID, new ATC_Trail(ID, Color.GREEN)); //colors[trails.keySet().size()]));
-            } else {
+            } else if (ID.startsWith("C")) {
                 trails.put(ID, new ATC_Trail(ID, Color.RED)); //colors[trails.keySet().size()]));
+            } else if (ID.startsWith("D")) {
+                trails.put(ID, new ATC_Trail(ID, Color.WHITE)); //colors[trails.keySet().size()]));
+            } else if (ID.startsWith("R")) {
+                trails.put(ID, new ATC_Trail(ID, Color.CYAN)); //colors[trails.keySet().size()]));
+            } else {
+                trails.put(ID, new ATC_Trail(ID, Color.YELLOW)); //colors[trails.keySet().size()]));
             }
         }
         trails.get(ID).pushTrail(new Point(x, y, z));

@@ -265,6 +265,7 @@ public class OleDataBase implements ReportableObject {
 
     public boolean DBObjectUpdate(String table, OleQuery find, OleQuery update) {
         SentenceBuilder sb = new SentenceBuilder(this);
+        try {
         if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
             sb.Op(INSERT).Table(table);
             update.getNetFieldList().forEach(f -> {
@@ -280,6 +281,9 @@ public class OleDataBase implements ReportableObject {
             sb.Pair(f, update.getOle(f).getField("value"));
             });
             return this.DBSBupdate(sb);
+        }
+        } catch (Exception ex) {
+            return false;
         }
     }
 

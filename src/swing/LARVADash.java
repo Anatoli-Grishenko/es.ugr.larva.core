@@ -100,7 +100,6 @@ public class LARVADash {
             cSoil = new Color(204, 102, 0), cDodgerB = new Color(0, 102, 204),
             cStatus = new Color(0, 50, 0), cTextStatus = new Color(0, 200, 0);
     Color[][] mMap, cVisual, cLidar, cThermal;
-    int[][] uploadedMap = null;
     HashMap<String, Palette> Palettes;
     protected Semaphore smContinue, smPlay, smStart, smReady;
     protected Semaphore smReadyData, smReadyFX, smAllowAgent;
@@ -173,32 +172,34 @@ public class LARVADash {
         return res;
     }
 
-    public boolean uploadFullMap(ACLMessage msg) {
-        try {
-            if (msg.getContent().contains("filedata")) {
-                SensorDecoder sdecAux = new SensorDecoder();
-                OleFile mapa = new OleFile();
-                mapa.set(msg.getContent());
-                mapa.setField("filename", "downloaded"+mapa.getField("filename"));
-                mapa.saveFile("./maps/");
-                sdecAux.setWorldMap(msg.getContent(), 255);
-                int w = sdecAux.getWorldMap().getWidth();
-                int h = sdecAux.getWorldMap().getHeight();
-                this.uploadedMap = new int[w][h];
-                for (int i = 0; i < w; i++) {
-                    for (int j = 0; j < h; j++) {
-                        uploadedMap[i][j] = sdecAux.getWorldMap().getStepLevel(i, j);
-                    }
-                }
-                return true;
-            } else {
-                return false;
-            }
-        } catch (Exception ex) {
-            return false;
-        }
-
-    }
+//    public boolean uploadFullMap(ACLMessage msg) {
+//        int i, j,w, h;
+//        try {
+//            if (msg.getContent().contains("filedata")) {
+//                SensorDecoder sdecAux = new SensorDecoder();
+//                OleFile mapa = new OleFile();
+//                mapa.set(msg.getContent());
+//                mapa.setField("filename", this.getName()+mapa.getField("filename"));
+//                mapa.saveFile("./maps/");
+//                sdecAux.setWorldMap(msg.getContent(), 255);
+//                w = sdecAux.getWorldMap().getWidth();
+//                h = sdecAux.getWorldMap().getHeight();
+//                this.uploadedMap = new int[w][h];
+//                for (i = 0; i < w; i++) {
+//                    for (j = 0; j < h; j++) {
+//                        System.out.println(this.getName()+":"+i+","+j);
+//                        uploadedMap[i][j] = sdecAux.getWorldMap().getStepLevel(i, j);
+//                    }
+//                }
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        } catch (Exception ex) {
+//            return false;
+//        }
+//
+//    }
 
     protected boolean setWorldMap(String olefile, int maxlevel, String spalette) {
         this.lastPerception.setWorldMap(olefile, maxlevel);
@@ -1680,11 +1681,17 @@ public class LARVADash {
         return lastPerception.getThermalData();
     }
 
+    /**
+     * Gives the height of the last map loaded in the specified point
+     * @param x The x-coordinate of the point being queried
+     * @param y The y-coordinate of the point being queried
+     * @return The height of the map, as a multiple of 5
+     */
     public int getMapLevel(int x, int y) {
-        if (uploadedMap == null || x < 0 || y < 0 || x>= uploadedMap.length || y>= uploadedMap[0].length ) {
+        if (x < 0 || y < 0 || x>=lastPerception.getWorldMap().getWidth()  || y>= lastPerception.getWorldMap().getHeight() ) {
             return Integer.MAX_VALUE;
         } else 
-            return uploadedMap[x][y];
+            return this.lastPerception.getWorldMap().getStepLevel(x, y);
     }
     public String getName() {
         if (lastPerception.isReady()) {
@@ -1842,6 +1849,23 @@ public class LARVADash {
             message += "\n";
         }
         return message;
+    }
+
+    /**
+     * Gives the width of the last map received
+     * @return the number of columns (X) of the map
+     */
+
+    public int getWidth() {
+        return worldw;
+    }
+
+    /**
+     * Gives the height of the last map received
+     * @return the number of rows (Y) of the map
+     */
+    public int getHeight() {
+        return worldh;
     }
 
 }
