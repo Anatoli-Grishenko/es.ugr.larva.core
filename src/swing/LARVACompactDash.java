@@ -83,7 +83,8 @@ public class LARVACompactDash extends LARVADash {
         boolean res = false;
         if (msg.getContent().contains("filedata")) {
             Ole ocontent = new Ole().set(msg.getContent());
-            OleFile ofile = new OleFile(ocontent.getOle("surface"));
+            OleFile ofile;
+            ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
             if (isActivated()) {
                 bGame.setEnabled(enablesimulation);
@@ -353,7 +354,6 @@ public class LARVACompactDash extends LARVADash {
 //
 //        }
 //    }
-
     protected void whenExecute(Consumer<String> executor) {
         externalExecutor = executor;
     }
@@ -435,7 +435,7 @@ public class LARVACompactDash extends LARVADash {
         mpMap = new MyMapPalPane(null);
         mpMap.addRuler();
         mpMap.addTrail();
-        
+
         mpVisual = new MyMapPalPane(null);
         mpVisual.addRuler();
         mpVisual.addHotSpot();

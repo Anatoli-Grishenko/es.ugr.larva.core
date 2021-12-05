@@ -404,6 +404,10 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
+                if (res.getContent() != null && res.getContent().contains("filedata") && 
+                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                    myDashboard.preProcessACLM(res);
+                }
                 repeat = false;
             }
         } while (repeat);
@@ -422,8 +426,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         do {
             res = blockingReceive(milis);
             if (res != null && ACLMessageTools.isDashACL(res)) {
+                res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
+                if (res.getContent() != null && res.getContent().contains("filedata") && 
+                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                    myDashboard.preProcessACLM(res);
+                }
                 repeat = false;
             }
         } while (repeat);
@@ -443,8 +452,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         do {
             res = blockingReceive(t);
             if (res != null && ACLMessageTools.isDashACL(res)) {
+                res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
+                if (res.getContent() != null && res.getContent().contains("filedata") && 
+                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                    myDashboard.preProcessACLM(res);
+                }
                 repeat = false;
             }
         } while (repeat);
@@ -465,8 +479,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         do {
             res = blockingReceive(t, milis);
             if (res != null && ACLMessageTools.isDashACL(res)) {
+                res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
+                if (res.getContent() != null && res.getContent().contains("filedata") && 
+                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                    myDashboard.preProcessACLM(res);
+                }
                 repeat = false;
             }
         } while (repeat);
