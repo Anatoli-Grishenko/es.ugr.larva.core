@@ -336,6 +336,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         } else {
             if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                 Info(inbox.getContent());
+                checkedin = false;
                 return true;
             } else {
                 Error(inbox.getContent());
@@ -370,7 +371,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 //                aux.setOntology(msg.getOntology());
 //                aux.setProtocol(msg.getProtocol());
                 sman = this.DFGetAllProvidersOf("SESSION MANAGER " + skey).get(0);
-                msg.addReceiver(new AID(sman,AID.ISLOCALNAME));
+                msg.addReceiver(new AID(sman, AID.ISLOCALNAME));
 //                aux.addReceiver(new AID(sman, AID.ISLOCALNAME));
 //                this.send(aux);
 //                Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(aux, false));
@@ -404,8 +405,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
-                if (res.getContent() != null && res.getContent().contains("filedata") && 
-                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                if (res.getContent() != null && res.getContent().contains("filedata")
+                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
                     myDashboard.preProcessACLM(res);
                 }
                 repeat = false;
@@ -429,8 +430,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
-                if (res.getContent() != null && res.getContent().contains("filedata") && 
-                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                if (res.getContent() != null && res.getContent().contains("filedata")
+                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
                     myDashboard.preProcessACLM(res);
                 }
                 repeat = false;
@@ -455,8 +456,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
-                if (res.getContent() != null && res.getContent().contains("filedata") && 
-                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                if (res.getContent() != null && res.getContent().contains("filedata")
+                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
                     myDashboard.preProcessACLM(res);
                 }
                 repeat = false;
@@ -482,8 +483,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 res = ACLMessageTools.cleanDashMark(res);
                 repeat = myDashboard.preProcessACLM(res);
             } else {
-                if (res.getContent() != null && res.getContent().contains("filedata") && 
-                        res.getReplyWith() != null && res.getReplyWith().contains("Recruit")){
+                if (res.getContent() != null && res.getContent().contains("filedata")
+                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
                     myDashboard.preProcessACLM(res);
                 }
                 repeat = false;
