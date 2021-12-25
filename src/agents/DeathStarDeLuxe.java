@@ -9,6 +9,7 @@ import data.Ole;
 import data.OleFile;
 import java.util.HashMap;
 import messaging.ACLMessageTools;
+import swing.LARVAAirTrafficControl3D;
 import swing.LARVAAirTrafficControlTiles;
 import swing.LARVAMiniDash;
 
@@ -16,7 +17,7 @@ import swing.LARVAMiniDash;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class DeathStar extends LARVAFirstAgent {
+public class DeathStarDeLuxe extends LARVAFirstAgent {
 
     enum Status {
         CHECKIN, CHECKOUT, IDLE, HASSESSION, UPDATE, EXIT
@@ -24,8 +25,8 @@ public class DeathStar extends LARVAFirstAgent {
     Status myStatus;
 
     protected HashMap<String, LARVAMiniDash> AgentDash;
-    protected LARVAAirTrafficControlTiles TheMap;
-    protected String sessionKey="";
+    protected LARVAAirTrafficControl3D TheMap;
+    protected String sessionKey = "";
 
     @Override
     public void setup() {
@@ -33,8 +34,8 @@ public class DeathStar extends LARVAFirstAgent {
         logger.offEcho();
         logger.onTabular();
         myStatus = Status.CHECKIN;
-        TheMap = new LARVAAirTrafficControlTiles();
-        TheMap.setTitle("DEATH STAR");
+        TheMap = new LARVAAirTrafficControl3D();
+        TheMap.setTitle("DEATH STAR DE LUXE");
         Info("Setting Death Star up");
         exit = false;
     }
@@ -62,7 +63,6 @@ public class DeathStar extends LARVAFirstAgent {
 
     @Override
     public void takeDown() {
-        MyCheckout();
         Info("Taking down and deleting agent");
         super.takeDown();
     }
@@ -90,27 +90,31 @@ public class DeathStar extends LARVAFirstAgent {
 
     public Status myIdle() {
         inbox = this.LARVAblockingReceive();
-        Info("Received: "+ACLMessageTools.fancyWriteACLM(inbox, false));
+        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
             this.sessionKey = inbox.getConversationId();
             Ole ocontent = new Ole().set(inbox.getContent());
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
-            TheMap.clear();
-            TheMap.setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));            
-            this.setTitle();
-        }else
-        if (inbox.getContent().contains("perceptions")) {
-            TheMap.feedPerception(inbox.getContent());            
-        }else
-        if (inbox.getContent().contains("goals")) {
-            TheMap.feedGoals(inbox.getContent());            
+            doSwingWait(() -> {
+                TheMap.clear();
+
+                TheMap.setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));
+                this.setTitle();
+            });
+        } else if (inbox.getContent().contains("perceptions")) {
+            doSwingWait(() -> {
+                TheMap.feedPerception(inbox.getContent());
+            });
+        } else if (inbox.getContent().contains("goals")) {
+            doSwingWait(() -> {
+                TheMap.feedGoals(inbox.getContent());
+            });
         }
         return Status.IDLE;
     }
-    
-    
+
     protected void setTitle() {
-        this.TheMap.setTitle("| DEATH STAR |"+userName+" | "+sessionKey+" |");
+        this.TheMap.setTitle("| DEATH STAR |" + userName + " | " + sessionKey + " |");
     }
 }
