@@ -33,7 +33,6 @@ public class Internet {
 
             res = in.readLine(); //you get the IP as a String
         } catch (Exception ex) {
-            Logger.getLogger(Internet.class.getName()).log(Level.SEVERE, null, ex);
         }
         return res;
     }
@@ -44,7 +43,6 @@ public class Internet {
             socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
             res = socket.getLocalAddress().getHostAddress();
         } catch (Exception ex) {
-            Logger.getLogger(Internet.class.getName()).log(Level.SEVERE, null, ex);
         }
         return res;
     }

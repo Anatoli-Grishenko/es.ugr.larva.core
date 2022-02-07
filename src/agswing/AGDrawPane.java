@@ -5,7 +5,6 @@ package agswing;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -28,17 +27,18 @@ public abstract class AGDrawPane extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (myg == null)
+        if (myg == null) {
             activate(g);
+        }
         myg = (Graphics2D) g;
-        AGDraw((Graphics2D)g);
+        AGDraw((Graphics2D) g);
     }
 
     public void activate(Graphics g) {
         setBackground(Color.BLACK);
         setForeground(Color.WHITE);
     }
-    
+
     public Color getBackground() {
         return background;
     }
@@ -55,12 +55,14 @@ public abstract class AGDrawPane extends JPanel {
         this.foreground = foreground;
     }
 
-    public void clear(){
-        myg.setBackground(background);
-        myg.setColor(background);
-        myg.fillRect(0,0,this.getSize().width, this.getSize().height);
-        myg.setColor(foreground);
+    public void clear() {
+        if (myg != null) {
+            myg.setBackground(background);
+            myg.setColor(background);
+            myg.fillRect(0, 0, this.getSize().width, this.getSize().height);
+            myg.setColor(foreground);
+        }
     }
-    
+
     abstract public void AGDraw(Graphics2D g);
 }

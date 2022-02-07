@@ -29,12 +29,14 @@ public class SwingTools {
     public static void doSwingWait(Runnable what) {
         if (!SwingUtilities.isEventDispatchThread()) {
             try {
+//                System.out.println("WITHIN SWING");
                 SwingUtilities.invokeAndWait(() -> {
                     what.run();
                 });
             } catch (Exception ex) {
             }
         } else {
+//                System.out.println("WITHOUT SWING");
             what.run();
         }
     }
