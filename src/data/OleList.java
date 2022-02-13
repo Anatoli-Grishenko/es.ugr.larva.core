@@ -20,13 +20,13 @@ public class OleList extends Ole {
 
     public OleList() {
         super();
-        setType(ole.LIST.name());
+        setType(ole.OLELIST.name());
         this.setField("items", new ArrayList());
     }
 
     public OleList(Ole o) {
         super(o);
-        setType(ole.LIST.name());
+        setType(ole.OLELIST.name());
     }
 
     protected JsonArray getList() {

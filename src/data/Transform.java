@@ -140,13 +140,33 @@ public class Transform {
 //            sensors s= sensors.valueOf(jsv.asString());
 
     }
-    
+
+    public static String getValueType(JsonValue jsv) {
+        if (jsv.isBoolean()) {
+            return ole.BOOLEAN.name();
+        } else if (jsv.isString()) {
+            return ole.STRING.name();
+        } else if (jsv.isNumber()) {
+            if (jsv.toString().contains(".")) {
+                return ole.DOUBLE.name();
+            } else {
+                return ole.INTEGER.name();
+            }
+        } else if (jsv.isArray()) {
+            return ole.ARRAY.name();
+        } else if (jsv.isObject()) {
+            return ole.OLE.name();
+        } else {
+            return ole.BADVALUE.name();
+        }
+    }
+
     public static JsonObject OleToJson(Ole odata) {
         JsonObject res = new JsonObject();
         for (String f : odata.getFieldList()) {
             String type = odata.getFieldType(f);
             if (type.equals(ole.INTEGER.name())) {
-                res.set(f,odata.getInt(f));
+                res.set(f, odata.getInt(f));
             } else if (type.equals(ole.DOUBLE.name())) {
                 res.set(f, odata.getDouble(f));
             } else if (type.equals(ole.STRING.name())) {
@@ -154,18 +174,17 @@ public class Transform {
             } else if (type.equals(ole.BOOLEAN.name())) {
                 res.set(f, odata.getBoolean(f));
             } else if (type.startsWith(ole.OLE.name())) {
-                res.set(f, odata.getOle(f).exportToJson());
-            } else if (type.equals(ole.ARRAY.name())) {
+                res.set(f, Transform.OleToJson(odata.getOle(f)));
             }
         }
         return res;
-    }    
+    }
 
     public static Ole JsonToOle(JsonObject jsole) {
-        Ole res  = new Ole();
+        Ole res = new Ole();
         for (String jsf : jsole.names()) {
             if (jsole.get(jsf).isBoolean()) {
-               res.setField(jsf, jsole.get(jsf).asBoolean());
+                res.setField(jsf, jsole.get(jsf).asBoolean());
             } else if (jsole.get(jsf).isNumber()) {
                 if (jsole.get(jsf).toString().contains(".") || jsole.get(jsf).toString().contains(",")) {
                     res.setField(jsf, jsole.get(jsf).asDouble());
@@ -176,9 +195,25 @@ public class Transform {
                 res.setField(jsf, jsole.get(jsf).asString());
             } else if (jsole.get(jsf).isObject()) {
                 res.setField(jsf, new Ole(jsole.get(jsf).asObject()));
+            } else if (jsole.get(jsf).isArray()) {
+                res.setField(jsf, new ArrayList());
+                for (JsonValue jsv : jsole.get(jsf).asArray()) {
+                    String stype = getValueType(jsv);
+                    if (jsv.isBoolean()) {
+                        res.addToField(jsf, jsv.asBoolean());
+                    } else if (jsv.isNumber()) {
+                        if (jsv.toString().contains(".") || jsv.toString().contains(",")) {
+                            res.addToField(jsf, jsv.asDouble());
+                        } else {
+                            res.addToField(jsf, jsv.asInt());
+                        }
+                    } else if (jsv.isString()) {
+                        res.addToField(jsf, jsv.asString());
+                    } 
+                }
             }
         }
         return res;
-    }    
+    }
 
 }

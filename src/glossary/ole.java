@@ -11,8 +11,9 @@ package glossary;
 
 public enum ole {BADVALUE, OLEMETA, 
                                 INTEGER, DOUBLE, STRING, ARRAY, BOOLEAN,
+                                OLELIST,
                                 OLEBITMAP, OLEFILE, OLEACLM, OLEPASSPORT, OLEREPORT, OLETABLE, 
-            ADMINPASSPORT, DBQUERY, LIST, NOTIFICATION,
+            ADMINPASSPORT, DBQUERY,  NOTIFICATION,
             SENSOR,REQUEST,ANSWER, RECORD, POINT, VECTOR, ENTITY,
             OLE, QUERY, DIALOG };
 

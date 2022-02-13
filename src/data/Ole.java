@@ -117,26 +117,26 @@ public class Ole {
         set(s);
     }
 
-    public JsonObject exportToJson() {
-        return Transform.OleToJson(this);
-//        JsonObject res = new JsonObject();
-//        for (String f : getFieldList()) {
-//            String type = getFieldType(f);
-//            if (type.equals(ole.INTEGER.name())) {
-//                res.set(f, this.getInt(f));
-//            } else if (type.equals(ole.DOUBLE.name())) {
-//                res.set(f, this.getDouble(f));
-//            } else if (type.equals(ole.STRING.name())) {
-//                res.set(f, this.getString(f));
-//            } else if (type.equals(ole.BOOLEAN.name())) {
-//                res.set(f, this.getBoolean(f));
-//            } else if (type.startsWith(ole.OLE.name())) {
-//                res.set(f, this.getOle(f).exportToJson());
-//            } else if (type.equals(ole.ARRAY.name())) {
-//            }
-//        }
-//        return res;
-    }
+//    public JsonObject exportToJson() {
+//        return Transform.OleToJson(this);
+////        JsonObject res = new JsonObject();
+////        for (String f : getFieldList()) {
+////            String type = getFieldType(f);
+////            if (type.equals(ole.INTEGER.name())) {
+////                res.set(f, this.getInt(f));
+////            } else if (type.equals(ole.DOUBLE.name())) {
+////                res.set(f, this.getDouble(f));
+////            } else if (type.equals(ole.STRING.name())) {
+////                res.set(f, this.getString(f));
+////            } else if (type.equals(ole.BOOLEAN.name())) {
+////                res.set(f, this.getBoolean(f));
+////            } else if (type.startsWith(ole.OLE.name())) {
+////                res.set(f, this.getOle(f).exportToJson());
+////            } else if (type.equals(ole.ARRAY.name())) {
+////            }
+////        }
+////        return res;
+//    }
 
     public Ole(JsonObject jsole)  {
         if (jsole.get(ole.OLEMETA.name())!=null) {  // From plain OLE
@@ -250,24 +250,29 @@ public class Ole {
         return enigma != null;
     }
 
+//    public String getValueType(JsonValue jsv) {
+//            if (jsv.isBoolean()) {
+//                return ole.BOOLEAN.name();
+//            } else if (jsv.isString()) {
+//                return ole.STRING.name();
+//            } else if (jsv.isNumber()) {
+//                if (jsv.toString().contains(".")) {
+//                    return ole.DOUBLE.name();
+//                } else {
+//                    return ole.INTEGER.name();
+//                }
+//            } else if (jsv.isArray()) {
+//                return ole.ARRAY.name();
+//            } else if (jsv.isObject()){
+//                return ole.OLE.name();
+//            }  else {
+//                return ole.BADVALUE.name();
+//            }
+//    }
+//    
     public String getFieldType(String field) {
         if (checkField(field)) {
-            JsonValue jsv = data.get(field);
-            if (jsv.isBoolean()) {
-                return ole.BOOLEAN.name();
-            } else if (jsv.isString()) {
-                return ole.STRING.name();
-            } else if (jsv.isNumber()) {
-                if (jsv.toString().contains(".")) {
-                    return ole.DOUBLE.name();
-                } else {
-                    return ole.INTEGER.name();
-                }
-            } else if (jsv.isArray()) {
-                return ole.ARRAY.name();
-            } else {
-                return getOle(field).getType();
-            }
+            return Transform.getValueType(data.get(field));
         } else {
             return ole.BADVALUE.name();
         }
@@ -442,7 +447,7 @@ public class Ole {
      */
     public final Ole setField(String fieldname, Ole value) {
         addField(fieldname);
-        data.set(fieldname, value.toJson());
+        data.set(fieldname, Transform.OleToJson(value));
         return this;
     }
 
