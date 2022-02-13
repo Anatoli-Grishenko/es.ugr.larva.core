@@ -92,6 +92,7 @@ public class Ole {
     /**
      * Basic constructor.
      */
+    
     public Ole() {
         Init();
     }
