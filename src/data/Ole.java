@@ -82,6 +82,7 @@ public class Ole {
     /**
      * This is the container for the object, specified as a JsonObject
      */
+    
     protected JsonObject data;
 
     /**
