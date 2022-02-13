@@ -6,6 +6,7 @@
 package data;
 
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
@@ -92,86 +93,8 @@ public class Ole {
     /**
      * Basic constructor.
      */
-    
     public Ole() {
         Init();
-    }
-
-    private void Init() {
-        data = new JsonObject();
-        enigma = null;
-        setID(Keygen.getAlphaNumKey(16));
-        setType(ole.OLE.name());
-        setFields(new ArrayList());
-        Meta("oledate", TimeHandler.Now());
-        Meta("description", "Object Linked and Embeded");
-        Meta("ole", true);
-    }
-
-    public Ole checkField(String fieldname) {
-        if (data.get(fieldname) == null) {
-            data.get("fields").asArray().add(fieldname);
-            data.set(fieldname, "");
-        }
-        return this;
-    }
-
-    public Ole Meta(String key, String value) {
-        data.set(key, value);
-        return this;
-    }
-
-    public Ole Meta(String key, int value) {
-        data.set(key, value);
-        return this;
-    }
-
-    public Ole Meta(String key, double value) {
-        data.set(key, value);
-        return this;
-    }
-
-    public Ole Meta(String key, boolean value) {
-        data.set(key, value);
-        return this;
-    }
-
-    public Ole Meta(String key, Ole value) {
-        data.set(key, value.toJson());
-        return this;
-    }
-
-    public Ole Meta(String key, ArrayList<Object> value) {
-        data.set(key, Transform.toJsonArray(value));
-        return this;
-    }
-
-    public Ole setID(String id) {
-        Meta("id", id);
-        return this;
-    }
-
-    public Ole setType(String type) {
-        Meta("type", type);
-        return this;
-    }
-
-    public Ole setFields(List<String> fields) {
-        Meta("fields", new ArrayList(fields));
-        return this;
-    }
-    
-    public String getFieldType(String field) {
-        JsonValue jsv =data.get(field);
-        if (jsv.isBoolean())
-            return ole.BOOLEAN.name();
-        else if (jsv.isString())
-            return ole.STRING.name();
-        else if (jsv.isNumber()) {
-            return ole.DOUBLE.name();
-        } else if (jsv.isArray())
-            return ole.ARRAY.name();
-        else return getOle(field).getType();
     }
 
     /**
@@ -181,7 +104,7 @@ public class Ole {
      */
     public Ole(Ole o) {
         this.enigma = o.enigma;
-        set(o.data);
+        this.data = o.data;
     }
 
     /**
@@ -194,73 +117,110 @@ public class Ole {
         set(s);
     }
 
-    public Ole(JsonObject jsole) {
-        set(jsole);
+    public JsonObject exportToJson() {
+        return Transform.OleToJson(this);
+//        JsonObject res = new JsonObject();
+//        for (String f : getFieldList()) {
+//            String type = getFieldType(f);
+//            if (type.equals(ole.INTEGER.name())) {
+//                res.set(f, this.getInt(f));
+//            } else if (type.equals(ole.DOUBLE.name())) {
+//                res.set(f, this.getDouble(f));
+//            } else if (type.equals(ole.STRING.name())) {
+//                res.set(f, this.getString(f));
+//            } else if (type.equals(ole.BOOLEAN.name())) {
+//                res.set(f, this.getBoolean(f));
+//            } else if (type.startsWith(ole.OLE.name())) {
+//                res.set(f, this.getOle(f).exportToJson());
+//            } else if (type.equals(ole.ARRAY.name())) {
+//            }
+//        }
+//        return res;
     }
 
-    public final Ole set(JsonObject jsole) {
-        Init();
-        JsonObject ole = Json.parse(jsole.toString()).asObject();
-        if (ole.getBoolean("ole", false)) {
-            this.data = ole;
+    public Ole(JsonObject jsole)  {
+        if (jsole.get(ole.OLEMETA.name())!=null) {  // From plain OLE
+            this.data = jsole;
+        } else {                                                                  // from plain JSON
+            this.data = Transform.JsonToOle(jsole).data;
+        }
+    }
+
+    private void Init() {
+        data = new JsonObject();
+        data.set(ole.OLEMETA.name(), new JsonObject());
+        enigma = null;
+        setID(Keygen.getAlphaNumKey(16));
+        setType(ole.OLE.name());
+        meta().set("fields", new JsonArray());
+        setDate(TimeHandler.Now());
+        setDescription("Object Linked and Embeded");
+        meta().set("ole", true);
+    }
+
+    private JsonObject meta() {
+        if (data.get(ole.OLEMETA.name()) != null) {
+            return data.get(ole.OLEMETA.name()).asObject();
         } else {
-            this.data = parseJson(jsole);
+            return new JsonObject();
+        }
+    }
+
+    public boolean checkField(String fieldName) {
+        return data.get(fieldName) != null;
+    }
+
+    public Ole addField(String fieldName) {
+        if (!checkField(fieldName)) {
+            data.set(fieldName, "");
+            meta().get("fields").asArray().add(fieldName);
         }
         return this;
     }
 
-    private JsonObject parseJson(JsonObject jsk) {
-        Ole res = new Ole();
-        for (String name : jsk.names()) {
-            if (jsk.get(name).isBoolean()) {
-                res.setField(name, jsk.getBoolean(name, true));
-            } else if (jsk.get(name).isNumber()) {
-                res.setField(name, jsk.getDouble(name, -1));
-            } else if (jsk.get(name).isString()) {
-                res.setField(name, jsk.getString(name, ""));
-            } else if (jsk.get(name).isArray()) {
-                res.setField(name, new ArrayList(Transform.toArrayList(jsk.get(name).asArray())));
-            } else {
-                res.setField(name, new Ole().set(jsk.get(name).asObject()));
-            }
-        }
-        return res.toJson();
-    }
-
-    /**
-     * Main method to re-construct serialialized Ole objects
-     *
-     * @param olestring The serialization, either encrypted or not, of the
-     * object
-     * @return It reconstructs the object and returns a reference to it. If the
-     * string fails to be decrypted or the string does not contain a valid
-     * JsonObject, then an empty Ole is returned (see {@link isEmpty}
-     */
-    public final Ole set(String olestring) {
-        JsonObject res;
-        String sdata;
-        try {
-            // If en
-            if (this.isEncrypted()) {
-                sdata = enigma.deCrypt(olestring);
-            } else {
-                sdata = olestring;
-            }
-            // Reconstruct the JsonObject main container
-            res = Json.parse(sdata).asObject();
-            set(res);
-        } catch (Exception ex) {
-        }
+    public Ole setID(String id) {
+        meta().set("id", id);
         return this;
     }
 
-    /**
-     * Informs of the type of the object stored
-     *
-     * @return The type. See {@link data.Ole} for details
-     */
+    public Ole setType(String type) {
+        meta().set("type", type);
+        return this;
+    }
+
+    public Ole setDate(String date) {
+        meta().set("date", date);
+        return this;
+    }
+
+    public Ole setDescription(String description) {
+        meta().set("description", description);
+        return this;
+    }
+
+    public Ole setOle() {
+        meta().set("ole", true);
+        return this;
+    }
+
+    public String getID() {
+        return meta().getString("id", ole.BADVALUE.name());
+    }
+
     public String getType() {
-        return data.getString("type", "unknown");
+        return meta().getString("type", ole.BADVALUE.name());
+    }
+
+    public String getDate() {
+        return meta().getString("date", ole.BADVALUE.name());
+    }
+
+    public String getDescription() {
+        return meta().getString("description", ole.BADVALUE.name());
+    }
+
+    public boolean isOle() {
+        return meta().getBoolean("ole", false);
     }
 
     /**
@@ -268,19 +228,8 @@ public class Ole {
      *
      * @return A list of String with the names of the fields
      */
-    public List<String> getFullFieldList() {
-        return Transform.toArrayListString(data.get("fields").asArray());
-    }
-
-    public List<String> getNetFieldList() {
-        ArrayList<String> netlist = new ArrayList(getFullFieldList());
-        netlist.remove("ole");
-        netlist.remove("id");
-        netlist.remove("type");
-        netlist.remove("description");
-        netlist.remove("oledate");
-        netlist.remove("fields");
-        return netlist;
+    public List<String> getFieldList() {
+        return Transform.toArrayListString(meta().get("fields").asArray());
     }
 
     /**
@@ -289,7 +238,7 @@ public class Ole {
      * @return true if data is empty, false otherwise
      */
     public boolean isEmpty() {
-        return this.getNetFieldList().size() == 0;
+        return this.getFieldList().isEmpty();
     }
 
     /**
@@ -301,6 +250,30 @@ public class Ole {
         return enigma != null;
     }
 
+    public String getFieldType(String field) {
+        if (checkField(field)) {
+            JsonValue jsv = data.get(field);
+            if (jsv.isBoolean()) {
+                return ole.BOOLEAN.name();
+            } else if (jsv.isString()) {
+                return ole.STRING.name();
+            } else if (jsv.isNumber()) {
+                if (jsv.toString().contains(".")) {
+                    return ole.DOUBLE.name();
+                } else {
+                    return ole.INTEGER.name();
+                }
+            } else if (jsv.isArray()) {
+                return ole.ARRAY.name();
+            } else {
+                return getOle(field).getType();
+            }
+        } else {
+            return ole.BADVALUE.name();
+        }
+    }
+
+//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv   
     /**
      * Most generic method to return a field. It is returned as a String
      *
@@ -309,12 +282,14 @@ public class Ole {
      */
     public final String getField(String field) {
         String res = "";
-        if (data.get(field) != null) {
+        if (checkField(field)) {
             if (data.get(field).isString()) {
                 res = data.get(field).asString();
             } else {
                 res = data.get(field).toString();
             }
+        } else {
+            res = ole.BADVALUE.name();
         }
         return res;
     }
@@ -390,7 +365,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, String value) {
-        checkField(fieldname);
+        addField(fieldname);
         data.set(fieldname, value);
         return this;
     }
@@ -405,7 +380,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, int value) {
-        checkField(fieldname);
+        addField(fieldname);
         data.set(fieldname, value);
         return this;
     }
@@ -420,6 +395,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, double value) {
+        addField(fieldname);
         data.set(fieldname, value);
         return this;
     }
@@ -434,7 +410,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, boolean value) {
-        checkField(fieldname);
+        addField(fieldname);
         data.set(fieldname, value);
         return this;
     }
@@ -450,7 +426,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, ArrayList<Object> value) {
-        checkField(fieldname);
+        addField(fieldname);
         data.set(fieldname, Transform.toJsonArray(value));
         return this;
     }
@@ -465,7 +441,7 @@ public class Ole {
      * @return A reference to the instance
      */
     public final Ole setField(String fieldname, Ole value) {
-        checkField(fieldname);
+        addField(fieldname);
         data.set(fieldname, value.toJson());
         return this;
     }
@@ -501,6 +477,63 @@ public class Ole {
     public final Ole addToField(String fieldname, Ole v) {
         if (data.get(fieldname).isArray()) {
             data.get(fieldname).asArray().add(v.toJson());
+        }
+        return this;
+    }
+
+    //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    public final Ole set(JsonObject jsole) {
+        Init();
+        JsonObject ole = Json.parse(jsole.toString()).asObject();
+        if (ole.getBoolean("ole", false)) {
+            this.data = ole;
+        } else {
+            this.data = parseJson(jsole);
+        }
+        return this;
+    }
+
+    private JsonObject parseJson(JsonObject jsk) {
+        Ole res = new Ole();
+        for (String name : jsk.names()) {
+            if (jsk.get(name).isBoolean()) {
+                res.setField(name, jsk.getBoolean(name, true));
+            } else if (jsk.get(name).isNumber()) {
+                res.setField(name, jsk.getDouble(name, -1));
+            } else if (jsk.get(name).isString()) {
+                res.setField(name, jsk.getString(name, ""));
+            } else if (jsk.get(name).isArray()) {
+                res.setField(name, new ArrayList(Transform.toArrayList(jsk.get(name).asArray())));
+            } else {
+                res.setField(name, new Ole().set(jsk.get(name).asObject()));
+            }
+        }
+        return res.toJson();
+    }
+
+    /**
+     * Main method to re-construct serialialized Ole objects
+     *
+     * @param olestring The serialization, either encrypted or not, of the
+     * object
+     * @return It reconstructs the object and returns a reference to it. If the
+     * string fails to be decrypted or the string does not contain a valid
+     * JsonObject, then an empty Ole is returned (see {@link isEmpty}
+     */
+    public final Ole set(String olestring) {
+        JsonObject res;
+        String sdata;
+        try {
+            // If en
+            if (this.isEncrypted()) {
+                sdata = enigma.deCrypt(olestring);
+            } else {
+                sdata = olestring;
+            }
+            // Reconstruct the JsonObject main container
+            res = Json.parse(sdata).asObject();
+            set(res);
+        } catch (Exception ex) {
         }
         return this;
     }
@@ -615,49 +648,4 @@ public class Ole {
         }
         return this;
     }
-
-//    public < E > void  deserialize(E o) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-//        Class c = o.getClass();
-//        for (Method m : c.getDeclaredMethods()) {
-//            System.out.println("Method "+m.getName());
-//        }
-//        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
-//        for (Field f : fullFields) {
-//            System.out.println(c.getName()+" Field " + f.getName());
-//            String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-//            Method setter;
-//            if (f.getType().isInstance(true)) {
-//                setter = c.getDeclaredMethod(setterName, boolean.class);                
-//                setter.invoke(o, getBoolean(f.getName()));
-//            } else if (f.getType().isInstance(0.1)) {
-//                setter = c.getDeclaredMethod(setterName, double.class);                
-//                setter.invoke(o, getDouble(f.getName()));
-//            } else if (f.getType().isInstance(1)) {
-//                setter = c.getDeclaredMethod(setterName, int.class);                
-//                setter.invoke(o, getInt(f.getName()));
-//            } else if (f.getType().isInstance("")) {
-//                setter = c.getDeclaredMethod(setterName, String.class);                
-//                setter.invoke(o, getField(f.getName()));
-//            }
-//        }
-//    }
-//
-//    public Ole serialize(String classname, Object o, String[] restrictedFields) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
-//        Class<?> c = Class.forName(classname);
-//
-//        ArrayList<Field> myFields, fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));;
-//        if (restrictedFields != null && restrictedFields.length > 1) {
-//            myFields = new ArrayList(Arrays.asList(restrictedFields));
-//        } else {
-//            myFields = fullFields;
-//        }
-//        for (Field f : myFields) {
-//            String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-//            Method getter = c.getDeclaredMethod(getterName);
-//            if (f.getType().isPrimitive() || f.getType().isInstance("")) {
-//                this.setFieldGeneric(f.getName(), getter.invoke(o));
-//            }
-//        }
-//        return this;
-//    }
 }

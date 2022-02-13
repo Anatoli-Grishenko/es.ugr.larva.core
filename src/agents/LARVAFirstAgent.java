@@ -167,7 +167,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         ArrayList<String> sensorList = new ArrayList();
         if (oleConfig != null && !oleConfig.isEmpty()) {
             Ole sensors = oleConfig.getOle("LARVA").getOle("Sensors");
-            for (String sensor : sensors.getNetFieldList()) {
+            for (String sensor : sensors.getFieldList()) {
                 if (sensors.getBoolean(sensor)) {
                     sensorList.add(sensor.toUpperCase());
                 }

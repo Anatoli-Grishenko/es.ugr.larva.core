@@ -106,7 +106,7 @@ public class OleDialog {
     }
 
     protected void Ole2Layout() {
-        ArrayList<String> fields = new ArrayList(mydata.getNetFieldList());
+        ArrayList<String> fields = new ArrayList(mydata.getFieldList());
         OleRecord tab;
         JPanel pTab;
         JLabel lA;
@@ -123,7 +123,7 @@ public class OleDialog {
             pTab.setLayout(new GridBagLayout());
             pTab.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
             gc.gridy = 0;
-            for (String sfield : tab.getNetFieldList()) {
+            for (String sfield : tab.getFieldList()) {
                 switch (tab.getFieldType(sfield)) {
                     case "INTEGER":
                     case "DOUBLE":
@@ -177,7 +177,7 @@ public class OleDialog {
                         gc2.anchor = GridBagConstraints.WEST;
                         gc2.gridx = 0;
                         gc2.gridy = 0;
-                        for (String sr2 : olrecord.getNetFieldList()) {
+                        for (String sr2 : olrecord.getFieldList()) {
                             lA = new JLabel(sr2, SwingConstants.LEFT);
                             group.add(lA, gc2);
                             gc2.gridx = (gc2.gridx + 1) % 4;
@@ -218,14 +218,14 @@ public class OleDialog {
     }
 
     protected void Layout2Ole() {
-        ArrayList<String> fields = new ArrayList(mydata.getNetFieldList());
+        ArrayList<String> fields = new ArrayList(mydata.getFieldList());
         OleRecord tab, myTab;
         res = new Ole();
 
         for (String stab : fields) {
             tab = new OleRecord();
             myTab = new OleRecord(mydata.getOle(stab));
-            for (String sfield : myTab.getNetFieldList()) {
+            for (String sfield : myTab.getFieldList()) {
                 switch (myTab.getFieldType(sfield)) {
                     case "STRING":
                         JTextField jtA = (JTextField) components.get(sfield);
@@ -255,13 +255,13 @@ public class OleDialog {
                         olistaux.addUniqueItem(new OleList(myTab.getOle(sfield)).prettyprint().split(" "));
                         JComboBox jcbA = (JComboBox) components.get(sfield);
                         olist.addUniqueItem((String) jcbA.getSelectedItem());
-                        olist.addDupItem(olistaux.prettyprint().split(" "));
+                        olist.addItem(olistaux.prettyprint().split(" "));
                         tab.setField(sfield, olist);
                         break;
                     case "RECORD":
                         OleRecord olrecord = new OleRecord(myTab.getOle(sfield)),
                          oleres = new OleRecord();
-                        for (String sr2 : olrecord.getNetFieldList()) {
+                        for (String sr2 : olrecord.getFieldList()) {
                             jcA = (JCheckBox) components.get(sr2);
                             oleres.setField(sr2, jcA.isSelected());
                         }

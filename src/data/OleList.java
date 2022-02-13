@@ -61,14 +61,14 @@ public class OleList extends Ole {
         return this;
     }
 
-    public OleList addDupItem(String[] items) {
+    public OleList addItem(String[] items) {
         for (int i = 0; i < items.length; i++) {
             this.addToField("items", items[i]);
         }
         return this;
     }
 
-    public OleList addDupItem(String item) {
+    public OleList addItem(String item) {
         this.addToField("items", item);
         return this;
     }
@@ -122,10 +122,10 @@ public class OleList extends Ole {
     public OleList getConcatenation(OleList other) {
         OleList res = new OleList();
         for (JsonValue jsv : getList().values()) {
-            res.addDupItem(jsv.asString());
+            res.addItem(jsv.asString());
         }
         for (JsonValue jsv : other.getList().values()) {
-            res.addDupItem(jsv.asString());
+            res.addItem(jsv.asString());
         }
         return res;
     }

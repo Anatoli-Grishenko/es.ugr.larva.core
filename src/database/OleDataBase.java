@@ -249,7 +249,7 @@ public class OleDataBase implements ReportableObject {
     //
     public OleTable DBObjectQuery(String table, OleQuery oq) {
         SentenceBuilder sb = new SentenceBuilder(this).Op(SELECT).Table(table);
-        oq.getNetFieldList().forEach(f -> {
+        oq.getFieldList().forEach(f -> {
             sb.Condition(f, oq.getOle(f).getField("comp"),oq.getOle(f).getField("value"));
         });
         return DBSBquery(sb);
@@ -257,7 +257,7 @@ public class OleDataBase implements ReportableObject {
 
     public boolean DBObjectDelete(String table, OleQuery oq) {
         SentenceBuilder sb = new SentenceBuilder(this).Op(DELETE).Table(table);
-        oq.getNetFieldList().forEach(f -> {
+        oq.getFieldList().forEach(f -> {
             sb.Condition(f, oq.getOle(f).getField("comp"),oq.getOle(f).getField("value"));
         });
         return DBSBdelete(sb);
@@ -268,16 +268,16 @@ public class OleDataBase implements ReportableObject {
         try {
         if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
             sb.Op(INSERT).Table(table);
-            update.getNetFieldList().forEach(f -> {
+            update.getFieldList().forEach(f -> {
                 sb.Pair(f, update.getOle(f).getField("value"));
             });
             return this.DBSBinsert(sb);
         } else {
             sb.Op(UPDATE).Table(table);
-            find.getNetFieldList().forEach(f -> {
+            find.getFieldList().forEach(f -> {
                 sb.Condition(f, find.getOle(f).getField("comp"),find.getOle(f).getField("value"));
             });
-            update.getNetFieldList().forEach(f -> {
+            update.getFieldList().forEach(f -> {
             sb.Pair(f, update.getOle(f).getField("value"));
             });
             return this.DBSBupdate(sb);
@@ -291,7 +291,7 @@ public class OleDataBase implements ReportableObject {
         SentenceBuilder sb = new SentenceBuilder(this);
         if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
             sb.Op(INSERT).Table(table);
-            update.getNetFieldList().forEach(f -> {
+            update.getFieldList().forEach(f -> {
                 sb.Pair(f, update.getOle(f).getField("value"));
             });
             return this.DBSBinsert(sb);

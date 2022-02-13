@@ -18,17 +18,17 @@ public class OleReport extends Ole {
 
     public OleReport() {
         super();
-        setType(glossary.ole.REPORT.name());
+        setType(glossary.ole.OLEREPORT.name());
     }
 
     private OleReport(Ole o) {
         super(o);
-        setType(glossary.ole.REPORT.name());
+        setType(glossary.ole.OLEREPORT.name());
     }
 
     public OleReport(ReportableObject o) {
         super();
-        setType(ole.REPORT.name());
+        setType(ole.OLEREPORT.name());
         setField("name", o.defReportType());
         setField("date", TimeHandler.Now());
         for (String s : o.defReportableObjectList()) {
@@ -39,7 +39,7 @@ public class OleReport extends Ole {
     public String shortTextReport() {
         String sep = "\n";
         String res = "*"+ getField("name") +"*"+ sep + "*"+getField("date")+"*";
-        ArrayList<String> fieldsreport = new ArrayList(this.getFullFieldList());
+        ArrayList<String> fieldsreport = new ArrayList(this.getFieldList());
         fieldsreport.remove("ole");
         fieldsreport.remove("name");
         fieldsreport.remove("description");

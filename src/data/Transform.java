@@ -7,6 +7,7 @@ package data;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import glossary.ole;
 import static glossary.ole.SENSOR;
@@ -57,7 +58,7 @@ public class Transform {
             Ole o = new Ole(jsv.toString());
             if (o.getType().equals(ole.SENSOR.name())) {
                 res.add(new OleSensor(o));
-            } else if (o.getType().equals(ole.FILE.name())) {
+            } else if (o.getType().equals(ole.OLEFILE.name())) {
                 res.add(new OleFile(o));
             } else {
                 res.add(o);
@@ -100,7 +101,7 @@ public class Transform {
                 if (!o.isEmpty()) {
                     if (o.getType().equals(ole.SENSOR.name())) {
                         res.add(new OleSensor(o));
-                    } else if (o.getType().equals(ole.FILE.name())) {
+                    } else if (o.getType().equals(ole.OLEFILE.name())) {
                         res.add(new OleFile(o));
                     } else {
                         res.add(o);
@@ -139,5 +140,45 @@ public class Transform {
 //            sensors s= sensors.valueOf(jsv.asString());
 
     }
+    
+    public static JsonObject OleToJson(Ole odata) {
+        JsonObject res = new JsonObject();
+        for (String f : odata.getFieldList()) {
+            String type = odata.getFieldType(f);
+            if (type.equals(ole.INTEGER.name())) {
+                res.set(f,odata.getInt(f));
+            } else if (type.equals(ole.DOUBLE.name())) {
+                res.set(f, odata.getDouble(f));
+            } else if (type.equals(ole.STRING.name())) {
+                res.set(f, odata.getString(f));
+            } else if (type.equals(ole.BOOLEAN.name())) {
+                res.set(f, odata.getBoolean(f));
+            } else if (type.startsWith(ole.OLE.name())) {
+                res.set(f, odata.getOle(f).exportToJson());
+            } else if (type.equals(ole.ARRAY.name())) {
+            }
+        }
+        return res;
+    }    
+
+    public static Ole JsonToOle(JsonObject jsole) {
+        Ole res  = new Ole();
+        for (String jsf : jsole.names()) {
+            if (jsole.get(jsf).isBoolean()) {
+               res.setField(jsf, jsole.get(jsf).asBoolean());
+            } else if (jsole.get(jsf).isNumber()) {
+                if (jsole.get(jsf).toString().contains(".") || jsole.get(jsf).toString().contains(",")) {
+                    res.setField(jsf, jsole.get(jsf).asDouble());
+                } else {
+                    res.setField(jsf, jsole.get(jsf).asInt());
+                }
+            } else if (jsole.get(jsf).isString()) {
+                res.setField(jsf, jsole.get(jsf).asString());
+            } else if (jsole.get(jsf).isObject()) {
+                res.setField(jsf, new Ole(jsole.get(jsf).asObject()));
+            }
+        }
+        return res;
+    }    
 
 }

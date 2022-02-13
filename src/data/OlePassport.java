@@ -31,7 +31,7 @@ public class OlePassport extends Ole {
     }
 
     private final void Init() {
-        setType(ole.PASSPORT.name());
+        setType(ole.OLEPASSPORT.name());
         this.checkField("userID");
         this.checkField("cid");
         this.checkField("alias");

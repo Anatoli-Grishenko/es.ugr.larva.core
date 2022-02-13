@@ -38,7 +38,7 @@ public class OleFile extends Ole {
         super();
         checkField("filename");
         checkField("filedata");
-        setType(ole.FILE.name());
+        setType(ole.OLEFILE.name());
     }
 
     /**
@@ -47,7 +47,7 @@ public class OleFile extends Ole {
      */
     public OleFile(Ole o) {
         super(o);
-        setType(ole.FILE.name());
+        setType(ole.OLEFILE.name());
     }
 
     /**
@@ -100,7 +100,7 @@ public class OleFile extends Ole {
      */
     public boolean saveFile(String outputfolder) {
         boolean res = false;
-        if (getType().equals(glossary.ole.FILE.name())) {
+        if (getType().equals(glossary.ole.OLEFILE.name())) {
             String filename = data.get("filename").asString();
             JsonArray content = data.get("filedata").asArray();
             byte[] bytedata = new byte[content.size()];

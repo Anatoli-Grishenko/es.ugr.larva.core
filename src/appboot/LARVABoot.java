@@ -283,19 +283,19 @@ public class LARVABoot {
         Info("Configuring boot:");
         if (configfilename != null) {
             OleRecord cfgbasic = new OleRecord(new Ole(config.getField("basic")));
-            if (cfgbasic.getFullFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
-                if (cfgbasic.getFullFieldList().contains("logfile")) {
+            if (cfgbasic.getFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
+                if (cfgbasic.getFieldList().contains("logfile")) {
                     logger.setLoggerFileName(cfgbasic.getString("logfile"));
                 } else {
                     logger.setLoggerFileName("default_log.json");
                 }
-                if (cfgbasic.getFullFieldList().contains("host")) {
+                if (cfgbasic.getFieldList().contains("host")) {
                     _host = cfgbasic.getString("host");
                 }
-                if (cfgbasic.getFullFieldList().contains("port")) {
+                if (cfgbasic.getFieldList().contains("port")) {
                     _port = cfgbasic.getInt("port");
                 }
-                if (cfgbasic.getFullFieldList().contains("containername")) {
+                if (cfgbasic.getFieldList().contains("containername")) {
                     this._containerName = cfgbasic.getString("containername");
                 }
             }
