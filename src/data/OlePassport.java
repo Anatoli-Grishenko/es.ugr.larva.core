@@ -18,7 +18,7 @@ public class OlePassport extends Ole {
      */
     public OlePassport() {
         super();
-        Init();
+        InitPassport();
     }
     
     /**
@@ -27,15 +27,15 @@ public class OlePassport extends Ole {
      */
     public OlePassport(Ole o) {
         super(o);
-        Init();
+        InitPassport();
     }
 
-    private final void Init() {
+    private final void InitPassport() {
         setType(ole.PASSPORT.name());
-        this.checkField("userID");
-        this.checkField("cid");
-        this.checkField("alias");
-        this.checkField("email");
-        this.checkField("name");
+        this.addField("userID");
+        this.addField("cid");
+        this.addField("alias");
+        this.addField("email");
+        this.addField("name");
     }
 }

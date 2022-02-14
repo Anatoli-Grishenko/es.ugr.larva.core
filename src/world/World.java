@@ -180,7 +180,7 @@ public class World {
                 oaux = cfg.getOle("drones");
                 this.maxflight = oaux.getInt("maxflight");
                 oaux = cfg.getOle("types");
-                for (String oclass : oaux.getNetFieldList()) {
+                for (String oclass : oaux.getFieldList()) {
                     this.getOntology().add(oclass, oaux.getField(oclass));
                 }
                 oaux = cfg.getOle("world");

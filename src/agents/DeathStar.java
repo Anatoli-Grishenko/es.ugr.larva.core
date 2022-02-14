@@ -93,7 +93,7 @@ public class DeathStar extends LARVAFirstAgent {
         Info("Received: "+ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
             this.sessionKey = inbox.getConversationId();
-            Ole ocontent = new Ole().set(inbox.getContent());
+            Ole ocontent = new Ole(inbox.getContent());
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
             TheMap.clear();

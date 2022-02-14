@@ -30,7 +30,7 @@ public class OleList extends Ole {
     }
 
     protected JsonArray getList() {
-        return this.data.get("items").asArray();
+        return get("items").asArray();
     }
 
     public int size() {

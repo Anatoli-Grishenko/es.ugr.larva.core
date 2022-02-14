@@ -39,7 +39,7 @@ public class OleReport extends Ole {
     public String shortTextReport() {
         String sep = "\n";
         String res = "*"+ getField("name") +"*"+ sep + "*"+getField("date")+"*";
-        ArrayList<String> fieldsreport = new ArrayList(this.getFullFieldList());
+        ArrayList<String> fieldsreport = new ArrayList(this.getFieldList());
         fieldsreport.remove("ole");
         fieldsreport.remove("name");
         fieldsreport.remove("description");

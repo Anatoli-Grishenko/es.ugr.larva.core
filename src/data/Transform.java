@@ -43,7 +43,7 @@ public class Transform {
             } else if (s instanceof Boolean) {
                 res.add((Boolean) s);
             } else if (s instanceof Ole) {
-                res.add(((Ole) s).toJson());
+                res.add((Ole) s);
             } else {
                 res.add((String) s.toString());
             }

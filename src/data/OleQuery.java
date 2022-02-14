@@ -22,7 +22,7 @@ public class OleQuery extends Ole {
      */
     public OleQuery() {
         super();
-        Init();
+        InitQuery();
     }
 
     /**
@@ -32,13 +32,13 @@ public class OleQuery extends Ole {
      */
     public OleQuery(Ole o) {
         super(o);
-        Init();
+        InitQuery();
     }
 
     /**
      * Sets the default values of OleFile objects
      */
-    private void Init() {
+    private void InitQuery() {
         sentence = "";
         setType(ole.QUERY.name());
     }

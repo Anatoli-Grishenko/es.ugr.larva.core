@@ -7,6 +7,7 @@ package data;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import crypto.Cryptor;
 import glossary.ole;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,8 +37,8 @@ public class OleFile extends Ole {
      */
     public OleFile() {
         super();
-        checkField("filename");
-        checkField("filedata");
+        addField("filename");
+        addField("filedata");
         setType(ole.FILE.name());
     }
 
@@ -72,6 +73,7 @@ public class OleFile extends Ole {
             // If encrypted, first transform the byte sequence into a String,
             // decrypt it, and back to a sequence of bytes
             if (isEncrypted()) {
+                Cryptor enigma = new Cryptor(meta().getString("crypto", ""));
                 String scontent = new String(bytedata, enigma.getCharSet()),
                         crypcontent = enigma.deCrypt(scontent);
                 bytedata = crypcontent.getBytes();
@@ -101,13 +103,14 @@ public class OleFile extends Ole {
     public boolean saveFile(String outputfolder) {
         boolean res = false;
         if (getType().equals(glossary.ole.FILE.name())) {
-            String filename = data.get("filename").asString();
-            JsonArray content = data.get("filedata").asArray();
+            String filename = get("filename").asString();
+            JsonArray content = get("filedata").asArray();
             byte[] bytedata = new byte[content.size()];
             for (int i = 0; i < bytedata.length; i++) {
                 bytedata[i] = (byte) content.get(i).asInt();
             }
             try {
+                Cryptor enigma = new Cryptor(meta().getString("crypto", ""));
                 FileOutputStream fos = new FileOutputStream(outputfolder + "/" + filename);
                 if (enigma == null) {
                     fos.write(bytedata);
@@ -132,17 +135,17 @@ public class OleFile extends Ole {
      * @return A boolean that says if the operation has been succesfull or not.
      */
     @Override
-    public boolean saveAsFile(String outputfolder, String newname) {
-        String oldname = data.getString("filename", ""),
+    public boolean saveAsFile(String outputfolder, String newname, boolean plainjson) {
+        String oldname = getString("filename", ""),
                 name = FilenameUtils.getBaseName(oldname),
                 extension = FilenameUtils.getExtension(oldname);
-        data.set("filename", newname + "." + extension);
+        set("filename", newname + "." + extension);
         return saveFile(outputfolder);
     }
 
     public String getStringContent() {
         String res = "";
-        JsonArray content = data.get("filedata").asArray();
+        JsonArray content = get("filedata").asArray();
         byte[] bytedata = new byte[content.size()];
         for (int i = 0; i < bytedata.length; i++) {
             bytedata[i] = (byte) content.get(i).asInt();
