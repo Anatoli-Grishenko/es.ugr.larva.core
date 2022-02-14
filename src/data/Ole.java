@@ -701,4 +701,21 @@ public class Ole extends JsonObject {
         }
         return this;
     }
+
+ public Ole setFieldGeneric(String field, Object s) {
+        if (s instanceof String) {
+            setField(field, (String) s);
+        } else if (s instanceof Integer) {
+            setField(field, (Integer) s);
+        } else if (s instanceof Double) {
+            setField(field, (Double) s);
+        } else if (s instanceof Boolean) {
+            setField(field, (Boolean) s);
+        } else if (s instanceof Ole) {
+            setField(field, (Ole) s);
+        } else {
+            setField(field, (String) s.toString());
+        }
+        return this;
+    }    
 }
