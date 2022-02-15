@@ -7,7 +7,6 @@ package data;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonValue;
-import glossary.ole;
 import java.util.ArrayList;
 
 /**
@@ -20,13 +19,13 @@ public class OleList extends Ole {
 
     public OleList() {
         super();
-        setType(ole.LIST.name());
+        setType(oletype.OLELIST.name());
         this.setField("items", new ArrayList());
     }
 
     public OleList(Ole o) {
         super(o);
-        setType(ole.LIST.name());
+        setType(oletype.OLELIST.name());
     }
 
     protected JsonArray getList() {

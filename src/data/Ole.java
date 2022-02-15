@@ -13,7 +13,6 @@ import com.eclipsesource.json.WriterConfig;
 import crypto.Cryptor;
 import crypto.Keygen;
 import data.Transform;
-import glossary.ole;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -66,20 +65,22 @@ import tools.TimeHandler;
 public class Ole extends JsonObject {
 
     //////////////////////////////////////////// Static constants
-    public static enum type {
+    public static enum oletype {
         BADVALUE, OLEMETA,
         INTEGER, DOUBLE, STRING, ARRAY, BOOLEAN,
-        OLELIST,
-        OLEBITMAP, OLEFILE, OLEACLM, OLEPASSPORT, OLEREPORT, OLETABLE,
+        OLELIST, OLEBITMAP, OLEFILE, OLEACLM, OLEPASSPORT, OLEREPORT,
+        OLETABLE, OLEQUERY, OLERECORD, OLESENSOR, OLEPOINT,
         ADMINPASSPORT, DBQUERY, NOTIFICATION,
-        SENSOR, REQUEST, ANSWER, RECORD, POINT, VECTOR, ENTITY,
-        OLE, QUERY, DIALOG
+        REQUEST, ANSWER, VECTOR, ENTITY,
+        OLE, DIALOG
     };
+
+    Cryptor myCryptor;
 
 //////////////////////////////////////////// Static methods    
     public static boolean isOle(JsonObject jso) {
-        if (jso.get(type.OLEMETA.name()) != null) {
-            return jso.get(type.OLEMETA.name()).asObject().getBoolean("ole", false);
+        if (jso.get(oletype.OLEMETA.name()) != null) {
+            return jso.get(oletype.OLEMETA.name()).asObject().getBoolean("ole", false);
         } else {
             return false;
         }
@@ -90,28 +91,51 @@ public class Ole extends JsonObject {
         return new Ole(jsole);
     }
 
-    public static JsonObject Ole2PlainJson(Ole odata) {
-        JsonObject res = new JsonObject();
-        for (String f : odata.getFieldList()) {
-            String type = odata.getFieldType(f);
-            if (type.equals(ole.INTEGER.name())) {
-                res.set(f, odata.getInt(f, -1));
-            } else if (type.equals(ole.DOUBLE.name())) {
-                res.set(f, odata.getDouble(f, -1));
-            } else if (type.equals(ole.STRING.name())) {
-                res.set(f, odata.getString(f, ""));
-            } else if (type.equals(ole.BOOLEAN.name())) {
-                res.set(f, odata.getBoolean(f, false));
+    public static JsonValue Ole2JsonValue(JsonValue jsobject) {
+        JsonValue jsvres;
+        if (jsobject.isArray()) {
+            jsvres = new JsonArray();
+            for (int i = 0; i < jsobject.asArray().size(); i++) {
+                jsvres.asArray().add(Ole2JsonValue(jsobject.asArray().get(i)));
             }
-            if (type.equals(ole.ARRAY.name())) {
-                res.set(f, odata.get(f).asArray());
-            } else if (type.startsWith(ole.OLE.name())) {
-                res.set(f, Ole2PlainJson(odata.getOle(f)));
+        } else if (jsobject.isObject()) { // es Ole
+            jsvres = new JsonObject();
+            for (String f : jsobject.asObject().names()) {
+                if (f.equals(oletype.OLEMETA.name())) {
+                    continue;
+                }
+                jsvres.asObject().set(f, Ole2JsonValue(jsobject.asObject().get(f)));
             }
+        } else {
+            jsvres = jsobject;
         }
-        return res;
+        return jsvres;
     }
 
+    public static JsonObject Ole2PlainJson(Ole odata) {
+        return Ole2JsonValue(odata).asObject();
+    }
+
+//        JsonObject res = new JsonObject();
+//        for (String f : odata.getFieldList()) {
+//            String type = odata.getFieldType(f);
+//            if (type.equals(oletype.INTEGER.name())) {
+//                res.set(f, odata.getInt(f, -1));
+//            } else if (type.equals(oletype.DOUBLE.name())) {
+//                res.set(f, odata.getDouble(f, -1));
+//            } else if (type.equals(oletype.STRING.name())) {
+//                res.set(f, odata.getString(f, ""));
+//            } else if (type.equals(oletype.BOOLEAN.name())) {
+//                res.set(f, odata.getBoolean(f, false));
+//            }
+//            if (type.equals(oletype.ARRAY.name())) {
+//                res.set(f, odata.get(f).asArray());
+//            } else if (type.startsWith(oletype.OLE.name())) {
+//                res.set(f, Ole2PlainJson(odata.getOle(f)));
+//            }
+//        }
+//        return res;
+//    }
     //////////////////////////////////////////// Constructors
     /**
      * Basic constructor.
@@ -130,8 +154,8 @@ public class Ole extends JsonObject {
     }
 
     protected JsonObject meta() {
-        if (get(type.OLEMETA.name()) != null) {
-            return get(type.OLEMETA.name()).asObject();
+        if (get(oletype.OLEMETA.name()) != null) {
+            return get(oletype.OLEMETA.name()).asObject();
         } else {
             return new JsonObject();
         }
@@ -147,9 +171,9 @@ public class Ole extends JsonObject {
 
     protected void Init() {
         clear();
-        set(type.OLEMETA.name(), new JsonObject());
+        set(oletype.OLEMETA.name(), new JsonObject());
         meta().set("id", Keygen.getAlphaNumKey(16));
-        meta().set("type", type.OLE.name());
+        meta().set("type", oletype.OLE.name());
         meta().set("fields", new JsonObject());
         meta().set("date", TimeHandler.Now());
         meta().set("description", "JSON Object Linked and Embeded");
@@ -162,12 +186,13 @@ public class Ole extends JsonObject {
         return isOle(this);
     }
 
-    public Ole set(String s){
+    public Ole set(String s) {
         parse(s);
         return this;
     }
+
     public Ole fromJson(JsonObject jsole) {
-        if (jsole.get(type.OLEMETA.name()) != null) {
+        if (jsole.get(oletype.OLEMETA.name()) != null) {
             fromFullJson(jsole);
         } else {
             fromPlainJson(jsole);
@@ -178,7 +203,7 @@ public class Ole extends JsonObject {
     protected Ole fromPlainJson(JsonObject jsole) {
         Init();
         for (String jsf : jsole.names()) {
-            if (jsf.equals(type.OLEMETA.name())) {
+            if (jsf.equals(oletype.OLEMETA.name())) {
                 continue;
             }
             if (jsole.get(jsf).isBoolean()) {
@@ -202,8 +227,9 @@ public class Ole extends JsonObject {
 
     protected Ole fromFullJson(JsonObject jsole) {
         clear();
-        set(type.OLEMETA.name(), jsole.get(type.OLEMETA.name()).asObject());
-        return fromPlainJson(jsole);
+        fromPlainJson(jsole);
+        set(oletype.OLEMETA.name(), jsole.get(oletype.OLEMETA.name()).asObject());
+        return this;
     }
 
     public JsonObject toPlainJson() {
@@ -213,8 +239,7 @@ public class Ole extends JsonObject {
     @Override
     public String toString(WriterConfig wcon) {
         if (this.isEncrypted()) {
-            Cryptor myc = new Cryptor(meta().getString("crypto", ""));
-            return myc.enCrypt(super.toString(wcon));
+            return myCryptor.enCrypt(super.toString(wcon));
         } else {
             return super.toString(wcon);
         }
@@ -230,13 +255,13 @@ public class Ole extends JsonObject {
             JsonObject jsole;
             String definit;
             if (this.isEncrypted()) {
-                definit = new Cryptor(meta().getString("crypto", "")).deCrypt(s);
+                definit = myCryptor.deCrypt(s);
             } else {
                 definit = s;
             }
 
             jsole = Json.parse(definit).asObject();
-            if (jsole.get(type.OLEMETA.name()) != null) {
+            if (jsole.get(oletype.OLEMETA.name()) != null) {
                 return fromFullJson(jsole);
             } else {
                 return fromPlainJson(jsole);
@@ -302,38 +327,38 @@ public class Ole extends JsonObject {
 
     public String getID() {
         if (isOle()) {
-            return meta().getString("id", type.BADVALUE.name());
+            return meta().getString("id", oletype.BADVALUE.name());
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public String getType() {
         if (isOle()) {
-            return meta().getString("type", type.BADVALUE.name());
+            return meta().getString("type", oletype.BADVALUE.name());
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public String getDate() {
         if (isOle()) {
-            return meta().getString("date", type.BADVALUE.name());
+            return meta().getString("date", oletype.BADVALUE.name());
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public String getDescription() {
         if (isOle()) {
-            return meta().getString("description", type.BADVALUE.name());
+            return meta().getString("description", oletype.BADVALUE.name());
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public List<String> getFieldList() {
-        if (get(type.OLEMETA.name()) != null) {
+        if (get(oletype.OLEMETA.name()) != null) {
             return meta().get("fields").asObject().names();
         } else {
             return new ArrayList<String>();
@@ -344,35 +369,35 @@ public class Ole extends JsonObject {
         if (checkField(field)) {
             return getValueType(get(field));
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public String getValueType(JsonValue jsv) {
         if (jsv.isBoolean()) {
-            return type.BOOLEAN.name();
+            return oletype.BOOLEAN.name();
         } else if (jsv.isString()) {
-            return type.STRING.name();
+            return oletype.STRING.name();
         } else if (jsv.isNumber()) {
             if (jsv.toString().contains(".")) {
-                return type.DOUBLE.name();
+                return oletype.DOUBLE.name();
             } else {
-                return type.INTEGER.name();
+                return oletype.INTEGER.name();
             }
         } else if (jsv.isArray()) {
-            return type.ARRAY.name();
+            return oletype.ARRAY.name();
         } else if (jsv.isObject()) {
-            return type.OLE.name();
+            return oletype.OLE.name();
         } else {
-            return type.BADVALUE.name();
+            return oletype.BADVALUE.name();
         }
     }
 
     public final Ole getOle(String field) {
-        if (get(field).isObject() && isOle(get(field).asObject())) {
-            return (Ole) get(field).asObject();
+        if (get(field).isObject()) { // && isOle(get(field).asObject())) {
+            return new Ole(get(field).asObject());
         } else {
-            return (Ole) new JsonObject();
+            return new Ole(new JsonObject());
         }
 
     }
@@ -419,7 +444,10 @@ public class Ole extends JsonObject {
 
     //////////////////////////////////////////// Crypto  
     public boolean isEncrypted() {
-        return meta().get("crypto").asString().length() > 0;
+//        if (meta() == null || meta().get("crypto")== null)
+//            return false;
+//        return meta().get("crypto").asString().length() > 0;
+        return myCryptor != null;
     }
 
     /**
@@ -431,7 +459,7 @@ public class Ole extends JsonObject {
      * @return A reference to the instance
      */
     public Ole onEncryption(Cryptor myc) {
-        meta().set("crypto", myc.getCryptoKey());
+        myCryptor = myc;
         return this;
     }
 
@@ -441,7 +469,7 @@ public class Ole extends JsonObject {
      * @return
      */
     public Ole offEncryption() {
-        meta().set("crypto", "");
+        myCryptor=null;
         return this;
     }
 
@@ -461,6 +489,7 @@ public class Ole extends JsonObject {
             String str = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
             parse(str);
         } catch (Exception ex) {
+            System.err.println("Error loading file " + fullfilename + " " + ex.toString());
         }
         return this;
     }
@@ -513,7 +542,7 @@ public class Ole extends JsonObject {
                 res = get(field).toString();
             }
         } else {
-            res = type.BADVALUE.name();
+            res = oletype.BADVALUE.name();
         }
         return res;
     }
@@ -666,8 +695,7 @@ public class Ole extends JsonObject {
         return this;
     }
 
-    
-     public final Ole addToField(String fieldname, String v) {
+    public final Ole addToField(String fieldname, String v) {
         if (get(fieldname).isArray()) {
             get(fieldname).asArray().add(v);
         }
@@ -702,7 +730,7 @@ public class Ole extends JsonObject {
         return this;
     }
 
- public Ole setFieldGeneric(String field, Object s) {
+    public Ole setFieldGeneric(String field, Object s) {
         if (s instanceof String) {
             setField(field, (String) s);
         } else if (s instanceof Integer) {
@@ -717,5 +745,5 @@ public class Ole extends JsonObject {
             setField(field, (String) s.toString());
         }
         return this;
-    }    
+    }
 }

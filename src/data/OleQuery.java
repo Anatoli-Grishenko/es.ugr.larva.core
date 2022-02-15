@@ -5,10 +5,6 @@
  */
 package data;
 
-import database.OleDataBase.SQLOP;
-import glossary.ole;
-import java.util.ArrayList;
-
 /**
  * Class devoted to wrap the answers of the servers to any request coming from
  * students
@@ -40,7 +36,7 @@ public class OleQuery extends Ole {
      */
     private void InitQuery() {
         sentence = "";
-        setType(ole.QUERY.name());
+        setType(oletype.OLEQUERY.name());
     }
 
     public OleQuery Pair(String field, Object o) {

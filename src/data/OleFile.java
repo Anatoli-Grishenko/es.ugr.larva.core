@@ -8,7 +8,6 @@ package data;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import crypto.Cryptor;
-import glossary.ole;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,7 +38,7 @@ public class OleFile extends Ole {
         super();
         addField("filename");
         addField("filedata");
-        setType(ole.FILE.name());
+        setType(oletype.OLEFILE.name());
     }
 
     /**
@@ -48,7 +47,9 @@ public class OleFile extends Ole {
      */
     public OleFile(Ole o) {
         super(o);
-        setType(ole.FILE.name());
+        addField("filename");
+        addField("filedata");
+        setType(oletype.OLEFILE.name());
     }
 
     /**
@@ -102,7 +103,7 @@ public class OleFile extends Ole {
      */
     public boolean saveFile(String outputfolder) {
         boolean res = false;
-        if (getType().equals(glossary.ole.FILE.name())) {
+        if (getType().equals(oletype.OLEFILE.name())) {
             String filename = get("filename").asString();
             JsonArray content = get("filedata").asArray();
             byte[] bytedata = new byte[content.size()];
@@ -110,13 +111,13 @@ public class OleFile extends Ole {
                 bytedata[i] = (byte) content.get(i).asInt();
             }
             try {
-                Cryptor enigma = new Cryptor(meta().getString("crypto", ""));
+//                Cryptor enigma = new Cryptor(meta().getString("crypto", ""));
                 FileOutputStream fos = new FileOutputStream(outputfolder + "/" + filename);
-                if (enigma == null) {
+                if (!this.isEncrypted()) {
                     fos.write(bytedata);
                 } else {
-                    String scontent = new String(bytedata, enigma.getCharSet()),
-                            crypcontent = enigma.enCrypt(scontent);
+                    String scontent = new String(bytedata, myCryptor.getCharSet()),
+                            crypcontent = myCryptor.enCrypt(scontent);
                     fos.write(crypcontent.getBytes());
                 }
                 fos.close();

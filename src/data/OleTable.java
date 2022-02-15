@@ -8,7 +8,7 @@ package data;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import glossary.ole;
+import com.eclipsesource.json.WriterConfig;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -21,26 +21,24 @@ import java.util.HashMap;
  */
 public class OleTable extends Ole {
 
-    JsonArray rows;
-
     public OleTable() {
         super();
         InitTable();
     }
 
-    public OleTable(OleTable o) {
+    public OleTable(Ole o) {
         super(o);
-        Init();
+        InitTable();
     }
 
     @Override
     public boolean isEmpty() {
-        return this.size()<1;
+        return this.size() < 1;
     }
 
     public OleTable(ResultSet rs) {
         super();
-        Init();
+        InitTable();
         Ole aux;
         String key;
         if (rs == null) {
@@ -55,6 +53,10 @@ public class OleTable extends Ole {
                 aux = new Ole();
                 key = "";
                 for (int i = 1; i <= columnCnt; i++) {
+//                    System.out.println(">>>>> THIS\n" + this.prettyprint());
+//                    System.out.println(">>>>> AUX\n" +aux.toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+//                    System.out.println(">>>>> THIS\n" + this.toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+//                    System.out.println(">>>>> AUX" +aux.toPlainJson().toString(WriterConfig.PRETTY_PRINT));
                     name = rsMeta.getColumnName(i);
                     switch (rsMeta.getColumnType(i)) {
                         case java.sql.Types.INTEGER:
@@ -81,7 +83,6 @@ public class OleTable extends Ole {
                             break;
                         case java.sql.Types.VARCHAR:
                         case java.sql.Types.LONGVARCHAR:
-                        default: 
                             try {
                             aux.setField(name, rs.getString(name));
                             if (i == 1) {
@@ -94,6 +95,8 @@ public class OleTable extends Ole {
                             }
                         }
                         break;
+                        default: // Other result types are not included in the table
+                            break;
                     }
                 }
                 this.addRow(aux);
@@ -105,22 +108,16 @@ public class OleTable extends Ole {
     }
 
     private void InitTable() {
-        setType(ole.TABLE.name());
-        // There is previous data in the ole data
-        if (this.getFieldList().contains("rows")) {
-            rows = get("rows").asArray();
-            initRows();
-        } else {
-            addField("rows");
-            rows = new JsonArray();
-            set("rows", rows);
-        }
-
+        setType(oletype.OLETABLE.name());
+        add("rows", new JsonArray()); // No añade el field
     }
 
+    public JsonArray rawRows(){
+        return this.get("rows").asArray();
+    }
     private void initRows() {
-        if (rows.size() > 0) {
-            Ole o = new Ole(rows.get(0).asObject());
+        if (rawRows().size() > 0) {
+            Ole o = new Ole(rawRows().get(0).asObject());
             for (String f : o.getFieldList()) {
                 addField(f);
             }
@@ -128,8 +125,8 @@ public class OleTable extends Ole {
     }
 
     public OleTable addRow(Ole o) {
-        rows.add(o);
-        if (rows.size() == 1) {
+        rawRows().add(o);
+        if (rawRows().size() == 1) {
             initRows();
         }
         return this;
@@ -137,8 +134,8 @@ public class OleTable extends Ole {
 
     public Ole getRow(int r) {
         if (0 <= r && r < size()) {
-            return new Ole(rows.get(r).asObject());
-//            return new Ole(rows.get(r).asObject().toString());
+            return new Ole(rawRows().get(r).asObject());
+//            return new Ole(rawRows().get(r).asObject().toString());
         } else {
             return new Ole();
         }
@@ -146,7 +143,7 @@ public class OleTable extends Ole {
 
     public Ole getRow(String field, int value) {
         Ole res = new Ole(), aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getInt(field) == value) {
                 return aux;
@@ -158,7 +155,7 @@ public class OleTable extends Ole {
 
     public Ole getRow(String field, String value) {
         Ole res = new Ole(), aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getField(field).equals(value)) {
                 return aux;
@@ -169,13 +166,13 @@ public class OleTable extends Ole {
     }
 
     public ArrayList<Ole> getAllRows() {
-        return new ArrayList(Transform.toArrayList(this.rows));
+        return new ArrayList(Transform.toArrayList(rawRows()));
     }
 
     public ArrayList<Ole> getAllRows(String field, String value) {
         ArrayList<Ole> res = new ArrayList();
         Ole aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getField(field).equals(value)) {
                 res.add(aux);
@@ -187,7 +184,7 @@ public class OleTable extends Ole {
     public ArrayList<Ole> getAllRows(String field, int value) {
         ArrayList<Ole> res = new ArrayList();
         Ole aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getInt(field) == value) {
                 res.add(aux);
@@ -199,7 +196,7 @@ public class OleTable extends Ole {
     public OleTable getAllRowsOleTable(String field, String value) {
         OleTable res = new OleTable();
         Ole aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getField(field).equals(value)) {
                 res.addRow(aux);
@@ -211,7 +208,7 @@ public class OleTable extends Ole {
     public OleTable getAllRowsOleTable(String field, int value) {
         OleTable res = new OleTable();
         Ole aux;
-        for (JsonValue jsvo : rows) {
+        for (JsonValue jsvo : rawRows()) {
             aux = new Ole(jsvo.asObject());
             if (aux.getInt(field) == value) {
                 res.addRow(aux);
@@ -220,39 +217,61 @@ public class OleTable extends Ole {
         return res;
     }
 
-    public JsonArray getAllRowsJsonArray() {
-        return this.rows;
+    public int size() {
+        return rawRows().size();
     }
 
-    public int size() {
-        return rows.size();
-    }
-    
     public String prettyprint() {
-        String res ="";
-        ArrayList<String> names = new ArrayList<>();
+        String res = "";
+        ArrayList<String> names = new ArrayList();
         int i = 0;
-        for (Ole orow : getAllRows()) {
+        for (; i<size();i++){ 
             if (i == 0) {
-                res+="|";
+                res += "|";
                 names = new ArrayList(getFieldList());
                 for (String col : names) {
                     res += String.format("%15s|", col);
                 }
-                res+="\n+";
+                res += "\n+";
                 for (String col : names) {
-                    res+="---------------+";
+                    res += "---------------+";
                 }
             }
-            res+="\n|";
+            res += "\n|";
             for (String key : names) {
-                String value = orow.getField(key);
-                res+=String.format("%15s|", value.substring(0, Math.min(15, value.length())));
+                String value = rawRows().get(i).asObject().get(key).toString();
+                res += String.format("%15s|", value.substring(0, Math.min(15, value.length())));
             }
-            i++;
         }
         res += "\n";
-        
+
         return res;
     }
+//    public String prettyprint() {
+//        String res = "";
+//        ArrayList<String> names = new ArrayList();
+//        int i = 0;
+//        for (Ole orow : getAllRows()) {
+//            if (i == 0) {
+//                res += "|";
+//                names = new ArrayList(getFieldList());
+//                for (String col : names) {
+//                    res += String.format("%15s|", col);
+//                }
+//                res += "\n+";
+//                for (String col : names) {
+//                    res += "---------------+";
+//                }
+//            }
+//            res += "\n|";
+//            for (String key : names) {
+//                String value = orow.getField(key);
+//                res += String.format("%15s|", value.substring(0, Math.min(15, value.length())));
+//            }
+//            i++;
+//        }
+//        res += "\n";
+//
+//        return res;
+//    }
 }

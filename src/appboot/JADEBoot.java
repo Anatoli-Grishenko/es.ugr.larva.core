@@ -177,7 +177,7 @@ public class JADEBoot {
         }
         Info("Configuring boot:");
         if (configfilename != null) {
-            OleRecord cfgbasic = new OleRecord(new Ole(config.getField("basic")));
+            OleRecord cfgbasic = new OleRecord(config.getOle("basic"));
             if (cfgbasic.getFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
                 if (cfgbasic.getFieldList().contains("logfile")) {
                     logger.setLoggerFileName(cfgbasic.getString("logfile"));

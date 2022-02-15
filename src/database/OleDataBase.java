@@ -6,6 +6,7 @@
 package database;
 
 import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleQuery;
 import data.OleTable;
@@ -317,6 +318,7 @@ public class OleDataBase implements ReportableObject {
         } catch (SQLException ex) {
             reportException(ex);
         }
+//        System.out.println("OLETABLE:"+_oleResultSet.toPlainJson().toString(WriterConfig.PRETTY_PRINT));
         if (_immediateClose) {
             closeTransaction();
         }
@@ -404,15 +406,15 @@ public class OleDataBase implements ReportableObject {
         DBSchema.setField("tables", new ArrayList());
         DBSchema.setField("description", "Schema of database " + this._database + " List of tables");
         otables = this.DBquery("select * from information_schema.TABLES where TABLE_SCHEMA='" + this._database + "'");
-        for (JsonValue jsvt : otables.getAllRowsJsonArray()) {
+        for (JsonValue jsvt : otables.rawRows()) {
             table = jsvt.asObject().getString("TABLE_NAME", "");
             DBSchema.addToField("tables", table);
             tablecolumns = new Ole();
             tablecolumns.setField("columns", new ArrayList());
             tablecolumns.setField("types", new ArrayList());
-            tablecolumns.setField("descrition", "Description of table " + table + ". List of columns names and types");
+            tablecolumns.setField("description", "Description of table " + table + ". List of columns names and types");
             ocols = this.DBquery("select * from information_schema.COLUMNS where TABLE_SCHEMA='" + this._database + "' and TABLE_NAME='" + table + "'");
-            for (JsonValue jsvc : ocols.getAllRowsJsonArray()) {
+            for (JsonValue jsvc : ocols.rawRows()) {
                 column = jsvc.asObject().getString("COLUMN_NAME", "");
                 type = jsvc.asObject().getString("DATA_TYPE", "");
                 tablecolumns.addToField("columns", column);
@@ -421,6 +423,7 @@ public class OleDataBase implements ReportableObject {
             }
             DBSchema.setField(table, tablecolumns);
         }
+//        System.out.println("SCHEMA:"+DBSchema.toPlainJson().toString(WriterConfig.PRETTY_PRINT));
     }
 
     public ArrayList<String> getTableList() {

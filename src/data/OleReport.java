@@ -5,7 +5,6 @@
  */
 package data;
 
-import glossary.ole;
 import java.util.ArrayList;
 import tools.ReportableObject;
 import tools.TimeHandler;
@@ -18,17 +17,17 @@ public class OleReport extends Ole {
 
     public OleReport() {
         super();
-        setType(glossary.ole.REPORT.name());
+        setType(oletype.OLEREPORT.name());
     }
 
     private OleReport(Ole o) {
         super(o);
-        setType(glossary.ole.REPORT.name());
+        setType(oletype.OLEREPORT.name());
     }
 
     public OleReport(ReportableObject o) {
         super();
-        setType(ole.REPORT.name());
+        setType(oletype.OLEREPORT.name());
         setField("name", o.defReportType());
         setField("date", TimeHandler.Now());
         for (String s : o.defReportableObjectList()) {

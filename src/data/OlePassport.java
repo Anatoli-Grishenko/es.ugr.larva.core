@@ -5,8 +5,6 @@
  */
 package data;
 
-import glossary.ole;
-
 /**
  * Class devoted to store, load and save a CardID just to handle it and 
  * being able to transfer it, without possibly decrypt it, but it can be shared. 
@@ -31,7 +29,7 @@ public class OlePassport extends Ole {
     }
 
     private final void InitPassport() {
-        setType(ole.PASSPORT.name());
+        setType(oletype.OLEPASSPORT.name());
         this.addField("userID");
         this.addField("cid");
         this.addField("alias");

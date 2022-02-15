@@ -223,7 +223,7 @@ public class LARVABoot {
             sStart.acquire();
         } catch (InterruptedException ex) {
         }
-        return this.selectConnection(new OleList(oleConfig.getOle("Jade").getOle("Host")).getItem(0),
+        return this.selectConnection(oleConfig.getOle("Jade").getField("Host"),
                 oleConfig.getOle("Jade").getInt("Port"));
     }
 

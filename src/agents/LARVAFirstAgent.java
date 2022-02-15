@@ -122,9 +122,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 oleConfig = null;
             } else {
 //                problemName = new OleList(oleConfig.getOle("LARVA").getOle("Problem")).getItem(0);
-                problemName = (String) oleConfig.getOle("LARVA")
-                        .getOle("Problem")
-                        .getArray("items").get(0);
+                problemName = (String) oleConfig.getOle("LARVA").getField("Problem");
                 Ole record = oleConfig.getOle("Jade");
                 logger.setEcho(!record.getBoolean("Silent execution"));
                 if (record.getBoolean("Save log")) {

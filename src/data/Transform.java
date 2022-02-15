@@ -8,13 +8,12 @@ package data;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonValue;
-import glossary.ole;
-import static glossary.ole.SENSOR;
 import static java.lang.Enum.valueOf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import data.Ole;
+import data.Ole.oletype;
 // JsonArray <--> ArrayList <--> Array <-- Enum
 /**
  * Class of static methods for transforming some objects into
@@ -55,9 +54,9 @@ public class Transform {
         ArrayList<Ole> res = new ArrayList();
         for (JsonValue jsv : jsa) {
             Ole o = new Ole(jsv.toString());
-            if (o.getType().equals(ole.SENSOR.name())) {
+            if (o.getType().equals(oletype.OLESENSOR.name())) {
                 res.add(new OleSensor(o));
-            } else if (o.getType().equals(ole.FILE.name())) {
+            } else if (o.getType().equals(oletype.OLEFILE.name())) {
                 res.add(new OleFile(o));
             } else {
                 res.add(o);
@@ -98,9 +97,9 @@ public class Transform {
             } else {
                 Ole o = new Ole(jsv.toString());
                 if (!o.isEmpty()) {
-                    if (o.getType().equals(ole.SENSOR.name())) {
+                    if (o.getType().equals(oletype.OLESENSOR.name())) {
                         res.add(new OleSensor(o));
-                    } else if (o.getType().equals(ole.FILE.name())) {
+                    } else if (o.getType().equals(oletype.OLEFILE.name())) {
                         res.add(new OleFile(o));
                     } else {
                         res.add(o);

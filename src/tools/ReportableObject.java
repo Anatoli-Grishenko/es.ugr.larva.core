@@ -6,7 +6,6 @@
 package tools;
 
 import data.Ole;
-import glossary.ole;
 
 /**
  * Interface to report the internal state of objects across the platform. It reports a set of object (objeclist) and, for each, a date, ans status and value

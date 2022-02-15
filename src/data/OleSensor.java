@@ -5,9 +5,6 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import glossary.ole;
 import java.util.ArrayList;
 
 /**
@@ -18,14 +15,14 @@ public class OleSensor extends Ole {
 
     public OleSensor() {
         super();
-        setType(ole.SENSOR.name());
+        setType(oletype.OLESENSOR.name());
         checkField("sensorname");
         checkField("reading");
     }
 
     public OleSensor(Ole o) {
         super(o);
-        setType(ole.SENSOR.name());
+        setType(oletype.OLESENSOR.name());
         checkField("sensorname");
         checkField("reading");
     }

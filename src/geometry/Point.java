@@ -8,7 +8,7 @@ package geometry;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import data.Ole;
-import glossary.ole;
+import data.Ole.oletype;
 
 /**
  *
@@ -73,7 +73,7 @@ public class Point {
     }
 
     public Point(Ole o) {
-        if (o.getType().equals(ole.POINT.name())) {
+        if (o.getType().equals(oletype.OLEPOINT.name())) {
             clear();
             _dim = o.getInt("dim");
             setX(o.getDouble("X"));
@@ -339,7 +339,7 @@ public class Point {
 
     public Ole toOle() {
         Ole res = new Ole();
-        res.setType(ole.POINT.name());
+        res.setType(oletype.OLEPOINT.name());
         res.setField("dim", _dim);
         switch (_dim) {
             case 3:
