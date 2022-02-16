@@ -6,6 +6,7 @@
 package swing;
 
 import data.Ole;
+import data.OleConfig;
 import data.OleList;
 import data.OleRecord;
 import java.awt.Component;
@@ -40,6 +41,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import static swing.SwingTools.doSwingLater;
+import static swing.SwingTools.doSwingWait;
 
 /**
  *
@@ -47,7 +50,7 @@ import javax.swing.border.EmptyBorder;
  */
 public class OleDialog {
 
-    Ole mydata, res;
+    OleConfig mydata, res;
     LARVAFrame myFrame;
     HashMap<String, Component> components;
     JTabbedPane tpMain;
@@ -56,7 +59,7 @@ public class OleDialog {
     int spacing = 5, fieldheight = 20, fieldwidth = 160;
     Semaphore waitDialog;
 
-    public OleDialog(LARVAFrame parent, Ole o) {
+    public OleDialog(LARVAFrame parent, OleConfig o) {
         myFrame = new LARVAFrame(e -> OleDialogListener(e));
         tpMain = new JTabbedPane();
         tpMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
@@ -70,24 +73,23 @@ public class OleDialog {
         flButtons.add(bOK);
         flButtons.add(bCancel);
         flMain.add(flButtons);
-        myFrame.add(flMain);
-        waitDialog = new Semaphore(0);
-        components = new HashMap();
-    
-       linkTo(o);
-    }
-
-    public void linkTo(Ole data) {
-        mydata = data;
+        mydata = o;
+        components = new HashMap();    
         Ole2Layout();
+       myFrame.add(flMain);
+        waitDialog = new Semaphore(0);
     }
 
-    public Ole getDialogResult() {
-//        try {
-//            waitDialog.acquire();
-//        } catch (InterruptedException ex) {
-//        }
-        return res;
+    public OleConfig Interact() {
+        doSwingWait(()->{
+                    myFrame.pack();
+                    myFrame.show();
+//                    try {
+//                        waitDialog.acquire();
+//                    } catch (InterruptedException ex) {
+//                    }
+        } );
+        return new OleConfig();
     }
 
     protected void OleDialogListener(ActionEvent e) {
@@ -201,26 +203,12 @@ public class OleDialog {
             tpMain.addTab(stab, null, pTab);
         }
 
-        if (!SwingUtilities.isEventDispatchThread()) {
-            try {
-                SwingUtilities.invokeAndWait(() -> {
-                    myFrame.pack();
-                    myFrame.show();
-                });
-            } catch (Exception ex) {
-            }
-        } else {
-            myFrame.setVisible(true);
-            myFrame.pack();
-            myFrame.show();
-        }
-
     }
 
     protected void Layout2Ole() {
         ArrayList<String> fields = new ArrayList(mydata.getFieldList());
         OleRecord tab, myTab;
-        res = new Ole();
+        res = new OleConfig();
 
         for (String stab : fields) {
             tab = new OleRecord();

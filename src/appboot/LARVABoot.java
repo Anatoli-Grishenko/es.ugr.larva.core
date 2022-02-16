@@ -5,6 +5,7 @@ package appboot;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import data.Ole;
+import data.OleConfig;
 import data.OleList;
 import data.OleRecord;
 import disk.Logger;
@@ -89,7 +90,7 @@ public class LARVABoot {
     protected boolean bResult;
     protected String sMessages;
     protected Semaphore sShutdown, sStart;
-    protected Ole oleConfig;
+    protected OleConfig oleConfig;
     protected OleDialog Settings;
     private String markdowns = "*_`#~";
 
@@ -119,7 +120,7 @@ public class LARVABoot {
         sShutdown = new Semaphore(0);
         sStart = new Semaphore(0);
         if (new File(_configFileName).exists()) {
-            oleConfig = new Ole();
+            oleConfig = new OleConfig();
             if (oleConfig.loadFile(_configFileName).isEmpty()) {
                 oleConfig = null;
             }
@@ -129,11 +130,11 @@ public class LARVABoot {
     }
 
     protected void initGUI() {
-        try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception ex) {
-            System.err.println("Failed to initialize LaF");
-        }
+//        try {
+//            UIManager.setLookAndFeel(new FlatDarkLaf());
+//        } catch (Exception ex) {
+//            System.err.println("Failed to initialize LaF");
+//        }
 
         fMain = new LARVAFrame(e -> this.jadebootListener(e));
         pMain = new JPanel();
@@ -660,7 +661,7 @@ public class LARVABoot {
             this.bConfig.setEnabled(false);
             this.bStart.setEnabled(false);
             if (Settings != null) {
-                oleConfig = Settings.getDialogResult();
+//                oleConfig = Settings.getDialogResult();
                 if (oleConfig != null && !oleConfig.isEmpty()) {
                     oleConfig.saveAsFile("./config/", "config.json", true);
                 }

@@ -69,7 +69,7 @@ public class Ole extends JsonObject {
         BADVALUE, OLEMETA,
         INTEGER, DOUBLE, STRING, ARRAY, BOOLEAN,
         OLELIST, OLEBITMAP, OLEFILE, OLEACLM, OLEPASSPORT, OLEREPORT,
-        OLETABLE, OLEQUERY, OLERECORD, OLESENSOR, OLEPOINT,
+        OLETABLE, OLEQUERY, OLERECORD, OLESENSOR, OLEPOINT, OLECONFIG,
         ADMINPASSPORT, DBQUERY, NOTIFICATION,
         REQUEST, ANSWER, VECTOR, ENTITY,
         OLE, DIALOG
@@ -114,6 +114,18 @@ public class Ole extends JsonObject {
 
     public static JsonObject Ole2PlainJson(Ole odata) {
         return Ole2JsonValue(odata).asObject();
+    }
+
+    public static List<String> allNames(JsonObject jso) {
+        List<String> res = new ArrayList();
+        for (String s : jso.names()) {
+            if (!jso.get(s).isObject()) {
+                res.add(s);
+            } else {
+                res.addAll(allNames(jso.get(s).asObject()));
+            }
+        }
+        return res;
     }
 
 //        JsonObject res = new JsonObject();
@@ -394,7 +406,7 @@ public class Ole extends JsonObject {
     }
 
     public final Ole getOle(String field) {
-        if (get(field).isObject()) { // && isOle(get(field).asObject())) {
+        if (get(field) != null && get(field).isObject()) { // && isOle(get(field).asObject())) {
             return new Ole(get(field).asObject());
         } else {
             return new Ole(new JsonObject());
@@ -469,7 +481,7 @@ public class Ole extends JsonObject {
      * @return
      */
     public Ole offEncryption() {
-        myCryptor=null;
+        myCryptor = null;
         return this;
     }
 
