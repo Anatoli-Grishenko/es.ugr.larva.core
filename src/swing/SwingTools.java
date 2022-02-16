@@ -21,12 +21,12 @@ public class SwingTools {
 
     public static void doSwingLater(Runnable what) {
         if (!SwingUtilities.isEventDispatchThread()) {
-            System.out.println("WITHIN SWING");
+//            System.out.println("WITHIN SWING");
             SwingUtilities.invokeLater(() -> {
                 what.run();
             });
         } else {
-            System.out.println("WITHOUT SWING");
+//            System.out.println("WITHOUT SWING");
             what.run();
         }
     }
@@ -34,14 +34,14 @@ public class SwingTools {
     public static void doSwingWait(Runnable what) {
         if (!SwingUtilities.isEventDispatchThread()) {
             try {
-                System.out.println("WITHIN SWING");
+//                System.out.println("WITHIN SWING");
                 SwingUtilities.invokeAndWait(() -> {
                     what.run();
                 });
             } catch (Exception ex) {
             }
         } else {
-            System.out.println("WITHOUT SWING");
+//            System.out.println("WITHOUT SWING");
             what.run();
         }
     }

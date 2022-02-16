@@ -39,7 +39,7 @@ public class OleConfig extends Ole {
         Ole options = getOptions();
         ArrayList<String> res = new ArrayList();
         for (String s : options.getFieldList()) {
-            if (options.getFieldType(s).equals(oletype.OLE)) {
+            if (options.getFieldType(s).equals(oletype.OLE.name())) {
                 res.add(s);
             }
         }
@@ -54,15 +54,17 @@ public class OleConfig extends Ole {
     public List<String> getAllTabNames() {
         ArrayList<String> res = new ArrayList();
         if (numTabs() == 0) {
-            res.add("defaulttab");
+            res.add("Options");
         } else {
-            res = new ArrayList(this.getAllTabNames());
+            res = new ArrayList(this.getTabList());
         }
         return res;
     }
 
     public Ole getTab(String stab) {
-        if (getAllTabNames().contains(stab)) {
+        if (numTabs() == 0) {
+            return getOptions();
+        } else if (getAllTabNames().contains(stab)) {
             return getOle(stab);
         } else {
             return new Ole();
@@ -71,21 +73,8 @@ public class OleConfig extends Ole {
 
     public List<String> getAllTabFields(String stab) {
         ArrayList<String> res = new ArrayList();
-        Ole otab;
-        if (getOptions().getFieldList().size() > 0) {
-            otab = getOptions().getOle(stab);
-        } else {
-            otab = this;
-        }
-        for (String s : otab.getFieldList()) {
-            if (!otab.getFieldType(s).equals(oletype.OLE.name())) {
-                res.add(s);
-            } else {
-                res.addAll(new OleConfig(otab.getOle(s)).getAllTabFields(s));
-            }
-        }
 
-        return res;
+        return getTab(stab).getFieldList();
     }
 
 }
