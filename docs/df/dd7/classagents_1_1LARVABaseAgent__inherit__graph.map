@@ -1,8 +1,0 @@
-<map id="agents.LARVABaseAgent" name="agents.LARVABaseAgent">
-<area shape="rect" id="node1" title=" " alt="" coords="165,80,348,107"/>
-<area shape="rect" id="node3" href="$d3/d56/classagents_1_1LARVAFirstAgent.html" title=" " alt="" coords="167,155,346,181"/>
-<area shape="rect" id="node2" title=" " alt="" coords="227,5,287,32"/>
-<area shape="rect" id="node4" href="$dd/d1b/classagents_1_1DeathStar.html" title=" " alt="" coords="5,229,140,256"/>
-<area shape="rect" id="node5" href="$da/df4/classagents_1_1DeathStarDeLuxe.html" title=" " alt="" coords="165,229,349,256"/>
-<area shape="rect" id="node6" href="$da/de3/classagents_1_1TradeFederation.html" title=" " alt="" coords="373,229,548,256"/>
-</map>
