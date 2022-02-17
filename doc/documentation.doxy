@@ -1,7 +1,7 @@
 PROJECT_NAME = "es.ugr.larva.core"
 PROJECT_NUMBER = 0
 OUTPUT_LANGUAGE = ENGLISH
-OUTPUT_DIRECTORY = ./doc
+OUTPUT_DIRECTORY = ./
 INPUT = ./src 
 EXCLUDE = ./nbproject/ dist/ build/
 RECURSIVE 	= YES
