@@ -1,0 +1,5 @@
+<map id="world.Compass" name="world.Compass">
+<area shape="rect" id="node1" title=" " alt="" coords="9,213,131,240"/>
+<area shape="rect" id="node2" href="$classgeometry_1_1Vector.html" title=" " alt="" coords="5,124,135,151"/>
+<area shape="rect" id="node3" href="$classgeometry_1_1Point.html" title=" " alt="" coords="10,5,130,32"/>
+</map>

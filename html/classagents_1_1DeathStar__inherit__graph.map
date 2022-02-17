@@ -1,0 +1,6 @@
+<map id="agents.DeathStar" name="agents.DeathStar">
+<area shape="rect" id="node1" title=" " alt="" coords="29,229,164,256"/>
+<area shape="rect" id="node2" href="$classagents_1_1LARVAFirstAgent.html" title=" " alt="" coords="7,155,186,181"/>
+<area shape="rect" id="node3" href="$classagents_1_1LARVABaseAgent.html" title=" " alt="" coords="5,80,188,107"/>
+<area shape="rect" id="node4" title=" " alt="" coords="67,5,127,32"/>
+</map>
