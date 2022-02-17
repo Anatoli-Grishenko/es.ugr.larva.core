@@ -1,6 +1,0 @@
-<map id="games.GameObject" name="games.GameObject">
-<area shape="rect" id="node1" title=" " alt="" coords="196,5,347,32"/>
-<area shape="rect" id="node2" href="$classgames_1_1GameBitmap.html" title=" " alt="" coords="5,80,161,107"/>
-<area shape="rect" id="node3" href="$classgames_1_1GameCharacter.html" title=" " alt="" coords="185,80,357,107"/>
-<area shape="rect" id="node4" href="$classgames_1_1GameLabel.html" title=" " alt="" coords="382,80,526,107"/>
-</map>
