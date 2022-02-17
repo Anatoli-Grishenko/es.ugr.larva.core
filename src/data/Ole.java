@@ -407,7 +407,7 @@ public class Ole extends JsonObject {
 
     public final Ole getOle(String field) {
         if (get(field) != null && get(field).isObject()) { // && isOle(get(field).asObject())) {
-            return new Ole(get(field).asObject());
+            return (Ole) get(field).asObject();
         } else {
             return new Ole(new JsonObject());
         }
