@@ -1,0 +1,184 @@
+\hypertarget{classagents_1_1BehaviourControl}{}\doxysection{agents.\+Behaviour\+Control Class Reference}
+\label{classagents_1_1BehaviourControl}\index{agents.BehaviourControl@{agents.BehaviourControl}}
+
+
+Inheritance diagram for agents.\+Behaviour\+Control\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{da/d3e/classagents_1_1BehaviourControl__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for agents.\+Behaviour\+Control\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{d8/d7f/classagents_1_1BehaviourControl__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a7f31c9935970caeda18027f72ef289f7}\label{classagents_1_1BehaviourControl_a7f31c9935970caeda18027f72ef289f7}} 
+{\bfseries Behaviour\+Control} (Agent a)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a2f916ec9c186a22442cd551b41970ba6}\label{classagents_1_1BehaviourControl_a2f916ec9c186a22442cd551b41970ba6}} 
+Array\+List$<$ String $>$ {\bfseries get\+All\+Behaviour\+Names} ()
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_addcb523d1fa1a96c2cafc1cc9ac8d5a1}\label{classagents_1_1BehaviourControl_addcb523d1fa1a96c2cafc1cc9ac8d5a1}} 
+Behaviour {\bfseries get\+Behaviour} (String name)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a2046d999ff768a011fc250f65b603796}\label{classagents_1_1BehaviourControl_a2046d999ff768a011fc250f65b603796}} 
+String {\bfseries register\+Behaviour} (Behaviour b, String name, String description)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_aa4d2cc22ade507d17897c47b1ac8be3c}\label{classagents_1_1BehaviourControl_aa4d2cc22ade507d17897c47b1ac8be3c}} 
+String {\bfseries unregister\+Behaviour} (Behaviour b)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_aa7b3928987224af2701d7c50ebc4f08f}\label{classagents_1_1BehaviourControl_aa7b3928987224af2701d7c50ebc4f08f}} 
+String {\bfseries unregister\+Behaviour} (String name)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_ab0da0cdcf477b254d785c869b6055235}\label{classagents_1_1BehaviourControl_ab0da0cdcf477b254d785c869b6055235}} 
+int {\bfseries size} ()
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a74ae20cf0a123c3dedcb8ba65dcaff81}\label{classagents_1_1BehaviourControl_a74ae20cf0a123c3dedcb8ba65dcaff81}} 
+boolean {\bfseries is\+Empty} ()
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a8431ab4ce2c0bc9443d61a0014f8ae78}\label{classagents_1_1BehaviourControl_a8431ab4ce2c0bc9443d61a0014f8ae78}} 
+long {\bfseries get\+Latency} (String behaviourname)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a898a8687f96bc7b0d31850c373133ac3}\label{classagents_1_1BehaviourControl_a898a8687f96bc7b0d31850c373133ac3}} 
+boolean {\bfseries is\+OK} (String behaviourname)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a0ae33deb544258db9b69e46b43edd7dc}\label{classagents_1_1BehaviourControl_a0ae33deb544258db9b69e46b43edd7dc}} 
+void {\bfseries start\+Behaviour} (Behaviour b)
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_ac3aa1fb63d44c7373f4e1cbe12b44a25}\label{classagents_1_1BehaviourControl_ac3aa1fb63d44c7373f4e1cbe12b44a25}} 
+void {\bfseries end\+Behaviour} (Behaviour b)
+\item 
+String \mbox{\hyperlink{classagents_1_1BehaviourControl_a8e8d69aeb9d9eae8fb6939ebfa1c09e1}{def\+Report\+Type}} ()
+\item 
+String\mbox{[}$\,$\mbox{]} \mbox{\hyperlink{classagents_1_1BehaviourControl_acdde6d5f65c9ff0b114ace50c47113d3}{def\+Reportable\+Object\+List}} ()
+\item 
+String \mbox{\hyperlink{classagents_1_1BehaviourControl_a41da81a75dbd00944e0763616fdc2757}{report\+Object\+Status}} (String objectid)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a9a78f4c39a3c6023ac524d071b745bfd}\label{classagents_1_1BehaviourControl_a9a78f4c39a3c6023ac524d071b745bfd}} 
+Hash\+Map$<$ String, Behaviour $>$ {\bfseries \+\_\+register}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a8005273f28aec38e163dde4078364a7b}\label{classagents_1_1BehaviourControl_a8005273f28aec38e163dde4078364a7b}} 
+Hash\+Map$<$ String, Integer $>$ {\bfseries \+\_\+counter}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_aa3f947719302fce243a517680d2b3b83}\label{classagents_1_1BehaviourControl_aa3f947719302fce243a517680d2b3b83}} 
+Hash\+Map$<$ String, String $>$ {\bfseries \+\_\+start}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a334de9c6e40b9bc385a1909d0d6237d0}\label{classagents_1_1BehaviourControl_a334de9c6e40b9bc385a1909d0d6237d0}} 
+Hash\+Map$<$ String, String $>$ {\bfseries \+\_\+end}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_aca1cabbe630dd13744b9e1ebfdcac556}\label{classagents_1_1BehaviourControl_aca1cabbe630dd13744b9e1ebfdcac556}} 
+Hash\+Map$<$ String, String $>$ {\bfseries \+\_\+description}
+\item 
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_ab3a7d269cabe8f3de28c24ff2ab8cfb1}\label{classagents_1_1BehaviourControl_ab3a7d269cabe8f3de28c24ff2ab8cfb1}} 
+Agent {\bfseries \+\_\+owner}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyAuthor}{Author}
+lcv 
+\end{DoxyAuthor}
+
+
+Definition at line 20 of file Behaviour\+Control.\+java.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_acdde6d5f65c9ff0b114ace50c47113d3}\label{classagents_1_1BehaviourControl_acdde6d5f65c9ff0b114ace50c47113d3}} 
+\index{agents.BehaviourControl@{agents.BehaviourControl}!defReportableObjectList@{defReportableObjectList}}
+\index{defReportableObjectList@{defReportableObjectList}!agents.BehaviourControl@{agents.BehaviourControl}}
+\doxysubsubsection{\texorpdfstring{defReportableObjectList()}{defReportableObjectList()}}
+{\footnotesize\ttfamily String \mbox{[}$\,$\mbox{]} agents.\+Behaviour\+Control.\+def\+Reportable\+Object\+List (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+List of object\textquotesingle{}s I\+Ds reported \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{interfacetools_1_1ReportableObject_ad4162057e5b46295575368a95b1e6219}{tools.\+Reportable\+Object}}.
+
+
+
+Definition at line 122 of file Behaviour\+Control.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{122                                               \{}
+\DoxyCodeLine{123         \textcolor{keywordflow}{return} Transform.toArray(this.getAllBehaviourNames());}
+\DoxyCodeLine{124     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a8e8d69aeb9d9eae8fb6939ebfa1c09e1}\label{classagents_1_1BehaviourControl_a8e8d69aeb9d9eae8fb6939ebfa1c09e1}} 
+\index{agents.BehaviourControl@{agents.BehaviourControl}!defReportType@{defReportType}}
+\index{defReportType@{defReportType}!agents.BehaviourControl@{agents.BehaviourControl}}
+\doxysubsubsection{\texorpdfstring{defReportType()}{defReportType()}}
+{\footnotesize\ttfamily String agents.\+Behaviour\+Control.\+def\+Report\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+An ID of the type of report \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{interfacetools_1_1ReportableObject_add53f3257fea93a998c45949f1b1b8c8}{tools.\+Reportable\+Object}}.
+
+
+
+Definition at line 117 of file Behaviour\+Control.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{117                                   \{}
+\DoxyCodeLine{118         \textcolor{keywordflow}{return} \textcolor{stringliteral}{"Behaviour Report"};}
+\DoxyCodeLine{119     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classagents_1_1BehaviourControl_a41da81a75dbd00944e0763616fdc2757}\label{classagents_1_1BehaviourControl_a41da81a75dbd00944e0763616fdc2757}} 
+\index{agents.BehaviourControl@{agents.BehaviourControl}!reportObjectStatus@{reportObjectStatus}}
+\index{reportObjectStatus@{reportObjectStatus}!agents.BehaviourControl@{agents.BehaviourControl}}
+\doxysubsubsection{\texorpdfstring{reportObjectStatus()}{reportObjectStatus()}}
+{\footnotesize\ttfamily String agents.\+Behaviour\+Control.\+report\+Object\+Status (\begin{DoxyParamCaption}\item[{String}]{objectid }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Reports and String decribing the internal state of the object 
+\begin{DoxyParams}{Parameters}
+{\em objectid} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{interfacetools_1_1ReportableObject_a805ec3474d5cb8c60a39b4206587fd1e}{tools.\+Reportable\+Object}}.
+
+
+
+Definition at line 127 of file Behaviour\+Control.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{127                                                       \{}
+\DoxyCodeLine{128         String res=\textcolor{stringliteral}{" count "}+\_counter.get(objectid)+\textcolor{stringliteral}{" last "}+\textcolor{keyword}{new} TimeHandler(\_end.get(objectid)).toString(\textcolor{keyword}{new} TimeHandler());}
+\DoxyCodeLine{129             res += \textcolor{stringliteral}{" duration "}+this.getLatency(objectid);            }
+\DoxyCodeLine{130         \textcolor{keywordflow}{return} res;}
+\DoxyCodeLine{131     \}}
+
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/agents/Behaviour\+Control.\+java\end{DoxyCompactItemize}

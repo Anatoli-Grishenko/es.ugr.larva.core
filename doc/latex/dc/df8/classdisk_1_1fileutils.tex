@@ -1,0 +1,175 @@
+\hypertarget{classdisk_1_1fileutils}{}\doxysection{disk.\+fileutils Class Reference}
+\label{classdisk_1_1fileutils}\index{disk.fileutils@{disk.fileutils}}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static Json\+Object \mbox{\hyperlink{classdisk_1_1fileutils_aa8d30ad50ce343c678691a3335fc9b2a}{File\+To\+Json}} (String filefrom)
+\item 
+static boolean \mbox{\hyperlink{classdisk_1_1fileutils_a437572fc5a71c5c9262c9fc49190df74}{Json\+To\+File}} (Json\+Object filejson, String outputfolder)
+\item 
+static Json\+Object \mbox{\hyperlink{classdisk_1_1fileutils_aba09f75867c1f34c6bdab897d9bd43cd}{Json\+Rename\+File}} (Json\+Object filejson, String newname)
+\item 
+static String\mbox{[}$\,$\mbox{]} \mbox{\hyperlink{classdisk_1_1fileutils_a553a9df42c70fcaced390563eea90ccc}{list\+Files}} (String folder, String extension)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyAuthor}{Author}
+lcv To load and save binary content of files into Json Strings. It encapsulated the name and content of a file so that it can be easily transferred thoruh a J\+Son sequence 
+\end{DoxyAuthor}
+
+
+Definition at line 25 of file fileutils.\+java.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classdisk_1_1fileutils_aa8d30ad50ce343c678691a3335fc9b2a}\label{classdisk_1_1fileutils_aa8d30ad50ce343c678691a3335fc9b2a}} 
+\index{disk.fileutils@{disk.fileutils}!FileToJson@{FileToJson}}
+\index{FileToJson@{FileToJson}!disk.fileutils@{disk.fileutils}}
+\doxysubsubsection{\texorpdfstring{FileToJson()}{FileToJson()}}
+{\footnotesize\ttfamily static Json\+Object disk.\+fileutils.\+File\+To\+Json (\begin{DoxyParamCaption}\item[{String}]{filefrom }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+It takes the binary (byte\mbox{[}\mbox{]}) content of any file, dump it as an integer Json Array. It encapsulates not only the binary content (key \char`\"{}filedata\char`\"{}) but also the original filename (key \char`\"{}filename\char`\"{}, just the filename, without the path to it, if such is given in {\ttfamily filefrom} 
+\begin{DoxyParams}{Parameters}
+{\em filefrom} & Name of the file to load \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+a J\+Son Object that encapsulates the content of the file. If an error occured during the load of fila, an empty J\+S\+ON object is returned instead 
+\end{DoxyReturn}
+
+
+Definition at line 34 of file fileutils.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{34                                                          \{}
+\DoxyCodeLine{35         JsonObject res= \textcolor{keyword}{new} JsonObject();}
+\DoxyCodeLine{36         \textcolor{keywordflow}{try} \{}
+\DoxyCodeLine{37             JsonArray arraydata = \textcolor{keyword}{new} JsonArray();}
+\DoxyCodeLine{38             Path path = Paths.get(filefrom);}
+\DoxyCodeLine{39             \textcolor{keywordtype}{byte}[] data = Files.readAllBytes(path);}
+\DoxyCodeLine{40             \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i=0; i<data.length; i++)}
+\DoxyCodeLine{41                 arraydata.add((\textcolor{keywordtype}{int}) data[i]);}
+\DoxyCodeLine{42             res=\textcolor{keyword}{new} JsonObject().add(\textcolor{stringliteral}{"filename"}, path.getFileName().toString()).add(\textcolor{stringliteral}{"filedata"},arraydata);}
+\DoxyCodeLine{43         \} \textcolor{keywordflow}{catch} (IOException ex) \{}
+\DoxyCodeLine{44         \}}
+\DoxyCodeLine{45         \textcolor{keywordflow}{return} res;}
+\DoxyCodeLine{46     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classdisk_1_1fileutils_aba09f75867c1f34c6bdab897d9bd43cd}\label{classdisk_1_1fileutils_aba09f75867c1f34c6bdab897d9bd43cd}} 
+\index{disk.fileutils@{disk.fileutils}!JsonRenameFile@{JsonRenameFile}}
+\index{JsonRenameFile@{JsonRenameFile}!disk.fileutils@{disk.fileutils}}
+\doxysubsubsection{\texorpdfstring{JsonRenameFile()}{JsonRenameFile()}}
+{\footnotesize\ttfamily static Json\+Object disk.\+fileutils.\+Json\+Rename\+File (\begin{DoxyParamCaption}\item[{Json\+Object}]{filejson,  }\item[{String}]{newname }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Renames the encapsulated file, byt changing the name included in the Json. It does not save the file, just changes its encapsulated name 
+\begin{DoxyParams}{Parameters}
+{\em filejson} & The encapsulated file \\
+\hline
+{\em newname} & The new name \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The new Json Object 
+\end{DoxyReturn}
+
+
+Definition at line 81 of file fileutils.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{81                                                                                  \{}
+\DoxyCodeLine{82         String oldname=filejson.getString(\textcolor{stringliteral}{"filename"}, \textcolor{stringliteral}{""}),}
+\DoxyCodeLine{83                 name = FilenameUtils.getBaseName(oldname), }
+\DoxyCodeLine{84                 extension = FilenameUtils.getExtension(oldname);}
+\DoxyCodeLine{85         \textcolor{keywordflow}{return} filejson.set(\textcolor{stringliteral}{"filename"}, newname+\textcolor{stringliteral}{"."}+extension);}
+\DoxyCodeLine{86     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classdisk_1_1fileutils_a437572fc5a71c5c9262c9fc49190df74}\label{classdisk_1_1fileutils_a437572fc5a71c5c9262c9fc49190df74}} 
+\index{disk.fileutils@{disk.fileutils}!JsonToFile@{JsonToFile}}
+\index{JsonToFile@{JsonToFile}!disk.fileutils@{disk.fileutils}}
+\doxysubsubsection{\texorpdfstring{JsonToFile()}{JsonToFile()}}
+{\footnotesize\ttfamily static boolean disk.\+fileutils.\+Json\+To\+File (\begin{DoxyParamCaption}\item[{Json\+Object}]{filejson,  }\item[{String}]{outputfolder }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+Given a Json encapsulated binary file obtained with the method {\ttfamily File\+To\+Json}, it saves the image exactly with the concatenation of the name encapsulated in it, and the path contained in {\ttfamily outputfolder} 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filejson} & The J\+Son encapsulated file \\
+\hline
+{\em outputfolder} & The folder on which to save the encapsulated file \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 57 of file fileutils.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{57                                                                                \{}
+\DoxyCodeLine{58         \textcolor{keywordtype}{boolean} res=\textcolor{keyword}{false};}
+\DoxyCodeLine{59             String filename = filejson.get(\textcolor{stringliteral}{"filename"}).asString();}
+\DoxyCodeLine{60             JsonArray content = filejson.get(\textcolor{stringliteral}{"filedata"}).asArray();}
+\DoxyCodeLine{61             \textcolor{keywordtype}{byte} [] data = \textcolor{keyword}{new} \textcolor{keywordtype}{byte}[content.size()];}
+\DoxyCodeLine{62             \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i=0; i<data.length; i++)}
+\DoxyCodeLine{63                 data[i] = (\textcolor{keywordtype}{byte}) content.get(i).asInt();}
+\DoxyCodeLine{64             \textcolor{keywordflow}{try} \{}
+\DoxyCodeLine{65                 FileOutputStream fos = \textcolor{keyword}{new} FileOutputStream(outputfolder+\textcolor{stringliteral}{"/"}+filename);}
+\DoxyCodeLine{66                 fos.write(data);}
+\DoxyCodeLine{67                 fos.close();}
+\DoxyCodeLine{68                 res=\textcolor{keyword}{true};}
+\DoxyCodeLine{69             \} \textcolor{keywordflow}{catch} (Exception ex) \{}
+\DoxyCodeLine{70             \}            }
+\DoxyCodeLine{71         \textcolor{keywordflow}{return} res;}
+\DoxyCodeLine{72     \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{classdisk_1_1fileutils_a553a9df42c70fcaced390563eea90ccc}\label{classdisk_1_1fileutils_a553a9df42c70fcaced390563eea90ccc}} 
+\index{disk.fileutils@{disk.fileutils}!listFiles@{listFiles}}
+\index{listFiles@{listFiles}!disk.fileutils@{disk.fileutils}}
+\doxysubsubsection{\texorpdfstring{listFiles()}{listFiles()}}
+{\footnotesize\ttfamily static String \mbox{[}$\,$\mbox{]} disk.\+fileutils.\+list\+Files (\begin{DoxyParamCaption}\item[{String}]{folder,  }\item[{String}]{extension }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+List the set of files in a given foled that meets a given extension 
+\begin{DoxyParams}{Parameters}
+{\em folder} & The folder to search files for. \\
+\hline
+{\em extension} & The expected extension of files in that folder \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+An array of file names in that folder which have this extension 
+\end{DoxyReturn}
+
+
+Definition at line 94 of file fileutils.\+java.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{94                                                                       \{}
+\DoxyCodeLine{95         String [] filenames;}
+\DoxyCodeLine{96         File dir = \textcolor{keyword}{new} File(folder);}
+\DoxyCodeLine{97         File[] folderinputs = dir.listFiles(\textcolor{keyword}{new} FilenameFilter() \{}
+\DoxyCodeLine{98             \textcolor{keyword}{public} \textcolor{keywordtype}{boolean} accept(File dir, String name) \{}
+\DoxyCodeLine{99                 \textcolor{keywordflow}{return} name.toLowerCase().endsWith(extension.toLowerCase());}
+\DoxyCodeLine{100             \}}
+\DoxyCodeLine{101         \});      }
+\DoxyCodeLine{102         filenames = \textcolor{keyword}{new} String [folderinputs.length];}
+\DoxyCodeLine{103         \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i=0; i<folderinputs.length; i++) }
+\DoxyCodeLine{104             filenames[i] = folderinputs[i].getName();}
+\DoxyCodeLine{105         \textcolor{keywordflow}{return} filenames;}
+\DoxyCodeLine{106     \} }
+
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/disk/fileutils.\+java\end{DoxyCompactItemize}

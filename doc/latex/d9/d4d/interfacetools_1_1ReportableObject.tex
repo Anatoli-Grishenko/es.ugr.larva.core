@@ -1,0 +1,97 @@
+\hypertarget{interfacetools_1_1ReportableObject}{}\doxysection{tools.\+Reportable\+Object Interface Reference}
+\label{interfacetools_1_1ReportableObject}\index{tools.ReportableObject@{tools.ReportableObject}}
+
+
+Inheritance diagram for tools.\+Reportable\+Object\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dd/d81/interfacetools_1_1ReportableObject__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for tools.\+Reportable\+Object\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{d2/d4b/interfacetools_1_1ReportableObject__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+abstract String \mbox{\hyperlink{interfacetools_1_1ReportableObject_add53f3257fea93a998c45949f1b1b8c8}{def\+Report\+Type}} ()
+\item 
+abstract String\mbox{[}$\,$\mbox{]} \mbox{\hyperlink{interfacetools_1_1ReportableObject_ad4162057e5b46295575368a95b1e6219}{def\+Reportable\+Object\+List}} ()
+\item 
+abstract String \mbox{\hyperlink{interfacetools_1_1ReportableObject_a805ec3474d5cb8c60a39b4206587fd1e}{report\+Object\+Status}} (String objectid)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{interfacetools_1_1ReportableObject_a3e19ddcd9c5a76930a15eb6a9d080141}\label{interfacetools_1_1ReportableObject_a3e19ddcd9c5a76930a15eb6a9d080141}} 
+static \mbox{\hyperlink{classdata_1_1Ole}{Ole}} {\bfseries report} =new \mbox{\hyperlink{classdata_1_1Ole}{Ole}}()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Interface to report the internal state of objects across the platform. It reports a set of object (objeclist) and, for each, a date, ans status and value \begin{DoxyAuthor}{Author}
+lcv 
+\end{DoxyAuthor}
+
+
+Definition at line 14 of file Reportable\+Object.\+java.
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{interfacetools_1_1ReportableObject_ad4162057e5b46295575368a95b1e6219}\label{interfacetools_1_1ReportableObject_ad4162057e5b46295575368a95b1e6219}} 
+\index{tools.ReportableObject@{tools.ReportableObject}!defReportableObjectList@{defReportableObjectList}}
+\index{defReportableObjectList@{defReportableObjectList}!tools.ReportableObject@{tools.ReportableObject}}
+\doxysubsubsection{\texorpdfstring{defReportableObjectList()}{defReportableObjectList()}}
+{\footnotesize\ttfamily abstract String \mbox{[}$\,$\mbox{]} tools.\+Reportable\+Object.\+def\+Reportable\+Object\+List (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [abstract]}}
+
+List of object\textquotesingle{}s I\+Ds reported \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classdatabase_1_1OleDataBase_a138091866ea1c205c2082e8f1ce0266f}{database.\+Ole\+Data\+Base}}, and \mbox{\hyperlink{classagents_1_1BehaviourControl_acdde6d5f65c9ff0b114ace50c47113d3}{agents.\+Behaviour\+Control}}.
+
+\mbox{\Hypertarget{interfacetools_1_1ReportableObject_add53f3257fea93a998c45949f1b1b8c8}\label{interfacetools_1_1ReportableObject_add53f3257fea93a998c45949f1b1b8c8}} 
+\index{tools.ReportableObject@{tools.ReportableObject}!defReportType@{defReportType}}
+\index{defReportType@{defReportType}!tools.ReportableObject@{tools.ReportableObject}}
+\doxysubsubsection{\texorpdfstring{defReportType()}{defReportType()}}
+{\footnotesize\ttfamily abstract String tools.\+Reportable\+Object.\+def\+Report\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [abstract]}}
+
+An ID of the type of report \begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classdatabase_1_1OleDataBase_a134555d2114091b3355e83ef39df2d93}{database.\+Ole\+Data\+Base}}, and \mbox{\hyperlink{classagents_1_1BehaviourControl_a8e8d69aeb9d9eae8fb6939ebfa1c09e1}{agents.\+Behaviour\+Control}}.
+
+\mbox{\Hypertarget{interfacetools_1_1ReportableObject_a805ec3474d5cb8c60a39b4206587fd1e}\label{interfacetools_1_1ReportableObject_a805ec3474d5cb8c60a39b4206587fd1e}} 
+\index{tools.ReportableObject@{tools.ReportableObject}!reportObjectStatus@{reportObjectStatus}}
+\index{reportObjectStatus@{reportObjectStatus}!tools.ReportableObject@{tools.ReportableObject}}
+\doxysubsubsection{\texorpdfstring{reportObjectStatus()}{reportObjectStatus()}}
+{\footnotesize\ttfamily abstract String tools.\+Reportable\+Object.\+report\+Object\+Status (\begin{DoxyParamCaption}\item[{String}]{objectid }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [abstract]}}
+
+Reports and String decribing the internal state of the object 
+\begin{DoxyParams}{Parameters}
+{\em objectid} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classdatabase_1_1OleDataBase_ae6507eeb541d0e5f548183e7566a582d}{database.\+Ole\+Data\+Base}}, and \mbox{\hyperlink{classagents_1_1BehaviourControl_a41da81a75dbd00944e0763616fdc2757}{agents.\+Behaviour\+Control}}.
+
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/tools/Reportable\+Object.\+java\end{DoxyCompactItemize}
