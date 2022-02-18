@@ -78,6 +78,11 @@ public class Ole extends JsonObject {
     Cryptor myCryptor;
 
 //////////////////////////////////////////// Static methods    
+    /**
+     * @brief Determine whether a JsonObject is also a Ole object
+     * @param jso a regular JsonObject
+     * @return 
+     */
     public static boolean isOle(JsonObject jso) {
         if (jso.get(oletype.OLEMETA.name()) != null) {
             return jso.get(oletype.OLEMETA.name()).asObject().getBoolean("ole", false);
@@ -87,11 +92,16 @@ public class Ole extends JsonObject {
 
     }
 
+    /**
+     * @brief Import a plain JsonObject into a valie Ole Object
+     * @param jsole The JsonObject
+     * @return A valid importation to a Ole Object
+     */
     public static Ole Json2Ole(JsonObject jsole) {
         return new Ole(jsole);
     }
 
-    public static JsonValue Ole2JsonValue(JsonValue jsobject) {
+   protected static JsonValue Ole2JsonValue(JsonValue jsobject) {
         JsonValue jsvres;
         if (jsobject.isArray()) {
             jsvres = new JsonArray();
@@ -112,10 +122,20 @@ public class Ole extends JsonObject {
         return jsvres;
     }
 
+    /**
+     * @brief Export a valid Ole Object into a plain JsonObject, removing any META information
+     * @param odata The Ole object to export
+     * @return A valid JsonObject without any META information
+     */
     public static JsonObject Ole2PlainJson(Ole odata) {
         return Ole2JsonValue(odata).asObject();
     }
 
+    /**
+     * @brief Gives all fieldnames included in a, poissible nested, JsonObject
+     * @param jso the JsonObject
+     * @return A list of all field names
+     */
     public static List<String> allNames(JsonObject jso) {
         List<String> res = new ArrayList();
         for (String s : jso.names()) {
@@ -128,39 +148,27 @@ public class Ole extends JsonObject {
         return res;
     }
 
-//        JsonObject res = new JsonObject();
-//        for (String f : odata.getFieldList()) {
-//            String type = odata.getFieldType(f);
-//            if (type.equals(oletype.INTEGER.name())) {
-//                res.set(f, odata.getInt(f, -1));
-//            } else if (type.equals(oletype.DOUBLE.name())) {
-//                res.set(f, odata.getDouble(f, -1));
-//            } else if (type.equals(oletype.STRING.name())) {
-//                res.set(f, odata.getString(f, ""));
-//            } else if (type.equals(oletype.BOOLEAN.name())) {
-//                res.set(f, odata.getBoolean(f, false));
-//            }
-//            if (type.equals(oletype.ARRAY.name())) {
-//                res.set(f, odata.get(f).asArray());
-//            } else if (type.startsWith(oletype.OLE.name())) {
-//                res.set(f, Ole2PlainJson(odata.getOle(f)));
-//            }
-//        }
-//        return res;
-//    }
     //////////////////////////////////////////// Constructors
     /**
-     * Basic constructor.
+     * @brief Basic constructor.
      */
     public Ole() {
         super();
         Init();
     }
 
+    /**
+     * @brief Import constructor
+     * @param jsole 
+     */
     public Ole(JsonObject jsole) {
         fromJson(jsole);
     }
 
+    /**
+     * @brief Parse constructor
+     * @param s 
+     */
     public Ole(String s) {
         parse(s);
     }
@@ -173,6 +181,10 @@ public class Ole extends JsonObject {
         }
     }
 
+    /**
+     * @brief removes all fields
+     * @return 
+     */
     public Ole clear() {
         ArrayList<String> names = new ArrayList(this.names());
         for (String s : names) {
@@ -460,10 +472,7 @@ public class Ole extends JsonObject {
 
     //////////////////////////////////////////// Crypto  
     public boolean isEncrypted() {
-//        if (meta() == null || meta().get("crypto")== null)
-//            return false;
-//        return meta().get("crypto").asString().length() > 0;
-        return myCryptor != null;
+       return myCryptor != null;
     }
 
     /**

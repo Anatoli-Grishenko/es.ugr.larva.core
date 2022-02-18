@@ -21,6 +21,10 @@ public class Cryptor {
     protected final String _atoms="abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 
+    /**
+     * @brief Basic constructor
+     * @param k The key to be used (must be 16 chars)
+     */
    public Cryptor(String k) {
        setCryptoKey(k);
    }
@@ -30,12 +34,20 @@ public class Cryptor {
        setCharSet(cs);
    }
 
+   /**
+    * @brief Changes the key ot be used
+    * @param k The key (16chars)
+    */
    public void setCryptoKey(String k) {
         _cryptoKey="";
         for (int i=0; i<16; i++)
             _cryptoKey += k.charAt(i%k.length()); 
    }
    
+   /**
+    * @brief Returns the embedded key
+    * @return The key
+    */
    public String getCryptoKey() {
        return _cryptoKey;
    }
@@ -48,10 +60,20 @@ public class Cryptor {
        this._charset=s;
    }
    
+   /**
+    * @brief Encripts a String into another string by using a 128bits-RSA Algorithm and the embedded key
+    * @param text The text to be encrypted
+    * @return The ecnrypted text
+    */
    public String enCrypt(String text) {
         return enCryptAES(text);
     }
 
+   /**
+    * @brief It tries to decrypt a string with the embedded key
+    * @param text The text to decrypt
+    * @return The decrypted string
+    */
     public String deCrypt(String text) {
         return deCryptAES(text);
     }

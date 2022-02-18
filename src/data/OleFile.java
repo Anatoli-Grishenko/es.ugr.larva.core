@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import org.apache.commons.io.FilenameUtils;
 
 /**
- * Subclass of {@link Ole} for reading, writing and transferring files through
+ * @brief Subclass of  Ole for reading, writing and transferring files through
  * ASCII messages. It reads the files byte to byte so it can be used for both text and
  * binary files. It is based on two fields one for the name of the file and
  * other for the content. The name of the file contains just the name with the
@@ -32,7 +32,7 @@ import org.apache.commons.io.FilenameUtils;
 public class OleFile extends Ole {
 
     /**
-     * Basic constructor. It defines the specific fields of this object
+     * @brief Basic constructor. It defines the specific fields of this object
      */
     public OleFile() {
         super();
@@ -42,7 +42,7 @@ public class OleFile extends Ole {
     }
 
     /**
-     * Copy constructor
+     * @brief Copy constructor
      * @param o The Ole object to be cloned
      */
     public OleFile(Ole o) {
@@ -53,6 +53,7 @@ public class OleFile extends Ole {
     }
 
     /**
+     * @brief
      * It takes the binary (byte[]) content of any file, dump it as an
      * integer Json Array. It encapsulates not only the binary content (key
      * "filedata") but also the original filename (key "filename", just the
@@ -93,7 +94,7 @@ public class OleFile extends Ole {
     }
 
     /**
-     * Given an encapsulated binary file obtained with the method {@link data.OleFile#loadFile(java.lang.String) }
+     * @brief Given an encapsulated binary file obtained with the method {@link data.OleFile#loadFile(java.lang.String) }
      * it saves the image exactly with the concatenation of the name
      * encapsulated in it, and the path specified in @param outputfolder. The file is sabed  
      * in binary mode, so it mught be considered as a replica of the former file. 
@@ -129,7 +130,7 @@ public class OleFile extends Ole {
     }
 
     /**
-     * Saves the file wrapped within the Ole object but with a new name
+     * @brief Saves the file wrapped within the Ole object but with a new name
      *
      * @param outputfolder Where to write the file
      * @param newname The new name
@@ -158,6 +159,10 @@ public class OleFile extends Ole {
         return res;
     }
     
+    /**
+     * @brief Retunrs the filename embedded into a OleFile object
+     * @return 
+     */
     public String getFileName() {
         return getField("filename");
     }
