@@ -6,8 +6,6 @@ package appboot;
 import com.formdev.flatlaf.FlatDarkLaf;
 import data.Ole;
 import data.OleConfig;
-import data.OleList;
-import data.OleRecord;
 import disk.Logger;
 import jade.core.MicroRuntime;
 import jade.core.Profile;
@@ -63,7 +61,7 @@ public class LARVABoot {
     protected FileWriter _lockCloseSession, _lockReboot;
     protected int _port;
     protected double _progress;
-    protected OleRecord config;
+    protected OleConfig config;
     protected String configfilename;
     protected Logger logger;
 
@@ -130,11 +128,11 @@ public class LARVABoot {
     }
 
     protected void initGUI() {
-//        try {
-//            UIManager.setLookAndFeel(new FlatDarkLaf());
-//        } catch (Exception ex) {
-//            System.err.println("Failed to initialize LaF");
-//        }
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize LaF");
+        }
 
         fMain = new LARVAFrame(e -> this.jadebootListener(e));
         pMain = new JPanel();
@@ -172,7 +170,7 @@ public class LARVABoot {
         fMain.setVisible(true);
         fMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         fMain.show();
-
+//        Settings=new OleDialog("Configuration");
     }
 
     protected void refreshGUI() {
@@ -224,8 +222,8 @@ public class LARVABoot {
             sStart.acquire();
         } catch (InterruptedException ex) {
         }
-        return this.selectConnection(oleConfig.getOle("Jade").getField("Host"),
-                oleConfig.getOle("Jade").getInt("Port"));
+        return this.selectConnection(oleConfig.getTab("Jade").getField("Host"),
+                oleConfig.getTab("Jade").getInt("Port"));
     }
 
     protected LARVABoot doCompleted(String task) {
@@ -262,7 +260,7 @@ public class LARVABoot {
         } else {
 
         }
-        config = new OleRecord();
+        config = new OleConfig();
         if (configfilename != null && !new File(configfilename).exists()) {
             configfilename = null;
         }
@@ -283,7 +281,7 @@ public class LARVABoot {
         }
         Info("Configuring boot:");
         if (configfilename != null) {
-            OleRecord cfgbasic = new OleRecord(new Ole(config.getField("basic")));
+            OleConfig cfgbasic = new OleConfig(new Ole(config.getField("basic")));
             if (cfgbasic.getFieldList().contains("savelog") && cfgbasic.getBoolean("savelog")) {
                 if (cfgbasic.getFieldList().contains("logfile")) {
                     logger.setLoggerFileName(cfgbasic.getString("logfile"));
@@ -433,7 +431,7 @@ public class LARVABoot {
      */
     public LARVABoot launchAgent(String name, Class c) {
         /// Issue #2 https://github.com/Anatoli-Grishenko/es.ugr.larva.core/issues/2
-        name=this.clearMarkDowns(name);
+        name = this.clearMarkDowns(name);
         Info("Launching agent " + name);
         if (!isCompleted("CONNECT")) {
             Abort("Please configure the connection first");
@@ -498,11 +496,12 @@ public class LARVABoot {
     }
 
     /**
-     * This method waits until all launched agents are dead. 
+     * This method waits until all launched agents are dead.
+     *
      * @return The own instance
      */
     public LARVABoot WaitToClose() {
-        this._quickshutdown=true;
+        this._quickshutdown = true;
         Info("Waiting for agents to close");
         while (!isEmpty() && !isShutDown()) {
             try {
@@ -545,8 +544,8 @@ public class LARVABoot {
 //    }
 
     /**
-     * It immediately kills all agents which could have been running in the predefined
-     * container without waiting for them to exit properly
+     * It immediately kills all agents which could have been running in the
+     * predefined container without waiting for them to exit properly
      *
      * @return The own instance
      */
@@ -575,8 +574,7 @@ public class LARVABoot {
     }
 
     /**
-     * The container of the agent is killed and the
-     * application exits
+     * The container of the agent is killed and the application exits
      *
      * @return The own instance
      */
@@ -635,6 +633,7 @@ public class LARVABoot {
         } else {
             what.run();
         }
+//            what.run();
     }
 
     protected void doSwingWait(Runnable what) {
@@ -648,6 +647,7 @@ public class LARVABoot {
         } else {
             what.run();
         }
+//            what.run();
     }
 
     protected void jadebootListener(ActionEvent e) {
@@ -660,15 +660,13 @@ public class LARVABoot {
             sStart.release();
             this.bConfig.setEnabled(false);
             this.bStart.setEnabled(false);
-            if (Settings != null) {
-//                oleConfig = Settings.getDialogResult();
-                if (oleConfig != null && !oleConfig.isEmpty()) {
-                    oleConfig.saveAsFile("./config/", "config.json", true);
-                }
-            }
         }
         if (e.getActionCommand().equals(Buttons.Configure.name())) {
-            Settings = new OleDialog(this.fMain, oleConfig);
+            Settings = new OleDialog(this.fMain,"Settings");
+            if (Settings.Interact(oleConfig)) {
+                oleConfig.saveAsFile("./config/", "config.json", true);
+            }
+            
         }
     }
 
@@ -764,14 +762,15 @@ public class LARVABoot {
     protected void setDebug(boolean _debug) {
         this._debug = _debug;
     }
+
     protected String clearMarkDowns(String original) {
-        String res= "";
-        for (int i=0; i<original.length(); i++) {
-            if (markdowns.contains(""+original.charAt(i))) {
-                res+=".";
+        String res = "";
+        for (int i = 0; i < original.length(); i++) {
+            if (markdowns.contains("" + original.charAt(i))) {
+                res += ".";
+            } else {
+                res += "" + original.charAt(i);
             }
-            else 
-                res += ""+original.charAt(i);
         }
         return res;
     }

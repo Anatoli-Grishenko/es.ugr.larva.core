@@ -9,7 +9,7 @@ import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;
 import data.OleList;
-import data.OleRecord;
+import data.Transform;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -33,6 +33,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -49,50 +50,61 @@ import static swing.SwingTools.doSwingWait;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class OleDialog {
+public class OleDialog extends JDialog implements ActionListener {
 
     OleConfig output, input;
-    LARVAFrame myFrame;
     HashMap<String, Component> components;
     JTabbedPane tpMain;
     JPanel flMain, flButtons;
-    MyPlainButton bOK, bCancel;
+    JButton bOK, bCancel;
     int spacing = 5, fieldheight = 20, fieldwidth = 160;
-    Semaphore waitDialog;
     boolean bresult;
+    JFrame parent;
 
-    public OleDialog(LARVAFrame parent, OleConfig o) {
-        myFrame = new LARVAFrame(e -> OleDialogListener(e));
+    public OleDialog(JFrame parent, String title) {
+        super(parent, title, true);
         tpMain = new JTabbedPane();
         tpMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         flMain = new JPanel();
         flMain.setLayout(new BoxLayout(flMain, BoxLayout.Y_AXIS));
         flButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
         flMain.add(tpMain);
-        bOK = new MyPlainButton("OK", "", myFrame);
-        bCancel = new MyPlainButton("Cancel", "", myFrame);
+        bOK = new JButton("OK");
+        bOK.addActionListener(e -> actionPerformed(e));
+        bCancel = new JButton("Cancel");
+        bCancel.addActionListener(e -> actionPerformed(e));
         flButtons.add(bOK);
         flButtons.add(bCancel);
         flMain.add(flButtons);
-        output = o;
-        input = o;
+
         components = new HashMap();
-        myFrame.add(flMain);
-        myFrame.pack();
-        myFrame.show();
-        myFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-       Ole2Layout();
-        this.waitDialog = new Semaphore(0);
+        getContentPane().add(flMain);
+
     }
 
-    public boolean Interact() {
-        doSwingWait(() -> {
-        });
-        try {
-            this.waitDialog.acquire(1);
-        } catch (Exception Ex) {
-
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()) {
+            case "OK":
+                Layout2Ole();
+                bresult = true;
+                break;
+            case "Cancel":
+                input = output;
+                bresult = false;
+                break;
         }
+        dispose();
+    }
+
+    public boolean Interact(OleConfig o) {
+        tpMain.removeAll();
+        output = o;
+        input = o;
+        Ole2Layout();
+        pack();
+        setVisible(true);
+
         return bresult;
     }
 
@@ -100,74 +112,94 @@ public class OleDialog {
         return output;
     }
 
-    protected void OleDialogListener(ActionEvent e) {
-        switch (e.getActionCommand()) {
-            case "OK":
-                Layout2Ole();
-                myFrame.closeLARVAFrame();
-                this.waitDialog.release(1);
-                bresult = true;
-                break;
-            case "Cancel":
-                input = output;
-                myFrame.closeLARVAFrame();
-                this.waitDialog.release(1);
-                bresult = false;
-                break;
-        }
-    }
-
-    protected JPanel addToLayout(Ole ocomponents, String title, boolean border) {
+       protected JPanel addToLayout(String oid, Ole ocomponents) {
         GridBagConstraints gc;
         JPanel dataPanel;
         JLabel label;
         JTextField text;
         JCheckBox checkbox;
-        Ole fieldproperties;
+        JComboBox combobox;
+        Ole fieldproperties, panelproperties;
+        String tooltip;
+        ArrayList<String> select;
+        String arraySelect[];
+        int columns;
 
-        gc = new GridBagConstraints();
+        panelproperties = input.getProperties(oid);
+        columns = panelproperties.getInt("columns", 1);
         dataPanel = new JPanel();
         dataPanel.setLayout(new GridBagLayout());
-        if (border) {
-            dataPanel.setBorder(BorderFactory.createTitledBorder(title));
-        }
+        gc = new GridBagConstraints();
         gc.weightx = 1;
         gc.weighty = 1;
         gc.insets = new Insets(spacing, spacing, spacing, spacing);
-        gc.anchor = GridBagConstraints.WEST;
+        gc.anchor = GridBagConstraints.NORTHWEST;
+//        gc.fill = GridBagConstraints.HORIZONTAL;
         gc.gridx = 0;
         gc.gridy = 0;
+        gc.gridwidth = 1;
+        if (panelproperties.getBoolean("border", false)) {
+            dataPanel.setBorder(BorderFactory.createTitledBorder(oid));
+        }
         for (String sfield : ocomponents.getFieldList()) {
+            fieldproperties = input.getProperties(sfield);
+            gc.gridwidth = input.getProperties(sfield).getInt("columns", 1);
             if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
-                text = new JTextField();
-                text.setText(ocomponents.getField(sfield));
-                text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
-                components.put(sfield, text);
-                gc.gridx = 0;
-                gc.anchor = GridBagConstraints.WEST;
                 label = new JLabel(sfield);
                 dataPanel.add(label, gc);
-                gc.gridx++;
-                dataPanel.add(text, gc);
+                select = fieldproperties.getArray("select");
+                if (select == null) {
+                    text = new JTextField();
+                    text.setText(ocomponents.getField(sfield));
+                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        text.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, text);
+                    gc.gridx++;
+                    dataPanel.add(text, gc);
+                    gc.gridx++;
+                } else {
+                    arraySelect = Transform.toArray(select);
+                    combobox = new JComboBox(arraySelect);
+                    combobox.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    combobox.setSelectedItem(ocomponents.getField(sfield));
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        combobox.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, combobox);
+                    gc.gridx++;
+                    dataPanel.add(combobox, gc);
+                    gc.gridx++;
+                }
             } else if (ocomponents.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {
                 checkbox = new JCheckBox();
                 checkbox.setSelected(ocomponents.getBoolean(sfield));
+                tooltip = fieldproperties.getString("tooltip");
+                if (tooltip != null) {
+                    checkbox.setToolTipText(tooltip);
+                }
                 components.put(sfield, checkbox);
-                gc.gridx = 0;
-                gc.anchor = GridBagConstraints.WEST;
-                label = new JLabel(sfield, SwingConstants.LEFT);
+                label = new JLabel(sfield);
+//                label = new JLabel(sfield, SwingConstants.LEFT);
                 dataPanel.add(label, gc);
                 gc.gridx++;
                 dataPanel.add(checkbox, gc);
-            }else if (ocomponents.getFieldType(sfield).equals(oletype.OLE.name())) {
+                gc.gridx++;
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.OLE.name())) {
                 gc.gridx = 0;
-                gc.anchor = GridBagConstraints.WEST;
-                dataPanel.add(addToLayout(ocomponents.getOle(sfield), sfield, true), gc);
+                dataPanel.add(addToLayout(sfield, ocomponents.getOle(sfield)), gc);
+                gc.gridx = columns;
             }
-             gc.gridy++;
-      }
+            if (gc.gridx + 1 >= columns) {
+                gc.gridx = 0;
+                gc.gridy++;
+            }
+        }
         return dataPanel;
     }
 
@@ -176,102 +208,69 @@ public class OleDialog {
         JPanel pTab;
         JLabel lA;
         Ole currentTab;
-        GridBagConstraints gc = new GridBagConstraints(), gc2;
-        gc.weightx = 1;
-        gc.weighty = 1;
-        gc.insets = new Insets(spacing, spacing, spacing, spacing);
+        Ole fieldproperties;
+        String tooltip;
 
         for (String stab : tabs) {
             currentTab = input.getTab(stab);
+            fieldproperties = input.getProperties(stab);
             pTab = new JPanel();
             pTab.setLayout(new BoxLayout(pTab, BoxLayout.LINE_AXIS));
             pTab.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-            pTab.add(addToLayout(currentTab, "", false));
+            pTab.add(addToLayout(stab, currentTab));
             tpMain.addTab(stab, null, pTab);
+            tooltip = fieldproperties.getString("tooltip");
+            if (tooltip != null) {
+                tpMain.setToolTipTextAt(tpMain.getTabCount() - 1, tooltip);
+            }
         }
-        myFrame.pack();
     }
-//                }//                    case "LIST":
-//                        OleList olist = new OleList(tab.getOle(sfield));
-//                        olist = olist.getIntersection(olist);
-//                        String slist[] = new OleList(olist).prettyprint().split(" ");
-//                        JComboBox jcbA = new JComboBox(slist);
-//                        jcbA.setPreferredSize(new Dimension(fieldwidth, fieldheight));
-//                        components.put(sfield, jcbA);
-//                        jcbA.setSelectedItem(slist[0]);
-//                        gc.gridx = 0;
-//                        gc.anchor = GridBagConstraints.WEST;
-//                        lA = new JLabel(sfield, SwingConstants.LEFT);
-//                        pTab.add(lA, gc);
-//                        gc.gridx++;
-//                        pTab.add(jcbA, gc);
-//                        break;
-//                    case "RECORD":
-//                        OleRecord olrecord = new OleRecord(tab.getOle(sfield));
-//                        JPanel group = new JPanel();
-//                        group.setLayout(new GridBagLayout());
-//                        group.setBorder(BorderFactory.createTitledBorder(sfield));
-//                        gc2 = new GridBagConstraints();
-//                        gc2.weightx = 1;
-//                        gc2.weighty = 1;
-//                        gc2.insets = new Insets(spacing, spacing, spacing, spacing);
-//                        gc2.anchor = GridBagConstraints.WEST;
-//                        gc2.gridx = 0;
-//                        gc2.gridy = 0;
-//                        for (String sr2 : olrecord.getFieldList()) {
-//                            lA = new JLabel(sr2, SwingConstants.LEFT);
-//                            group.add(lA, gc2);
-//                            gc2.gridx = (gc2.gridx + 1) % 4;
-//                            jcA = new JCheckBox();
-//                            jcA.setSelected(olrecord.getBoolean(sr2));
-//                            components.put(sr2, jcA);
-//                            group.add(jcA, gc2);
-//                            gc2.gridx = (gc2.gridx + 1) % 4;
-//                            if (gc2.gridx == 0) {
-//                                gc2.gridy++;
-//                            }
-//                            gc.gridx = 0;
-//                            gc.gridwidth = 4;
-//                            pTab.add(group, gc);
-//                        }
-//                        break;
-//
 
     protected void getFromLayout(Ole currentTab) {
-       JPanel dataPanel;
+        JPanel dataPanel;
         JLabel label;
         JTextField text;
         JCheckBox checkbox;
+        ArrayList<String> select;
+        JComboBox combobox;
+        Ole fieldproperties;
 
         for (String sfield : currentTab.getFieldList()) {
-//                System.out.println("OLEDIALOG Tab" + stab + " Field " + sfield);
-                if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())) {
+            fieldproperties = input.getProperties(sfield);
+            select = fieldproperties.getArray("select");
+            if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())) {
+                if (select == null) {
                     text = (JTextField) components.get(sfield);
                     currentTab.setField(sfield, text.getText());
-                } else if (currentTab.getFieldType(sfield).equals(oletype.INTEGER.name())) {
-                    text = (JTextField) components.get(sfield);
-                    int iv;
-                    try {
-                        iv = Integer.parseInt(text.getText());
-                        currentTab.setField(sfield, iv);
-                    } catch (Exception ex) {
-                    }
-                } else if (currentTab.getFieldType(sfield).equals(oletype.DOUBLE.name())) {
-                    text = (JTextField) components.get(sfield);
-                    double dv;
-                    try {
-                        dv = Double.parseDouble(text.getText());
-                        currentTab.setField(sfield, dv);
-                    } catch (Exception ex) {
-                    }
-                } else if (currentTab.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {
-                    checkbox = (JCheckBox) components.get(sfield);
-                    currentTab.setField(sfield, checkbox.isSelected());
-                } else if (currentTab.getFieldType(sfield).equals(oletype.OLE.name())) {
-                    getFromLayout(currentTab.getOle(sfield));
+                } else {
+                    combobox = (JComboBox) components.get(sfield);
+                    currentTab.setField(sfield, (String) combobox.getSelectedItem());
                 }
-            }        
+            } else if (currentTab.getFieldType(sfield).equals(oletype.INTEGER.name())) {
+                text = (JTextField) components.get(sfield);
+                int iv;
+                try {
+                    iv = Integer.parseInt(text.getText());
+                    currentTab.setField(sfield, iv);
+                } catch (Exception ex) {
+                }
+            } else if (currentTab.getFieldType(sfield).equals(oletype.DOUBLE.name())) {
+                text = (JTextField) components.get(sfield);
+                double dv;
+                try {
+                    dv = Double.parseDouble(text.getText());
+                    currentTab.setField(sfield, dv);
+                } catch (Exception ex) {
+                }
+            } else if (currentTab.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {
+                checkbox = (JCheckBox) components.get(sfield);
+                currentTab.setField(sfield, checkbox.isSelected());
+            } else if (currentTab.getFieldType(sfield).equals(oletype.OLE.name())) {
+                getFromLayout(currentTab.getOle(sfield));
+            }
+        }
     }
+
     protected void Layout2Ole() {
         ArrayList<String> tabs = new ArrayList(input.getAllTabNames());
         Ole currentTab;
@@ -280,56 +279,6 @@ public class OleDialog {
         for (String stab : tabs) {
             currentTab = input.getTab(stab);
             getFromLayout(currentTab);
-//        for (String stab : fields) {
-//            tab = new OleRecord();
-//            myTab = new OleRecord(output.getOle(stab));
-//            for (String sfield : myTab.getFieldList()) {
-//                switch (myTab.getFieldType(sfield)) {
-//                    case "STRING":
-//                        JTextField jtA = (JTextField) components.get(sfield);
-//                        tab.setField(sfield, jtA.getText());
-//                        break;
-//                    case "INTEGER":
-//                    case "DOUBLE":
-//                        int iv;
-//                        double db;
-//                        jtA = (JTextField) components.get(sfield);
-//                        try {
-//                            iv = Integer.parseInt(jtA.getText());
-//                            tab.setField(sfield, iv);
-//                        } catch (Exception ex) {
-//                            db = Double.parseDouble(jtA.getText());
-//                            tab.setField(sfield, db);
-//                        }
-//                        break;
-//
-//                    case "BOOLEAN":
-//                        JCheckBox jcA = (JCheckBox) components.get(sfield);
-//                        tab.setField(sfield, jcA.isSelected());
-//                        break;
-//                    case "LIST":
-//                        OleList olist = new OleList(),
-//                         olistaux = new OleList();
-//                        olistaux.addUniqueItem(new OleList(myTab.getOle(sfield)).prettyprint().split(" "));
-//                        JComboBox jcbA = (JComboBox) components.get(sfield);
-//                        olist.addUniqueItem((String) jcbA.getSelectedItem());
-//                        olist.addDupItem(olistaux.prettyprint().split(" "));
-//                        tab.setField(sfield, olist);
-//                        break;
-//                    case "RECORD":
-//                        OleRecord olrecord = new OleRecord(myTab.getOle(sfield)),
-//                         oleres = new OleRecord();
-//                        for (String sr2 : olrecord.getFieldList()) {
-//                            jcA = (JCheckBox) components.get(sr2);
-//                            oleres.setField(sr2, jcA.isSelected());
-//                        }
-//                        tab.setField(sfield, oleres);
-//                        break;
-//
-//                }
-//            }
-//            input.setField(stab, tab);
-//        }
         }
     }
 

@@ -6,6 +6,7 @@
 package agents;
 
 import data.Ole;
+import data.OleConfig;
 import data.OleList;
 import data.Transform;
 import swing.LARVAFrame;
@@ -88,7 +89,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     protected OleList stepsDone, stepsSent;
     protected boolean traceRunSteps;
-    protected Ole oleConfig;
+    protected OleConfig oleConfig;
 
     /**
      * Main JADE setup
@@ -117,12 +118,12 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
         if (new File("./config/config.json").exists()) {
             Info("Found a configuration file");
-            oleConfig = new Ole();
+            oleConfig = new OleConfig();
             if (oleConfig.loadFile("./config/config.json").isEmpty()) {
                 oleConfig = null;
             } else {
 //                problemName = new OleList(oleConfig.getOle("LARVA").getOle("Problem")).getItem(0);
-                problemName = (String) oleConfig.getOle("LARVA").getField("Problem");
+                problemName = (String) oleConfig.getTab("LARVA").getField("Problem");
                 Ole record = oleConfig.getOle("Jade");
                 logger.setEcho(!record.getBoolean("Silent execution"));
                 if (record.getBoolean("Save log")) {
@@ -164,7 +165,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         String res[] = new String[0];
         ArrayList<String> sensorList = new ArrayList();
         if (oleConfig != null && !oleConfig.isEmpty()) {
-            Ole sensors = oleConfig.getOle("LARVA").getOle("Sensors");
+            Ole sensors = oleConfig.getTab("LARVA").getOle("Sensors");
             for (String sensor : sensors.getFieldList()) {
                 if (sensors.getBoolean(sensor)) {
                     sensorList.add(sensor.toUpperCase());

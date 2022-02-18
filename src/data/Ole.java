@@ -198,6 +198,10 @@ public class Ole extends JsonObject {
         return isOle(this);
     }
 
+    public boolean isEmpty() {
+        return getFieldList().size() == 0;
+    }
+
     public Ole set(String s) {
         parse(s);
         return this;
@@ -613,7 +617,10 @@ public class Ole extends JsonObject {
      * not compatible
      */
     public final ArrayList getArray(String field) {
-        return new ArrayList(Transform.toArrayList(get(field).asArray()));
+        if (get(field) != null && getFieldType(field).equals(oletype.ARRAY.name())) {
+            return new ArrayList(Transform.toArrayList(get(field).asArray()));
+        } else
+            return null;
     }
 
     /**

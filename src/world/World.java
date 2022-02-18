@@ -18,7 +18,7 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 import data.Ole;
-import data.OleRecord;
+import data.OleConfig;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class World {
     protected String name, spalette;
     protected boolean _godmode = false, debug = false;
     protected String _surfaceName;
-    protected OleRecord cfg;
+    protected OleConfig cfg;
     protected String[][] filter, filterHQ, filterDLX;
     static int range = 41, cx = range / 2, cy = cx;
     int maxflight;
@@ -172,7 +172,7 @@ public class World {
 
     public String loadConfig(String worldconfigfilename) {
         Ole ocfg = new Ole().loadFile("./LARVA/worlds/" + worldconfigfilename + ".worldconf.json");
-        cfg = new OleRecord(ocfg);
+        cfg = new OleConfig(ocfg);
         Ole oaux;
         if (!cfg.isEmpty()) {
             try {
@@ -234,7 +234,7 @@ public class World {
         return "Empty configuration";
     }
 
-    public OleRecord getConfig() {
+    public OleConfig getConfig() {
         return this.cfg;
     }
 

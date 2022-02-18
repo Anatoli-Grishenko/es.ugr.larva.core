@@ -2,77 +2,6 @@
  * @file OleConfig.java
  * @author Anatoli.Grishenko@gmail.com
  *
- *  Formats of OLE to be admitted as Config
- * /////////////////////////////////////////////////PLAIN:
- * {
-    "Host": "localhost", 
-    "Port": 1099,
-    "Weight":92.3,
-    "Save log": false
-}
-
-* /////////////////////////////////////////////////TABS:
-* {
-    "Jade": {
-        "Host": "localhost", 
-        "Port": 1099,
-        "Agent name": "Luis", 
-        "Save log": false,
-        "Silent execution": false
-    },
-    "LARVA": {
-        "Problem": "Mandalore", 
-        "Heuristic": "LEFT-WALL", 
-        "ONTARGET": true,
-        "GPS": true,
-        "ALTITUDE": true
-    },
-    "Display":{
-        "width":100,
-        "height":200,
-        "displayname":"My Screen"
-    },
-    "Time":{
-        "x":2.1,
-        "y":3.1415
-    }
-}
- * ///////////////////////////////////////////////// TABS+GROUPS(recursive)
- * {
-    "Jade": {
-        "Host": "localhost", 
-        "Port": 1099,
-        "Agent name": "Luis", 
-        "Save log": false,
-        "Silent execution": false
-    },
-    "LARVA": {
-        "Problem": "Mandalore", 
-        "Heuristic": "LEFT-WALL", 
-        "Sensors":{
-        "ONTARGET": true,
-        "GPS": true,
-        "ALTITUDE": true
-        }
-    },
-    "Display":{
-        "resolution":{
-        "width":100,
-        "height":200,
-        "screen":{  "displayname":"My Screen"}}
-    },
-    "Time":{
-        "x":2.1,
-        "y":3.1415
-    }
-}
-
- * ///////////////////////////////////////////////// CONSTRAINTS
- * 
- * 
- * 
- * 
- * 
  */
 package data;
 
@@ -99,6 +28,9 @@ public class OleConfig extends Ole {
             return getOle("properties");
         else
             return new Ole();
+    }
+    public Ole getProperties(String sfield) {
+        return getProperties().getOle(sfield);
     }
 
     public Ole getOptions() {

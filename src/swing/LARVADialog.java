@@ -20,10 +20,11 @@ public class LARVADialog extends JDialog implements ActionListener {
 
     Consumer<ActionEvent> myListener;
 
-    public LARVADialog(Consumer<ActionEvent> listener) {
+    
+    public LARVADialog(String title, Consumer<ActionEvent> listener) {
         super();
         myListener = listener;
-        this.setTitle("LARVA");
+        this.setTitle(title);
     }
 
     @Override
@@ -31,7 +32,7 @@ public class LARVADialog extends JDialog implements ActionListener {
         myListener.accept(e);
     }
 
-    public void closeLARVAFrame() {
+    public void closeLARVADialog() {
         this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
 
     }
