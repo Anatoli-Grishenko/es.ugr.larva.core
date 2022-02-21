@@ -7,6 +7,7 @@ package world;
 
 import geometry.Point;
 import geometry.Vector;
+import geometry.Compass;
 import map2D.Map2DGrayscale;
 import ontology.Ontology;
 import world.Perceptor.ATTACH;

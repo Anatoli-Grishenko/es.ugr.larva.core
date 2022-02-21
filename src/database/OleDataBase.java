@@ -449,7 +449,7 @@ public class OleDataBase implements ReportableObject {
             try {
                 File f = new File("src/database/"+this._database+".java");
                 PrintWriter of = new PrintWriter(f);
-                of.println("package database;");
+                of.println("database;");
                 of.println("import data.OleTable;");
     
                 of.println("public class "+this._database+" {");

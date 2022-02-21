@@ -43,46 +43,50 @@ public class OleDot extends Ole {
             out.println("digraph graphname {");
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
-                    + "dpi=300"
-                    + //                    "ratio=\"fill\";\n" +
-                    " size=\"16,11!\";\n"
+                    + "dpi=300\n"
+                    +                    "ratio=\"fill\";\n" 
+                    + " size=\"16,11!\";\n"
                     + " margin=0;");
             classtypes = new ArrayList<String>(getArray("classtypes"));
-            System.out.println("CLASS TYPES: " + classtypes);
+//            System.out.println("CLASS TYPES: " + classtypes);
             // Generate classes
             for (String classtype : classtypes) {
                 oleformat = getOle("format").getOle(classtype);
                 if (getOle("class").getFieldList().contains(classtype)) {
                     classnames = new ArrayList<String>(getOle("class").getArray(classtype));
-                    System.out.println(classtype + ":" + classnames);
+//                    System.out.println(classtype + ":" + classnames);
                     for (String classname : classnames) {
-                        node = classname+" "+"[shape=plain, label=<"+
-                                "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\"><tr><td bgcolor=\""+oleformat.getString("fillcolor", "white")+"\">"+
-                                "<FONT face=\""+oleformat.getString("face","Courier New")+"\" POINT-SIZE= \""+oleformat.getInt("fontsize",12)+"\"><b>" + classname + "</b></FONT></td></tr>\n";
+                        node = classname + " " + "[shape=plain, label=<"
+                                + "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\"><tr><td bgcolor=\"" + oleformat.getString("fillcolor", "white") + "\">"
+                                + "<FONT face=\"" + oleformat.getString("face", "Arial") + "\" POINT-SIZE= \"" + oleformat.getInt("fontsize", 10) + "\"><b>" + classname + "</b></FONT></td></tr>\n";
                         classmethod = "";
                         if (getOle("methods").get(classname) != null) {
                             classmethods = new ArrayList<String>(getOle("methods").getArray(classname));
                             int i = 0;
                             for (String methodname : classmethods) {
-                                node += "<tr><td align=\"left\">"+ "<FONT face=\""+oleformat.getString("face","Courier New")+"\" POINT-SIZE= \""+oleformat.getInt("fontsize",12)*3/4+"\"><i>" + methodname+ "</i></FONT>"+"</td></tr>\n";
+                                methodname = methodname.replace("<", "&lt;");
+                                methodname = methodname.replace(">", "&gt;");
+                                node += "<tr><td align=\"left\">" + "<FONT face=\"" + oleformat.getString("face", "Courier New") + "\" POINT-SIZE= \"" + oleformat.getInt("fontsize", 18) * 3 / 4 + "\"><i>" + methodname + "</i></FONT>" + "</td></tr>\n";
                             }
-                        } 
+                        }
                         node += "</table>>]";
                         out.println(classname + " " + node);
                     }
                 }
             }
             // Generate extends
-            relationnames = new ArrayList<String>(getArray("relationtypes"));
-            for (String relationname : relationnames) {
-                relationformat = getOle("format").getString(relationname, "");
-                if (getOle("relation").getFieldList().contains(relationname)) {
-                    relations = new ArrayList<Ole>(getOle("relation").getArray(relationname));
-                    for (Ole orelation : relations) {
-                        parent = orelation.getFieldList().get(0);
-                        children = new ArrayList<String>(orelation.getArray(parent));
-                        for (String child : children) {
-                            out.println(child + " -> " + parent + " " + relationformat);
+            if (get("relationtypes") != null) {
+                relationnames = new ArrayList<String>(getArray("relationtypes"));
+                for (String relationname : relationnames) {
+                    relationformat = getOle("format").getString(relationname, "");
+                    if (getOle("relation").getFieldList().contains(relationname)) {
+                        relations = new ArrayList<Ole>(getOle("relation").getArray(relationname));
+                        for (Ole orelation : relations) {
+                            parent = orelation.getFieldList().get(0);
+                            children = new ArrayList<String>(orelation.getArray(parent));
+                            for (String child : children) {
+                                out.println(child + " -> " + parent + " " + relationformat);
+                            }
                         }
                     }
                 }
