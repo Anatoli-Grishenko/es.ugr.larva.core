@@ -663,7 +663,7 @@ public class LARVABoot {
         }
         if (e.getActionCommand().equals(Buttons.Configure.name())) {
             Settings = new OleDialog(this.fMain,"Settings");
-            if (Settings.Interact(oleConfig)) {
+            if (Settings.run(oleConfig)) {
                 oleConfig.saveAsFile("./config/", "config.json", true);
             }
             

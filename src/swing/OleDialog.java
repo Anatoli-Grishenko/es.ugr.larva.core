@@ -22,6 +22,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
@@ -34,6 +36,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -84,20 +87,54 @@ public class OleDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        JFileChooser choose;
+        String sfield;
+        JTextField choosevalue;
         switch (e.getActionCommand()) {
             case "OK":
                 Layout2Ole();
                 bresult = true;
+                dispose();
                 break;
             case "Cancel":
                 input = output;
                 bresult = false;
+                dispose();
                 break;
+            default:
+                if (e.getActionCommand().startsWith(".../")) { //select folder
+                    sfield = e.getActionCommand().replace(".../", "");
+                    if (components.get(sfield) != null) {
+                        choosevalue = (JTextField) components.get(sfield);                        
+                        choose = new JFileChooser();
+                        String cwd=Paths.get("").toAbsolutePath().toString()+"/"+(choosevalue.getText().length()>0?choosevalue.getText(): "./");
+                        choose.setCurrentDirectory(new File(cwd));
+                        choose.setDialogTitle("Please select "+sfield);
+                        choose.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                        if (choose.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                            choosevalue.setText(choose.getSelectedFile().getName());                            
+                        }
+                    }
+                } else if (e.getActionCommand().startsWith("...")) { //select file
+                    sfield = e.getActionCommand().replace("...", "");
+                    if (components.get(sfield) != null) {
+                        choosevalue = (JTextField) components.get(sfield);                        
+                        choose = new JFileChooser();
+                        String cwd=Paths.get("").toAbsolutePath().toString();
+                        choose.setCurrentDirectory(new File(cwd));
+                        choose.setDialogTitle("Please select "+sfield);
+                        choose.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                        if (choose.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                            choosevalue.setText(choose.getSelectedFile().getName());                            
+                        }
+                    }
+                }
+
         }
-        dispose();
+
     }
 
-    public boolean Interact(OleConfig o) {
+    public boolean run(OleConfig o) {
         tpMain.removeAll();
         output = o;
         input = o;
@@ -112,7 +149,7 @@ public class OleDialog extends JDialog implements ActionListener {
         return output;
     }
 
-       protected JPanel addToLayout(String oid, Ole ocomponents) {
+    protected JPanel addToLayout(String oid, Ole ocomponents) {
         GridBagConstraints gc;
         JPanel dataPanel;
         JLabel label;
@@ -122,6 +159,7 @@ public class OleDialog extends JDialog implements ActionListener {
         Ole fieldproperties, panelproperties;
         String tooltip;
         ArrayList<String> select;
+        JButton bFileChoose;
         String arraySelect[];
         int columns;
 
@@ -137,7 +175,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //        gc.fill = GridBagConstraints.HORIZONTAL;
         gc.gridx = 0;
         gc.gridy = 0;
-        gc.gridwidth = 1;
+        gc.gridwidth = columns; // Columns?
         if (panelproperties.getBoolean("border", false)) {
             dataPanel.setBorder(BorderFactory.createTitledBorder(oid));
         }
@@ -149,20 +187,9 @@ public class OleDialog extends JDialog implements ActionListener {
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
                 label = new JLabel(sfield);
                 dataPanel.add(label, gc);
-                select = fieldproperties.getArray("select");
-                if (select == null) {
-                    text = new JTextField();
-                    text.setText(ocomponents.getField(sfield));
-                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
-                    tooltip = fieldproperties.getString("tooltip");
-                    if (tooltip != null) {
-                        text.setToolTipText(tooltip);
-                    }
-                    components.put(sfield, text);
-                    gc.gridx++;
-                    dataPanel.add(text, gc);
-                    gc.gridx++;
-                } else {
+                gc.gridx++;
+                if (fieldproperties.getArray("select") != null) { // Combobox
+                    select = fieldproperties.getArray("select");
                     arraySelect = Transform.toArray(select);
                     combobox = new JComboBox(arraySelect);
                     combobox.setPreferredSize(new Dimension(fieldwidth, fieldheight));
@@ -172,8 +199,53 @@ public class OleDialog extends JDialog implements ActionListener {
                         combobox.setToolTipText(tooltip);
                     }
                     components.put(sfield, combobox);
-                    gc.gridx++;
                     dataPanel.add(combobox, gc);
+                    gc.gridx++;
+
+                } else if (fieldproperties.get("folder") != null) {     // Select folder               
+                    text = new JTextField();
+                    text.setText(ocomponents.getField(sfield));
+                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    text.setEnabled(false);
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        text.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, text);
+                    dataPanel.add(text, gc);
+                    gc.gridx++;
+                    bFileChoose = new JButton("...");
+                    bFileChoose.setActionCommand(".../" + sfield);
+                    bFileChoose.addActionListener(this);
+                    dataPanel.add(bFileChoose, gc);
+                    gc.gridx++;
+                } else if (fieldproperties.get("file") != null) {     // Select file               
+                    text = new JTextField();
+                    text.setText(ocomponents.getField(sfield));
+                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    text.setEnabled(false);
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        text.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, text);
+                    dataPanel.add(text, gc);
+                    gc.gridx++;
+                    bFileChoose = new JButton("...");
+                    bFileChoose.setActionCommand("..." + sfield);
+                    bFileChoose.addActionListener(this);
+                    dataPanel.add(bFileChoose, gc);
+                    gc.gridx++;
+                } else {
+                    text = new JTextField();
+                    text.setText(ocomponents.getField(sfield));
+                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        text.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, text);
+                    dataPanel.add(text, gc);
                     gc.gridx++;
                 }
             } else if (ocomponents.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {

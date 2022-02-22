@@ -28,6 +28,12 @@ public class LARVAFrame extends JFrame implements ActionListener, KeyListener {
         this.setTitle("LARVA");
 
     }
+    public LARVAFrame(String title, Consumer<ActionEvent> listener) {
+        super();
+        myListener = listener;
+        this.setTitle(title);
+
+    }
 
     public LARVAFrame() {
         super();
@@ -56,9 +62,9 @@ public class LARVAFrame extends JFrame implements ActionListener, KeyListener {
 
     }
 
-    public void defaultListener(ActionEvent e) {
-
-    }
+//    public void defaultListener(ActionEvent e) {
+//
+//    }
 
     @Override
     public void keyTyped(KeyEvent e) {

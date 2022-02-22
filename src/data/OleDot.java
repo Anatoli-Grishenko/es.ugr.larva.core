@@ -44,7 +44,7 @@ public class OleDot extends Ole {
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
                     + "dpi=300\n"
-                    +                    "ratio=\"fill\";\n" 
+                    + "ratio=\"fill\";\n" 
                     + " size=\"16,11!\";\n"
                     + " margin=0;");
             classtypes = new ArrayList<String>(getArray("classtypes"));
