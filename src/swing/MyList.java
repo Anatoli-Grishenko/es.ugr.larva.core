@@ -80,6 +80,11 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
         return this;
     }
 
+    public MyList clear(){
+        listModel.clear();
+        return this;
+    }
+    
     private int getIndex(String what) {
         int res = -1;
         for (int i = 0; i < listModel.size(); i++) {

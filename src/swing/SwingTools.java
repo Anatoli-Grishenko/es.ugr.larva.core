@@ -10,6 +10,7 @@ import java.awt.Image;
 import java.awt.Insets;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -60,6 +61,45 @@ public class SwingTools {
         } catch (Exception ex) {
             System.err.println("Failed to initialize look-and-feel");
         }
+    }
+
+    public static void initFlatLaf() {
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize look-and-feel");
+        }
+    }
+
+    public static void Info(String message) {
+        JOptionPane.showMessageDialog(null,
+                message, "LARVA Boot", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void Error(String message) {
+        JOptionPane.showMessageDialog(null,
+                message, "LARVA Boot", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public static void Warning(String message) {
+        JOptionPane.showMessageDialog(null,
+                message, "LARVA Boot", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public static  String inputLine(String message) {
+        String sResult = JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE);
+        return sResult;
+    }
+
+    public static String inputSelect(String message, String[] options, String value) {
+        String res = (String) JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE, null, options, value);
+        return res;
+    }
+
+    public static boolean Confirm(String message) {
+        boolean bResult = JOptionPane.showConfirmDialog(null,
+                message, "LARVA Boot", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        return bResult;
     }
 
 }
