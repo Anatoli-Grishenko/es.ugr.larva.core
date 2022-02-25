@@ -110,6 +110,7 @@ public class OleDialog extends JDialog implements ActionListener {
     int spacing = 5, fieldheight = 20, fieldwidth = 160;
     boolean bresult;
     JFrame parent;
+    Consumer<ActionEvent> buttonListener;
 
     public OleDialog(JFrame parent, String title) {
         super(parent, title, true);
@@ -129,7 +130,11 @@ public class OleDialog extends JDialog implements ActionListener {
 
         components = new HashMap();
         getContentPane().add(flMain);
+    }
 
+    public OleDialog addActionListener(Consumer<ActionEvent> l) {
+        buttonListener = l;
+        return this;
     }
 
     @Override
@@ -175,6 +180,10 @@ public class OleDialog extends JDialog implements ActionListener {
                             choosevalue.setText(relative);
                         }
                     }
+                } else if (e.getActionCommand().startsWith("[") && e.getActionCommand().endsWith("]")) {
+                    if (buttonListener != null) {
+                        buttonListener.accept(e);
+                    }
                 }
 
         }
@@ -207,7 +216,7 @@ public class OleDialog extends JDialog implements ActionListener {
         Ole fieldproperties, panelproperties;
         String tooltip;
         ArrayList<String> select;
-        JButton bFileChoose;
+        JButton bFileChoose, bAux;
         String arraySelect[];
         int columns;
 
@@ -232,12 +241,18 @@ public class OleDialog extends JDialog implements ActionListener {
             fieldproperties = input.getProperties(sfield);
             gc.gridwidth = input.getProperties(sfield).getInt("columns", 1);
             if (ocomponents.getField(sfield).contains("<html>")) {
-//                gc.gridx = 0;
                 gc.gridwidth = GridBagConstraints.REMAINDER;
                 label = new JLabel(ocomponents.getField(sfield));
                 dataPanel.add(label, gc);
                 gc.gridx = columns;
                 gc.gridwidth = 1; // Columns?
+            } else if (sfield.startsWith("[") && sfield.endsWith("]")){
+                bAux = new JButton(ocomponents.getField(sfield));
+                bAux.setActionCommand(sfield);
+                bAux.addActionListener(this);                    
+                gc.gridwidth=1;
+                dataPanel.add(bAux, gc);
+                gc.gridx++;
             } else if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
@@ -318,13 +333,13 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridx++;
                 dataPanel.add(checkbox, gc);
                 gc.gridx++;
-            } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) {
-                int listsize = 3;
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
+                int listsize = 5;
                 MyList.Type listtype;
                 try {
                     listtype = MyList.Type.valueOf(fieldproperties.getString("listtype").toUpperCase());
-                }catch(Exception ex) {                    
-                    listtype= MyList.Type.STRING;
+                } catch (Exception ex) {
+                    listtype = MyList.Type.STRING;
                 }
                 list = new MyList().init(listtype);
                 list.addAllElements(ocomponents.getArray(sfield));
@@ -425,12 +440,12 @@ public class OleDialog extends JDialog implements ActionListener {
                 checkbox = (JCheckBox) components.get(sfield);
                 currentTab.setField(sfield, checkbox.isSelected());
             } else if (currentTab.getFieldType(sfield).equals(oletype.ARRAY.name())) {
-                ArrayList<String> sList=new ArrayList();
+                ArrayList<String> sList = new ArrayList();
                 JsonArray jaarray = new JsonArray();
                 MyList mlist = (MyList) components.get(sfield);
                 DefaultListModel mlm = mlist.getListMode();
                 for (int i = 0; i < mlm.size(); i++) {
-                    sList.add((String)mlm.getElementAt(i));
+                    sList.add((String) mlm.getElementAt(i));
                 }
                 currentTab.setField(sfield, new ArrayList(sList));
             } else if (currentTab.getFieldType(sfield).equals(oletype.OLE.name())) {

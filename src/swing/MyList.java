@@ -52,7 +52,7 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
         listPane = new JScrollPane(this);
         listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         listPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        listPane.setPreferredSize(new Dimension(100,100));
+        listPane.setPreferredSize(new Dimension(100,150));
         return this;
     }
 
@@ -115,7 +115,8 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
             } else {
                 remove.setEnabled(true);
             }
-        }
+        } else
+                remove.setEnabled(false);
     }
 
     @Override
