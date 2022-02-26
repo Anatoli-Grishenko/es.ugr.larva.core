@@ -37,7 +37,9 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
         super();
     }
 
-    public MyList init(Type t) {
+    public MyList init(Type t, int nrows) {
+        if (nrows < 0)
+            nrows=3;
         listModel = new DefaultListModel();
         add = new JButton("+");
         add.addActionListener(this);
@@ -48,11 +50,11 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         addListSelectionListener(this);
-        setVisibleRowCount(3);
+        setVisibleRowCount(nrows);
         listPane = new JScrollPane(this);
         listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         listPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        listPane.setPreferredSize(new Dimension(100,150));
+        listPane.setPreferredSize(new Dimension(30*nrows,30*nrows));
         return this;
     }
 
@@ -131,7 +133,7 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
             case "+":
                 switch (mytype) {
                     case FILE:
-                        toAdd= OleDialog.doSelectFile("./");
+                        toAdd= OleDialog.doSelectFile("./", "");
                         break;
                     case FOLDER:
                         toAdd= OleDialog.doSelectFolder("./");

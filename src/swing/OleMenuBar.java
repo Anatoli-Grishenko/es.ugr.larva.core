@@ -8,7 +8,9 @@ package swing;
 import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;
+import java.awt.Component;
 import java.awt.MenuItem;
+import java.util.HashMap;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -19,12 +21,14 @@ import javax.swing.JMenuItem;
  */
 public class OleMenuBar extends JMenuBar {
 
+    HashMap <String, Component> components;
     JMenu mMenu;
     JMenuItem miItem;
     OleFrame parent;
 
     public OleMenuBar(OleFrame of, OleConfig ocfg) {
         parent = of;
+        components=new HashMap();
         this.removeAll();
         Ole oMenu = ocfg.getTab("Menu");
         for (String smenu : oMenu.getFieldList()) {
@@ -32,6 +36,7 @@ public class OleMenuBar extends JMenuBar {
                 miItem = new JMenuItem(smenu);
                miItem.setActionCommand(oMenu.getField(smenu));
                 miItem.addActionListener(parent);
+                components.put(smenu, miItem);
                 this.add(miItem);
             } else if (oMenu.getFieldType(smenu).toUpperCase().equals(oletype.OLE.name())) {
                 this.add(addMenu(smenu, new OleConfig(oMenu.getOle(smenu))));
@@ -47,6 +52,7 @@ public class OleMenuBar extends JMenuBar {
                 miItem = new JMenuItem(smenu);
                 miItem.setActionCommand(omenu.getField(smenu));
                 miItem.addActionListener(parent);
+                components.put(smenu, miItem);
                 mAux.add(miItem);
             } else if (omenu.getFieldType(smenu).toUpperCase().equals(oletype.OLE.name())) {
                 mAux.add(addMenu(smenu, new OleConfig(omenu.getOle(smenu))));

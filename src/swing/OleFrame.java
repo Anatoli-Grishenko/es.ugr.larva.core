@@ -31,22 +31,10 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
     public OleFrame(OleConfig olecfg) {
         super(olecfg.getOptions().getString("FrameTitle", "Untitled"));
         oConfig = olecfg;
-        setResizable(false);
-        setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
         setVisible(true);
     }
 
     public OleFrame init() {
-        if (oConfig.getOptions().getFieldList().contains("Menu")) {
-//            JMenuBar mb = new JMenuBar();
-//            JMenu m= new JMenu("File");
-//            JMenuItem mi = new JMenuItem("test");
-//            mi.addActionListener(this);
-//            m.add(mi);
-//            mb.add(m);
-//            this.setJMenuBar(mb);
-            this.setJMenuBar(new OleMenuBar(this, oConfig));
-        }
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         return this;
     }
@@ -94,19 +82,19 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
         return bResult;
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-        myKeyListener(e);
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        myKeyListener(e);
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        myKeyListener(e);
-    }
+//    @Override
+//    public void keyTyped(KeyEvent e) {
+//        myKeyListener(e);
+//    }
+//
+//    @Override
+//    public void keyPressed(KeyEvent e) {
+//        myKeyListener(e);
+//    }
+//
+//    @Override
+//    public void keyReleased(KeyEvent e) {
+//        myKeyListener(e);
+//    }
 
 }
