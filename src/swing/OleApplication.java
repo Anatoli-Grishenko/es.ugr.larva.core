@@ -52,32 +52,14 @@ public abstract class OleApplication extends OleFrame {
             this.setJMenuBar(new OleMenuBar(this, oConfig));
         }
 
-//        if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
-//            pStatus = new JPanel();
-//            pStatus.setLayout(new FlowLayout(FlowLayout.LEFT));
-//            pStatus.setLayout(new BoxLayout(pStatus, BoxLayout.X_AXIS));
-//            pStatus.setAlignmentX(LEFT_ALIGNMENT);
-//            pStatus.setBackground(Color.DARK_GRAY);
-//            pStatus.setForeground(Color.WHITE);
-//            pStatus.setBorder(new EmptyBorder(new Insets(2, 2, 2, 2)));
-//            pStatus.setPreferredSize(new Dimension(getWidth(), 64));
-//            pStatus.setSize(new Dimension(getWidth(), 64));
-//            pMain.setPreferredSize(new Dimension(getWidth(), getHeight() - pStatus.getHeight() - 
-//                    this.getJMenuBar().getHeight()));
-//            pMain.setSize(new Dimension(getWidth(), getHeight() - pStatus.getHeight() - 
-//                    this.getJMenuBar().getHeight()));
-//        } else {
-//            pMain.setPreferredSize(new Dimension(getWidth(), getHeight()));
-//            pMain.setSize(new Dimension(getWidth(), getHeight()));
-//        }
         Container aux = this.getContentPane();
         aux.setLayout(new BorderLayout());
 
         pMain = new JPanel();
-        pMain.setLayout(new BoxLayout(pMain, BoxLayout.PAGE_AXIS));
+        pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         pMain.setBackground(Color.WHITE);
         pMain.setBorder(new EmptyBorder(0, 0, 0, 0));
-        addLabel(pMain, " ", Color.BLACK);
+//        addLabel(pMain, " ", Color.BLACK);
         this.getContentPane().add(pMain, BorderLayout.CENTER);
 
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
@@ -90,6 +72,10 @@ public abstract class OleApplication extends OleFrame {
         }
         this.pack();
         return this;
+    }
+    
+    public JPanel getMainPanel() {
+        return this.pMain;
     }
 
     protected void addLabel(Container con, String s, Color col) {

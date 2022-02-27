@@ -28,6 +28,11 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
 
     OleConfig oConfig;
 
+    public OleFrame(String title) {
+        super(title);
+        setVisible(true);
+    }
+
     public OleFrame(OleConfig olecfg) {
         super(olecfg.getOptions().getString("FrameTitle", "Untitled"));
         oConfig = olecfg;
