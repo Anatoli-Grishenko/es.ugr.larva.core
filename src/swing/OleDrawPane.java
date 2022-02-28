@@ -30,6 +30,7 @@ public abstract class OleDrawPane extends JPanel {
     }
 
     public void clear() {
+        System.out.println("OleDrawPane clear");
         if (myg != null) {
             myg.setBackground(getBackground());
             myg.setColor(getBackground());

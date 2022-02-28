@@ -11,6 +11,8 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 
@@ -33,11 +35,22 @@ public class OleProgressFrame extends OleFrame {
         pbMain.setPreferredSize(new Dimension(w-20, 25));
         pbMain.setValue(0);
         lMain= new JLabel("Starting");
-        
+        pMain.add(pbMain);
+        pMain.add(lMain);
+        pMain.validate();
+        this.pack();
+        this.setVisible(true);
     }
     
     
-//    public void addProgress(String what)
+    public void addProgress(String what, int value) {
+        lMain.setText(what);
+        pbMain.setValue(value);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+        }
+    }
     @Override
     public void itemStateChanged(ItemEvent e) {
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

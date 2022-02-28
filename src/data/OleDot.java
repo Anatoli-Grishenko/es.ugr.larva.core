@@ -43,7 +43,7 @@ public class OleDot extends Ole {
             out.println("digraph graphname {");
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
-                    + "dpi=600\n"
+                    + "dpi=150\n"
 //                    + "ratio=\"fill\";\n" 
                     + " size=\"16,11!\";\n"
                     + " margin=0;");
