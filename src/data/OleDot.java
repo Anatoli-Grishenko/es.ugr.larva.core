@@ -35,8 +35,9 @@ public class OleDot extends Ole {
     }
 
     public void setResolution(int ppp) {
-        
+        pppResolution = ppp;
     }
+    
     public void toDot(String dotfilename) {
         ArrayList<String> classtypes, classnames, relationnames, children, classmethods;
         ArrayList<Ole> relations;

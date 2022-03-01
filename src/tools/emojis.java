@@ -69,10 +69,12 @@ public class emojis {
             THUMBUP = "\ud83d\udc4d",
             THUMNDOWN = "\ud83d\udc4e",
             GLOWINGSTAR = "\ud83c\udf1f",
-            CLASS="🔲",
+            CLASS="⬜",
             PACKAGE="📦",
-            MAGNIFFIER="🔍",
+            MAGNIFIER="🔍",
             FOLDER = "📁",
+            METHOD="⚪",
+            DPI="📐",
             GEAR = "⚙️",
             MYSELFF = "👦",
             MYGROUP = "👨‍👩‍👧‍👦",
@@ -112,15 +114,6 @@ public class emojis {
         return res;
 
     }
-//    public static String showProgress(String done, String total) {
-//        String res = "";
-//        int idone = 0, itotal = 0;
-//        idone = countTokens(done);
-//        itotal = countTokens(total);
-//        res += String.format("%2d/%2d", idone, itotal);
-//        return res;
-//
-//    }
 
     public static String showProgressBar(int width, OleList total, OleList done, String color) {
         String res = "";
@@ -151,24 +144,5 @@ public class emojis {
         res += showProgress(total, done);
         return res;
     }
-//    public static String showProgressBar(int width, String done, String total) {
-//        String res = "";
-//        int idone = 0, itotal = 0;
-//        idone += countTokens(done);
-//        itotal += countTokens(total);
-//        if (itotal <= width) {
-//            width = itotal;
-//        }
-//        for (int k = 0; k < width; k++) {
-//            if (k < idone *width / itotal) {
-//                res += emojis.BLUESQUARE;
-//            } else {
-//                res += emojis.WHITESQUARE;
-//
-//            }
-//        }
-//        res += showProgress(done,total);
-//        return res;
-//    }
 
 }

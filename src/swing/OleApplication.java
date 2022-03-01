@@ -67,16 +67,18 @@ public abstract class OleApplication extends OleFrame {
             this.setJMenuBar(new OleMenuBar(this, oConfig));
         }
 
-        Container aux = this.getContentPane();
-        aux.setLayout(new BorderLayout());
+        Container mainPane = this.getContentPane();
+        mainPane.setLayout(new BorderLayout());
 
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         pMain.setBackground(Color.WHITE);
         pMain.setBorder(new EmptyBorder(0, 0, 0, 0));
 //        addLabel(pMain, " ", Color.BLACK);
-        this.getContentPane().add(pMain, BorderLayout.CENTER);
-
+        mainPane.add(pMain, BorderLayout.CENTER);
+        if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
+            mainPane.add(new OleToolBar(this, oConfig), BorderLayout.PAGE_START);
+        }
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();
             pStatus.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -84,7 +86,7 @@ public abstract class OleApplication extends OleFrame {
             pStatus.setBackground(Color.GRAY);
             pStatus.setBorder(new EmptyBorder(0, 0, 0, 0));
             addLabel(pStatus, "Ready", Color.BLACK);
-            this.getContentPane().add(pStatus, BorderLayout.SOUTH);
+            mainPane.add(pStatus, BorderLayout.PAGE_END);
         }
         this.pack();
         return this;
@@ -305,25 +307,25 @@ public abstract class OleApplication extends OleFrame {
 //        }
     }
     
-    public void addTaskBar() {
-        dicComponents = new HashMap();
-        listComponents = new ArrayList();
-    }
-    
-    public void addToTaskBar(String command, Component c) {
-        listComponents.add(command);
-        dicComponents.put(command,c);
-    }
-    
-    public void showTaskBar() {
-        this.cleanStatus();
-        for (String s : listComponents) {
-            pStatus.add(dicComponents.get(s));
-        }
-    }
-    
-    public Component getTaskBarItem(String item) {
-        return dicComponents.get(item);
-    }
+//    public void addTaskBar() {
+//        dicComponents = new HashMap();
+//        listComponents = new ArrayList();
+//    }
+//    
+//    public void addToTaskBar(String command, Component c) {
+//        listComponents.add(command);
+//        dicComponents.put(command,c);
+//    }
+//    
+//    public void showTaskBar() {
+//        this.cleanStatus();
+//        for (String s : listComponents) {
+//            pStatus.add(dicComponents.get(s));
+//        }
+//    }
+//    
+//    public Component getTaskBarItem(String item) {
+//        return dicComponents.get(item);
+//    }
 
 }
