@@ -150,6 +150,7 @@ public class OleDialog extends JDialog implements ActionListener {
         flButtons.add(bOK);
         flButtons.add(bCancel);
         flMain.add(flButtons);
+        this.getRootPane().setDefaultButton(bOK);
 
         components = new HashMap();
         getContentPane().add(flMain);

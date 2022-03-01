@@ -18,6 +18,8 @@ import java.util.logging.Logger;
  */
 public class OleDot extends Ole {
 
+    int pppResolution=150;
+    
     public OleDot() {
         super();
         setType(oletype.OLEDOT.name());
@@ -32,6 +34,9 @@ public class OleDot extends Ole {
         addField("relation");
     }
 
+    public void setResolution(int ppp) {
+        
+    }
     public void toDot(String dotfilename) {
         ArrayList<String> classtypes, classnames, relationnames, children, classmethods;
         ArrayList<Ole> relations;
@@ -43,7 +48,7 @@ public class OleDot extends Ole {
             out.println("digraph graphname {");
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
-                    + "dpi=150\n"
+                    + "dpi="+pppResolution+"\n"
 //                    + "ratio=\"fill\";\n" 
                     + " size=\"16,11!\";\n"
                     + " margin=0;");

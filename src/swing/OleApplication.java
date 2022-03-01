@@ -8,6 +8,7 @@ package swing;
 import data.OleConfig;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -19,6 +20,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.io.ObjectInputFilter.Status;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.function.Consumer;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -38,12 +42,14 @@ import tools.emojis;
  */
 public abstract class OleApplication extends OleFrame {
 
-    JPanel pMain, pStatus;
+    JPanel pMain, pStatus, pToolBar;
     JProgressBar pbMain;
     JLabel lMain, lProgress;
     OleFrame ofProgress;
     JTextArea jtaProgress;
     boolean debug;
+    HashMap<String,Component> dicComponents;
+    ArrayList<String> listComponents;
 
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
@@ -297,6 +303,27 @@ public abstract class OleApplication extends OleFrame {
 //            ofProgress.dispose();
 //            ofProgress = null;
 //        }
+    }
+    
+    public void addTaskBar() {
+        dicComponents = new HashMap();
+        listComponents = new ArrayList();
+    }
+    
+    public void addToTaskBar(String command, Component c) {
+        listComponents.add(command);
+        dicComponents.put(command,c);
+    }
+    
+    public void showTaskBar() {
+        this.cleanStatus();
+        for (String s : listComponents) {
+            pStatus.add(dicComponents.get(s));
+        }
+    }
+    
+    public Component getTaskBarItem(String item) {
+        return dicComponents.get(item);
     }
 
 }
