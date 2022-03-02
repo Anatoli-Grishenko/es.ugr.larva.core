@@ -24,7 +24,7 @@ import javax.swing.JScrollPane;
  */
 public class OleBitmapPane extends JScrollPane {
 
-    public double DragSpeed=0.5;
+    public double DragSpeed=0.1;
     OleDrawPane odPane;
     double zoom;
     int x1,x2,y1,y2;

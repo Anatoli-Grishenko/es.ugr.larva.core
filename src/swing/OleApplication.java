@@ -5,6 +5,7 @@
  */
 package swing;
 
+import data.Ole;
 import data.OleConfig;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -42,22 +43,29 @@ import tools.emojis;
  */
 public abstract class OleApplication extends OleFrame {
 
+    OleBitmapPane osDiagram;
+    OleDrawPane opDiagram;    
     JPanel pMain, pStatus, pToolBar;
     JProgressBar pbMain;
     JLabel lMain, lProgress;
     OleFrame ofProgress;
     JTextArea jtaProgress;
     boolean debug;
-    HashMap<String,Component> dicComponents;
+    HashMap<String, Component> dicComponents;
     ArrayList<String> listComponents;
 
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;
-        setSize(800, 600);
+        Ole oAux = olecfg.getOle("FrameSize");
+        if (oAux.isEmpty()) {
+            setSize(800, 600);
+        } else {
+            setSize(oAux.getInt("width", 800), oAux.getInt("height", 600));
+        }
         this.setPreferredSize(new Dimension(800, 600));
-//        setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
         setVisible(true);
+        init();
     }
 
     @Override
@@ -72,9 +80,8 @@ public abstract class OleApplication extends OleFrame {
 
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
-        pMain.setBackground(Color.WHITE);
-        pMain.setBorder(new EmptyBorder(0, 0, 0, 0));
-//        addLabel(pMain, " ", Color.BLACK);
+//        pMain.setBackground(Color.WHITE);
+//        pMain.setBorder(new EmptyBorder(0, 0, 0, 0));
         mainPane.add(pMain, BorderLayout.CENTER);
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
             mainPane.add(new OleToolBar(this, oConfig), BorderLayout.PAGE_START);
@@ -82,18 +89,56 @@ public abstract class OleApplication extends OleFrame {
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();
             pStatus.setLayout(new FlowLayout(FlowLayout.LEFT));
-//            pStatus.setLayout(new BoxLayout(pStatus, BoxLayout.X_AXIS));
-            pStatus.setBackground(Color.GRAY);
-            pStatus.setBorder(new EmptyBorder(0, 0, 0, 0));
-            addLabel(pStatus, "Ready", Color.BLACK);
+//            pStatus.setBackground(Color.GRAY);
+//            pStatus.setBorder(new EmptyBorder(0, 0, 0, 0));
+//            addLabel(pStatus, "Ready", Color.BLACK);
+            addLabel(pStatus, "Ready");
             mainPane.add(pStatus, BorderLayout.PAGE_END);
         }
+        getMainPanel().removeAll();
+        getMainPanel().setLayout(new BorderLayout());
+
+        opDiagram = new OleDrawPane() {
+            @Override
+            public void OleDraw(Graphics2D g) {
+                Draw(g);
+            }
+        };
+
+//        opDiagram.setBorder(new EmptyBorder(0, 0, 0, 0));
+        opDiagram.setPreferredSize(getMainPanel().getPreferredSize());
+//        opDiagram.setBackground(Color.LIGHT_GRAY);
+//        opDiagram.setForeground(Color.WHITE);
+
+        osDiagram = new OleBitmapPane(opDiagram);
+
+//        osDiagram.setBorder(new EmptyBorder(0, 0, 0, 0));
+        osDiagram.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        osDiagram.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        getMainPanel().add(osDiagram, BorderLayout.CENTER);
+        getMainPanel().validate();
         this.pack();
         return this;
     }
 
+    public OleBitmapPane getScollPane() {
+        return osDiagram;
+    }
+
+    public OleDrawPane getDrawingPane() {
+        return opDiagram;
+    }
+
     public JPanel getMainPanel() {
         return this.pMain;
+    }
+    
+    public abstract void Draw(Graphics2D g);
+
+    protected void addLabel(Container con, String s) {
+        JLabel l = new JLabel(s, SwingConstants.LEFT);
+        con.add(l);
     }
 
     protected void addLabel(Container con, String s, Color col) {
@@ -116,9 +161,6 @@ public abstract class OleApplication extends OleFrame {
     public void actionPerformed(ActionEvent e) {
         myActionListener(e);
     }
-
-    @Override
-    public abstract void itemStateChanged(ItemEvent e);
 
     @Override
     public abstract void myActionListener(ActionEvent e);
@@ -153,7 +195,8 @@ public abstract class OleApplication extends OleFrame {
     public void showStatus(String message) {
         if (pStatus != null) {
             cleanStatus();
-            addLabel(pStatus, "   " + message, Color.BLACK);
+//            addLabel(pStatus, "   " + message, Color.BLACK);
+            addLabel(pStatus, "   " + message);
             pStatus.validate();
         }
     }
@@ -161,9 +204,12 @@ public abstract class OleApplication extends OleFrame {
     public void showInfo(String message) {
         if (pStatus != null) {
             cleanStatus();
-            addLabel(pStatus, "   ", Color.BLACK);
+            addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.INFO, Color.BLUE);
-            addLabel(pStatus, " " + message, Color.BLACK);
+            addLabel(pStatus, " " + message);
+//            addLabel(pStatus, "   ", Color.BLACK);
+//            addLabel(pStatus, emojis.INFO, Color.BLUE);
+//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -171,9 +217,12 @@ public abstract class OleApplication extends OleFrame {
     public void showWarning(String message) {
         if (pStatus != null) {
             cleanStatus();
-            addLabel(pStatus, "   ", Color.BLACK);
+            addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.WARNING, Color.ORANGE);
-            addLabel(pStatus, " " + message, Color.BLACK);
+            addLabel(pStatus, " " + message);
+//            addLabel(pStatus, "   ", Color.BLACK);
+//            addLabel(pStatus, emojis.WARNING, Color.ORANGE);
+//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -181,9 +230,12 @@ public abstract class OleApplication extends OleFrame {
     public void showError(String message) {
         if (pStatus != null) {
             cleanStatus();
-            addLabel(pStatus, "   ", Color.BLACK);
+            addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.ERROR, Color.RED);
-            addLabel(pStatus, " " + message, Color.BLACK);
+            addLabel(pStatus, " " + message);
+//            addLabel(pStatus, "   ", Color.BLACK);
+//            addLabel(pStatus, emojis.ERROR, Color.RED);
+//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -191,14 +243,10 @@ public abstract class OleApplication extends OleFrame {
     public void showProgressFrame(String what, int value, int max) {
         closeProgress("");
         ofProgress = new OleFrame(this.getTitle()) {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
 
             @Override
             public void myActionListener(ActionEvent e) {
-                if(e.getActionCommand().equals("Colse")) {
+                if (e.getActionCommand().equals("Colse")) {
                     dispose();
                 }
             }
@@ -225,13 +273,13 @@ public abstract class OleApplication extends OleFrame {
         };
         Container ofContent = ofProgress.getContentPane();
 //        ofContent.setLayout(new FlowLayout(FlowLayout.LEFT));
-        ofContent.setLayout(new BoxLayout(ofContent,BoxLayout.Y_AXIS));
+        ofContent.setLayout(new BoxLayout(ofContent, BoxLayout.Y_AXIS));
         ofContent.setPreferredSize(new Dimension(500, 100));
         pbMain = new JProgressBar(0, max);
-        pbMain.setSize(new Dimension(500,25));
+        pbMain.setSize(new Dimension(500, 25));
         pbMain.setValue(value);
         lMain = new JLabel(what);
-        lMain.setForeground(Color.BLACK);
+//        lMain.setForeground(Color.BLACK);
         jtaProgress = new JTextArea();
         jtaProgress.setRows(5);
         ofContent.add(lMain);
@@ -258,9 +306,9 @@ public abstract class OleApplication extends OleFrame {
             pbMain.setSize(new Dimension((int) (pStatus.getPreferredSize().getWidth() / 2), (int) (pStatus.getPreferredSize().getHeight() * 3 / 4)));
             pbMain.setValue(value);
             lMain = new JLabel(what);
-            lMain.setForeground(Color.BLACK);
+//            lMain.setForeground(Color.BLACK);
             lProgress = new JLabel("Starting");
-            lProgress.setForeground(Color.BLACK);
+//            lProgress.setForeground(Color.BLACK);
             pStatus.add(lMain);
             pStatus.add(pbMain);
             pStatus.add(lProgress);
@@ -278,7 +326,7 @@ public abstract class OleApplication extends OleFrame {
             if (ofProgress == null) {
                 lProgress.setText(toadd);
             } else {
-                jtaProgress.append(toadd+"\n");
+                jtaProgress.append(toadd + "\n");
             }
 
             if (value <= pbMain.getMaximum()) {
@@ -306,26 +354,36 @@ public abstract class OleApplication extends OleFrame {
 //            ofProgress = null;
 //        }
     }
-    
-//    public void addTaskBar() {
-//        dicComponents = new HashMap();
-//        listComponents = new ArrayList();
-//    }
-//    
-//    public void addToTaskBar(String command, Component c) {
-//        listComponents.add(command);
-//        dicComponents.put(command,c);
-//    }
-//    
-//    public void showTaskBar() {
-//        this.cleanStatus();
-//        for (String s : listComponents) {
-//            pStatus.add(dicComponents.get(s));
-//        }
-//    }
-//    
-//    public Component getTaskBarItem(String item) {
-//        return dicComponents.get(item);
-//    }
+
+    public void Info(String message) {
+        JOptionPane.showMessageDialog(this,
+                message, "Alert", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void Warning(String message) {
+        JOptionPane.showMessageDialog(this,
+                message, "Alert", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public void Error(String message) {
+        JOptionPane.showMessageDialog(this,
+                message, "Alert", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public String inputLine(String message) {
+        String sResult = JOptionPane.showInputDialog(this, message, "Input", JOptionPane.QUESTION_MESSAGE);
+        return sResult;
+    }
+
+    public String inputSelect(String message, String[] options, String value) {
+        String res = (String) JOptionPane.showInputDialog(null, message, "Select", JOptionPane.QUESTION_MESSAGE, null, options, value);
+        return res;
+    }
+
+    public boolean Confirm(String message) {
+        boolean bResult = JOptionPane.showConfirmDialog(this,
+                message, "Confirm", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        return bResult;
+    }
 
 }

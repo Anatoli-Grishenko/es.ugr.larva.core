@@ -32,8 +32,8 @@ public class OleToolBar extends JPanel {
     public OleToolBar(OleApplication oapp, OleConfig olecfg) {
         super();
         setLayout(new FlowLayout(FlowLayout.LEFT));
-        setBorder(new EmptyBorder(0, 0, 0, 0));
-        setBackground(Color.DARK_GRAY);
+//        setBorder(new EmptyBorder(0, 0, 0, 0));
+//        setBackground(Color.DARK_GRAY);
         dicComponents = new HashMap();
         listComponents = new ArrayList();
         Ole oTool = olecfg.getTab("ToolBar"), ocontent;
@@ -48,25 +48,6 @@ public class OleToolBar extends JPanel {
             } catch (Exception ex) {
                 content="X";
             }
-//            switch (ocontent.getField("button")) {
-//                case "FOLDER":
-//                    content = emojis.FOLDER;
-//                    break;
-//                case "MAGNIFIER":
-//                    content = emojis.MAGNIFIER;
-//                    break;
-//                case "PACKAGE":
-//                    content = emojis.PACKAGE;
-//                    break;
-//                case "CLASS":
-//                    content = emojis.CLASS;
-//                    break;
-//                case "METHOD":
-//                    content = emojis.METHOD;
-//                    break;
-//                default:
-//                    content = emojis.ERROR;
-//            }
             obAux = new OleButton(stool, content, oapp);
             obAux.addActionListener(oapp);
             this.add(obAux);
