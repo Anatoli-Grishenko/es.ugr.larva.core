@@ -5,7 +5,7 @@
  */
 package tools;
 
-import data.OleList;
+import data.OleSet;
 import static data.TokenList.countTokens;
 
 /**
@@ -105,7 +105,7 @@ public class emojis {
             ASSIGNMENT = "📝",
             LUDWIG = "\uD83D\udc68";
 
-    public static String showProgress(OleList total, OleList done) {
+    public static String showProgress(OleSet total, OleSet done) {
         String res = "";
         int idone = 0, itotal = 0;
         idone = done.size();
@@ -115,7 +115,7 @@ public class emojis {
 
     }
 
-    public static String showProgressBar(int width, OleList total, OleList done, String color) {
+    public static String showProgressBar(int width, OleSet total, OleSet done, String color) {
         String res = "";
         int idone = 0, itotal = 0;
         idone = done.size();

@@ -5,6 +5,7 @@
  */
 package swing;
 
+import data.OleConfig;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,7 +24,7 @@ import javax.swing.event.ListSelectionListener;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class MyList extends JList implements ListSelectionListener, ActionListener {
+public class OleList extends JList implements ListSelectionListener, ActionListener {
 
     public static enum Type {
         STRING, FILE, FOLDER
@@ -33,60 +34,66 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
     private JScrollPane listPane;
     private Type mytype;
 
-    public MyList() {
+    public OleList() {
         super();
     }
 
-    public MyList init(Type t, int nrows) {
-        if (nrows < 0)
-            nrows=3;
+    public OleList init(OleConfig olecfg) {
         listModel = new DefaultListModel();
         add = new JButton("+");
         add.addActionListener(this);
         remove = new JButton("-");
         remove.addActionListener(this);
-        mytype = t;
+        try {
+            mytype = Type.valueOf(olecfg.getString("listtype", "string").toUpperCase());
+        } catch (Exception ex) {
+            mytype = Type.STRING;
+        }
         this.setModel(listModel);
-        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        if (olecfg.getBoolean("multiple", true)) {
+            setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        } else {
+            setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        }
 
         addListSelectionListener(this);
-        setVisibleRowCount(nrows);
+        setVisibleRowCount(olecfg.getInt("rows", 5));
         listPane = new JScrollPane(this);
         listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         listPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        listPane.setPreferredSize(new Dimension(30*nrows,30*nrows));
+        listPane.setPreferredSize(new Dimension(30 * this.getVisibleRowCount(), 30 * this.getVisibleRowCount()));
         return this;
     }
 
-    public MyList addElement(String element) {
+    public OleList addElement(String element) {
         listModel.addElement(element);
         return this;
     }
 
-    public MyList addAllElements(ArrayList<String> elements) {
+    public OleList addAllElements(ArrayList<String> elements) {
         for (String element : elements) {
             listModel.addElement(element);
         }
         return this;
     }
 
-    public MyList removeElement(int pos) {
+    public OleList removeElement(int pos) {
         listModel.remove(pos);
         return this;
     }
 
-    public MyList removeElement(String element) {
+    public OleList removeElement(String element) {
         listModel.removeElement(element);
 //        int index = this.gets
 //        listModel.addElement(element);
         return this;
     }
 
-    public MyList clear(){
+    public OleList clear() {
         listModel.clear();
         return this;
     }
-    
+
     private int getIndex(String what) {
         int res = -1;
         for (int i = 0; i < listModel.size(); i++) {
@@ -122,8 +129,9 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
             } else {
                 remove.setEnabled(true);
             }
-        } else
-                remove.setEnabled(false);
+        } else {
+            remove.setEnabled(false);
+        }
     }
 
     @Override
@@ -133,25 +141,26 @@ public class MyList extends JList implements ListSelectionListener, ActionListen
             case "+":
                 switch (mytype) {
                     case FILE:
-                        toAdd= OleDialog.doSelectFile("./", "");
+                        toAdd = OleDialog.doSelectFile("./", "");
                         break;
                     case FOLDER:
-                        toAdd= OleDialog.doSelectFolder("./");
+                        toAdd = OleDialog.doSelectFolder("./");
                         break;
                     case STRING:
                         toAdd = JOptionPane.showInputDialog(null, "Please type new string to add", "List", JOptionPane.QUESTION_MESSAGE);
                         break;
                 }
                 if (toAdd != null && toAdd.length() > 0 && !listModel.contains(toAdd)) {
-                    int index=listModel.size() + 1;
+                    int index = listModel.size() + 1;
                     listModel.addElement(toAdd);
-                    this.setSelectedIndex(listModel.size()-1);
-                    this.ensureIndexIsVisible(listModel.size()-1);
+                    this.setSelectedIndex(listModel.size() - 1);
+                    this.ensureIndexIsVisible(listModel.size() - 1);
                 }
                 break;
             case "-":
-                int index = this.getSelectedIndex();
-                this.removeElement(index);
+                for (Object o : this.getSelectedValuesList()) {
+                    listModel.removeElement(o);
+                }
                 break;
         }
     }

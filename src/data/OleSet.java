@@ -15,15 +15,15 @@ import java.util.ArrayList;
  * represented.
  *
  */
-public class OleList extends Ole {
+public class OleSet extends Ole {
 
-    public OleList() {
+    public OleSet() {
         super();
         setType(oletype.OLELIST.name());
         this.setField("items", new ArrayList());
     }
 
-    public OleList(Ole o) {
+    public OleSet(Ole o) {
         super(o);
         setType(oletype.OLELIST.name());
     }
@@ -44,14 +44,14 @@ public class OleList extends Ole {
         }
     }
 
-    public OleList addUniqueItem(String item) {
+    public OleSet addUniqueItem(String item) {
         if (!findItem(item)) {
             this.addToField("items", item);
         }
         return this;
     }
 
-    public OleList addUniqueItem(String[] items) {
+    public OleSet addUniqueItem(String[] items) {
         for (int i = 0; i < items.length; i++) {
             if (!findItem(items[i])) {
                 this.addToField("items", items[i]);
@@ -60,26 +60,26 @@ public class OleList extends Ole {
         return this;
     }
 
-    public OleList addDupItem(String[] items) {
+    public OleSet addDupItem(String[] items) {
         for (int i = 0; i < items.length; i++) {
             this.addToField("items", items[i]);
         }
         return this;
     }
 
-    public OleList addDupItem(String item) {
+    public OleSet addDupItem(String item) {
         this.addToField("items", item);
         return this;
     }
 
-    public OleList removeItem(String item) {
+    public OleSet removeItem(String item) {
         ArrayList<String> items = this.getArray("items");
         items.remove(item);
         this.setField("items", new ArrayList(items));
         return this;
     }
 
-    public OleList removeALlItems(String item) {
+    public OleSet removeALlItems(String item) {
         ArrayList<String> items = this.getArray("items");
         while (items.contains(item)) {
             items.remove(item);
@@ -97,8 +97,8 @@ public class OleList extends Ole {
         return false;
     }
 
-    public OleList getIntersection(OleList other) {
-        OleList res = new OleList();
+    public OleSet getIntersection(OleSet other) {
+        OleSet res = new OleSet();
         for (JsonValue jsv : getList().values()) {
             if (other.findItem(jsv.asString())) {
                 res.addUniqueItem(jsv.asString());
@@ -107,8 +107,8 @@ public class OleList extends Ole {
         return res;
     }
 
-    public OleList getUnion(OleList other) {
-        OleList res = new OleList();
+    public OleSet getUnion(OleSet other) {
+        OleSet res = new OleSet();
         for (JsonValue jsv : getList().values()) {
             res.addUniqueItem(jsv.asString());
         }
@@ -118,8 +118,8 @@ public class OleList extends Ole {
         return res;
     }
 
-    public OleList getConcatenation(OleList other) {
-        OleList res = new OleList();
+    public OleSet getConcatenation(OleSet other) {
+        OleSet res = new OleSet();
         for (JsonValue jsv : getList().values()) {
             res.addDupItem(jsv.asString());
         }
@@ -129,8 +129,8 @@ public class OleList extends Ole {
         return res;
     }
 
-    public OleList getDifference(OleList other) {
-        OleList res = new OleList();
+    public OleSet getDifference(OleSet other) {
+        OleSet res = new OleSet();
         for (JsonValue jsv : getList().values()) {
             if (!other.findItem(jsv.asString())) {
                 res.addUniqueItem(jsv.asString());

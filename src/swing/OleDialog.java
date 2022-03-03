@@ -9,7 +9,7 @@ import com.eclipsesource.json.JsonArray;
 import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;
-import data.OleList;
+import data.OleSet;
 import data.Transform;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -264,7 +264,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JTextField text;
         JCheckBox checkbox;
         JComboBox combobox;
-        MyList list;
+        OleList list;
         Ole fieldproperties, panelproperties;
         String tooltip;
         ArrayList<String> select;
@@ -387,13 +387,13 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridx++;
             } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
                 listsize = fieldproperties.getInt("rows",5);
-                MyList.Type listtype;
+                OleList.Type listtype;
                 try {
-                    listtype = MyList.Type.valueOf(fieldproperties.getString("listtype").toUpperCase());
+                    listtype = OleList.Type.valueOf(fieldproperties.getString("listtype").toUpperCase());
                 } catch (Exception ex) {
-                    listtype = MyList.Type.STRING;
+                    listtype = OleList.Type.STRING;
                 }
-                list = new MyList().init(listtype, listsize);
+                list = new OleList().init(new OleConfig(fieldproperties));
                 tooltip = fieldproperties.getString("tooltip","");
                 if (tooltip != null) {
                     list.setToolTipText(tooltip);
@@ -444,7 +444,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JTextField text;
         JCheckBox checkbox;
         JComboBox combobox;
-        MyList list;
+        OleList list;
         Ole fieldproperties, panelproperties;
         String tooltip;
         ArrayList<String> select;
@@ -483,7 +483,7 @@ public class OleDialog extends JDialog implements ActionListener {
                 checkbox.setSelected(ocomponents.getBoolean(sfield));
             } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
                 String selected=fieldproperties.getString("selected","");
-                list = (MyList) components.get(sfield);
+                list = (OleList) components.get(sfield);
                 list.clear();
                 list.addAllElements(ocomponents.getArray(sfield));
                 if (selected != null && selected.length()>0 && ocomponents.getArray(sfield).contains(selected)) {
@@ -511,7 +511,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JCheckBox checkbox;
         ArrayList<String> select;
         JComboBox combobox;
-        MyList list;
+        OleList list;
         Ole fieldproperties;
 
         for (String sfield : currentTab.getFieldList()) {
@@ -552,7 +552,7 @@ public class OleDialog extends JDialog implements ActionListener {
                 currentTab.setField(sfield, checkbox.isSelected());
             } else if (currentTab.getFieldType(sfield).equals(oletype.ARRAY.name())) {
                 ArrayList<String> sList = new ArrayList();
-                MyList mlist = (MyList) components.get(sfield);
+                OleList mlist = (OleList) components.get(sfield);
                 DefaultListModel mlm = mlist.getListMode();
                 for (int i = 0; i < mlm.size(); i++) {
                     sList.add((String) mlm.getElementAt(i));
@@ -576,7 +576,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //        JTextField text;
 //        JCheckBox checkbox;
 //        JComboBox combobox;
-//        MyList list;
+//        OleList list;
 //        Ole fieldproperties, panelproperties;
 //        String tooltip;
 //        ArrayList<String> select;
@@ -698,13 +698,13 @@ public class OleDialog extends JDialog implements ActionListener {
 //                dataPanel.add(checkbox, gc);
 //                gc.gridx++;
 //            } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
-//                MyList.Type listtype;
+//                OleList.Type listtype;
 //                try {
-//                    listtype = MyList.Type.valueOf(fieldproperties.getString("listtype").toUpperCase());
+//                    listtype = OleList.Type.valueOf(fieldproperties.getString("listtype").toUpperCase());
 //                } catch (Exception ex) {
-//                    listtype = MyList.Type.STRING;
+//                    listtype = OleList.Type.STRING;
 //                }
-//                list = new MyList().init(listtype);
+//                list = new OleList().init(listtype);
 //                list.addAllElements(ocomponents.getArray(sfield));
 //                list.setVisibleRowCount(listsize);
 //                tooltip = fieldproperties.getString("tooltip");
@@ -766,7 +766,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //        JCheckBox checkbox;
 //        ArrayList<String> select;
 //        JComboBox combobox;
-//        MyList list;
+//        OleList list;
 //        Ole fieldproperties;
 //
 //        for (String sfield : currentTab.getFieldList()) {
@@ -805,7 +805,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //            } else if (currentTab.getFieldType(sfield).equals(oletype.ARRAY.name())) {
 //                ArrayList<String> sList = new ArrayList();
 //                JsonArray jaarray = new JsonArray();
-//                MyList mlist = (MyList) components.get(sfield);
+//                OleList mlist = (OleList) components.get(sfield);
 //                DefaultListModel mlm = mlist.getListMode();
 //                for (int i = 0; i < mlm.size(); i++) {
 //                    sList.add((String) mlm.getElementAt(i));

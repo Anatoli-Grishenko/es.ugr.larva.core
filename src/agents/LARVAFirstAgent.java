@@ -7,7 +7,7 @@ package agents;
 
 import data.Ole;
 import data.OleConfig;
-import data.OleList;
+import data.OleSet;
 import data.Transform;
 import swing.LARVAFrame;
 import disk.Logger;
@@ -87,7 +87,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     //
     protected String title, mySessionmanager = "", problemName;
 
-    protected OleList stepsDone, stepsSent;
+    protected OleSet stepsDone, stepsSent;
     protected boolean traceRunSteps;
     protected OleConfig oleConfig;
 
@@ -96,8 +96,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      */
     @Override
     public void setup() {
-        stepsDone = new OleList();
-        stepsSent = new OleList();
+        stepsDone = new OleSet();
+        stepsSent = new OleSet();
         sd = new SequenceDiagram();
         traceRunSteps = false;
         super.setup();
@@ -122,7 +122,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             if (oleConfig.loadFile("./config/config.json").isEmpty()) {
                 oleConfig = null;
             } else {
-//                problemName = new OleList(oleConfig.getOle("LARVA").getOle("Problem")).getItem(0);
+//                problemName = new OleSet(oleConfig.getOle("LARVA").getOle("Problem")).getItem(0);
                 problemName = (String) oleConfig.getTab("LARVA").getField("Problem");
                 Ole record = oleConfig.getOle("Jade");
                 logger.setEcho(!record.getBoolean("Silent execution"));
@@ -732,7 +732,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             outgoing.addReceiver(new AID(mySessionmanager, AID.ISLOCALNAME));
             outgoing.setContent(stepsSent.prettyprint());
             this.send(outgoing);
-            stepsSent = new OleList();
+            stepsSent = new OleSet();
         }
     }
 
