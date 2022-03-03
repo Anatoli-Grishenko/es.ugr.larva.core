@@ -7,10 +7,14 @@ package data;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import map2D.Map2DColor;
 
 /**
  *
@@ -38,6 +42,28 @@ public class OleDot extends Ole {
         pppResolution = ppp;
     }
     
+    public static void exportTo(String dotFile, String type) {
+        String exportFile = dotFile.replace("dot/", "export/").replace(".dot", "."+type);
+        String tmpFile = dotFile.replace("dot/", "export/").replace(".mod", ".tmp");
+        File f = new File(exportFile);
+        if (f.exists()) {
+            f.delete();
+        }
+        String command;
+        ProcessBuilder pb;
+        Process ps = null;
+        try {
+            command = "/usr/bin/dot -T"+type+" "+ FileSystems.getDefault().getPath(dotFile).normalize().toAbsolutePath().toString()
+                    + "  -o " + FileSystems.getDefault().getPath(exportFile).normalize().toAbsolutePath().toString();
+            pb = new ProcessBuilder().command(command.split(" "));
+            pb.directory(FileSystems.getDefault().getPath("./").normalize().toAbsolutePath().toFile());
+            ps = pb.start();
+            ps.waitFor(5000, TimeUnit.MILLISECONDS);
+
+        } catch (Exception ex) {
+            System.err.println("Error generating output to " + exportFile + "\n" + ex.toString());
+        }        
+    }
     public void toDot(String dotfilename) {
         ArrayList<String> classtypes, classnames, relationnames, children, classmethods;
         ArrayList<Ole> relations;

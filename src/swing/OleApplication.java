@@ -57,6 +57,10 @@ public abstract class OleApplication extends OleFrame {
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;
+        if (oConfig.getOptions().getString("FlatLaf","Dark").equals("Dark"))
+            SwingTools.initFlatLafDark();
+        else
+            SwingTools.initFlatLafLight();
         Ole oAux = olecfg.getOle("FrameSize");
         if (oAux.isEmpty()) {
             setSize(800, 600);

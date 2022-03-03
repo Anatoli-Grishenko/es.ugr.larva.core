@@ -6,6 +6,8 @@
 package swing;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.Image;
 import java.awt.Insets;
 import javax.swing.ImageIcon;
@@ -57,13 +59,22 @@ public class SwingTools {
 
     public static void initLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
+            UIManager.setLookAndFeel(new FlatLightLaf());
+//            UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception ex) {
             System.err.println("Failed to initialize look-and-feel");
         }
     }
 
-    public static void initFlatLaf() {
+    public static void initFlatLafLight() {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize look-and-feel");
+        }
+    }
+
+    public static void initFlatLafDark() {
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception ex) {
