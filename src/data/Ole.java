@@ -186,7 +186,7 @@ public class Ole extends JsonObject {
      * @return 
      */
     public Ole clear() {
-        ArrayList<String> names = new ArrayList(this.names());
+        ArrayList<String> names = new ArrayList(this.getFieldList());
         for (String s : names) {
             this.remove(s);
         }

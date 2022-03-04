@@ -22,8 +22,8 @@ import map2D.Map2DColor;
  */
 public class OleDot extends Ole {
 
-    int pppResolution=150;
-    
+    int pppResolution = 150, width=16, height=11;
+
     public OleDot() {
         super();
         setType(oletype.OLEDOT.name());
@@ -41,9 +41,25 @@ public class OleDot extends Ole {
     public void setResolution(int ppp) {
         pppResolution = ppp;
     }
-    
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     public static void exportTo(String dotFile, String type) {
-        String exportFile = dotFile.replace("dot/", "export/").replace(".dot", "."+type);
+        String exportFile = dotFile.replace("dot/", "export/").replace(".dot", "." + type);
         String tmpFile = dotFile.replace("dot/", "export/").replace(".mod", ".tmp");
         File f = new File(exportFile);
         if (f.exists()) {
@@ -53,7 +69,7 @@ public class OleDot extends Ole {
         ProcessBuilder pb;
         Process ps = null;
         try {
-            command = "/usr/bin/dot -T"+type+" "+ FileSystems.getDefault().getPath(dotFile).normalize().toAbsolutePath().toString()
+            command = "/usr/bin/dot -T" + type + " " + FileSystems.getDefault().getPath(dotFile).normalize().toAbsolutePath().toString()
                     + "  -o " + FileSystems.getDefault().getPath(exportFile).normalize().toAbsolutePath().toString();
             pb = new ProcessBuilder().command(command.split(" "));
             pb.directory(FileSystems.getDefault().getPath("./").normalize().toAbsolutePath().toFile());
@@ -62,8 +78,9 @@ public class OleDot extends Ole {
 
         } catch (Exception ex) {
             System.err.println("Error generating output to " + exportFile + "\n" + ex.toString());
-        }        
+        }
     }
+
     public void toDot(String dotfilename) {
         ArrayList<String> classtypes, classnames, relationnames, children, classmethods;
         ArrayList<Ole> relations;
@@ -75,9 +92,9 @@ public class OleDot extends Ole {
             out.println("digraph graphname {");
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
-                    + "dpi="+pppResolution+"\n"
-//                    + "ratio=\"fill\";\n" 
-                    + " size=\"16,11!\";\n"
+                    + "dpi=" + pppResolution + "\n"
+                    + "ratio=\"fill\";\n" 
+                    + " size=\""+getWidth()+","+getHeight()+"!\";\n"
                     + " margin=0;");
             classtypes = new ArrayList<String>(getArray("classtypes"));
 //            System.out.println("CLASS TYPES: " + classtypes);
@@ -98,6 +115,7 @@ public class OleDot extends Ole {
                             for (String methodname : classmethods) {
                                 methodname = methodname.replace("<", "&lt;");
                                 methodname = methodname.replace(">", "&gt;");
+                                methodname = highlight(methodname);
                                 node += "<tr><td align=\"left\">" + "<FONT face=\"" + oleformat.getString("face", "Courier New") + "\" POINT-SIZE= \"" + oleformat.getInt("fontsize", 18) * 3 / 4 + "\"><i>" + methodname + "</i></FONT>" + "</td></tr>\n";
                             }
                         }
@@ -134,5 +152,23 @@ public class OleDot extends Ole {
         ArrayList<Ole> children;
         parent = classname.getFieldList().get(0);
         children = new ArrayList<Ole>(classname.getArray(parent));
+    }
+
+    public static String highlight(String s) {
+        String methodname = "";
+        boolean bdo = false;
+        for (int i = s.length() - 1; i >= 0; i--) {
+            if (bdo) {
+                methodname = "" + s.charAt(i) + methodname;
+            }
+            if (s.charAt(i) == '(') {
+                bdo = true;
+            }
+            if (bdo && s.charAt(i) == ' ') {
+                bdo = false;
+            }
+        }
+        methodname = methodname.trim();
+        return s.replace(methodname, "<b>" + methodname + "</b>");
     }
 }
