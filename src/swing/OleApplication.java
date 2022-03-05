@@ -44,7 +44,7 @@ import tools.emojis;
 public abstract class OleApplication extends OleFrame {
 
     OleBitmapPane osDiagram;
-    OleDrawPane opDiagram;    
+    OleDrawPane opDiagram;
     JPanel pMain, pStatus, pToolBar;
     JProgressBar pbMain;
     JLabel lMain, lProgress;
@@ -57,10 +57,7 @@ public abstract class OleApplication extends OleFrame {
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;
-        if (oConfig.getOptions().getString("FlatLaf","Dark").equals("Dark"))
-            SwingTools.initFlatLafDark();
-        else
-            SwingTools.initFlatLafLight();
+        SwingTools.initLookAndFeel(oConfig.getOptions().getString("FlatLaf", "Dark"));
         Ole oAux = olecfg.getOle("FrameSize");
         if (oAux.isEmpty()) {
             setSize(800, 600);
@@ -137,7 +134,7 @@ public abstract class OleApplication extends OleFrame {
     public JPanel getMainPanel() {
         return this.pMain;
     }
-    
+
     public abstract void Draw(Graphics2D g);
 
     protected void addLabel(Container con, String s) {

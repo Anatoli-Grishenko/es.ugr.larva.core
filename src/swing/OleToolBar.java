@@ -42,11 +42,11 @@ public class OleToolBar extends JPanel {
         oTool.getFieldList();
         for (String stool : oTool.getFieldList()) {
             ocontent = oTool.getOle(stool);
-            content="";
+            content = "";
             try {
-            content =(String) emojis.class.getField(ocontent.getField("button")).get(content);
+                content = (String) emojis.class.getField(ocontent.getField("button")).get(content);
             } catch (Exception ex) {
-                content="X";
+                content = "X";
             }
             obAux = new OleButton(stool, content, oapp);
             obAux.addActionListener(oapp);

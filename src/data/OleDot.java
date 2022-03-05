@@ -23,6 +23,7 @@ import map2D.Map2DColor;
 public class OleDot extends Ole {
 
     int pppResolution = 150, width=16, height=11;
+    boolean fill=false;
 
     public OleDot() {
         super();
@@ -42,6 +43,15 @@ public class OleDot extends Ole {
         pppResolution = ppp;
     }
 
+    public boolean isFill() {
+        return fill;
+    }
+
+    public void setFill(boolean fill) {
+        this.fill = fill;
+    }
+
+    
     public int getWidth() {
         return width;
     }
@@ -93,7 +103,7 @@ public class OleDot extends Ole {
             //out.println("{ rank = sink ; }");
             out.println("     rankdir=\"BT\"\n"
                     + "dpi=" + pppResolution + "\n"
-                    + "ratio=\"fill\";\n" 
+                    + (isFill()? "ratio=\"fill\";\n" :"")
                     + " size=\""+getWidth()+","+getHeight()+"!\";\n"
                     + " margin=0;");
             classtypes = new ArrayList<String>(getArray("classtypes"));

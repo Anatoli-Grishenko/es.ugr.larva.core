@@ -6,6 +6,7 @@
 package swing;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.Image;
@@ -57,26 +58,18 @@ public class SwingTools {
         return res;
     }
 
-    public static void initLookAndFeel() {
+    public static void initLookAndFeel(String UI) {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-//            UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception ex) {
-            System.err.println("Failed to initialize look-and-feel");
-        }
-    }
-
-    public static void initFlatLafLight() {
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (Exception ex) {
-            System.err.println("Failed to initialize look-and-feel");
-        }
-    }
-
-    public static void initFlatLafDark() {
-        try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
+            switch (UI.toUpperCase()) {
+                case "LIGHT":
+                    UIManager.setLookAndFeel(new FlatLightLaf());
+                    break;
+                case "DARK":
+                    UIManager.setLookAndFeel(new FlatDarkLaf());
+                    break;
+                case "PLAIN":
+                default:
+            }
         } catch (Exception ex) {
             System.err.println("Failed to initialize look-and-feel");
         }
@@ -97,7 +90,7 @@ public class SwingTools {
                 message, "LARVA Boot", JOptionPane.WARNING_MESSAGE);
     }
 
-    public static  String inputLine(String message) {
+    public static String inputLine(String message) {
         String sResult = JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE);
         return sResult;
     }

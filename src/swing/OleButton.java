@@ -26,25 +26,22 @@ public class OleButton extends JButton {
     public OleButton(String command, String text, OleApplication oapp) {
         setActionCommand(command);
         setFocusPainted(true);
-        setContentAreaFilled(true);
-        setMargin(new Insets(1, 1, 1, 1));
-//        addActionListener(oapp);
+        setContentAreaFilled(false);
+        setMargin(new Insets(0, 0, 0, 0));
         setText(text);
         this.setFont(new Font("Arial", Font.BOLD, 20));
-//        this.setForeground(Color.WHITE);
-//        setBackground(Color.DARK_GRAY);
         this.setToolTipText(command);        
         this.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
-//                setForeground(Color.BLUE);
-//                setBackground(Color.GRAY);                
+            public void mouseEntered(MouseEvent e) {         
+        setContentAreaFilled(true);
+        setBackground(Color.GRAY);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-//                setForeground(Color.WHITE);
-//                setBackground(Color.DARK_GRAY);
+            setContentAreaFilled(false);
+                setBackground(oapp.getBackground());
             }
         });
     }
