@@ -3,9 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package agswing;
+package geometry;
 
-import geometry.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,38 +14,37 @@ import java.util.HashMap;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Scene3D {
-
-    protected HashMap<String, Object3D> scene;
+    protected HashMap<String, Entity3D> scene;
 
     public Scene3D() {
         scene = new HashMap();
     }
 
-    public void addObject3D(Object3D o) {
+    public void addEntity3D(Entity3D o) {
         scene.put(o.getName(), o);
     }
 
-    public Object3D getObject(String name) {
+    public Entity3D getObject(String name) {
         return scene.get(name);
     }
 
-    public ArrayList<Object3D> getAllObjects(Point reference) {
-        ArrayList<Object3D> res = new ArrayList();
+    public ArrayList<Entity3D> getAllObjects(Point3D reference) {
+        ArrayList<Entity3D> res = new ArrayList();
         for (String s : scene.keySet()) {
             res.add(getObject(s));
         }
-        if (reference != null) {
-            res.sort(new Comparator<Object3D>() {
-                @Override
-                public int compare(Object3D o1, Object3D o2) {
-                    if (o1.getCenter().realDistanceTo(reference) > o2.getCenter().realDistanceTo(reference)) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                }
-            });
-        }
+//        if (reference != null) {
+//            res.sort(new Comparator<Entity3D>() {
+//                @Override
+//                public int compare(Entity3D o1, Entity3D o2) {
+//                    if (o1.getCenter().realDistanceTo(reference) > o2.getCenter().realDistanceTo(reference)) {
+//                        return -1;
+//                    } else {
+//                        return 1;
+//                    }
+//                }
+//            });
+//        }
         return res;
     }
 
@@ -57,5 +55,5 @@ public class Scene3D {
     public Scene3D clearAll() {
         scene = new HashMap();
         return this;
-    }
+    }    
 }

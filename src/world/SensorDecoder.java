@@ -13,8 +13,8 @@ import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleFile;
 import data.Transform;
-import geometry.Point;
-import geometry.Vector;
+import geometry.Point3D;
+import geometry.Vector3D;
 import glossary.sensors;
 import java.awt.Color;
 import java.io.File;
@@ -194,11 +194,11 @@ public class SensorDecoder {
 //        return -1;
     }
 
-    public double getAngular(Point p) {
+    public double getAngular(Point3D p) {
         if (isReady() && hasSensor("ANGULAR")) {
-            Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
-            Point me = new Point(getGPS()[0], getGPS()[1], getGPS()[2]);
-            Vector Busca = new Vector(me, p);
+            Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
+            Point3D me = new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
+            Vector3D Busca = new Vector3D(me, p);
 
             
             int v = (int) Norte.angleXYTo(Busca);;

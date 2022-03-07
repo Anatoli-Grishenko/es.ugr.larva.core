@@ -3,35 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package agswing;
+package geometry;
 
-import geometry.Point;
-import java.awt.Graphics2D;
 
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public  class Line3D  extends Object3D {
-    
-    protected Point end;
+public class Line3D extends Entity3D{
+    protected Point3D end;
 
-    public Point getEnd() {
+    public Point3D getEnd() {
         return end;
     }
 
-    public Object3D setEnd(Point end) {
+    public Line3D setEnd(Point3D end) {
         this.end = end.clone();
-        this.center =this.getPosition().clone().plus(end).scalar(0.5);
+        this._center =this.getPosition().clone().plus(end).scalar(0.5);
         return this;
     }
 
-    public Line3D(Point start, Point end) {
+    public Line3D(Point3D start, Point3D end) {
         super();
         this.setPosition(start);
         this.setEnd(end);               
-    }
-
-
-    
+    }    
 }

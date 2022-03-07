@@ -3,19 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package agswing;
-
-import geometry.Point;
+package geometry;
 
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class Circle3D extends Object3D{
+public class Circle3D extends Entity3D{
     String content;
     double radius;
     
-    public Circle3D(Point p, double r) {
+    public Circle3D(Point3D p, double r) {
         super();
         setPosition(p);
         setRadius(r);
@@ -37,8 +35,5 @@ public class Circle3D extends Object3D{
     public Circle3D setRadius(double radius) {
         this.radius = radius;
         return this;
-    }
-    
-    
-    
+    }   
 }

@@ -3,33 +3,30 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package agswing;
+package geometry;
 
-import geometry.Point;
-import java.awt.Polygon;
 import java.util.ArrayList;
 
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class Polygon3D extends Object3D {
-
-    protected ArrayList<Point> vertex;
+public class Polygon3D extends Entity3D {
+   protected ArrayList<Point3D> vertex;
     boolean filled;
 
     public Polygon3D() {
         vertex = new ArrayList();
     }
 
-    public Polygon3D(Point p) {
+    public Polygon3D(Point3D p) {
         vertex = new ArrayList();
         setPosition(p);
     }
 
-    public Polygon3D addVertex(Point p) {
+    public Polygon3D addVertex(Point3D p) {
         vertex.add(p);
-        Point pc = this.getPosition().clone();
+        Point3D pc = this.getPosition().clone();
         int n = 0;
         for (int i = 0; i < size(); i++) {
             if (!this.getVertex(i).isEqualTo(this.getPosition())) {
@@ -56,10 +53,10 @@ public class Polygon3D extends Object3D {
         return vertex.size();
     }
 
-    public Point getVertex(int n) {
+    public Point3D getVertex(int n) {
         if (n <= vertex.size()) {
             return vertex.get(n);
         }
         return null;
-    }
+    }    
 }

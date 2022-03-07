@@ -5,7 +5,7 @@
  */
 package world;
 
-import geometry.Point;
+import geometry.Point3D;
 import world.Thing;
 import world.World;
 import com.eclipsesource.json.JsonArray;
@@ -27,7 +27,7 @@ public class liveBot extends Thing {
      glossary.Roles role;
      int energylevel, burnmovement, burnsensor, compass, altitude, order;
      double distance, angle;
-     Point origin;
+     Point3D origin;
      public int minAllowedLevel, maxAllowedLevel, range, alive, ontarget;
      ArrayList<String> capabilities, attachments;
      JsonObject lastPerceptions;
@@ -82,7 +82,7 @@ public class liveBot extends Thing {
     }
 
     public void fromJson(JsonObject update) {
-        _position = new Point(update.getInt("x", -1),
+        _position = new Point3D(update.getInt("x", -1),
                 update.getInt("y", -1), update.getInt("z", -1));
         energylevel = update.getInt("energy", -1);
         altitude = update.getInt("altitude", -1);
@@ -151,7 +151,7 @@ public class liveBot extends Thing {
     }
 
     @Override
-    public Point getPosition() {
+    public Point3D getPosition() {
         return this._position;
     }
 

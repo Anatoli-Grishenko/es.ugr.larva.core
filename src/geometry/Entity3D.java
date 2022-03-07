@@ -8,28 +8,52 @@ package geometry;
 import glossary.direction;
 import static crypto.Keygen.getAlphaNumKey;
 import static crypto.Keygen.getAlphaNumKey;
+import static crypto.Keygen.getHexaKey;
+import java.awt.Color;
+import java.util.Comparator;
 
 
 /**
  *
  * @author lcv
  */
-public  class Entity {
+public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 
     protected String _name, _key;
-    protected Point _position, _size;
+    protected Point3D _position, _size,_center;
     protected int _sorientation; 
+    protected Color _color;
 
 
-    public Entity(String name) {
+    public Entity3D(String name) {
         _name = name;
         _key = getAlphaNumKey(16);
         _sorientation = direction.EAST.ordinal();
-       setPosition(new Point(0,0,0));
-       setSize(new Point(1,1,0));
+       setPosition(new Point3D(0,0,0));
+       setSize(new Point3D(1,1,0));
     }
 
-            
+     public Entity3D(Point3D position, Color color) {
+        _position = position;
+        _color = color;
+        _name = getHexaKey();
+    }
+    
+    public Entity3D() {
+        _position = new Point3D(0,0,0);
+        _color = Color.WHITE;
+        _name = getHexaKey();
+    } 
+
+    public Point3D getCenter() {
+        return _center;
+    }
+
+    public Entity3D  setCenter(Point3D _center) {
+        this._center = _center;
+        return this;
+    }
+    
     public String getName() {
         return _name;
     }
@@ -38,21 +62,37 @@ public  class Entity {
         return _key;
     }
 
-    public final Entity setPosition(Point p) {
+    public final Entity3D setPosition(Point3D p) {
         _position = p.clone();
+        _center = _position.clone();
         return this;
     }
-   public Point getPosition() {
+
+    public Color getColor() {
+        return _color;
+    }
+
+    public Entity3D setColor(Color _color) {
+        this._color = _color;
+        return this;
+    }
+    
+   public Point3D getPosition() {
         return _position;
     }
 
-    public final Entity setSize(Point p) {
+    public final Entity3D setSize(Point3D p) {
         _size = p.clone();
         return this;
     }
 
-    public Point getSize() {
+    public Point3D getSize() {
         return _size;
+    }
+
+    public Entity3D setName(String _name) {
+        this._name = _name;
+        return this;
     }
 
     public int getDimension() {
@@ -60,12 +100,12 @@ public  class Entity {
     }
 
 
-    private Entity setVectorTo(Point target) {
-//        _orientation = new Vector(getPosition(), target).canonical();
+    private Entity3D setVectorTo(Point3D target) {
+//        _orientation = new Vector3D(getPosition(), target).canonical();
         return this;
     }
 
-    public Entity setOrientation(int orientation) {
+    public Entity3D setOrientation(int orientation) {
         _sorientation = orientation % 8;
         return this;
     }
@@ -75,31 +115,31 @@ public  class Entity {
         return _sorientation;
     }
     
-    public Vector getVector(){
-        return new Vector(getPosition(),getPosition().clone().plus(Compass.SHIFT[_sorientation]));
+    public Vector3D getVector(){
+        return new Vector3D(getPosition(),getPosition().clone().plus(Compass.SHIFT[_sorientation]));
     }
     
-    public Entity move(Vector shift) {
+    public Entity3D move(Vector3D shift) {
         getPosition().plus(shift.canonical().getTarget());
         return this;
     }
 
-    public Entity moveForward(int units) {
+    public Entity3D moveForward(int units) {
         return move(Compass.SHIFT[getOrientation()].clone().scalar(units));
     }
     
-    public Entity moveUp(int units) {
+    public Entity3D moveUp(int units) {
         return move(Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
     }
     
-    public Entity moveDown(int units) {
+    public Entity3D moveDown(int units) {
         return move(Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
     }
     
-    private Entity RotateXY(double degrees) {
-//        Vector orientation=getOrientation().canonical();
+    private Entity3D RotateXY(double degrees) {
+//        Vector3D orientation=getOrientation().canonical();
 //        double radio=orientation.modulo();
-//        orientation=new Vector()
+//        orientation=new Vector3D()
 //        setOrientation(getOrienta)
 //        base.define(L.getPosition().getX()+radio*Math.cos(i*Math.PI/180),L.getPosition().getY()-radio*Math.sin(i*Math.PI/180));
         return this;
@@ -117,16 +157,16 @@ public  class Entity {
         return (sdirection + 4) % 8;
     }
 
-    public Entity rotateLeft() {
-        return setOrientation(Entity.this.rotateLeft(getOrientation()));
+    public Entity3D rotateLeft() {
+        return setOrientation(Entity3D.this.rotateLeft(getOrientation()));
     }
 
-    public Entity rotateRight() {
-        return setOrientation(Entity.this.rotateRight(getOrientation()));
+    public Entity3D rotateRight() {
+        return setOrientation(Entity3D.this.rotateRight(getOrientation()));
     }
 
  
-    public boolean contains(Point p) {
+    public boolean contains(Point3D p) {
         if (p.getDimension() != getPosition().getDimension()) {
             return false;
         }
@@ -142,4 +182,12 @@ public  class Entity {
         }
         return res;
     }
-}
+
+    public int compareTo(Entity3D other) {
+        return (int) (1000 * getCenter().fastDistanceXYTo(other.getCenter()));
+    }
+    
+    public int compare(Entity3D one, Entity3D other) {
+        return one.compareTo(other);
+    }
+    }

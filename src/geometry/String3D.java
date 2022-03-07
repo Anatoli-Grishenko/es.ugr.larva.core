@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package agswing;
+package geometry;
 
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class String3D extends Object3D{
+public class String3D extends Entity3D {
     String content;
     public String3D(String s) {
         super();
@@ -23,7 +23,5 @@ public class String3D extends Object3D{
     public void setContent(String content) {
         this.content = content;
     }
-    
-    
-    
+        
 }

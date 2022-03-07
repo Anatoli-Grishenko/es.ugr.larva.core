@@ -5,12 +5,11 @@
  */
 package swing;
 
-import geometry.Point;
+import geometry.Point3D;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
@@ -21,12 +20,8 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import map2D.Map2DColor;
 import map2D.Palette;
@@ -47,7 +42,7 @@ public class MyMapPalPane extends MyDrawPane {
     protected int palw = 35, cellw = 20, shadow = 0;
     protected MyPopup mPopup;
     protected boolean ruler, trail, hotspot, redecorate = true, paintpalette = true;
-    protected ArrayList<Point> thetrail;
+    protected ArrayList<Point3D> thetrail;
 
     public MyMapPalPane(Consumer<Graphics2D> function) {
         super(function);
@@ -161,7 +156,7 @@ public class MyMapPalPane extends MyDrawPane {
     }
 
     public void setTrail(int x, int y, int z) {
-        thetrail.add(new Point(x, y, z));
+        thetrail.add(new Point3D(x, y, z));
         redecorate = false;
         validate();
         repaint();
@@ -272,7 +267,8 @@ public class MyMapPalPane extends MyDrawPane {
             }
         }
         if (shadow > 0) {
-            Point p1, p2;
+            Point3D p1;
+            Point3D p2;
             Color c;
             int level;
             if (thetrail.size() > 0 && palMap != null) {
@@ -280,12 +276,12 @@ public class MyMapPalPane extends MyDrawPane {
                     p1 = thetrail.get(thetrail.size() - 2);
                     level = shadow*(int) p1.getZ()/256;
                     hidePoint(g, p1);
-                    p2 = p1.clone().minus(new Point(level, level, 0));
+                    p2 = p1.clone().minus(new Point3D(level, level, 0));
                     hidePoint(g, p2);
                 }
                 p1 = thetrail.get(thetrail.size() - 1);
                 level = shadow*(int) p1.getZ()/256;
-                p2 = p1.clone().minus(new Point(level, level, 0));
+                p2 = p1.clone().minus(new Point3D(level, level, 0));
                 paintPoint(g, p1, Color.BLACK);
                 paintPoint(g, p2, Color.GREEN);
             }
@@ -301,28 +297,28 @@ public class MyMapPalPane extends MyDrawPane {
     }
 
     protected void paintTrailPos(Graphics2D g, int pos) {
-        Point p = thetrail.get(pos);
+        Point3D p = thetrail.get(pos);
         paintPoint(g, p, new Color(0, 256 * pos / thetrail.size(), 0));
         framePoint(g, p, Color.GREEN);
 
     }
 
-    protected void paintPoint(Graphics2D g, Point p, Color c) {
+    protected void paintPoint(Graphics2D g, Point3D p, Color c) {
         g.setColor(c);
         g.fillRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
     }
 
-    protected void framePoint(Graphics2D g, Point p, Color c) {
+    protected void framePoint(Graphics2D g, Point3D p, Color c) {
         g.setColor(c);
         g.drawRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
     }
 
     protected void hideTrailPos(Graphics2D g, int pos) {
-        Point p = thetrail.get(pos);
+        Point3D p = thetrail.get(pos);
         hidePoint(g, p);
     }
 
-    protected void hidePoint(Graphics2D g, Point p) {
+    protected void hidePoint(Graphics2D g, Point3D p) {
         Color c;
         if (0 <= p.getX() && p.getX() < getMapWidth() && 0 <= p.getY() && p.getY() < getMapHeight()) {
             c = this.m2dMap.getColor((int) p.getX(), (int) p.getY());

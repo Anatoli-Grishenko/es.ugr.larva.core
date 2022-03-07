@@ -7,7 +7,7 @@ package swing;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import geometry.Point;
+import geometry.Point3D;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -179,7 +179,7 @@ public class AirTrafficControl extends MyDrawPane {
                 trails.put(ID, new ATC_Trail(ID, Color.YELLOW)); //colors[trails.keySet().size()]));
             }
         }
-        trails.get(ID).pushTrail(new Point(x, y, z));
+        trails.get(ID).pushTrail(new Point3D(x, y, z));
         redecorate = false;
         validate();
         repaint();
@@ -312,17 +312,18 @@ public class AirTrafficControl extends MyDrawPane {
     }
 
     protected void paintTrailPos(Graphics2D g, String ID, int pos) {
-        Point p = trails.get(ID).getPoint(pos), p2;
+        Point3D p = trails.get(ID).getPoint(pos);
+        Point3D p2;
         int diam1 = 10, diam2 = 5;
         g.setColor(trails.get(ID).c);
         if (pos == 0) {
-//            paintPoint(g, p.clone().plus(new Point(-1, 0)), trails.get(ID).c);
-//            paintPoint(g, p.clone().plus(new Point(1, 0)), trails.get(ID).c);
-//            paintPoint(g, p.clone().plus(new Point(0, 1)), trails.get(ID).c);
-//            paintPoint(g, p.clone().plus(new Point(0, -1)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point3D(-1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point3D(1, 0)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point3D(0, 1)), trails.get(ID).c);
+//            paintPoint(g, p.clone().plus(new Point3D(0, -1)), trails.get(ID).c);
 
             g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam1 / 2, diam1, diam1);
-//            p2 = p.clone().plus(new Point(0,-1));
+//            p2 = p.clone().plus(new Point3D(0,-1));
             g.drawString(ID, offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY());
         } else {
             g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam2 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam2 / 2, diam2, diam2);
@@ -331,30 +332,30 @@ public class AirTrafficControl extends MyDrawPane {
     }
 
     protected void paintGoal(Graphics2D g, JsonObject jsgoal) {
-        Point p = new Point(jsgoal.getString("position", ""));
+        Point3D p = new Point3D(jsgoal.getString("position", ""));
         int diam1 = 10, diam2 = 5;
         g.setColor(Color.YELLOW);
         g.fillOval(offsetimg + zoom * (int) p.getX() + zoom / 2 - diam1 / 2, offsetimg + zoom * (int) p.getY() + zoom / 2 - diam1 / 2, diam1, diam1);
 
     }
 
-    protected void paintPoint(Graphics2D g, Point p, Color c) {
+    protected void paintPoint(Graphics2D g, Point3D p, Color c) {
         g.setColor(c);
         g.fillRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
         System.err.println("X " + +zoom * (int) p.getX() + "   Y " + offsetimg + zoom * (int) p.getY());
     }
 
-    protected void framePoint(Graphics2D g, Point p, Color c) {
+    protected void framePoint(Graphics2D g, Point3D p, Color c) {
         g.setColor(c);
         g.drawRect(offsetimg + zoom * (int) p.getX(), offsetimg + zoom * (int) p.getY(), zoom, zoom);
     }
 
     protected void hideTrailPos(Graphics2D g, String ID, int pos) {
-        Point p = trails.get(ID).getPoint(pos);
+        Point3D p = trails.get(ID).getPoint(pos);
         hidePoint(g, p);
     }
 
-    protected void hidePoint(Graphics2D g, Point p) {
+    protected void hidePoint(Graphics2D g, Point3D p) {
         Color c;
         if (0 <= p.getX() && p.getX() < getMapWidth() && 0 <= p.getY() && p.getY() < getMapHeight()) {
             c = this.m2dMap.getColor((int) p.getX(), (int) p.getY());
@@ -443,14 +444,14 @@ class ATC_Trail {
     protected final int TRAILSIZE = 1;
     String id;
     Color c;
-    ArrayList<Point> trail = new ArrayList();
+    ArrayList<Point3D> trail = new ArrayList();
 
     public ATC_Trail(String id, Color nc) {
         this.id = id;
         c = nc;
     }
 
-    public void pushTrail(Point p) {
+    public void pushTrail(Point3D p) {
         if (size() == TRAILSIZE) {
             trail.remove(0);
         }
@@ -461,7 +462,7 @@ class ATC_Trail {
         return trail.size();
     }
 
-    public Point getPoint(int i) {
+    public Point3D getPoint(int i) {
         return trail.get(size() - 1 - i);
     }
 }

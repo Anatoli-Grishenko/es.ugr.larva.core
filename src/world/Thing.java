@@ -5,8 +5,8 @@
  */
 package world;
 
-import geometry.Entity;
-import geometry.Point;
+import geometry.Entity3D;
+import geometry.Point3D;
 import map2D.Map2DColor;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
  *
  * @author lcv
  */
-public class Thing extends Entity {
+public class Thing extends Entity3D {
 
     public static enum PROPERTY {
         POSITION, PRESENCE, ORIENTATION, SURFACE, TEMPERATURE, REPORT, ENERGY, STATUS, PAYLOAD, CARGO, ONTARGET,
@@ -79,8 +79,8 @@ public class Thing extends Entity {
     }
               
     
-    public Thing placeAtSurface(Point p) {
-        this.setPosition(new Point(p.getX(), p.getY(), this.getWorld().getEnvironment().getSurface().getStepLevel(p.getX(), p.getY())));
+    public Thing placeAtSurface(Point3D p) {
+        this.setPosition(new Point3D(p.getX(), p.getY(), this.getWorld().getEnvironment().getSurface().getStepLevel(p.getX(), p.getY())));
         return this;
     }
 
@@ -101,7 +101,7 @@ public class Thing extends Entity {
         return _sensors.size();
     }
 
-//    public JsonObject oldgiveVisible(PROPERTY property, Point target) {
+//    public JsonObject oldgiveVisible(PROPERTY property, Point3D target) {
 //        JsonObject res = new JsonObject();
 //        JsonArray valuelist = new JsonArray();
 //        if (property == PROPERTY.POSITION) {

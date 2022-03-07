@@ -43,16 +43,16 @@ import tools.emojis;
  */
 public abstract class OleApplication extends OleFrame {
 
-    OleBitmapPane osDiagram;
-    OleDrawPane opDiagram;
-    JPanel pMain, pStatus, pToolBar;
-    JProgressBar pbMain;
-    JLabel lMain, lProgress;
-    OleFrame ofProgress;
-    JTextArea jtaProgress;
-    boolean debug;
-    HashMap<String, Component> dicComponents;
-    ArrayList<String> listComponents;
+    protected OleScrollPane osDiagram;
+    protected OleDrawPane opDiagram;
+    protected JPanel pMain, pStatus, pToolBar;
+    protected JProgressBar pbMain;
+    protected JLabel lMain, lProgress;
+    protected OleFrame ofProgress;
+    protected JTextArea jtaProgress;
+    protected boolean debug;
+    protected HashMap<String, Component> dicComponents;
+    protected ArrayList<String> listComponents;
 
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
@@ -81,8 +81,6 @@ public abstract class OleApplication extends OleFrame {
 
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
-//        pMain.setBackground(Color.WHITE);
-//        pMain.setBorder(new EmptyBorder(0, 0, 0, 0));
         mainPane.add(pMain, BorderLayout.CENTER);
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
             mainPane.add(new OleToolBar(this, oConfig), BorderLayout.PAGE_START);
@@ -90,9 +88,6 @@ public abstract class OleApplication extends OleFrame {
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();
             pStatus.setLayout(new FlowLayout(FlowLayout.LEFT));
-//            pStatus.setBackground(Color.GRAY);
-//            pStatus.setBorder(new EmptyBorder(0, 0, 0, 0));
-//            addLabel(pStatus, "Ready", Color.BLACK);
             addLabel(pStatus, "Ready");
             mainPane.add(pStatus, BorderLayout.PAGE_END);
         }
@@ -111,7 +106,7 @@ public abstract class OleApplication extends OleFrame {
 //        opDiagram.setBackground(Color.LIGHT_GRAY);
 //        opDiagram.setForeground(Color.WHITE);
 
-        osDiagram = new OleBitmapPane(opDiagram);
+        osDiagram = new OleScrollPane(opDiagram);
 
 //        osDiagram.setBorder(new EmptyBorder(0, 0, 0, 0));
         osDiagram.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -123,7 +118,7 @@ public abstract class OleApplication extends OleFrame {
         return this;
     }
 
-    public OleBitmapPane getScollPane() {
+    public OleScrollPane getScollPane() {
         return osDiagram;
     }
 

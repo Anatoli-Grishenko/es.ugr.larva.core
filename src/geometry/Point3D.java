@@ -14,7 +14,7 @@ import data.Ole.oletype;
  *
  * @author lcv
  */
-public class Point {
+public class Point3D {
 
     public static final double _pNULL = 0;
     static final int NDIGITS = 4;
@@ -23,30 +23,30 @@ public class Point {
     private double _coord[];
     private int _dim;
 
-    public Point() {
+    public Point3D() {
         clear();
         _dim = 0;
     }
 
-    public Point(double x, double y, double z) {
+    public Point3D(double x, double y, double z) {
         clear();
         _dim = 3;
         setX(x).setY(y).setZ(z);
     }
 
-    public Point(double x, double y) {
+    public Point3D(double x, double y) {
         clear();
         _dim = 2;
         setX(x).setY(y);
     }
 
-    public Point(double x) {
+    public Point3D(double x) {
         clear();
         _dim = 1;
         setX(x);
     }
 
-    public Point(String spoint) {
+    public Point3D(String spoint) {
         clear();
         String parts[]=spoint.split(",");
         _dim = parts.length;
@@ -72,7 +72,7 @@ public class Point {
         }
     }
 
-    public Point(Ole o) {
+    public Point3D(Ole o) {
         if (o.getType().equals(oletype.OLEPOINT.name())) {
             clear();
             _dim = o.getInt("dim");
@@ -82,21 +82,21 @@ public class Point {
         }
         
     }
-//    public Point fromOle(Ole o) {
+//    public Point3D fromOle(Ole o) {
 //        if (o.getType().equals(ole.POINT.name())) {
 //            switch() {
 //                case 3:
-//                    return new Point(o.getDouble("X"),o.getDouble("Y"), o.getDouble("Z"));
+//                    return new Point3D(o.getDouble("X"),o.getDouble("Y"), o.getDouble("Z"));
 //                case 2:
-//                    return new Point(o.getDouble("X"),o.getDouble("Y"));
+//                    return new Point3D(o.getDouble("X"),o.getDouble("Y"));
 //                default:
-//                    return new Point(o.getDouble("X"));
+//                    return new Point3D(o.getDouble("X"));
 //
 //            }
 //        } else
-//            return new Point(0);
+//            return new Point3D(0);
 //    }
-////    public Point(int dimension) {
+////    public Point3D(int dimension) {
 //        _dim=dimension;
 //        clear();
 //    }
@@ -104,7 +104,7 @@ public class Point {
         return _coord[0];
     }
 
-    public Point setX(double x) {
+    public Point3D setX(double x) {
         _coord[0] = x;
         return this;
     }
@@ -113,7 +113,7 @@ public class Point {
         return _coord[1];
     }
 
-    public Point setY(double y) {
+    public Point3D setY(double y) {
         _coord[1] = y;
         return this;
     }
@@ -122,7 +122,7 @@ public class Point {
         return _coord[2];
     }
 
-    public Point setZ(double z) {
+    public Point3D setZ(double z) {
         _coord[2] = z;
         return this;
     }
@@ -131,12 +131,12 @@ public class Point {
         return _dim;
     }
 
-    public Point clear() {
+    public Point3D clear() {
         _coord = new double[]{_pNULL, _pNULL, _pNULL};
         return this;
     }
 
-    public Point define(String key) {
+    public Point3D define(String key) {
         _dim = (key.length() - 1) / (NDIGITS + 1);
         int ini, end;
         switch (_dim) {
@@ -159,30 +159,30 @@ public class Point {
         return this;
     }
 
-    private Point define(double x, double y, double z) {
+    private Point3D define(double x, double y, double z) {
         clear();
         _dim = 3;
         return this.setX(x).setY(y).setZ(z);
     }
 
-    private Point define(double x, double y) {
+    private Point3D define(double x, double y) {
         clear();
         _dim = 2;
         return this.setX(x).setY(y);
     }
 
-    private Point define(double x) {
+    private Point3D define(double x) {
         clear();
         _dim = 1;
         return this.setX(x);
     }
 
-    public double fastDistanceXYTo(Point p) {
+    public double fastDistanceXYTo(Point3D p) {
         return this.realDistanceTo(p.to2D());
 //        return this.approx_distance2(p.to2D());
     }
 
-    public double realDistanceTo(Point p) {
+    public double realDistanceTo(Point3D p) {
         double res = 0;
         int mdim = (int) Math.min(_dim, p.getDimension());
         if (mdim == 1) {
@@ -200,23 +200,23 @@ public class Point {
         return Math.sqrt(res);
     }
 
-    public Point getOrigin() {
-        Point res;
+    public Point3D getOrigin() {
+        Point3D res;
         switch (_dim) {
             case 3:
-                res = new Point(0, 0, 0);
+                res = new Point3D(0, 0, 0);
                 break;
             case 2:
-                res = new Point(0, 0);
+                res = new Point3D(0, 0);
                 break;
             default:
-                res = new Point(0);
+                res = new Point3D(0);
                 break;
         }
         return res;
     }
 
-    public boolean isEqualTo(Point p) {
+    public boolean isEqualTo(Point3D p) {
         boolean res = true;
         if (_dim != p.getDimension()) {
             return false;
@@ -233,7 +233,7 @@ public class Point {
         return res;
     }
 
-    public boolean isProjection(Point p) {
+    public boolean isProjection(Point3D p) {
         boolean res = true;
         switch ((int) Math.min(_dim, p.getDimension())) {
             case 3:
@@ -247,7 +247,7 @@ public class Point {
         return res;
     }
 
-    public Point plus(Point p) {
+    public Point3D plus(Point3D p) {
         switch ((int) Math.min(_dim, p.getDimension())) {
             case 3:
                 setZ(getZ() + p.getZ());
@@ -260,11 +260,11 @@ public class Point {
         return this;
     }
 
-    public Point plus(Vector v) {
+    public Point3D plus(Vector3D v) {
         return plus(v.canonical().getTarget());
     }
 
-    public Point invert() {
+    public Point3D invert() {
         switch (_dim) {
             case 3:
                 setZ(-getZ());
@@ -277,11 +277,11 @@ public class Point {
         return this;
     }
 
-    public Point minus(Point p) {
+    public Point3D minus(Point3D p) {
         return this.plus(p.clone().invert());
     }
 
-    public Point times(Point p) {
+    public Point3D times(Point3D p) {
         switch ((int) Math.min(_dim, p.getDimension())) {
             case 3:
                 setZ(getZ() * p.getZ());
@@ -294,7 +294,7 @@ public class Point {
         return this;
     }
 
-    public Point scalar(double s) {
+    public Point3D scalar(double s) {
         switch (_dim) {
             case 3:
                 setZ(s * getZ());
@@ -354,32 +354,32 @@ public class Point {
     }
 
     
-    public Point fromJson(JsonArray jspa) {
+    public Point3D fromJson(JsonArray jspa) {
         if (jspa.size() == 3) {
-            return new Point(jspa.get(0).asDouble(),jspa.get(1).asDouble(),jspa.get(1).asDouble());
+            return new Point3D(jspa.get(0).asDouble(),jspa.get(1).asDouble(),jspa.get(1).asDouble());
         } else if (jspa.size() == 2) {
-            return new Point(jspa.get(0).asDouble(),jspa.get(1).asDouble());
+            return new Point3D(jspa.get(0).asDouble(),jspa.get(1).asDouble());
         } else {
-            return new Point(jspa.get(0).asDouble());            
+            return new Point3D(jspa.get(0).asDouble());            
         }
     }
 
 
-    public Point to3D() {
-        return new Point(getX(), getY(), getZ());
+    public Point3D to3D() {
+        return new Point3D(getX(), getY(), getZ());
     }
 
-    public Point to2D() {
-        return new Point(getX(), getY());
+    public Point3D to2D() {
+        return new Point3D(getX(), getY());
     }
 
-    public Point to1D() {
-        return new Point(getX());
+    public Point3D to1D() {
+        return new Point3D(getX());
     }
 
     @Override
-    public Point clone() {
-        Point res = new Point(getX(), getY(), getZ());
+    public Point3D clone() {
+        Point3D res = new Point3D(getX(), getY(), getZ());
         res._dim = _dim;
         return res;
     }
@@ -407,7 +407,7 @@ public class Point {
         return ((approx + 512) >> 10);
     }
 
-    private double approx_distance2(Point other) {
+    private double approx_distance2(Point3D other) {
         double x = other.getX() - getX(), y = other.getY() - getY(), z = other.getZ() - getZ();
         double res = 0, root2 = 1.4142, root3 = 1.7320, factor2, max, min;
 

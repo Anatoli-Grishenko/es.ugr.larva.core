@@ -5,8 +5,8 @@
  */
 package world;
 
-import geometry.Point;
-import geometry.Vector;
+import geometry.Point3D;
+import geometry.Vector3D;
 import geometry.Compass;
 import map2D.Map2DGrayscale;
 import ontology.Ontology;
@@ -111,8 +111,8 @@ public class World {
         return this.name;
     }
 
-    public Point placeAtMap(String where, ArrayList<Double> pos) {
-        Point res = new Point(0, 0, 0);
+    public Point3D placeAtMap(String where, ArrayList<Double> pos) {
+        Point3D res = new Point3D(0, 0, 0);
         int width = this.getEnvironment().getSurface().getWidth(),
                 height = this.getEnvironment().getSurface().getHeight();
         switch (where) {
@@ -166,7 +166,7 @@ public class World {
             res.setZ(this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()));
             return res;
         } else {
-            return new Point(0, 0, this.getEnvironment().getSurface().getStepLevel(0, 0));
+            return new Point3D(0, 0, this.getEnvironment().getSurface().getStepLevel(0, 0));
         }
 
     }
@@ -186,14 +186,14 @@ public class World {
                 }
                 oaux = cfg.getOle("world");
                 Thing e = setEnvironment(oaux.getField(name)).getEnvironment();
-                e.setPosition(new Point(0, 0, 0));
+                e.setPosition(new Point3D(0, 0, 0));
                 e.setOrientation(Compass.NORTH);
                 Map2DColor terrain = new Map2DColor(10, 10, 0);
                 setSurfaceName("./LARVA/worlds/" + oaux.getField("surface"));
                 spalette = oaux.getField("palette");
                 terrain.loadMapNormalize(getSurfaceName());
                 e.setSurface(terrain);
-                e.setSize(new Point(this._environment._surface.getWidth(),
+                e.setSize(new Point3D(this._environment._surface.getWidth(),
                         this._environment._surface.getHeight(), 0));
 
                 for (Ole othing : new ArrayList<Ole>(oaux.getArray("things"))) {
@@ -207,7 +207,7 @@ public class World {
                     this.addThing(e, props);
                     ArrayList<Double> auxp = othing.getArray("surface-location");
                     String where = (othing.getField("origin").equals("")) ? "choice" : othing.getField("origin");
-                    Point eposition = this.placeAtMap(where, auxp);
+                    Point3D eposition = this.placeAtMap(where, auxp);
                     e.setPosition(eposition);
 //                    if (auxp.get(0) < 0 || auxp.get(1) < 0) {
 //                        int rx, ry;
@@ -216,14 +216,14 @@ public class World {
 //                            rx = (int) (Math.random() * terrain.getWidth());
 //                            ry = (int) (Math.random() * terrain.getHeight());
 //                            for (Thing myt : this._population.values()) {
-//                                if (!myt.getName().equals(this.getName()) && myt.getType().equals("PEOPLE") && myt.getPosition().to2D().fastDistanceXYTo(new Point(rx, ry)) < 5) {
+//                                if (!myt.getName().equals(this.getName()) && myt.getType().equals("PEOPLE") && myt.getPosition().to2D().fastDistanceXYTo(new Point3D(rx, ry)) < 5) {
 //                                    valid = false;
 //                                }
 //                            }
 //                        } while (!valid);
-//                        e.placeAtSurface(new Point(rx, ry));
+//                        e.placeAtSurface(new Point3D(rx, ry));
 //                    } else {
-//                        e.placeAtSurface(new Point(auxp.get(0), auxp.get(1), 0));
+//                        e.placeAtSurface(new Point3D(auxp.get(0), auxp.get(1), 0));
 //                    }
                 }
             } catch (Exception ex) {
@@ -251,7 +251,7 @@ public class World {
     public World setEnvironment(String name) {
         _environment = addThing(name, "ENVIRONMENT",
                 new PROPERTY[]{PROPERTY.SURFACE, PROPERTY.POSITION, PROPERTY.ORIENTATION});
-        _environment.setSize(new Point(1, 1, 0));
+        _environment.setSize(new Point3D(1, 1, 0));
         _environment.setOrientation(Compass.NORTH);
         return this;
     }
@@ -268,7 +268,7 @@ public class World {
             }
         }
         if (i.getSize() == null) {
-            i.setSize(new Point(1, 1, 0));
+            i.setSize(new Point3D(1, 1, 0));
         }
         _population.put(i.getId(), i);
         for (int ch = 0; ch < visible.length; ch++) {
@@ -358,7 +358,8 @@ public class World {
         }
         // Sometimes only the closest Thing is detected
         if (p.getSelection() == SELECTION.CLOSEST && detectable.size() > 1) {
-            Point mypos = p.getOwner().getPosition(), yourpos;
+            Point3D mypos = p.getOwner().getPosition();
+            Point3D yourpos;
             double shortest = Double.MAX_VALUE, distance;
             Thing best = null, ti;
             for (int i = 0; i < detectable.size(); i++) {
@@ -385,13 +386,15 @@ public class World {
         OPERATION operation = p.getOperation();
         ATTACH attachment = p.getAttachment();
         ArrayList<Thing> detectable = getDetectableList(p);
-        Point point, pini, pend;
-        Vector vectororientation;
+        Point3D point;
+        Point3D pini, pend;
+        Vector3D vectororientation;
         point = who.getPosition();
 
         vectororientation = who.getVector();
         int range = p.getRange(), orientation = who.getOrientation();
-        Point prange, observable;
+        Point3D prange;
+        Point3D observable;
         double x1, y1, x2, y2, incrx;
         if (range == 1) { // single rangle
             x1 = point.getX();
@@ -410,11 +413,11 @@ public class World {
                 // For every position xy check all the potentially detected objects
                 for (Thing t : detectable) {
                     // Start reading properties
-                    observable = new Point(sx, sy, this.getEnvironment().getSurface().getStepLevel(sx, sy));
+                    observable = new Point3D(sx, sy, this.getEnvironment().getSurface().getStepLevel(sx, sy));
 //                    if (property == PROPERTY.SURFACE || property==PROPERTY.PRESENCE) {
-//                        observable = new Point(sx, sy, t.getSurface().getStepLevel(sx, sy));
+//                        observable = new Point3D(sx, sy, t.getSurface().getStepLevel(sx, sy));
 //                    } else {
-//                        observable = new Point(sx, sy);
+//                        observable = new Point3D(sx, sy);
 //                    }
                     if (observable.fastDistanceXYTo(t.getPosition()) <= p.getSensitivity()) {
                         if (operation == OPERATION.QUERY) {
@@ -469,7 +472,7 @@ public class World {
                                 } else if (attachment == ATTACH.FRONTAL) {
                                     partialres = new JsonObject().add("value", vectororientation.angleXYTo(t.getPosition()));
                                 } else {
-                                    partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector(observable, t.getPosition())));
+                                    partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector3D(observable, t.getPosition())));
                                 }
                             }
                             if (property == PROPERTY.ORIENTATION) {
@@ -530,14 +533,14 @@ public class World {
                     } else {
                         rowreading.add(xyreading);
                     }
-                    //coordinates.add(new JsonObject().add("xy", new Point(sx, sy).toJson()));
+                    //coordinates.add(new JsonObject().add("xy", new Point3D(sx, sy).toJson()));
                 }
             }
             if (rowreading.size() == 1) {
                 allreadings.add(rowreading.get(0));
             } else {
                 allreadings.add(rowreading);
-                coordinates.add(new Point(Math.round(x1), Math.round(sy)).toJson());
+                coordinates.add(new Point3D(Math.round(x1), Math.round(sy)).toJson());
             }
             x1 += incrx;
         }
@@ -612,8 +615,8 @@ public class World {
 //        OPERATION operation = p.getOperation();
 //        ATTACH attachment = p.getAttachment();
 //        ArrayList<Thing> detectable = getDetectableList(p);
-//        Point point, pini, pend;
-//        Vector orientation;
+//        Point3D point, pini, pend;
+//        Vector3D orientation;
 //        point = who.getPosition();
 //        orientation = who.getVector();
 //        int range = p.getRange();
@@ -622,15 +625,15 @@ public class World {
 //            x1 = x2 = point.getX();
 //            y1 = y2 = point.getY();
 //        } else {        // multiple range
-//            Vector vp1, vp1p2;
+//            Vector3D vp1, vp1p2;
 //            if (p.getAttachment() == ATTACH.FRONTAL) {
-//                vp1 = Compass.VECTOR[Entity.rotateLeft(Entity.rotateLeft(who.getOrientation()))].clone().scalar(range / 2);
-//                vp1p2 = Compass.VECTOR[Entity.rotateRight(who.getOrientation())].clone().scalar(range - 1);
+//                vp1 = Compass.VECTOR[Entity3D.rotateLeft(Entity3D.rotateLeft(who.getOrientation()))].clone().scalar(range / 2);
+//                vp1p2 = Compass.VECTOR[Entity3D.rotateRight(who.getOrientation())].clone().scalar(range - 1);
 //            } else if (p.getAttachment() == ATTACH.LEFT) {
 //                vp1 = Compass.VECTOR[who.getOrientation()].clone().scalar(range / 2);
-//                vp1p2 = Compass.VECTOR[Entity.rotateLeft(Entity.rotateLeft(Entity.rotateLeft(who.getOrientation())))].clone().scalar(range - 1);
+//                vp1p2 = Compass.VECTOR[Entity3D.rotateLeft(Entity3D.rotateLeft(Entity3D.rotateLeft(who.getOrientation())))].clone().scalar(range - 1);
 //            } else if (p.getAttachment() == ATTACH.RIGHT) {
-//                vp1 = Compass.VECTOR[Entity.Opposite(who.getOrientation())].clone().scalar(range / 2);
+//                vp1 = Compass.VECTOR[Entity3D.Opposite(who.getOrientation())].clone().scalar(range / 2);
 //                vp1p2 = Compass.VECTOR[who.getOrientation()].clone().scalar(range - 1);
 //            } else { //if (p.getAttachment() == ATTACH.ZENITAL) {
 //                vp1 = Compass.VECTOR[Compass.NORTHWEST].clone().scalar(range / 2);
@@ -645,7 +648,7 @@ public class World {
 //        }
 //        for (double sy = y1; sy <= y2; sy++) {
 //            for (double sx = x1; sx <= x2; sx++) {
-//                Point observable = new Point(sx, sy);
+//                Point3D observable = new Point3D(sx, sy);
 //                xyreading = new JsonArray();
 //                for (Thing t : detectable) {
 //                    if (observable.fastDistanceTo(t.getPosition()) < p.getSensitivity()) {
@@ -689,7 +692,7 @@ public class World {
 //                                } else if (attachment == ATTACH.FRONTAL) {
 //                                    partialres = new JsonObject().add("value", orientation.angleXYTo(t.getPosition()));
 //                                } else {
-//                                    partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector(observable, t.getPosition())));
+//                                    partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector3D(observable, t.getPosition())));
 //                                }
 //                            }
 //                            if (property == PROPERTY.ORIENTATION) {
@@ -714,7 +717,7 @@ public class World {
 //        if (p.getRange() == 1) {
 //            return res.add("sensor", p.getName()).add("data", allreadings);
 //        } else {
-//            return res.add("sensor", p.getName()).add("data", allreadings).add("range_from", new Point(x1, y1).toJson()).add("range_to", new Point(x2, y2).toJson());
+//            return res.add("sensor", p.getName()).add("data", allreadings).add("range_from", new Point3D(x1, y1).toJson()).add("range_to", new Point3D(x2, y2).toJson());
 //        }
 //    }
 //    // Handling rotations

@@ -9,8 +9,8 @@ package swing;
 import com.eclipsesource.json.JsonArray;
 import data.Ole;
 import data.OleFile;
-import geometry.Point;
-import geometry.Vector;
+import geometry.Point3D;
+import geometry.Vector3D;
 import glossary.sensors;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
@@ -1639,9 +1639,9 @@ public class LARVADash {
 
     }
 
-    public double getDistance(Point p) {
+    public double getDistance(Point3D p) {
         if (lastPerception.isReady()) {
-            Point me = new Point(getGPS()[0], getGPS()[1]);
+            Point3D me = new Point3D(getGPS()[0], getGPS()[1]);
             return me.fastDistanceXYTo(p.to2D());
         }
         return -1;
@@ -1655,7 +1655,7 @@ public class LARVADash {
         return -1;
     }
 
-    public double getAngular(Point p) {
+    public double getAngular(Point3D p) {
         if (lastPerception.isReady()) {
             return lastPerception.getAngular(p);
         }
