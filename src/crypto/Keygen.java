@@ -91,15 +91,15 @@ public class Keygen {
         scanonical = "";
     }
 
-    public Keygen() {
+    private Keygen() {
         initCode(ALPHANUMATOMS);
     }
 
-    public Keygen(String input) {
+    private Keygen(String input) {
         initCode(input);
     }
 
-    public Keygen rotateLeft(int n) {
+    private Keygen rotateLeft(int n) {
         String c;
 
         for (int i = 0; i < n; i++) {
@@ -109,7 +109,7 @@ public class Keygen {
         return this;
     }
 
-    public Keygen rotateRight(int n) {
+    private Keygen rotateRight(int n) {
         String c;
 
         for (int i = 0; i < n; i++) {
@@ -120,14 +120,14 @@ public class Keygen {
         return this;
     }
 
-    public Keygen lock() {
+    private Keygen lock() {
         if (scanonical.equals("")) {
             scanonical = canonical.toString();
         }
         return this;
     }
 
-    public Keygen unlock() {
+    private Keygen unlock() {
         if (!scanonical.equals("")) {
             canonical = new BigInteger(scanonical);
             scanonical = "";
@@ -135,7 +135,7 @@ public class Keygen {
         return this;
     }
 
-    public Keygen setOffset(boolean o) {
+    private Keygen setOffset(boolean o) {
         offset = o;
         return this;
     }
@@ -146,7 +146,7 @@ public class Keygen {
      * @param word
      * @return
      */
-    public boolean belongs(String word) {
+    private boolean belongs(String word) {
         for (char cs : word.toCharArray()) {
             if (inputCode.indexOf(cs) < 0) {
                 return false;
@@ -161,7 +161,7 @@ public class Keygen {
      * @param w
      * @return
      */
-    public Keygen encode(String w) throws Exception {
+    private Keygen encode(String w) throws Exception {
         int koffset = 0;
         if (offset) {
             koffset = (int) (Math.random() * (KOFF - 1)) + 1;
@@ -187,7 +187,7 @@ public class Keygen {
     // 20730738123215545446067099070324852
     //3073812321554544606709907032485227
 
-    public String decode() {
+    private String decode() {
         int koffset;
         boolean exit = false;
         String res = "";
@@ -209,12 +209,12 @@ public class Keygen {
         return res;
     }
 
-    public Keygen recode(Keygen other) {
+    private Keygen recode(Keygen other) {
         canonical = other.getCanonical();
         return this;
     }
 
-    public BigInteger getCanonical() {
+    private BigInteger getCanonical() {
         return canonical;
     }
 

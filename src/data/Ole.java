@@ -267,7 +267,7 @@ public class Ole extends JsonObject {
     @Override
     public String toString(WriterConfig wcon) {
         if (this.isEncrypted()) {
-            return myCryptor.enCrypt(super.toString(wcon));
+            return myCryptor.enCrypt64(super.toString(wcon));
         } else {
             return super.toString(wcon);
         }
@@ -278,7 +278,7 @@ public class Ole extends JsonObject {
         return toString(WriterConfig.MINIMAL);
     }
 
-    public Ole parse(String s) {
+    public  Ole parse(String s) {
         try {
             JsonObject jsole;
             String definit;
@@ -496,6 +496,10 @@ public class Ole extends JsonObject {
     public Ole offEncryption() {
         myCryptor = null;
         return this;
+    }
+    
+    public Cryptor getCryptor() {
+        return this.myCryptor;
     }
 
     ////////////////////// File I/O

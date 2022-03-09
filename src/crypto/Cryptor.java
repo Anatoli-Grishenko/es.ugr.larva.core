@@ -18,9 +18,16 @@ import javax.crypto.spec.SecretKeySpec;
 public class Cryptor {
    protected String  _cryptoKey,
         _charset="ISO-8859-1";
-    protected final String _atoms="abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String _atoms="abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            _defaultKey="DBACryptoKey";
+    
 
 
+   public Cryptor() {
+       setCryptoKey(Cryptor._defaultKey);
+   }
+
+    
     /**
      * @brief Basic constructor
      * @param k The key to be used (must be 16 chars)
@@ -78,7 +85,7 @@ public class Cryptor {
         return deCryptAES(text);
     }
 
-    public String enCryptAES(String text) {
+    private String enCryptAES(String text) {
        String res= "";
         Key aesKey;
         Cipher cipher;
@@ -94,7 +101,7 @@ public class Cryptor {
         return res;
     }
 
-    public String deCryptAES(String text) {
+    private String deCryptAES(String text) {
         String res= "";
         Key aesKey;
         Cipher cipher;
