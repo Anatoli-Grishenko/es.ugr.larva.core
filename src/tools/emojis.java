@@ -82,6 +82,9 @@ public class emojis {
             FONT="🅰️",
             DPI=" 📐",
             GEAR = "⚙️",
+            EJECT="⏏️",
+            PLUG="🔌",
+            ID = "👤",
             MYSELFF = "👦",
             MYGROUP = "👨‍👩‍👧‍👦",
             MYCLASS = emojis.SPEAKER,
@@ -95,6 +98,8 @@ public class emojis {
             CANCEL="🚫",
             REQUEST="👉",
             LINEUP="🏁",
+            ACTIVATE="▶️",
+            DEACTIVATE="⏹️",            
             JOIN="👏";
     public static final String AGENT = PASSPORT,
             DEAD = REDCIRCLE,

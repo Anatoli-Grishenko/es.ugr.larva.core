@@ -42,7 +42,7 @@ import tools.emojis;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public abstract class OleApplication extends OleFrame {
-
+    public static Color DodgerBlue=new Color(30,144,255), Maroon=new Color(128,0,0);
     protected OleScrollPane osDiagram;
     protected OleDrawPane opDiagram;
     protected JPanel pMain, pStatus, pToolBar;
@@ -132,15 +132,29 @@ public abstract class OleApplication extends OleFrame {
 
     public abstract void Draw(Graphics2D g);
 
-    protected void addLabel(Container con, String s) {
+    
+    public void addLabel(Container con, String s) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         con.add(l);
     }
 
-    protected void addLabel(Container con, String s, Color col) {
+    public void addLabel(Container con, String s, Color col) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         l.setForeground(col);
         con.add(l);
+    }
+
+    public void addStatus(String s) {
+        JLabel l = new JLabel(s, SwingConstants.LEFT);
+        pStatus.add(l);
+            pStatus.validate();
+    }
+
+    public void addStatus(String s, Color col) {
+        JLabel l = new JLabel(s, SwingConstants.LEFT);
+        l.setForeground(col);
+        pStatus.add(l);
+            pStatus.validate();
     }
 
     public LayoutManager defLayout(Container c) {
