@@ -35,6 +35,7 @@ import messaging.SequenceDiagram;
 import swing.LARVACompactDash;
 import swing.LARVADash;
 import swing.LARVADash.Layout;
+import swing.OleApplication;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -71,7 +72,7 @@ import swing.LARVADash.Layout;
 public class LARVAFirstAgent extends LARVABaseAgent {
 
     // JFrame from launcher
-    protected LARVAFrame myFrame;
+    protected OleApplication myApp;
     protected JPanel myPane, myMap;
     protected JScrollPane myScrPane;
     protected JTextArea myText;
@@ -105,37 +106,24 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         addRunStep("MILES01");
         this.logger.setEcho(true);
         // create a new frame to store text field and button
-        if (this.getArguments() != null && this.getArguments().length > 1) {
-            doSwingWait(() -> {
-                myText = (JTextArea) this.getArguments()[2];
-                myScrPane = (JScrollPane) this.getArguments()[1];
-                myFrame = (LARVAFrame) this.getArguments()[0];
-            });
-            doSwingLater(() -> {
-                myFrame.show();
-                this.refreshGUI();
-            });
-        }
-        if (new File("./config/config.json").exists()) {
-            Info("Found a configuration file");
-            oleConfig = new OleConfig();
-            if (oleConfig.loadFile("./config/config.json").isEmpty()) {
-                oleConfig = null;
-            } else {
-//                problemName = new OleSet(oleConfig.getOle("LARVA").getOle("Problem")).getItem(0);
-                problemName = (String) oleConfig.getTab("LARVA").getField("Problem");
-                Ole record = oleConfig.getOle("Jade");
-                logger.setEcho(!record.getBoolean("Silent execution"));
-                if (record.getBoolean("Save log")) {
-                    String logfile = record.getField("Log file");
-                    if (logfile.length() == 0) {
-                        logfile = "./auditLog.json";
+        if (this.getArguments() != null && this.getArguments().length > 0) {
+            BootPayload payload = (BootPayload) this.getArguments()[0];
+            myText = payload.getJtaLog();
+            myApp = payload.getParent();
+            if (payload.getOlecfg() != null) {
+                oleConfig = payload.getOlecfg();
+                if (oleConfig.getTab("LARVA") != null) {
+                    problemName = (String) oleConfig.getTab("LARVA").getField("Problem");
+                }
+                if (oleConfig.getTab("Log activity") != null) {
+                    logger.setEcho(!oleConfig.getTab("Log activity").getBoolean("Silent", false));
+                    if (oleConfig.getTab("Log activity").getBoolean("Save log", false)) {
+                        String logfile = oleConfig.getTab("Log activity").getString("File log", "./default.log");
+                        logger.setLoggerFileName(logfile);
                     }
-                    logger.setLoggerFileName(logfile);
                 }
             }
         }
-//        myDashboard = new LARVACompactDash(this);
     }
 
     /**
@@ -144,7 +132,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      * @return true when SWING is active, false otherwise
      */
     protected boolean isSwing() {
-        return this.myFrame != null;
+        return this.myApp != null;
     }
 
     /**
@@ -202,10 +190,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         if (isSwing()) {
             myText.append(logger.getLastlog());
             myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-            refreshGUI();
-            JOptionPane.showMessageDialog(null,
-                    logger.getLastlog(), "Agent " + getLocalName(),
-                    JOptionPane.ERROR_MESSAGE);
+            myApp.Error(message);
         }
     }
 
@@ -224,7 +209,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         if (isSwing() && logger.isEcho()) {
             myText.append(logger.getLastlog());
             myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-            refreshGUI();
         }
     }
 
@@ -573,7 +557,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     @Override
     protected String inputLine(String message) {
         if (isSwing()) {
-            String res = JOptionPane.showInputDialog(null, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE);
+            String res = myApp.inputLine(message);
             return res;
         } else {
             return super.inputLine(message);
@@ -591,17 +575,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      */
     protected String inputSelect(String message, String[] options, String value) {
         if (isSwing()) {
-            String res = (String) JOptionPane.showInputDialog(null, message, "Agent " + getLocalName(), JOptionPane.QUESTION_MESSAGE, null, options, value);
+            String res = myApp.inputSelect(message, options, value);
             return res;
         } else {
             return super.inputLine(message);
         }
-    }
-
-    protected void refreshGUI() {
-        doSwingLater(() -> {
-            myFrame.repaint();
-        });
     }
 
     protected void doSwingLater(Runnable what) {

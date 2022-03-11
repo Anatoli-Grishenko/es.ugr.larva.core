@@ -6,6 +6,8 @@
 package agents;
 
 import data.OleConfig;
+import data.OlePassport;
+import javax.swing.JTextArea;
 import swing.OleApplication;
 
 /**
@@ -17,6 +19,8 @@ public class BootPayload {
 
     OleApplication parent;
     OleConfig olecfg;
+    OlePassport oPassport;
+    JTextArea jtaLog;
 
     public BootPayload(OleApplication parent, OleConfig olecfg) {
         this.parent = parent;
@@ -40,6 +44,22 @@ public class BootPayload {
 
     public void setOlecfg(OleConfig olecfg) {
         this.olecfg = olecfg;
+    }
+
+    public OlePassport getoPassport() {
+        return oPassport;
+    }
+
+    public void setoPassport(OlePassport oPassport) {
+        this.oPassport = oPassport;
+    }
+
+    public JTextArea getJtaLog() {
+        return jtaLog;
+    }
+
+    public void setJtaLog(JTextArea jtaLog) {
+        this.jtaLog = jtaLog;
     }
 
 }

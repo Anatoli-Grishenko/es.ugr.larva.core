@@ -13,6 +13,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Insets;
@@ -42,13 +43,15 @@ import tools.emojis;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public abstract class OleApplication extends OleFrame {
-    public static Color DodgerBlue=new Color(30,144,255), Maroon=new Color(128,0,0);
+
+    public static Color DodgerBlue = new Color(30, 144, 255), Maroon = new Color(128, 0, 0);
     protected OleScrollPane osDiagram;
     protected OleDrawPane opDiagram;
     protected JPanel pMain, pStatus, pToolBar;
     protected JProgressBar pbMain;
     protected JLabel lMain, lProgress;
     protected OleFrame ofProgress;
+    protected OleToolBar otbToolBar;
     protected JTextArea jtaProgress;
     protected boolean debug;
     protected HashMap<String, Component> dicComponents;
@@ -83,7 +86,8 @@ public abstract class OleApplication extends OleFrame {
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         mainPane.add(pMain, BorderLayout.CENTER);
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
-            mainPane.add(new OleToolBar(this, oConfig), BorderLayout.PAGE_START);
+            otbToolBar = new OleToolBar(this, oConfig);
+            mainPane.add(otbToolBar, BorderLayout.PAGE_START);
         }
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();
@@ -101,14 +105,8 @@ public abstract class OleApplication extends OleFrame {
             }
         };
 
-//        opDiagram.setBorder(new EmptyBorder(0, 0, 0, 0));
         opDiagram.setPreferredSize(getMainPanel().getPreferredSize());
-//        opDiagram.setBackground(Color.LIGHT_GRAY);
-//        opDiagram.setForeground(Color.WHITE);
-
         osDiagram = new OleScrollPane(opDiagram);
-
-//        osDiagram.setBorder(new EmptyBorder(0, 0, 0, 0));
         osDiagram.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         osDiagram.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
@@ -130,9 +128,11 @@ public abstract class OleApplication extends OleFrame {
         return this.pMain;
     }
 
+    public OleToolBar getToolBar(){
+        return this.otbToolBar;
+    }
     public abstract void Draw(Graphics2D g);
 
-    
     public void addLabel(Container con, String s) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         con.add(l);
@@ -147,14 +147,19 @@ public abstract class OleApplication extends OleFrame {
     public void addStatus(String s) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         pStatus.add(l);
-            pStatus.validate();
+        pStatus.validate();
     }
 
     public void addStatus(String s, Color col) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         l.setForeground(col);
+        if (s.length()<4) {
+            Font f = l.getFont();
+            f = f.deriveFont(Font.BOLD);
+            l.setFont(f);
+        }
         pStatus.add(l);
-            pStatus.validate();
+        pStatus.validate();
     }
 
     public LayoutManager defLayout(Container c) {
@@ -217,9 +222,6 @@ public abstract class OleApplication extends OleFrame {
             addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.INFO, Color.BLUE);
             addLabel(pStatus, " " + message);
-//            addLabel(pStatus, "   ", Color.BLACK);
-//            addLabel(pStatus, emojis.INFO, Color.BLUE);
-//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -230,9 +232,6 @@ public abstract class OleApplication extends OleFrame {
             addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.WARNING, Color.ORANGE);
             addLabel(pStatus, " " + message);
-//            addLabel(pStatus, "   ", Color.BLACK);
-//            addLabel(pStatus, emojis.WARNING, Color.ORANGE);
-//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -243,9 +242,6 @@ public abstract class OleApplication extends OleFrame {
             addLabel(pStatus, "   ");
             addLabel(pStatus, emojis.ERROR, Color.RED);
             addLabel(pStatus, " " + message);
-//            addLabel(pStatus, "   ", Color.BLACK);
-//            addLabel(pStatus, emojis.ERROR, Color.RED);
-//            addLabel(pStatus, " " + message, Color.BLACK);
             pStatus.validate();
         }
     }
@@ -316,9 +312,7 @@ public abstract class OleApplication extends OleFrame {
             pbMain.setSize(new Dimension((int) (pStatus.getPreferredSize().getWidth() / 2), (int) (pStatus.getPreferredSize().getHeight() * 3 / 4)));
             pbMain.setValue(value);
             lMain = new JLabel(what);
-//            lMain.setForeground(Color.BLACK);
             lProgress = new JLabel("Starting");
-//            lProgress.setForeground(Color.BLACK);
             pStatus.add(lMain);
             pStatus.add(pbMain);
             pStatus.add(lProgress);
@@ -341,7 +335,6 @@ public abstract class OleApplication extends OleFrame {
 
             if (value <= pbMain.getMaximum()) {
                 pbMain.setValue(value);
-//        pStatus.validate();
                 if (debug) {
                     debug = Confirm("Continue " + what);
                 }

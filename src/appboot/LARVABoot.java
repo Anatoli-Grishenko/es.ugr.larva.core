@@ -3,7 +3,7 @@
  */
 package appboot;
 
-import com.formdev.flatlaf.FlatDarkLaf;
+import agents.BootPayload;
 import data.Ole;
 import data.OleConfig;
 import data.OlePassport;
@@ -14,22 +14,18 @@ import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.ScrollPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -37,16 +33,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
 import swing.LARVAFrame;
 import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleDialog;
-import swing.OleDrawPane;
-import swing.OleScrollPane;
-import swing.SwingTools;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
@@ -86,12 +76,7 @@ public class LARVABoot {
         Start, Shutdown, Configure
     };
 
-    protected LARVAFrame fMain;
     protected JScrollPane pScroll;
-    protected String title;
-    protected JPanel pControl;
-    protected JPanel pMain;
-    protected JButton bStart, bExit, bConfig;
 
     protected OleApplication appMain;
     OleConfig app;
@@ -105,7 +90,7 @@ public class LARVABoot {
     protected String sResult;
     protected boolean bResult;
     protected String sMessages;
-    protected Semaphore sShutdown, sStart, doSwing, doJade;
+    protected Semaphore sShutdown, doSwing, doJade;
     protected OleConfig oleConfig;
     private String markdowns = "*_`#~";
 
@@ -134,7 +119,6 @@ public class LARVABoot {
         _achieved = new ArrayList<>();
         _args = new Component[0];
         sShutdown = new Semaphore(0);
-        sStart = new Semaphore(0);
         doSwing = new Semaphore(1);
         doJade = new Semaphore(1);
         initGUI();
@@ -166,12 +150,14 @@ public class LARVABoot {
         pTiles = new JPanel();
         pTiles.setPreferredSize(new Dimension(100, 100));
         pTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
-//        pTiles.setLayout(new BoxLayout(pTiles,BoxLayout.Y_AXIS));
         psTiles = new JScrollPane(pTiles);
         psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         taMessages = new JTextArea();
         taMessages.setEditable(false);
         taMessages.setWrapStyleWord(true);
+        Font f = appMain.getFont();
+        f = new Font(Font.MONOSPACED, Font.PLAIN, f.getSize());
+        taMessages.setFont(f);
         pScroll = new JScrollPane(taMessages);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
@@ -198,7 +184,6 @@ public class LARVABoot {
     void appListener(ActionEvent e) {
 //        System.out.println("Listener  waiting");
         try {
-            Thread.sleep(1000);
             this.doJade.acquire(1);
         } catch (Exception ex) {
 
@@ -214,7 +199,6 @@ public class LARVABoot {
         }
         if (e.getActionCommand().equals("Connect")) {
             this.Boot();
-            showStatus();
         }
         if (e.getActionCommand().equals("Options")) {
             OleDialog oOptions = new OleDialog(appMain, "Boot options");
@@ -263,87 +247,6 @@ public class LARVABoot {
             appMain.addStatus(emojis.ID, OleApplication.Maroon);
             appMain.addStatus(" No passport yet");
         }
-//        String status=emojis.PLUG;
-//        if (_connected) {
-//            status += " "+oleConfig.getTab("Connection").getString("Hostname", "");
-//            status += "("+oleConfig.getTab("Connection").getInt("Port", -1)+")";
-//        } else {
-//            status +=" NO CONNECTION";
-//        }
-//        status += "     "+emojis.ID;
-//        if (oPassport != null && !oPassport.isEmpty()) {
-//            status += " "+oPassport.getName();
-//        } else {
-//            status += " NO PASSPORT";
-//        }
-//        appMain.showStatus(status);
-    }
-
-    //    protected void initGUI() {
-    //        try {
-    //            UIManager.setLookAndFeel(new FlatDarkLaf());
-    //        } catch (Exception ex) {
-    //            System.err.println("Failed to initialize LaF");
-    //        }
-    //
-    //        fMain = new LARVAFrame(e -> this.jadebootListener(e));
-    //        pMain = new JPanel();
-    //        BoxLayout pHBox = new BoxLayout(pMain, BoxLayout.Y_AXIS);
-    //        pMain.setLayout(pHBox);
-    //        pMain.setBorder(new EmptyBorder(new Insets(4, 4, 4, 4)));
-    //
-    //        taMessages = new JTextArea(100, 100);
-    //        taMessages.setEditable(false);
-    //        taMessages.setWrapStyleWord(true);
-    //
-    //        pControl = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    //        pControl.setPreferredSize(new Dimension(width, 32));
-    //        bExit = new JButton(Buttons.Shutdown.name());
-    //        bExit.addActionListener(fMain);
-    //        bStart = new JButton(Buttons.Start.name());
-    //        bStart.addActionListener(fMain);
-    //        bConfig = new JButton(Buttons.Configure.name());
-    //        bConfig.addActionListener(fMain);
-    //        if (this.oleConfig != null) {
-    //            pControl.add(bConfig);
-    //            pControl.add(bStart);
-    //            sStart.drainPermits();
-    //        } else {
-    //            sStart.release();
-    //        }
-    //        pControl.add(bExit);
-    //        taMessages = new JTextArea(100, 100);
-    //        taMessages.setEditable(false);
-    //        taMessages.setWrapStyleWord(true);
-    //        pScroll = new JScrollPane(taMessages);
-    //        pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-    //        pScroll.setPreferredSize(new Dimension(width, height - pScroll.getHeight()));
-    //        pMain.add(pScroll);
-    //        pMain.add(pControl);
-    //        fMain.add(pMain);
-    //        fMain.setSize(width, height);
-    //        fMain.setVisible(true);
-    //        fMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    //        fMain.show();
-    ////        Settings=new OleDialog("Configuration");
-    //    }
-    protected void refreshGUI() {
-//        title = "LARVA Launcher";
-//        if (!_achieved.contains("ARGUMENTS")) {
-//            title = emojis.BLACKCIRCLE + " " + (int) (_progress * 100) + "% " + title + " processing arguments";
-//        } else if (!_achieved.contains("CONFIGURE")) {
-//            title = emojis.BLACKCIRCLE + " " + (int) (_progress * 100) + "% " + title + " loading configuration";
-//        } else if (!_connected) {
-//            title = emojis.BLACKCIRCLE + " " + (int) (_progress * 100) + "% " + title + " Connecting to JADE";
-//        } else {
-//            title = emojis.WHITECIRCLE + " " + title + "[" + this._platformType + "] " + this._host + ":" + this._port;
-//        }
-//        fMain.setTitle(title);
-//
-////        fMain.revalidate();
-//        fMain.repaint();
-////        taMessages.revalidate();
-////        taMessages.repaint();
     }
 
     /**
@@ -372,20 +275,20 @@ public class LARVABoot {
         if (oleConfig == null) {
             this.Abort("Sorry, method Boot() without argumentes requires a configuration fle");
         }
-//        try {
-//            sStart.acquire();
-//        } catch (InterruptedException ex) {
-//        }
         appMain.showProgress("Booting Jade", 0, 10);
-        return this.selectConnection();
-//        return this.selectConnection(oleConfig.getTab("Connection").getField("Hostname"),
-//                oleConfig.getTab("Conection").getInt("Port"));
+        this.selectConnection();
+        showStatus();
+        if (_connected) {
+            appMain.getToolBar().getButton("Passport").setEnabled(false);
+            appMain.getToolBar().getButton("Connect").setEnabled(false);
+            appMain.getToolBar().getButton("Options").setEnabled(false);
+        }
+        return this;
     }
 
     protected LARVABoot doCompleted(String task) {
         if (_tasks.contains(task) && !isCompleted(task)) {
             _achieved.add(task);
-            Progress();
         }
         return this;
     }
@@ -484,7 +387,6 @@ public class LARVABoot {
             }
 //            _runtime.setCloseVM(true);
             _connected = true;
-            this.refreshGUI();
             Info("Connected to Jade");
             appMain.showProgress("Connected to JADE");
         } catch (Exception ex) {
@@ -590,24 +492,6 @@ public class LARVABoot {
         return this;
     }
 
-//    public LARVABoot checkAgent(String name) {
-//        AgentController agc;
-//        try {
-//            if (isMicroBoot()) {
-//                agc = MicroRuntime.getAgent(name);
-//            } else {
-//                agc = _firstContainer.getAgent(name);
-//            }
-//        } catch (Exception ex) {
-//            appMain.Info("Agent " + name + " has died");
-//            stopAgent(name);
-////            _controllers.remove(name);
-////            this._runningAgents.remove(name);
-////            _tiles.get(name).doDeactivate();
-//        }
-//        return this;
-//    }
-
     /**
      * Given a class c which inherits, either directly or not, from JADE Agent
      * it opens a container (the same for all launched agents) and launch the
@@ -620,7 +504,7 @@ public class LARVABoot {
     synchronized public LARVABoot launchAgent(String name, Class c) {
         /// Issue #2 https://github.com/Anatoli-Grishenko/es.ugr.larva.core/issues/2
         name = this.clearMarkDowns(name);
-        Info("Launching agent " + name+" "+c.getName());
+        Info("Launching agent " + name + " " + c.getName());
         if (!isCompleted("CONNECT")) {
             Boot();
         }
@@ -628,15 +512,19 @@ public class LARVABoot {
             loadAgent(name, c);
         }
         AgentController ag;
-        _args = new Object[3];
-        _args[0] = appMain;
-        _args[1] = this.pScroll;
-        _args[2] = this.taMessages;
+        BootPayload payload = new BootPayload();
+        payload.setJtaLog(taMessages);
+        payload.setOlecfg(oleConfig);
+        payload.setParent(appMain);
+        payload.setoPassport(oPassport);
+        _args = new Object[1];
+        _args[0] = payload;
         if (isMicroBoot()) {
             try {
                 MicroRuntime.startAgent(name, c.getName(), _args);
                 ag = MicroRuntime.getAgent(name);
                 _controllers.put(name, ag);
+                _runningAgents.add(name);
                 _tiles.get(name).doActivate();
                 showStatus();
             } catch (Exception ex) {
@@ -648,6 +536,7 @@ public class LARVABoot {
                 ag = _firstContainer.createNewAgent(name, c.getName(), _args);
                 ag.start();
                 _controllers.put(name, ag);
+                _runningAgents.add(name);
                 _tiles.get(name).doActivate();
                 showStatus();
             } catch (Exception e) {
@@ -660,84 +549,24 @@ public class LARVABoot {
         return this;
     }
 
-    protected LARVABoot Progress() {
-        _progress = _achieved.size() * 1.0 / _tasks.size();
-        refreshGUI();
-        return this;
-    }
-
     protected void Info(String s) {
         logger.logMessage(s);
         taMessages.append(logger.getLastlog()); //logger.getLastlog());
-        refreshGUI();
-        if (_debug) {
-            Alert(s);
-        }
+        taMessages.setCaretPosition(Math.max(taMessages.getText().lastIndexOf("\n"), 0));
     }
 
     protected void Error(String s) {
         logger.logError(s);
-//        taMessages.append(logger.getLastlog()); //logger.getLastlog());
+        taMessages.append(logger.getLastlog()); //logger.getLastlog());
         appMain.Error(s);
-        refreshGUI();
     }
 
     protected void Exception(Exception ex) {
         logger.logException(ex);
-//        taMessages.append(logger.getLastlog());
-        refreshGUI();
+        taMessages.append(logger.getLastlog());
     }
 
-    /**
-     * This method waits until all launched agents are dead.
-     *
-     * @return The own instance
-     */
-//    public LARVABoot WaitToClose() {
-//        while (!isEmpty() && !isShutDown()) {
-//            for (String name : _runningAgents) {
-//                checkAgent(name);
-//            }
-//            try {
-//                Thread.sleep(1000);
-//            } catch (Exception e) {
-//            }
-//        }
-//        return this;
-//    }
-//    public LARVABoot WaitToClose() {
-//        boolean somealive;
-//        String alive;
-//        Info("Waiting for agents to close");
-//        do {
-//            alive = "";
-//            somealive = false;
-//            for (String sname : _runningAgents) {
-//                String name = "" + sname;
-//                try {
-//                    if (isMicroBoot()) {
-//                        somealive = MicroRuntime.size() > 0;
-//                    } else {
-//                        _firstContainer.getAgent(name);
-//                        somealive = true;
-//                    }
-//                    alive += name + ". ";
-//                } catch (Exception ex) {
-//                    _controllers.remove(name);
-////                    _runningAgents.remove(name);
-//                }
-//            }
-//            if (somealive) {
-//                try {
-//                    Thread.sleep(2500);
-//                } catch (Exception e) {
-//                }
-//            }
-//        } while (somealive && !this.sShutdown.tryAcquire());
-//        return this;
-//    }
-
-    public void waitToClose() {
+    public void WaitToShutDown() {
         boolean exit = false;
         do {
 //            System.out.println("Manager waiting");
@@ -750,7 +579,6 @@ public class LARVABoot {
             String name;
             while (!_launchingAgents.isEmpty()) {
                 name = _launchingAgents.get(0);
-                _runningAgents.add(name);
                 _launchingAgents.remove(0);
                 launchAgent(name, _tiles.get(name).getMyClass());
             }
@@ -796,27 +624,6 @@ public class LARVABoot {
     }
 
     /**
-     * It immediately kills all agents which could have been running in the
-     * predefined container without waiting for them to exit properly
-     *
-     * @return The own instance
-     */
-//    protected LARVABoot Close() {
-//        // Kill all agents
-//        try {
-//            this.sShutdown.acquire();
-//        } catch (Exception ex) {
-//        };
-//        Info("Killing all remaining agents");
-//        this._achieved.remove("LAUNCH");
-//        AgentController agc;
-//        for (String name : _runningAgents) {
-//            stopAgent(name);
-//        }
-//        return this;
-//    }
-
-    /**
      * The container of the agent is killed and the application exits
      *
      * @return The own instance
@@ -824,30 +631,16 @@ public class LARVABoot {
     public LARVABoot ShutDown() {
         Info("Shutting down");
         Info("Turning off JadeBoot");
-        if (!this._quickshutdown) {
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-            }
-        }
+//        if (!this._quickshutdown) {
+//            try {
+//                Thread.sleep(5000);
+//            } catch (Exception e) {
+//            }
+//        }
         turnOff(_firstContainer);
         appMain.dispose();
         return this;
     }
-
-    /**
-     * It kills all agents which could have been running in the predefined
-     * container. Once all agents have been terminated, the container is killed
-     * and the application exits
-     *
-     * @return The own instance
-     */
-//    public LARVABoot WaitToShutDown() {
-//        this._quickshutdown = false; //true;
-//        Close();
-//        ShutDown();
-//        return this;
-//    }
 
     protected void turnOff(ContainerController container) {
         Info("Shutting down container " + _containerName);
@@ -858,54 +651,11 @@ public class LARVABoot {
                 try {
                     container.kill();
                 } catch (Exception ex) {
-//                Exception(ex);
                 }
             }
         } catch (Exception ex) {
-//                Exception(ex);
         }
         Info("Container " + _containerName + " shut down");
-    }
-
-    protected void jadebootListener(ActionEvent e) {
-//        if (e.getActionCommand().equals(Buttons.Shutdown.name())) {
-//            if (Confirm("Kill all agents and exit?")) {
-//                this.sShutdown.release();
-//            }
-//        }
-//        if (e.getActionCommand().equals(Buttons.Start.name())) {
-//            sStart.release();
-//            this.bConfig.setEnabled(false);
-//            this.bStart.setEnabled(false);
-//        }
-//        if (e.getActionCommand().equals(Buttons.Configure.name())) {
-//            Settings = new OleDialog(this.fMain, "Settings");
-//            if (Settings.run(oleConfig)) {
-//                oleConfig.saveAsFile("./config/", "config.json", true);
-//            }
-//
-//        }
-    }
-
-    public void Alert(String message) {
-        JOptionPane.showMessageDialog(this.fMain,
-                message, "LARVA Boot", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    public String inputLine(String message) {
-        sResult = JOptionPane.showInputDialog(this.fMain, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE);
-        return sResult;
-    }
-
-    public String inputSelect(String message, String[] options, String value) {
-        String res = (String) JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE, null, options, value);
-        return res;
-    }
-
-    public boolean Confirm(String message) {
-        bResult = JOptionPane.showConfirmDialog(this.fMain,
-                message, "LARVA Boot", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-        return bResult;
     }
 
     protected boolean isJade() {
@@ -960,10 +710,6 @@ public class LARVABoot {
                 && !getExtIPAddress().equals(getLocalIPAddress());
     }
 
-    public JFrame getMyFrame() {
-        return fMain;
-    }
-
     public JScrollPane getMyPane() {
         return pScroll;
     }
@@ -978,6 +724,22 @@ public class LARVABoot {
 
     protected void setDebug(boolean _debug) {
         this._debug = _debug;
+    }
+
+    public void Alert(String message) {
+        appMain.Warning(message);
+    }
+
+    public String inputLine(String message) {
+        return appMain.inputLine(message);
+    }
+
+    public String inputSelect(String message, String[] options, String value) {
+        return appMain.inputSelect(message, options, value);
+    }
+
+    public boolean Confirm(String message) {
+        return appMain.Confirm(message);
     }
 
     protected String clearMarkDowns(String original) {

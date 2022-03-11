@@ -6,6 +6,7 @@
 package swing;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.LayoutManager;
@@ -59,7 +60,7 @@ public class OleAgentTile extends JPanel{
         if (myStatus==Status.OFF){
             mybOn.setEnabled(true);
             mybOff.setEnabled(false);
-            mylLabel.setForeground(OleApplication.Maroon);
+            mylLabel.setForeground(Color.BLACK);
         } else {
             mybOn.setEnabled(false);
             mybOff.setEnabled(true);

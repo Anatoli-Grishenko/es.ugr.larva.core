@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -27,7 +28,6 @@ public class OleToolBar extends JPanel {
 
     OleFrame parent;
     HashMap<String, Component> dicComponents;
-    ArrayList<String> listComponents;
 
     public OleToolBar(OleApplication oapp, OleConfig olecfg) {
         super();
@@ -35,7 +35,6 @@ public class OleToolBar extends JPanel {
 //        setBorder(new EmptyBorder(0, 0, 0, 0));
 //        setBackground(Color.DARK_GRAY);
         dicComponents = new HashMap();
-        listComponents = new ArrayList();
         Ole oTool = olecfg.getTab("ToolBar"), ocontent;
         OleButton obAux;
         String content;
@@ -56,8 +55,16 @@ public class OleToolBar extends JPanel {
             obAux = new OleButton(stool, content, oapp);
             obAux.addActionListener(oapp);
             this.add(obAux);
+            dicComponents.put(stool, obAux);
         }
-
+    }
+    
+    public List<String> getButtonList() {
+        return (List<String>) dicComponents.keySet();
+    }
+    
+    public OleButton getButton(String name) {
+        return (OleButton) dicComponents.get(name);
     }
 
 }
