@@ -5,6 +5,7 @@
  */
 package swing;
 
+import agents.AgentReport;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -28,31 +29,37 @@ public class OleAgentTile extends JPanel{
     final int width=150,height=10;
     OleApplication myParent;
     Status myStatus;
-    String myName;
-    Class myClass;
     JButton mybOn, mybOff;
     JLabel mylLabel, mylLabel2;
+    AgentReport myReport;
     
-    public OleAgentTile(OleApplication parent, String name, Class c) {
+    public OleAgentTile(OleApplication parent, AgentReport report) {
         super();
         this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
         this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED) );
         myStatus=Status.OFF;
-        myName = name;
         myParent=parent;
-        myClass=c;
+        myReport = report;
         mylLabel = new JLabel("---");
-        mylLabel2 = new JLabel("<html><i>"+c.getSimpleName()+"</i></html>");
+        mylLabel2 = new JLabel("<html><i>"+myReport.getClassName()+"</i></html>");
         mybOn = new JButton(emojis.ACTIVATE);
-        mybOn.setActionCommand("Activate "+myName);
+        mybOn.setActionCommand("Activate "+myReport.getAgentName());
         mybOn.addActionListener(parent);
         mybOff = new JButton(emojis.DEACTIVATE);
-        mybOff.setActionCommand("Deactivate "+myName);
+        mybOff.setActionCommand("Deactivate "+myReport.getAgentName());
         mybOff.addActionListener(parent);
         this.add(mylLabel);
         this.add(mylLabel2);
         this.add(mybOn);
         this.add(mybOff);
+    }
+
+    public AgentReport getMyReport() {
+        return myReport;
+    }
+
+    public void setMyReport(AgentReport myReport) {
+        this.myReport = myReport;
     }
     
     public void showSummary() {
@@ -66,7 +73,7 @@ public class OleAgentTile extends JPanel{
             mybOff.setEnabled(true);
             mylLabel.setForeground(OleApplication.DodgerBlue);
         }
-        mylLabel.setText(emojis.BLACKCIRCLE+" "+myName);
+        mylLabel.setText(emojis.BLACKCIRCLE+" "+myReport.getAgentName());
         this.validate();
     }
    
@@ -81,19 +88,11 @@ public class OleAgentTile extends JPanel{
     }
 
     public String getMyName() {
-        return myName;
-    }
-
-    public void setMyName(String myName) {
-        this.myName = myName;
+        return myReport.getAgentName();
     }
 
     public Class getMyClass() {
-        return myClass;
-    }
-
-    public void setMyClass(Class myClass) {
-        this.myClass = myClass;
+        return myReport.getAgentClass();
     }
     
 }

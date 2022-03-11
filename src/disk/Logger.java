@@ -276,9 +276,9 @@ public class Logger {
             }
         } catch (Exception Ex) {
             _lastlog = s.substring(0, 10) + "\n";
-            if (_echo) {
-                _outTo.printf(_lastlog);
-            }
+//            if (_echo) {
+//                _outTo.printf(_lastlog);
+//            }
 
         }
     }

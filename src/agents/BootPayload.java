@@ -20,7 +20,8 @@ public class BootPayload {
     OleApplication parent;
     OleConfig olecfg;
     OlePassport oPassport;
-    JTextArea jtaLog;
+    JTextArea jtaLog;    
+    AgentReport myReport;
 
     public BootPayload(OleApplication parent, OleConfig olecfg) {
         this.parent = parent;
@@ -60,6 +61,14 @@ public class BootPayload {
 
     public void setJtaLog(JTextArea jtaLog) {
         this.jtaLog = jtaLog;
+    }
+
+    public AgentReport getMyReport() {
+        return myReport;
+    }
+
+    public void setMyReport(AgentReport myReport) {
+        this.myReport = myReport;
     }
 
 }

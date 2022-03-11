@@ -91,9 +91,6 @@ public class LARVABaseAgent extends Agent {
      * Geeneral variables for messaging
      */
     protected ACLMessage inbox, outbox;
-
-
-
     /**
      * To store the personal passport
      */
@@ -102,8 +99,9 @@ public class LARVABaseAgent extends Agent {
     /**
      * Counter of cycles of the method Execute()
      */
-    protected int ncycles;
+    protected long ncycles;
 
+  
     /**
      * Main constructor
      */
@@ -143,6 +141,13 @@ public class LARVABaseAgent extends Agent {
 
     }
 
+    public void preExecute() { }
+
+    public void postExecute() { }
+
+    public void doExit() {
+        exit= true;
+    }
     //
     // DF+
     //
@@ -441,9 +446,11 @@ public class LARVABaseAgent extends Agent {
         defaultBehaviour = new Behaviour() {
             @Override
             public void action() {
+                preExecute();
                 Execute();
+                postExecute();
                 ncycles++;
-                if (exit) {
+                if (isExit()) {
                     doDelete();
                 }
             }
@@ -471,7 +478,7 @@ public class LARVABaseAgent extends Agent {
      * It gives the number of consecutive executions of the method Execute()
      * @return The number of iterations of the agent
      */
-    public int getNCycles() {
+    public long getNCycles() {
         return ncycles;
     }
 

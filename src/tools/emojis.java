@@ -155,5 +155,15 @@ public class emojis {
         res += showProgress(total, done);
         return res;
     }
-
+    public String doProgress(int value, int max) {
+        String res = "";
+        for (int i = 0; i < max; i++) {
+            if (i < value) {
+                res += emojis.BLACKSQUARE;
+            } else {
+                res += emojis.WHITESQUARE;
+            }
+        }
+        return res;
+    }
 }

@@ -91,7 +91,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleSet stepsDone, stepsSent;
     protected boolean traceRunSteps;
     protected OleConfig oleConfig;
-
+    protected AgentReport myReport;
+    BootPayload payload;
+    
     /**
      * Main JADE setup
      */
@@ -107,7 +109,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         this.logger.setEcho(true);
         // create a new frame to store text field and button
         if (this.getArguments() != null && this.getArguments().length > 0) {
-            BootPayload payload = (BootPayload) this.getArguments()[0];
+            payload = (BootPayload) this.getArguments()[0];
             myText = payload.getJtaLog();
             myApp = payload.getParent();
             if (payload.getOlecfg() != null) {
@@ -122,6 +124,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                         logger.setLoggerFileName(logfile);
                     }
                 }
+            }
+            if (payload.getMyReport() != null) {
+                myReport = payload.getMyReport();
+            }else {
+                myReport = new AgentReport(getName(),this.getClass(),100);
             }
         }
     }
@@ -368,6 +375,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
         this.send(msg);
         Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
+        myReport.setOutBox(myReport.getOutBox()+1);
         sd.addSequence(msg);
     }
 
@@ -398,6 +406,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
         sd.addSequence(res);
         this.checkReceivedMessage(res);
+        myReport.setInBox(myReport.getInBox()+1);
         return res;
     }
 

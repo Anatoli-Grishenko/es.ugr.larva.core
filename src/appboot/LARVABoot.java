@@ -3,6 +3,7 @@
  */
 package appboot;
 
+import agents.AgentReport;
 import agents.BootPayload;
 import data.Ole;
 import data.OleConfig;
@@ -465,8 +466,9 @@ public class LARVABoot {
         return this;
     }
 
-    public LARVABoot loadAgent(String name, Class c) {
-        OleAgentTile otAux = new OleAgentTile(appMain, name, c);
+    public LARVABoot loadAgent(String name, Class c) {        
+        OleAgentTile otAux = new OleAgentTile(appMain, 
+                new AgentReport(name, c, 100));
         pTiles.add(otAux);
         otAux.showSummary();
         pTiles.validate();
