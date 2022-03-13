@@ -22,36 +22,41 @@ import javax.swing.JPanel;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleFoldable extends JPanel implements ActionListener {
+public class OleFoldablePane extends JPanel implements ActionListener {
 
     OleButton obControl;
     JLabel jlHeader;
-    JPanel jpContent;
+    OleFoldableList jpContent;
     boolean folded;
     String fold = "-", unfold = "+";
 
-    public OleFoldable(Component parent, JLabel header) {
+    public OleFoldablePane(Component parent, JLabel header) {
         super();
         jlHeader = header;
         obControl = new OleButton(this, "fold", unfold);
         obControl.setFlat();
-        jpContent = new JPanel();
+        jpContent = new OleFoldableList(this, new Dimension(100,100));
         this.setLayout(new GridBagLayout());
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         GridBagConstraints gc = new GridBagConstraints();
         gc.gridx = 0;
         gc.gridy = 0;
         gc.anchor = GridBagConstraints.WEST;
+        gc.weightx=0.9;
         this.add(jlHeader, gc);
         gc.gridx++;
         gc.anchor = GridBagConstraints.EAST;
         obControl.hideButton();
+        gc.weightx=0.1;
         this.add(obControl, gc);
         gc.gridx = 0;
         gc.gridy++;
-        gc.anchor = GridBagConstraints.WEST;
+        gc.weightx=1;
+        gc.fill=GridBagConstraints.HORIZONTAL;
+//        gc.anchor = GridBagConstraints.WEST;
         this.add(jpContent, gc);
-        fold();
+        doDeactivate();
+        doFold();
         this.validate();
         this.addMouseListener(new MouseListener() {
             @Override
@@ -69,42 +74,61 @@ public class OleFoldable extends JPanel implements ActionListener {
             @Override
             public void mouseEntered(MouseEvent e) {
                 obControl.unHideButton();
+             doActivate();
 //                obControl.setVisible(true);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 obControl.hideButton();
+                doDeactivate();
 //                obControl.setVisible(false);
             }
         });
 
     }
 
-    public JPanel getFoldabelPane() {
+    public OleFoldableList getFoldablePane() {
         return this.jpContent;
     }
+    public void setFoldablePane(OleFoldableList p) {
+        jpContent=p;
+        jpContent.validate();
+    }
+    
+    public JLabel getHeader() {
+        return this.jlHeader;
+    }
 
-    public void fold() {
+    public void doFold() {
         folded = true;
         obControl.setText(unfold);
         obControl.setActionCommand("unfold");
+        obControl.hideButton();
         jpContent.setVisible(false);
     }
 
-    public void unfold() {
+    public void doUnfold() {
         folded = false;
         obControl.setText(fold);
         obControl.setActionCommand("fold");
-        jpContent.setVisible(true);
+        obControl.hideButton();
+        jpContent.setVisible(true);        
     }
 
+    public void doActivate() {
+        this.setBorder(BorderFactory.createLineBorder(OleApplication.DodgerBlue));
+    }
+    
+    public void doDeactivate() {
+        this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().equals("fold")) {
-            fold();
+            doFold();
         } else if (e.getActionCommand().equals("unfold")) {
-            unfold();
+            doUnfold();
         }
     }
 

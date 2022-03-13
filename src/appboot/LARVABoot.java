@@ -150,7 +150,7 @@ public class LARVABoot {
         appMain.getMainPanel().setLayout(new BorderLayout());
         pTiles = new JPanel();
         pTiles.setPreferredSize(new Dimension(100, 100));
-        pTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
+        pTiles.setLayout(new BorderLayout());
         psTiles = new JScrollPane(pTiles);
         psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         taMessages = new JTextArea();
@@ -469,7 +469,8 @@ public class LARVABoot {
     public LARVABoot loadAgent(String name, Class c) {        
         OleAgentTile otAux = new OleAgentTile(appMain, 
                 new AgentReport(name, c, 100));
-        pTiles.add(otAux);
+//        otAux.setPreferredSize(pTiles.getPreferredSize());
+        pTiles.add(otAux, BorderLayout.LINE_END);
         otAux.showSummary();
         pTiles.validate();
         _tiles.put(name, otAux);
