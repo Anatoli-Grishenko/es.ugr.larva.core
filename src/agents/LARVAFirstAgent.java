@@ -93,7 +93,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     BootPayload payload;
-    
+
     /**
      * Main JADE setup
      */
@@ -127,10 +127,15 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
             if (payload.getMyReport() != null) {
                 myReport = payload.getMyReport();
-            }else {
-                myReport = new AgentReport(getName(),this.getClass(),100);
+            } else {
+                myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
+    }
+
+    @Override
+    public void postExecute() {
+        myReport.tick();
     }
 
     /**
@@ -375,7 +380,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
         this.send(msg);
         Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
-        myReport.setOutBox(myReport.getOutBox()+1);
+        myReport.setOutBox(myReport.getOutBox() + 1);
         sd.addSequence(msg);
     }
 
@@ -406,7 +411,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
         sd.addSequence(res);
         this.checkReceivedMessage(res);
-        myReport.setInBox(myReport.getInBox()+1);
+        myReport.setInBox(myReport.getInBox() + 1);
         return res;
     }
 

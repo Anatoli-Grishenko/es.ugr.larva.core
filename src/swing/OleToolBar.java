@@ -32,28 +32,50 @@ public class OleToolBar extends JPanel {
     public OleToolBar(OleApplication oapp, OleConfig olecfg) {
         super();
         setLayout(new FlowLayout(FlowLayout.LEFT));
-//        setBorder(new EmptyBorder(0, 0, 0, 0));
-//        setBackground(Color.DARK_GRAY);
         dicComponents = new HashMap();
         Ole oTool = olecfg.getTab("ToolBar"), ocontent;
         OleButton obAux;
-        String content;
+        String content, style, type;
+        if (olecfg.getOptions().getOle("ToolBar").isEmpty()) {
+            style="flat";
+            type="text";
+        } else {
+            style=olecfg.getProperties().getOle("ToolBar").getString("style","flat");
+            type=olecfg.getProperties().getOle("ToolBar").getString("type","text");
+        }
         oTool.getFieldList();
         for (String stool : oTool.getFieldList()) {
             ocontent = oTool.getOle(stool);
             content = "";
-            if (!ocontent.getString("button","").equals("")) {
-                try {
-                    content = (String) emojis.class.getField(ocontent.getField("button")).get(content);
-                    content = content.trim();
-                } catch (Exception ex) {
-                    content = "X";
-                }
-            }else if (!ocontent.getString("text","").equals("")) {
-                content = ocontent.getField("text");
+//            if (!ocontent.getString("button","").equals("")) {
+//                try {
+//                    content = (String) emojis.class.getField(ocontent.getField("button")).get(content);
+//                    content = content.trim();
+//                } catch (Exception ex) {
+//                    content = "X";
+//                }
+//            }else if (!ocontent.getString("text","").equals("")) {
+//                content = ocontent.getField("text");
+//            }
+            content = ocontent.getField("text");
+            obAux = new OleButton(oapp, stool, content);
+            switch(style) {
+                case "regular":
+                    obAux.setRegular();
+                    break;
+                case "flat":
+                default:
+                    obAux.setFlat();
+                    break;
             }
-            obAux = new OleButton(stool, content, oapp);
-            obAux.addActionListener(oapp);
+            if (type.equals("emoji")) {
+                try{
+                obAux.setText((String) emojis.class.getField(ocontent.getField("text")).get(content));
+                obAux.setEmoji();
+                } catch (Exception ex) {
+                }
+                obAux.setEmoji();
+            }
             this.add(obAux);
             dicComponents.put(stool, obAux);
         }

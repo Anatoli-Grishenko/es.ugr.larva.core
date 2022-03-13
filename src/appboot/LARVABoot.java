@@ -519,6 +519,7 @@ public class LARVABoot {
         payload.setOlecfg(oleConfig);
         payload.setParent(appMain);
         payload.setoPassport(oPassport);
+        payload.setMyReport(_tiles.get(name).getMyReport());
         _args = new Object[1];
         _args[0] = payload;
         if (isMicroBoot()) {
@@ -593,6 +594,8 @@ public class LARVABoot {
                     } else {
                         agc = _firstContainer.getAgent(s);
                     }
+//                    System.out.println(s+"**"+_tiles.get(s).getMyReport().getLastCycle());
+                    _tiles.get(s).updateReport();
                 } catch (Exception ex) {
                     Info("Agent " + s + " has died");
                     _tiles.get(s).doDeactivate();
@@ -621,7 +624,7 @@ public class LARVABoot {
 
             }
         } while (!exit);
-        System.out.println("Manager exiting");
+//        System.out.println("Manager exiting");
         ShutDown();
     }
 

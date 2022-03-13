@@ -73,6 +73,12 @@ public class TimeHandler {
         
         return res.getSeconds();
     }
+    
+    public long elapsedTimeMilisecs(TimeHandler other) {
+        Duration res = Duration.between(_theTime, other._theTime);
+        
+        return res.getNano()/1000000;
+    }
 
     public long elapsedTimeSecs() {
         Duration res = Duration.between(_baseTime._theTime, _theTime);

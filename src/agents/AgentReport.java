@@ -35,9 +35,18 @@ public class AgentReport {
         this.agentClass = c;
         this.className = c.getSimpleName();
         this.bufferSize = bufferSize;
+        timeStamp= new TimeHandler();
+        inBoxes = new ArrayList();
+        outBoxes = new ArrayList();
+        lastCycles = new ArrayList();
         latency = 10000;
     }
 
+    public void clearData() {
+        setLastCycle(0);
+        setInBox(0);
+        setOutBox(0);
+    }
     public void pushData(ArrayList<Integer> buffer, int data) {
         if (buffer.size() == getBufferSize()) {
             buffer.remove(0);
@@ -46,14 +55,13 @@ public class AgentReport {
     }
 
     public void tick() {
-        TimeHandler now = new TimeHandler();
-        setLastCycle((int) timeStamp.elapsedTimeSecs(now));
-        setTimeStamp(now);
+        TimeHandler now = new TimeHandler();      
         pushData(inBoxes, inBox);
         pushData(outBoxes, outBox);
         pushData(lastCycles, lastCycle);
-        setInBox(0);
-        setOutBox(0);
+        setLastCycle((int) Math.abs(timeStamp.elapsedTimeMilisecs(now))+getLastCycle());
+        setTimeStamp(now);
+        System.out.println("\n"+agentName+"-|-"+this.getLastCycle()+" "+getInBox()+"-"+getOutBox());
 
     }
 
