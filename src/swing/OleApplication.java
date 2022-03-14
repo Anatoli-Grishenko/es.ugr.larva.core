@@ -47,7 +47,7 @@ public abstract class OleApplication extends OleFrame {
     public static Color DodgerBlue = new Color(30, 144, 255), Maroon = new Color(128, 0, 0);
     protected OleScrollPane osDiagram;
     protected OleDrawPane opDiagram;
-    protected JPanel pMain, pStatus, pToolBar;
+    protected JPanel pMain, pStatus, pToolBar, pHeader;
     protected JProgressBar pbMain;
     protected JLabel lMain, lProgress;
     protected OleFrame ofProgress;
@@ -78,16 +78,24 @@ public abstract class OleApplication extends OleFrame {
         if (oConfig.getOptions().getFieldList().contains("Menu")) {
             this.setJMenuBar(new OleMenuBar(this, oConfig));
         }
-
         Container mainPane = this.getContentPane();
         mainPane.setLayout(new BorderLayout());
-
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         mainPane.add(pMain, BorderLayout.CENTER);
+        pHeader = new JPanel();
+        pHeader.setLayout(new BoxLayout(pHeader, BoxLayout.PAGE_AXIS));
+        if (oConfig.getOptions().getFieldList().contains("Header")) {
+            JLabel lAux = new JLabel(oConfig.getOptions().getString("Header", ""), SwingConstants.LEFT);
+            pHeader.add(lAux);
+        }
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
             otbToolBar = new OleToolBar(this, oConfig);
-            mainPane.add(otbToolBar, BorderLayout.PAGE_START);
+//            mainPane.add(otbToolBar, BorderLayout.PAGE_START);
+            pHeader.add(otbToolBar);
+        }
+        if (pHeader.getComponents().length>0) {
+            mainPane.add(pHeader, BorderLayout.PAGE_START);            
         }
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();
@@ -128,9 +136,10 @@ public abstract class OleApplication extends OleFrame {
         return this.pMain;
     }
 
-    public OleToolBar getToolBar(){
+    public OleToolBar getToolBar() {
         return this.otbToolBar;
     }
+
     public abstract void Draw(Graphics2D g);
 
     public void addLabel(Container con, String s) {
@@ -153,7 +162,7 @@ public abstract class OleApplication extends OleFrame {
     public void addStatus(String s, Color col) {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         l.setForeground(col);
-        if (s.length()<4) {
+        if (s.length() < 4) {
             Font f = l.getFont();
             f = f.deriveFont(Font.BOLD);
             l.setFont(f);

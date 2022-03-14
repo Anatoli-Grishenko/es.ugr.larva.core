@@ -19,7 +19,7 @@ import tools.TimeHandler;
 public class AgentReport {
 
     TimeHandler timeStamp;
-    String agentName, className;
+    String agentName, className, ownerName;
     Class agentClass;
     int bufferSize;
     int latency;
@@ -61,7 +61,7 @@ public class AgentReport {
         pushData(lastCycles, lastCycle);
         setLastCycle((int) Math.abs(timeStamp.elapsedTimeMilisecs(now))+getLastCycle());
         setTimeStamp(now);
-        System.out.println("\n"+agentName+"-|-"+this.getLastCycle()+" "+getInBox()+"-"+getOutBox());
+//        System.out.println("\n"+agentName+"-|-"+this.getLastCycle()+" "+getInBox()+"-"+getOutBox());
 
     }
 
@@ -214,6 +214,14 @@ public class AgentReport {
 
     public void setAgentClass(Class agentClass) {
         this.agentClass = agentClass;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
 }

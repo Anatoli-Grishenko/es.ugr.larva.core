@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.JButton;
+import tools.emojis;
 
 /**
  *
@@ -85,7 +86,10 @@ public class OleButton extends JButton {
 
     public OleButton setEmoji() {
         type = "emoji";
-        setText(" " + getText().trim() + " ");
+        try {
+            setText((String) emojis.class.getField(getText()).get(getText()));
+        } catch (Exception ex) {
+        }
         setFont(new Font("Arial", Font.BOLD, 20));
         return this;
     }

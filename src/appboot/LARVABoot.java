@@ -38,6 +38,7 @@ import swing.LARVAFrame;
 import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleDialog;
+import swing.OleFoldableList;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
@@ -82,7 +83,7 @@ public class LARVABoot {
     protected OleApplication appMain;
     OleConfig app;
     OlePassport oPassport;
-    JPanel pTiles;
+    OleFoldableList pTiles;
     JScrollPane psTiles;
     protected JTextArea taMessages;
 
@@ -148,11 +149,11 @@ public class LARVABoot {
         };
         appMain.getMainPanel().removeAll();
         appMain.getMainPanel().setLayout(new BorderLayout());
-        pTiles = new JPanel();
-        pTiles.setPreferredSize(new Dimension(100, 100));
-        pTiles.setLayout(new BorderLayout());
+        pTiles = new OleFoldableList(appMain);
+        pTiles.setPreferredSize(new Dimension(120, (int) appMain.getPreferredSize().getHeight()));
         psTiles = new JScrollPane(pTiles);
-        psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        psTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         taMessages = new JTextArea();
         taMessages.setEditable(false);
         taMessages.setWrapStyleWord(true);
@@ -161,9 +162,10 @@ public class LARVABoot {
         taMessages.setFont(f);
         pScroll = new JScrollPane(taMessages);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
         appMain.getMainPanel().add(psTiles, BorderLayout.LINE_START);
         appMain.getMainPanel().add(pScroll, BorderLayout.CENTER);
+        appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
+                app.getOptions().getOle("FrameSize").getInt("height", 480)));
         showStatus();
         if (new File(_configFileName).exists()) {
             oleConfig = new OleConfig();
@@ -172,12 +174,18 @@ public class LARVABoot {
                 appMain.Error("Error loading configuration file " + _configFileName);
                 Exit();
             }
-        }
-        if (oleConfig.getTab("Identity").getBoolean("Autoload", false)) {
-            loadPassport();
-        }
-        if (oleConfig.getTab("Connection").getBoolean("Autoconnect", false)) {
-            Boot();
+            if (oleConfig.getTab("Identity").getBoolean("Autoload", false)) {
+                loadPassport();
+            }
+            if (oleConfig.getTab("Connection").getBoolean("Autoconnect", false)) {
+                Boot();
+            }
+        } else {
+            for (String s : appMain.getToolBar().getButtonList()) {
+                if (!s.toUpperCase().equals("EXIT")) {
+                    appMain.getToolBar().getButton(s).setVisible(false);
+                }
+            }
         }
         showStatus();
     }
@@ -206,6 +214,9 @@ public class LARVABoot {
             if (oOptions.run(oleConfig)) {
                 oleConfig = oOptions.getResult();
                 oleConfig.saveAsFile("./", this._configFileName, true);
+                if (oleConfig.getTab("Identity").getString("Passport file", "").length() > 0) {
+                    loadPassport();
+                }
             }
         }
         if (e.getActionCommand().startsWith("Activate ")) {
@@ -227,6 +238,13 @@ public class LARVABoot {
         oPassport.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
         if (oPassport.isEmpty()) {
             appMain.Error("Error loading passport file " + oleConfig.getTab("Identity").getString("Pasport file", ""));
+        }else {
+            for (String s : _tiles.keySet()) {
+                if (_tiles.get(s) != null) {
+                    _tiles.get(s).getMyReport().setOwnerName(oPassport.getName());
+                    _tiles.get(s).updateReport();
+                }                
+            }
         }
         showStatus();
     }
@@ -235,8 +253,10 @@ public class LARVABoot {
         appMain.cleanStatus();
         if (_connected) {
             appMain.addStatus(emojis.PLUG, OleApplication.DodgerBlue);
-            appMain.addStatus(oleConfig.getTab("Connection").getString("Hostname", ""));
-            appMain.addStatus("(" + oleConfig.getTab("Connection").getInt("Port", -1) + ")");
+            appMain.addStatus(_host);
+//            appMain.addStatus(oleConfig.getTab("Connection").getString("Hostname", ""));
+            appMain.addStatus("(" + _port + ")");
+//            appMain.addStatus("(" + oleConfig.getTab("Connection").getInt("Port", -1) + ")");
         } else {
             appMain.addStatus(emojis.PLUG, OleApplication.Maroon);
             appMain.addStatus(" No connection yet");
@@ -259,11 +279,14 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot Boot(String host, int port) {
-        if (oleConfig == null) {
-            return this.selectConnection(host, port);
-        } else {
-            return Boot();
+        this.selectConnection(host, port);
+        showStatus();
+        if (_connected) {
+//            appMain.getToolBar().getButton("Passport").setEnabled(false);
+            appMain.getToolBar().getButton("Connect").setEnabled(false);
+            appMain.getToolBar().getButton("Options").setEnabled(false);
         }
+        return this;
     }
 
     /**
@@ -280,7 +303,7 @@ public class LARVABoot {
         this.selectConnection();
         showStatus();
         if (_connected) {
-            appMain.getToolBar().getButton("Passport").setEnabled(false);
+//            appMain.getToolBar().getButton("Passport").setEnabled(false);
             appMain.getToolBar().getButton("Connect").setEnabled(false);
             appMain.getToolBar().getButton("Options").setEnabled(false);
         }
@@ -314,8 +337,10 @@ public class LARVABoot {
         } else {
 
         }
-        oleConfig.setField("rebootjade", this._lockRebootFilename);
-        oleConfig.setField("shutdownjade", this._lockShutDownFilename);
+        if (oleConfig != null) {
+            oleConfig.setField("rebootjade", this._lockRebootFilename);
+            oleConfig.setField("shutdownjade", this._lockShutDownFilename);
+        }
         doCompleted("ARGUMENTS");
         return this;
     }
@@ -326,25 +351,27 @@ public class LARVABoot {
         }
         appMain.showProgress("Applying configuration");
         appMain.showProgress("Configuring log activity");
-        Ole cfgbasic = oleConfig.getTab("Log activity");
-        if (cfgbasic.getBoolean("Overwrite log", false)) {
-            logger.onOverwrite();
-        } else {
-            logger.onAppend();
+        if (oleConfig != null) {
+            Ole cfgbasic = oleConfig.getTab("Log activity");
+            if (cfgbasic.getBoolean("Overwrite log", false)) {
+                logger.onOverwrite();
+            } else {
+                logger.onAppend();
+            }
+            if (cfgbasic.getBoolean("Silent", false)) {
+                logger.offEcho();
+            } else {
+                logger.onEcho();
+            }
+            if (cfgbasic.getBoolean("Save log", false)) {
+                logger.setLoggerFileName(cfgbasic.getString("File log", "./default.json"));
+            }
+            appMain.showProgress("Configuring JADE host");
+            _host = oleConfig.getTab("Connection").getField("Hostname");
+            _port = oleConfig.getTab("Connection").getInt("Port");
+            Info("Applied config " + this._configFileName);
         }
-        if (cfgbasic.getBoolean("Silent", false)) {
-            logger.offEcho();
-        } else {
-            logger.onEcho();
-        }
-        if (cfgbasic.getBoolean("Save log", false)) {
-            logger.setLoggerFileName(cfgbasic.getString("File log", "./default.json"));
-        }
-        appMain.showProgress("Configuring JADE host");
-        _host = oleConfig.getTab("Connection").getField("Hostname");
-        _port = oleConfig.getTab("Connection").getInt("Port");
         Info("%% BOOTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-        Info("Applied config " + this._configFileName);
         doCompleted("CONFIGURE");
         return this;
     }
@@ -409,7 +436,7 @@ public class LARVABoot {
         if (!isCompleted("CONFIGURE")) {
             Configure();
         }
-        System.out.println("Trying to connecto to Jade (MicroBoot) @" + host + ":" + port);
+//        System.out.println("Trying to connecto to Jade (MicroBoot) @" + host + ":" + port);
         _platformType = PLATFORM.MICROJADE;
         _host = host;
         _port = port;
@@ -456,21 +483,24 @@ public class LARVABoot {
     }
 
     protected LARVABoot selectConnection() {
-
+        if (oleConfig == null) {
+            this.Abort("Sorry, method Boot() without argumentes requires a configuration fle");
+        }
         if (!isCompleted("CONFIGURE")) {
             Configure();
         }
-
         selectConnection(_host, _port);
         appMain.closeProgress(who);
         return this;
     }
 
-    public LARVABoot loadAgent(String name, Class c) {        
-        OleAgentTile otAux = new OleAgentTile(appMain, 
-                new AgentReport(name, c, 100));
-//        otAux.setPreferredSize(pTiles.getPreferredSize());
-        pTiles.add(otAux, BorderLayout.LINE_END);
+    public LARVABoot loadAgent(String name, Class c) {
+        AgentReport ag = new AgentReport(name, c, 100);
+        if (oPassport != null) {
+            ag.setOwnerName(oPassport.getName());
+        }
+        OleAgentTile otAux = new OleAgentTile(appMain, ag);
+        pTiles.addFoldable(otAux);
         otAux.showSummary();
         pTiles.validate();
         _tiles.put(name, otAux);
@@ -487,7 +517,7 @@ public class LARVABoot {
             }
             agc.kill();
             _controllers.remove(name);
-            _tiles.get(name).doDeactivate();
+            _tiles.get(name).doDeactivateAgent();
             Info("Agent " + name + " deactivated");
         } catch (Exception ex) {
 //            appMain.Error("Error stoping agent " + name);
@@ -529,7 +559,7 @@ public class LARVABoot {
                 ag = MicroRuntime.getAgent(name);
                 _controllers.put(name, ag);
                 _runningAgents.add(name);
-                _tiles.get(name).doActivate();
+                _tiles.get(name).doActivateAgent();
                 showStatus();
             } catch (Exception ex) {
                 Error("Error creating Agent " + name);
@@ -541,7 +571,7 @@ public class LARVABoot {
                 ag.start();
                 _controllers.put(name, ag);
                 _runningAgents.add(name);
-                _tiles.get(name).doActivate();
+                _tiles.get(name).doActivateAgent();
                 showStatus();
             } catch (Exception e) {
                 Error("Error creating Agent " + name);
@@ -599,7 +629,7 @@ public class LARVABoot {
                     _tiles.get(s).updateReport();
                 } catch (Exception ex) {
                     Info("Agent " + s + " has died");
-                    _tiles.get(s).doDeactivate();
+                    _tiles.get(s).doDeactivateAgent();
                     diedAgents.add(s);
                 }
             }

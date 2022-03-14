@@ -26,59 +26,57 @@ import tools.emojis;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleAgentTile extends OleFoldablePane{
-    public static enum Status {OFF, ON};
-    final int width=150,height=10;
+public class OleAgentTile extends OleFoldablePane {
+
+    public static enum Status {
+        OFF, ON
+    };
+    final int width = 150, height = 10;
     OleApplication myParent;
     Status myStatus;
-    JButton mybOn, mybOff,mybSwitch;
+    OleButton mybOn, mybOff, mybSwitch;
     JLabel mylLabel, mylLabel2;
     AgentReport myReport;
-    OlePerformeter olpTime, olpInbox,olpOutbox;
-    
+    OlePerformeter olpTime, olpInbox, olpOutbox;
+
     public OleAgentTile(OleApplication parent, AgentReport report) {
-        super(parent, new JLabel(report.getAgentName()));        
-        
+        super(parent, new JLabel(report.getAgentName()));
+
 //        this.setLayout(new FlowLayout(FlowLayout.CENTER));
 //        this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
 //        this.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED) );
-        myStatus=Status.OFF;
-        myParent=parent;
+//        this.setPreferredSize(new Dimension(80,8000));
+        myStatus = Status.OFF;
+        myParent = parent;
         myReport = report;
         mylLabel = this.getHeader();
-        mylLabel2 = new JLabel("<html><i>"+myReport.getClassName()+"</i></html>");
-        mybOn = new JButton(emojis.ACTIVATE);
-        mybOn.setActionCommand("Activate "+myReport.getAgentName());
-        mybOn.addActionListener(parent);
-        mybOff = new JButton(emojis.DEACTIVATE);
-        mybOff.setActionCommand("Deactivate "+myReport.getAgentName());
-        mybOff.addActionListener(parent);
-        mybSwitch = new JButton(emojis.DEACTIVATE);
-        mybSwitch.setActionCommand("Deactivate "+myReport.getAgentName());
-        mybSwitch.addActionListener(parent);
-        olpTime = new OlePerformeter(this,90,26, 2000);
-        olpInbox = new OlePerformeter(this,90,26, 5);
-        olpOutbox = new OlePerformeter(this,90,26, 5);
-        JPanel jpContent = this.getFoldablePane();
-        jpContent.setLayout(new GridBagLayout());
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.gridx=0;
-        gc.gridy=0;
-        gc.gridwidth=1;
-        gc.gridheight=1;
-        gc.gridy++;
-        jpContent.add(mylLabel2,gc);
-        gc.gridy++;
-        jpContent.add(mybOn, gc);
-        gc.gridy++;
-        jpContent.add(mybOff, gc);
-        gc.gridy++;
-        jpContent.add(olpTime, gc);
-        gc.gridy++;
-        jpContent.add(olpInbox, gc);
-        gc.gridy++;
-        jpContent.add(olpOutbox, gc);
-//        this.add(new JLabel("Luisillo"), gc);
+        if (myReport.getOwnerName() == null) {
+            mylLabel2 = new JLabel(emojis.CANCEL+" Unidentified");
+        } else {
+            mylLabel2 = new JLabel(emojis.OK+" "+myReport.getOwnerName());
+        }
+        mybOn = new OleButton(parent, "Activate " + myReport.getAgentName(), emojis.ACTIVATE);
+        mybOn.setFlat();
+        mybOff = new OleButton(parent, "Deactivate " + myReport.getAgentName(), emojis.DEACTIVATE);
+        mybOff.setFlat();
+//        mybSwitch = new JButton(emojis.DEACTIVATE);
+//        mybSwitch.setActionCommand("Deactivate "+myReport.getAgentName());
+//        mybSwitch.addActionListener(parent);
+        olpTime = new OlePerformeter(this, 100, 26, 2000);
+        olpInbox = new OlePerformeter(this, 100, 26, 5);
+        olpOutbox = new OlePerformeter(this, 100, 26, 5);
+        OleFoldableList ofpAgent = new OleFoldableList(this);
+        this.getFoldablePane().add(ofpAgent);
+        this.getFoldablePane().add(mylLabel2);
+        this.getFoldablePane().add(mybOn);
+        this.getFoldablePane().add(mybOff);
+        this.getFoldablePane().add(new JLabel("CPU load"));
+        this.getFoldablePane().add(olpTime);
+        this.getFoldablePane().add(new JLabel("Messages IN"));
+        this.getFoldablePane().add(olpInbox);
+        this.getFoldablePane().add(new JLabel("Messages OUT"));
+        this.getFoldablePane().add(olpOutbox);
+        this.validate();
     }
 
     public AgentReport getMyReport() {
@@ -88,10 +86,10 @@ public class OleAgentTile extends OleFoldablePane{
     public void setMyReport(AgentReport myReport) {
         this.myReport = myReport;
     }
-    
+
     public void showSummary() {
-        
-        if (myStatus==Status.OFF){
+
+        if (myStatus == Status.OFF) {
             mybOn.setEnabled(true);
             mybOff.setEnabled(false);
             mylLabel.setForeground(Color.BLACK);
@@ -103,13 +101,13 @@ public class OleAgentTile extends OleFoldablePane{
         mylLabel.setText(myReport.getAgentName());
         this.validate();
     }
-   
-    
-    public void doActivate() {
+
+    public void doActivateAgent() {
         myStatus = Status.ON;
         showSummary();
     }
-    public void doDeactivate() {
+
+    public void doDeactivateAgent() {
         myStatus = Status.OFF;
         showSummary();
     }
@@ -121,12 +119,18 @@ public class OleAgentTile extends OleFoldablePane{
     public Class getMyClass() {
         return myReport.getAgentClass();
     }
-    
+
     public void updateReport() {
         olpTime.pushData(myReport.getLastCycle());
         olpInbox.pushData(myReport.getInBox());
         olpOutbox.pushData(myReport.getOutBox());
         myReport.clearData();
+        if (myReport.getOwnerName() == null) {
+            mylLabel2.setText(emojis.CANCEL+" Unidentified");
+        } else {
+            mylLabel2.setText(emojis.OK+" "+myReport.getOwnerName());
+        }
+        
     }
 }
 ///*

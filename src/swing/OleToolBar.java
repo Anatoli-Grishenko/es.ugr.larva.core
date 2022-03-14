@@ -69,12 +69,8 @@ public class OleToolBar extends JPanel {
                     break;
             }
             if (type.equals("emoji")) {
-                try{
-                obAux.setText((String) emojis.class.getField(ocontent.getField("text")).get(content));
                 obAux.setEmoji();
-                } catch (Exception ex) {
-                }
-                obAux.setEmoji();
+                obAux.setText(" " + obAux.getText().trim() + " ");
             }
             this.add(obAux);
             dicComponents.put(stool, obAux);
@@ -82,7 +78,7 @@ public class OleToolBar extends JPanel {
     }
     
     public List<String> getButtonList() {
-        return (List<String>) dicComponents.keySet();
+        return new ArrayList<String>(dicComponents.keySet());
     }
     
     public OleButton getButton(String name) {

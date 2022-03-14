@@ -35,7 +35,7 @@ public class OleFoldablePane extends JPanel implements ActionListener {
         jlHeader = header;
         obControl = new OleButton(this, "fold", unfold);
         obControl.setFlat();
-        jpContent = new OleFoldableList(this, new Dimension(100,100));
+        jpContent = new OleFoldableList(this);
         this.setLayout(new GridBagLayout());
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         GridBagConstraints gc = new GridBagConstraints();
@@ -121,7 +121,7 @@ public class OleFoldablePane extends JPanel implements ActionListener {
     }
     
     public void doDeactivate() {
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        this.setBorder(BorderFactory.createLineBorder(Color.GRAY));
     }
     @Override
     public void actionPerformed(ActionEvent e) {
