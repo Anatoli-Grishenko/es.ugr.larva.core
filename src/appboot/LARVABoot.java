@@ -626,7 +626,7 @@ public class LARVABoot {
                         agc = _firstContainer.getAgent(s);
                     }
 //                    System.out.println(s+"**"+_tiles.get(s).getMyReport().getLastCycle());
-                    _tiles.get(s).updateReport();
+                    _tiles.get(s).updateReportReadings();
                 } catch (Exception ex) {
                     Info("Agent " + s + " has died");
                     _tiles.get(s).doDeactivateAgent();

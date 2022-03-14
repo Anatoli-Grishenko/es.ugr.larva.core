@@ -14,17 +14,24 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.ObjectInputFilter.Status;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -36,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import map2D.Map2DColor;
 import tools.emojis;
 
 /**
@@ -83,16 +91,36 @@ public abstract class OleApplication extends OleFrame {
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         mainPane.add(pMain, BorderLayout.CENTER);
-        pHeader = new JPanel();
-        pHeader.setLayout(new BoxLayout(pHeader, BoxLayout.PAGE_AXIS));
+        Map2DColor grid=new Map2DColor();
+        try {
+            grid.loadMapRaw("images/grid.png");
+        } catch (IOException ex) {
+            this.Error(ex.toString());
+        }
+        pHeader = new JPanel() { 
+        @Override
+        public void paintComponent(Graphics g) {
+            g.drawImage(grid.getMap(), 0,0,1400,500,pHeader);            
+        }};
+//        pHeader.setLayout(new BoxLayout(pHeader, BoxLayout.PAGE_AXIS));
+//        pHeader.setLayout(new GridBagLayout());
+        pHeader.setLayout(new BorderLayout());
+        
+//        GridBagConstraints gc = new  GridBagConstraints();
+//        gc.gridx=0;
+//        gc.gridy=0;
+//        gc.anchor=GridBagConstraints.WEST;
+//        gc.fill=GridBagConstraints.HORIZONTAL;
         if (oConfig.getOptions().getFieldList().contains("Header")) {
             JLabel lAux = new JLabel(oConfig.getOptions().getString("Header", ""), SwingConstants.LEFT);
-            pHeader.add(lAux);
+            pHeader.add(lAux,BorderLayout.NORTH);
+//            gc.gridy++;
         }
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
             otbToolBar = new OleToolBar(this, oConfig);
+            otbToolBar.setBackground(Color.BLACK);
 //            mainPane.add(otbToolBar, BorderLayout.PAGE_START);
-            pHeader.add(otbToolBar);
+            pHeader.add(otbToolBar,BorderLayout.SOUTH);
         }
         if (pHeader.getComponents().length>0) {
             mainPane.add(pHeader, BorderLayout.PAGE_START);            

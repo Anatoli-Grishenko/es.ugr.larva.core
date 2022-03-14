@@ -42,7 +42,9 @@ public class OlePassport extends Ole {
         Scanner reader;
         try {
              reader = new Scanner(new File(fullfilename));
-             sload = reader.nextLine();
+//             sload = reader.nextLine();
+             sload = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
+             setField("rawPassport",sload);
              publicPassport=sload.split(separator)[0];
              setField("name",this.getCryptor().deCrypt64(publicPassport));
         } catch (FileNotFoundException ex) {
@@ -54,6 +56,7 @@ public class OlePassport extends Ole {
 
     private final void InitPassport() {
         setType(oletype.OLEPASSPORT.name());
+        this.addField("rawPassport");
         this.addField("userID");
         this.addField("cid");
         this.addField("alias");

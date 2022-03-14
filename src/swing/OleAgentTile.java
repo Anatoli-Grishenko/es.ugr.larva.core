@@ -120,17 +120,21 @@ public class OleAgentTile extends OleFoldablePane {
         return myReport.getAgentClass();
     }
 
-    public void updateReport() {
+    public void updateReportReadings() {
         olpTime.pushData(myReport.getLastCycle());
         olpInbox.pushData(myReport.getInBox());
         olpOutbox.pushData(myReport.getOutBox());
-        myReport.clearData();
+        myReport.clearData();   
+    }
+    public void updateReport() {
         if (myReport.getOwnerName() == null) {
             mylLabel2.setText(emojis.CANCEL+" Unidentified");
+            mylLabel2.validate();
         } else {
-            mylLabel2.setText(emojis.OK+" "+myReport.getOwnerName());
+            mylLabel2.setText(emojis.OK+" "+myReport.getOwnerName().substring(0, 10));
+            mylLabel2.validate();
         }
-        
+        this.validate();
     }
 }
 ///*
@@ -258,7 +262,7 @@ public class OleAgentTile extends OleFoldablePane {
 //        return myReport.getAgentClass();
 //    }
 //    
-//    public void updateReport() {
+//    public void updateReportReadings() {
 //        olpTime.pushData(myReport.getLastCycle());
 //        olpInbox.pushData(myReport.getInBox());
 //        olpOutbox.pushData(myReport.getOutBox());

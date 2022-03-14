@@ -112,6 +112,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             payload = (BootPayload) this.getArguments()[0];
             myText = payload.getJtaLog();
             myApp = payload.getParent();
+            if (payload.getoPassport() != null) {
+                this.mypassport = payload.getoPassport().getField("rawPassport");
+            }
             if (payload.getOlecfg() != null) {
                 oleConfig = payload.getOlecfg();
                 if (oleConfig.getTab("LARVA") != null) {
