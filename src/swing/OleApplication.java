@@ -64,6 +64,8 @@ public abstract class OleApplication extends OleFrame {
     protected boolean debug;
     protected HashMap<String, Component> dicComponents;
     protected ArrayList<String> listComponents;
+    protected Map2DColor watermarkHeader;
+    protected Color colorHeader;
 
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
@@ -91,39 +93,49 @@ public abstract class OleApplication extends OleFrame {
         pMain = new JPanel();
         pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
         mainPane.add(pMain, BorderLayout.CENTER);
-        Map2DColor grid=new Map2DColor();
-        try {
-            grid.loadMapRaw("images/grid.png");
-        } catch (IOException ex) {
-            this.Error(ex.toString());
+        if (oConfig.getProperties().getOle("Header").getFieldList().contains("watermark")) {
+            try {
+                watermarkHeader = new Map2DColor();
+                String image = oConfig.getProperties().getOle("Header").getString("watermark", "");
+                image = image.replace("file:", "");
+                watermarkHeader.loadMapRaw(image);
+                pHeader = new JPanel() {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        g.drawImage(watermarkHeader.getMap(), 0, 0, watermarkHeader.getWidth(), watermarkHeader.getHeight(), pHeader);
+                    }
+                };
+            } catch (IOException ex) {
+                this.Error(ex.toString());
+                pHeader = new JPanel();
+            }
+        } else {
+            pHeader = new JPanel();
         }
-        pHeader = new JPanel() { 
-        @Override
-        public void paintComponent(Graphics g) {
-            g.drawImage(grid.getMap(), 0,0,1400,500,pHeader);            
-        }};
-//        pHeader.setLayout(new BoxLayout(pHeader, BoxLayout.PAGE_AXIS));
-//        pHeader.setLayout(new GridBagLayout());
         pHeader.setLayout(new BorderLayout());
-        
-//        GridBagConstraints gc = new  GridBagConstraints();
-//        gc.gridx=0;
-//        gc.gridy=0;
-//        gc.anchor=GridBagConstraints.WEST;
-//        gc.fill=GridBagConstraints.HORIZONTAL;
         if (oConfig.getOptions().getFieldList().contains("Header")) {
             JLabel lAux = new JLabel(oConfig.getOptions().getString("Header", ""), SwingConstants.LEFT);
-            pHeader.add(lAux,BorderLayout.NORTH);
-//            gc.gridy++;
+            if (oConfig.getProperties().getOle("Header").getFieldList().contains("background")) {
+                String bckgr = oConfig.getProperties().getOle("Header").getString("background", "NONE");
+                try {
+                    colorHeader = (Color) Color.class.getField(bckgr).get(bckgr);
+                    pHeader.setBackground(colorHeader);
+                } catch (Exception ex) {
+                    colorHeader = null;
+                }
+            }
+            pHeader.add(lAux, BorderLayout.NORTH);
         }
         if (oConfig.getOptions().getFieldList().contains("ToolBar")) {
             otbToolBar = new OleToolBar(this, oConfig);
-            otbToolBar.setBackground(Color.BLACK);
-//            mainPane.add(otbToolBar, BorderLayout.PAGE_START);
-            pHeader.add(otbToolBar,BorderLayout.SOUTH);
+            if (colorHeader != null) {
+                otbToolBar.setBackground(colorHeader);
+            }
+            pHeader.add(otbToolBar, BorderLayout.SOUTH);
         }
-        if (pHeader.getComponents().length>0) {
-            mainPane.add(pHeader, BorderLayout.PAGE_START);            
+        if (pHeader.getComponents().length > 0) {
+            pHeader.validate();
+            mainPane.add(pHeader, BorderLayout.PAGE_START);
         }
         if (oConfig.getOptions().getBoolean("FrameStatus", false)) {
             pStatus = new JPanel();

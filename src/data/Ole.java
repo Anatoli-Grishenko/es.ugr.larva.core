@@ -516,6 +516,10 @@ public class Ole extends JsonObject {
     public Ole loadFile(String fullfilename) {
         try {
             String str = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
+            if (str.contains("resource:/")) {
+                String base= getClass().getResource("/resources/").toString();
+                str = str.replaceAll("resource:/resources/", base);
+            }
             parse(str);
         } catch (Exception ex) {
             System.err.println("Error loading file " + fullfilename + " " + ex.toString());

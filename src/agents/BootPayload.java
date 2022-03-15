@@ -7,6 +7,7 @@ package agents;
 
 import data.OleConfig;
 import data.OlePassport;
+import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import swing.OleApplication;
 
@@ -20,7 +21,8 @@ public class BootPayload {
     OleApplication parent;
     OleConfig olecfg;
     OlePassport oPassport;
-    JTextArea jtaLog;    
+    JTextArea jtaLog;   
+    JPanel jpXui;
     AgentReport myReport;
 
     public BootPayload(OleApplication parent, OleConfig olecfg) {
@@ -69,6 +71,14 @@ public class BootPayload {
 
     public void setMyReport(AgentReport myReport) {
         this.myReport = myReport;
+    }
+
+    public JPanel getJpXui() {
+        return jpXui;
+    }
+
+    public void setJpXui(JPanel jpXui) {
+        this.jpXui = jpXui;
     }
 
 }

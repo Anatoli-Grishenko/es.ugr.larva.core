@@ -148,6 +148,9 @@ public class LARVABaseAgent extends Agent {
     public void doExit() {
         exit= true;
     }
+    public void doNotExit() {
+        exit= false;
+    }
     //
     // DF+
     //

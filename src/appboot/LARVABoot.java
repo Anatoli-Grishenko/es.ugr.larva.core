@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
@@ -32,12 +33,14 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import swing.LARVAFrame;
 import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleDialog;
+import swing.OleDrawPane;
 import swing.OleFoldableList;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
@@ -48,6 +51,9 @@ import tools.emojis;
  * of the associated container
  */
 public class LARVABoot {
+    public static final int METAL=0;
+    public static final int LIGHT=1;
+    public static final int CLASSIC=2;
 
     protected boolean _connected = false, _echo = false, _debug = false, _quickshutdown = false;
     protected String _title, _subtitile, _version = "1.0";
@@ -61,11 +67,11 @@ public class LARVABoot {
     protected HashMap<String, OleAgentTile> _tiles;
     protected ArrayList<String> _runningAgents, _launchingAgents, _stoppingAgents;
     protected String _host, _virtualhost, _containerName, _platformId, _username, _password;
-    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock",
-            _configFileName = "./config/Configuration.conf",
-            _appConfiguration = "./config/LARVABoot.app";
+    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock";
+    String   _configFileName,
+            _appConfiguration, _background, _logoUgr;
     protected FileWriter _lockCloseSession, _lockReboot;
-    protected int _port;
+    protected int _port, _style;
     protected double _progress;
     protected Logger logger;
 
@@ -84,8 +90,10 @@ public class LARVABoot {
     OleConfig app;
     OlePassport oPassport;
     OleFoldableList pTiles;
+    JPanel _pServerTiles, _XUI;
     JScrollPane psTiles;
     protected JTextArea taMessages;
+    protected JTabbedPane tabbedPane;
 
     protected int nlog;
     protected String who, name;
@@ -102,6 +110,14 @@ public class LARVABoot {
      * connect to JADE and launch agents
      */
     public LARVABoot() {
+        initGUI(METAL);
+    }
+    public LARVABoot(int s) {
+        initGUI(s);
+    }
+
+    protected void initGUI(int style) {
+        _style=style%3;
         _firstContainer = null;
         _containerName = "";
         _controllers = new HashMap<>();
@@ -123,12 +139,22 @@ public class LARVABoot {
         sShutdown = new Semaphore(0);
         doSwing = new Semaphore(1);
         doJade = new Semaphore(1);
-        initGUI();
-    }
-
-    protected void initGUI() {
+        switch (_style) {
+            case METAL:
+                this._appConfiguration=getClass().getResource("/resources/config/MetalBoot.app").toString().replace("file:", "");
+                break;
+            case LIGHT:
+                this._appConfiguration=getClass().getResource("/resources/config/LightBoot.app").toString().replace("file:", "");
+                break;
+            default:
+                this._appConfiguration=getClass().getResource("/resources/config/ClassicBoot.app").toString().replace("file:", "");
+                
+        }
+        this._configFileName="./config/Configuration.conf";
+//        this._background = getClass().getResource("/resources/images/grid.png").toString().replace("file:", "");
+//        this._logoUgr = getClass().getResource("/resources/images/logougr_tiny.png").toString();
         app = new OleConfig();
-        app.loadFile(_appConfiguration);
+        app.loadFile(this._appConfiguration);
         if (app.isEmpty()) {
             System.err.println("Missing configuration file " + _appConfiguration);
             System.exit(1);
@@ -149,11 +175,16 @@ public class LARVABoot {
         };
         appMain.getMainPanel().removeAll();
         appMain.getMainPanel().setLayout(new BorderLayout());
+        
         pTiles = new OleFoldableList(appMain);
         pTiles.setPreferredSize(new Dimension(120, (int) appMain.getPreferredSize().getHeight()));
         psTiles = new JScrollPane(pTiles);
         psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         psTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        tabbedPane= new JTabbedPane();
+        tabbedPane.addTab("Local agents", psTiles);
+        appMain.getMainPanel().add(tabbedPane, BorderLayout.LINE_START);
+
         taMessages = new JTextArea();
         taMessages.setEditable(false);
         taMessages.setWrapStyleWord(true);
@@ -161,9 +192,19 @@ public class LARVABoot {
         f = new Font(Font.MONOSPACED, Font.PLAIN, f.getSize());
         taMessages.setFont(f);
         pScroll = new JScrollPane(taMessages);
-        pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        appMain.getMainPanel().add(psTiles, BorderLayout.LINE_START);
-        appMain.getMainPanel().add(pScroll, BorderLayout.CENTER);
+        pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);      
+        tabbedPane= new JTabbedPane();
+        tabbedPane.addTab("Activity log", pScroll);
+        _pServerTiles = new JPanel();
+        _pServerTiles.setLayout(new FlowLayout(FlowLayout.LEFT));
+        pScroll = new JScrollPane(_pServerTiles);
+        pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);      
+        tabbedPane.addTab("Server agents", pScroll);
+        _XUI = new JPanel();
+        pScroll = new JScrollPane(_XUI);
+        pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);      
+        tabbedPane.addTab("XUI", pScroll);
+        appMain.getMainPanel().add(tabbedPane, BorderLayout.CENTER);
         appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
                 app.getOptions().getOle("FrameSize").getInt("height", 480)));
         showStatus();
@@ -500,6 +541,7 @@ public class LARVABoot {
             ag.setOwnerName(oPassport.getName());
         }
         OleAgentTile otAux = new OleAgentTile(appMain, ag);
+        otAux.updateReport();
         pTiles.addFoldable(otAux);
         otAux.showSummary();
         pTiles.validate();
@@ -547,6 +589,7 @@ public class LARVABoot {
         AgentController ag;
         BootPayload payload = new BootPayload();
         payload.setJtaLog(taMessages);
+        payload.setJpXui(null);
         payload.setOlecfg(oleConfig);
         payload.setParent(appMain);
         payload.setoPassport(oPassport);
@@ -746,9 +789,9 @@ public class LARVABoot {
                 && !getExtIPAddress().equals(getLocalIPAddress());
     }
 
-    public JScrollPane getMyPane() {
-        return pScroll;
-    }
+//    public JScrollPane getMyPane() {
+//        return pScroll;
+//    }
 
     protected JTextArea getMessages() {
         return taMessages;

@@ -50,7 +50,7 @@ public class LARVAAirTrafficControlTiles {
 
     // Layout GUI
     protected LARVAFrame fDashboard;
-    protected JPanel pMain;
+    protected JPanel pMain, jpXUI;
     protected MyDrawPane dpMap, dpTiles;
     protected JScrollPane spTiles;
     protected int iRight, iButton, iTiles,
@@ -86,8 +86,18 @@ public class LARVAAirTrafficControlTiles {
     OleFile ofile;
     protected int nFrames, maxFrames = 5;
 
+    public LARVAAirTrafficControlTiles(JPanel XUI) {
+        jpXUI = XUI;
+        lastPerception = new SensorDecoder();
+        Palettes = new HashMap();
+        File f = new File(splashlock);
+        this.showsplash = !f.exists();
+        Dashboards = new HashMap();
+        initGUI();
+    }
 
     public LARVAAirTrafficControlTiles() {
+        jpXUI = null;
         lastPerception = new SensorDecoder();
         Palettes = new HashMap();
         File f = new File(splashlock);
@@ -183,55 +193,85 @@ public class LARVAAirTrafficControlTiles {
 
     public void initGUI() {
         // Define panels
-        fDashboard = new LARVAFrame(e -> this.DashListener(e));
-        pMain = new JPanel();
-        pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
+        if (jpXUI == null) {
+            fDashboard = new LARVAFrame(e -> this.DashListener(e));
+            pMain = new JPanel();
+            pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
 
-        dpMap = new MyDrawPane(null);
-        dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        dpMap.setBackground(cBackgr);
+            dpMap = new MyDrawPane(null);
+            dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            dpMap.setBackground(cBackgr);
 
-        dpTiles = new MyDrawPane(null);
-        dpTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        dpTiles.setBackground(cBackgr);
-        dpTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
+            dpTiles = new MyDrawPane(null);
+            dpTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            dpTiles.setBackground(cBackgr);
+            dpTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-        mpMap = new AirTrafficControl(null);
+            mpMap = new AirTrafficControl(null);
 //        mpMap.addRuler();
 //        mpMap.addTrail();
 
-        spTiles = new JScrollPane(dpTiles);
-        spTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        spTiles.setBackground(cBackgr);
-        spTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        spTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            spTiles = new JScrollPane(dpTiles);
+            spTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            spTiles.setBackground(cBackgr);
+            spTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+            spTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        // Define sizes
-        iRight = 710;
-        iButton = 48;
-        iTiles = 0;//455;
-        pMain.setPreferredSize(new Dimension(iRight + iTiles, iRight));
-        mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
+            // Define sizes
+            iRight = 710;
+            iButton = 48;
+            iTiles = 0;//455;
+            pMain.setPreferredSize(new Dimension(iRight + iTiles, iRight));
+            mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
 //        dpTiles.setPreferredSize(new Dimension(iTiles, iRight - 2));
 
-        // Mount panes
-        dpMap.add(mpMap);
-        pMain.add(dpMap);
+            // Mount panes
+            dpMap.add(mpMap);
+            pMain.add(dpMap);
 //        pMain.add(spTiles);
 
-        this.fDashboard.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                disableDashBoard();
-            }
-        });
+            this.fDashboard.addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent e) {
+                    disableDashBoard();
+                }
+            });
 
-        fDashboard.setVisible(true);
-        fDashboard.setResizable(false);
-        fDashboard.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        fDashboard.add(pMain);
-        fDashboard.pack();
-        fDashboard.show();
+            fDashboard.setVisible(true);
+            fDashboard.setResizable(false);
+            fDashboard.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            fDashboard.add(pMain);
+            fDashboard.pack();
+            fDashboard.show();
+        } else {
+            pMain = new JPanel();
+            pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
+
+            dpMap = new MyDrawPane(null);
+            dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            dpMap.setBackground(cBackgr);
+
+            dpTiles = new MyDrawPane(null);
+            dpTiles.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+            dpTiles.setBackground(cBackgr);
+            dpTiles.setLayout(new FlowLayout(FlowLayout.CENTER));
+
+            mpMap = new AirTrafficControl(null);
+
+
+            // Define sizes
+            iRight = 710;
+            iButton = 48;
+            iTiles = 0;//455;
+            pMain.setPreferredSize(new Dimension(iRight + iTiles, iRight));
+            mpMap.setBounds(0, 0, iRight - 2, iRight - 2);
+
+            // Mount panes
+            dpMap.add(mpMap);
+            pMain.add(dpMap);            
+            jpXUI.add(pMain);
+        }
         refresh();
 
         // Palettes

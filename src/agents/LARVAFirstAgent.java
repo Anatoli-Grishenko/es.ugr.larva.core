@@ -36,6 +36,7 @@ import swing.LARVACompactDash;
 import swing.LARVADash;
 import swing.LARVADash.Layout;
 import swing.OleApplication;
+import tools.emojis;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -296,6 +297,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             if (checkin == null) {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
+                if (traceRunSteps) {
+                    addRunStep("MILES20");
+                }
                 checkout = checkin.createReply();
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
@@ -382,7 +386,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             msg = ACLMessageTools.addDashMark(msg);
         }
         this.send(msg);
-        Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
+        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
         myReport.setOutBox(myReport.getOutBox() + 1);
         sd.addSequence(msg);
     }
@@ -411,7 +415,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 repeat = false;
             }
         } while (repeat);
-        Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+        Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
         sd.addSequence(res);
         this.checkReceivedMessage(res);
         myReport.setInBox(myReport.getInBox() + 1);
@@ -464,7 +468,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
         } while (repeat);
         if (res != null) {
-            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
         }
         this.checkReceivedMessage(res);
         sd.addSequence(res);
@@ -491,7 +495,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
         } while (repeat);
         if (res != null) {
-            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
             sd.addSequence(res);
         }
         this.checkReceivedMessage(res);
