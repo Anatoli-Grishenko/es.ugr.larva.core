@@ -7,7 +7,11 @@ package agents;
 
 import data.Ole;
 import data.OleFile;
+import java.awt.Component;
 import java.util.HashMap;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import messaging.ACLMessageTools;
 import swing.LARVAAirTrafficControlTiles;
 import swing.LARVAMiniDash;
@@ -26,6 +30,7 @@ public class XUIAgent extends LARVAFirstAgent {
     protected HashMap<String, LARVAMiniDash> AgentDash;
     protected LARVAAirTrafficControlTiles TheMap;
     protected String sessionKey="";
+    JPanel _XUI,_Server;
 
     @Override
     public void setup() {
@@ -33,8 +38,8 @@ public class XUIAgent extends LARVAFirstAgent {
         logger.offEcho();
         logger.onTabular();
         myStatus = Status.CHECKIN;
-        TheMap = new LARVAAirTrafficControlTiles();
-        TheMap.setTitle("DEATH STAR");
+        _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
+        TheMap = new LARVAAirTrafficControlTiles(_XUI);
         Info("Setting Death Star up");
         exit = false;
     }
@@ -69,16 +74,11 @@ public class XUIAgent extends LARVAFirstAgent {
 
     public Status MyCheckin() {
         Info("Loading passport and checking-in to LARVA");
-        if (!loadMyPassport("passport/MyPassport.passport")) {
-            Error("Unable to load passport file");
-            return Status.EXIT;
-        }
         if (!doLARVACheckin()) {
             Error("Unable to checkin");
             return Status.EXIT;
         }
         this.DFSetMyServices(new String[]{"XUI " + userID});
-        this.setTitle();
         TheMap.clear();
         return Status.IDLE;
     }
@@ -98,7 +98,6 @@ public class XUIAgent extends LARVAFirstAgent {
             int maxlevel = ocontent.getInt("maxflight");
             TheMap.clear();
             TheMap.setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));            
-            this.setTitle();
         }else
         if (inbox.getContent().contains("perceptions")) {
             TheMap.feedPerception(inbox.getContent());            
@@ -109,8 +108,4 @@ public class XUIAgent extends LARVAFirstAgent {
         return Status.IDLE;
     }
     
-    
-    protected void setTitle() {
-        this.TheMap.setTitle("| DEATH STAR |"+userName+" | "+sessionKey+" |");
-    }
-}
+ }

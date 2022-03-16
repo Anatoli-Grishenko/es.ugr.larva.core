@@ -34,7 +34,6 @@ public class DeathStar extends LARVAFirstAgent {
         logger.onTabular();
         myStatus = Status.CHECKIN;
         TheMap = new LARVAAirTrafficControlTiles();
-        TheMap.setTitle("DEATH STAR");
         Info("Setting Death Star up");
         exit = false;
     }
@@ -111,6 +110,5 @@ public class DeathStar extends LARVAFirstAgent {
     
     
     protected void setTitle() {
-        this.TheMap.setTitle("| DEATH STAR |"+userName+" | "+sessionKey+" |");
     }
 }

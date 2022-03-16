@@ -17,6 +17,8 @@ public class emojis {
 
     public static final String ROBOT = "🤖",
             KEYBOARD = "⌨️",
+            TRASH="🗑️",
+            SAVEAS="💾",
             STOP = "🛑",
             ERROR = "🚫",
             REPLY = "↩️",

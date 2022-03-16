@@ -7,7 +7,10 @@ package agents;
 
 import data.OleConfig;
 import data.OlePassport;
+import java.awt.Component;
+import java.util.HashMap;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import swing.OleApplication;
 
@@ -16,21 +19,20 @@ import swing.OleApplication;
  * application
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class BootPayload {
+public class LARVAPayload {
 
     OleApplication parent;
     OleConfig olecfg;
     OlePassport oPassport;
-    JTextArea jtaLog;   
-    JPanel jpXui;
+    HashMap <String , Component> guiComponents;
     AgentReport myReport;
 
-    public BootPayload(OleApplication parent, OleConfig olecfg) {
+    public LARVAPayload(OleApplication parent, OleConfig olecfg) {
         this.parent = parent;
         this.olecfg = olecfg;
     }
 
-    public BootPayload() {
+    public LARVAPayload() {
     }
 
     public OleApplication getParent() {
@@ -57,14 +59,6 @@ public class BootPayload {
         this.oPassport = oPassport;
     }
 
-    public JTextArea getJtaLog() {
-        return jtaLog;
-    }
-
-    public void setJtaLog(JTextArea jtaLog) {
-        this.jtaLog = jtaLog;
-    }
-
     public AgentReport getMyReport() {
         return myReport;
     }
@@ -73,12 +67,13 @@ public class BootPayload {
         this.myReport = myReport;
     }
 
-    public JPanel getJpXui() {
-        return jpXui;
+    public HashMap<String, Component> getGuiComponents() {
+        return guiComponents;
     }
 
-    public void setJpXui(JPanel jpXui) {
-        this.jpXui = jpXui;
+    public void setGuiComponents(HashMap<String, Component> guiComponents) {
+        this.guiComponents = guiComponents;
     }
+
 
 }

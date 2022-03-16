@@ -93,7 +93,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected boolean traceRunSteps;
     protected OleConfig oleConfig;
     protected AgentReport myReport;
-    BootPayload payload;
+    protected LARVAPayload payload;
 
     /**
      * Main JADE setup
@@ -110,17 +110,14 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         this.logger.setEcho(true);
         // create a new frame to store text field and button
         if (this.getArguments() != null && this.getArguments().length > 0) {
-            payload = (BootPayload) this.getArguments()[0];
-            myText = payload.getJtaLog();
+            payload = (LARVAPayload) this.getArguments()[0];
+            myText = (JTextArea) payload.getGuiComponents().get("Activity log");
             myApp = payload.getParent();
             if (payload.getoPassport() != null) {
                 this.mypassport = payload.getoPassport().getField("rawPassport");
             }
             if (payload.getOlecfg() != null) {
                 oleConfig = payload.getOlecfg();
-                if (oleConfig.getTab("LARVA") != null) {
-                    problemName = (String) oleConfig.getTab("LARVA").getField("Problem");
-                }
                 if (oleConfig.getTab("Log activity") != null) {
                     logger.setEcho(!oleConfig.getTab("Log activity").getBoolean("Silent", false));
                     if (oleConfig.getTab("Log activity").getBoolean("Save log", false)) {
@@ -165,11 +162,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      *
      * @return The set of sensors configured in the external configuration file
      */
-    protected String[] getConfiguredSensors() {
+    protected String[] getConfiguredSensors(OleConfig ocfg) {
         String res[] = new String[0];
         ArrayList<String> sensorList = new ArrayList();
-        if (oleConfig != null && !oleConfig.isEmpty()) {
-            Ole sensors = oleConfig.getTab("LARVA").getOle("Sensors");
+        if (ocfg != null && !ocfg.isEmpty()) {
+            Ole sensors = ocfg.getTab("LARVA").getOle("Sensors");
             for (String sensor : sensors.getFieldList()) {
                 if (sensors.getBoolean(sensor)) {
                     sensorList.add(sensor.toUpperCase());
@@ -223,8 +220,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
         logger.logMessage(message);
         if (isSwing() && logger.isEcho()) {
-            myText.append(logger.getLastlog());
-            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
+            myText.append(logger.getLastlog()+"");
+//            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
+            myText.setCaretPosition(Math.max(myText.getText().length(), 0));
         }
     }
 

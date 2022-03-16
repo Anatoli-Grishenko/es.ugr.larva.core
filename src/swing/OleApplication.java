@@ -66,7 +66,6 @@ public abstract class OleApplication extends OleFrame {
     protected ArrayList<String> listComponents;
     protected Map2DColor watermarkHeader;
     protected Color colorHeader;
-
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;

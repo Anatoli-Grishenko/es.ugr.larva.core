@@ -7,12 +7,10 @@ package swing;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import javax.swing.JButton;
 import tools.emojis;
 
@@ -25,7 +23,9 @@ public class OleButton extends JButton {
     static final int PlainButton = 1;
     static final int RegularButton = 0;
     static final int IconButton = 2;
-    String style, type, text;
+    static final int TextButton = 3;
+    static final int EmojiButton = 3;
+    String style, type, command;
     Color foreground;
     Component parent;
 
@@ -33,12 +33,11 @@ public class OleButton extends JButton {
         super();
         parent = (Component) p;
         foreground = this.getForeground();
-        this.text = text;
         setText(text);
-        type = "text";
-        style = "regular";
-        setActionCommand(command);
-        setToolTipText(command);
+        setRegular();        
+        this.command = command;
+        setActionCommand(this.command);
+        setToolTipText(this.command);
         setFocusPainted(true);
         this.addActionListener(p);
         this.addMouseListener(new MouseAdapter() {
@@ -56,20 +55,15 @@ public class OleButton extends JButton {
     }
 
     public void hideButton() {
-//        this.setVisible(false);
         this.setForeground(parent.getBackground());
-//        this.setText("   ");
     }
 
     public void unHideButton() {
-//        this.setVisible(true);
         this.setForeground(foreground);
-//        this.setText(text);
     }
 
     public void mouseIn(MouseEvent e) {
-        if (style.equals("flat")) {
-//            this.setFocusPainted(true);
+        if (getStyle().equals("flat")) {
             unHideButton();
             setContentAreaFilled(true);
             this.setBorderPainted(true);
@@ -77,44 +71,64 @@ public class OleButton extends JButton {
     }
 
     public void mouseOut(MouseEvent e) {
-        if (style.equals("flat")) {
-//            this.setFocusPainted(false);
+        if (getStyle().equals("flat")) {
             setContentAreaFilled(false);
             this.setBorderPainted(false);
         }
     }
 
     public OleButton setEmoji() {
-        type = "emoji";
-        try {
-            setText((String) emojis.class.getField(getText()).get(getText()));
-        } catch (Exception ex) {
-        }
-        setFont(new Font("Arial", Font.BOLD, 20));
+        setType("emoji");
+        setText(getText().trim());
         return this;
     }
 
     public OleButton setFlat() {
-        style = "flat";
-        setMargin(new Insets(0, 0, 0, 0));
-        setContentAreaFilled(false);
-        this.setBorderPainted(false);
-        this.setFocusPainted(false);
+        setStyle("flat");
         return this;
     }
 
     public OleButton setRegular() {
-        style = "regular";
-        setContentAreaFilled(true);
-//        setMargin(new Insets(1, 1, 1, 1));
-//        setFocusPainted(true);
-//        this.setBorderPainted(true);
+        setStyle("regular");
         return this;
     }
 
-    @Override
-    public void setEnabled(boolean b) {
-        super.setEnabled(b);
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public String getStyle() {
+        return style;
+    }
+
+    public void setStyle(String style) {
+        this.style=style;
+        if (style.equals("flat")) {
+            setMargin(new Insets(0, 0, 0, 0));
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+        } else {
+            setContentAreaFilled(true);
+        }
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+        if (type.equals("emoji")) {
+            try {
+                setText((String) emojis.class.getField(getText()).get(getText()));
+            } catch (Exception ex) {
+            }
+        }
     }
 
 }

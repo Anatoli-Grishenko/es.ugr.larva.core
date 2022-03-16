@@ -65,6 +65,7 @@ import static swing.SwingTools.doSwingWait;
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class OleDialog extends JDialog implements ActionListener {
+
     OleConfig output, input;
     HashMap<String, Component> components;
     JTabbedPane tpMain;
@@ -75,11 +76,10 @@ public class OleDialog extends JDialog implements ActionListener {
     JFrame parent;
     BiConsumer<ActionEvent, OleConfig> buttonListener;
     int listsize = 5;
-    
-    
+
     public static String doSelectFile(String currentfolder, String extension) {
         JFileChooser choose;
-        
+
         String currentpath = Paths.get("").toAbsolutePath().toString(),
                 filepath = FileSystems.getDefault().getPath(currentfolder).normalize().toAbsolutePath().toString();
         choose = new JFileChooser();
@@ -94,12 +94,12 @@ public class OleDialog extends JDialog implements ActionListener {
         } else {
             return null;
         }
-        
+
     }
-    
+
     public static String doSaveAsFile(String currentfolder) {
         JFileChooser choose;
-        
+
         String currentpath = Paths.get("").toAbsolutePath().toString(),
                 filepath = FileSystems.getDefault().getPath(currentfolder).normalize().toAbsolutePath().toString();
         choose = new JFileChooser();
@@ -113,12 +113,12 @@ public class OleDialog extends JDialog implements ActionListener {
         } else {
             return null;
         }
-        
+
     }
-    
+
     public static String doSelectFolder(String currentfolder) {
         JFileChooser choose;
-        
+
         String currentpath = Paths.get("").toAbsolutePath().toString(),
                 filepath = FileSystems.getDefault().getPath(currentfolder).normalize().toAbsolutePath().toString();
         choose = new JFileChooser();
@@ -132,9 +132,9 @@ public class OleDialog extends JDialog implements ActionListener {
         } else {
             return null;
         }
-        
+
     }
-    
+
     public OleDialog(JFrame parent, String title) {
         super(parent, title, true);
         tpMain = new JTabbedPane();
@@ -151,16 +151,16 @@ public class OleDialog extends JDialog implements ActionListener {
         flButtons.add(bCancel);
         flMain.add(flButtons);
         this.getRootPane().setDefaultButton(bOK);
-        
+
         components = new HashMap();
         getContentPane().add(flMain);
     }
-    
+
     public OleDialog addActionListener(BiConsumer<ActionEvent, OleConfig> l) {
         buttonListener = l;
         return this;
     }
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         JFileChooser choose;
@@ -212,13 +212,16 @@ public class OleDialog extends JDialog implements ActionListener {
                         setValues(input);
                     }
                 }
-            
+
         }
-        
+
     }
-    
+
     public boolean run(OleConfig o) {
-        return run(o,"");
+        SwingTools.doSwingWait(() -> {
+           run(o, "");
+        });
+        return this.bresult;
 //        tpMain.removeAll();
 //        output = new OleConfig(o);
 //        input = new OleConfig(o);
@@ -228,7 +231,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //        setVisible(true);
 //        return bresult;
     }
-    
+
     public boolean run(OleConfig o, String defaulttab) {
         tpMain.removeAll();
         output = new OleConfig(o);
@@ -242,7 +245,7 @@ public class OleDialog extends JDialog implements ActionListener {
         setVisible(true);
         return bresult;
     }
-    
+
     public OleConfig getResult() {
         return output;
     }
@@ -255,7 +258,7 @@ public class OleDialog extends JDialog implements ActionListener {
         Ole currentTab;
         Ole fieldproperties;
         String tooltip;
-        
+
         for (String stab : tabs) {
             currentTab = olecfg.getTab(stab);
             fieldproperties = olecfg.getProperties(stab);
@@ -270,7 +273,7 @@ public class OleDialog extends JDialog implements ActionListener {
             }
         }
     }
-    
+
     protected JPanel setLayout(String oid, Ole ocomponents, OleConfig olecfg) {
         GridBagConstraints gc;
         JPanel dataPanel;
@@ -285,7 +288,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JButton bFileChoose, bAux;
         String arraySelect[];
         int columns;
-        
+
         panelproperties = olecfg.getProperties(oid);
         columns = panelproperties.getInt("columns", 1);
         dataPanel = new JPanel();
@@ -339,7 +342,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     components.put(sfield, combobox);
                     dataPanel.add(combobox, gc);
                     gc.gridx++;
-                    
+
                 } else if (fieldproperties.get("folder") != null) {     // Select folder               
                     text = new JTextField();
 //                    text.setText(ocomponents.getField(sfield));
@@ -437,7 +440,7 @@ public class OleDialog extends JDialog implements ActionListener {
         }
         return dataPanel;
     }
-    
+
     protected void setValues(OleConfig olecfg) {
         ArrayList<String> tabs = new ArrayList(olecfg.getAllTabNames());
         JPanel pTab;
@@ -445,13 +448,13 @@ public class OleDialog extends JDialog implements ActionListener {
         Ole currentTab;
         Ole fieldproperties;
         String tooltip;
-        
+
         for (String stab : tabs) {
             currentTab = olecfg.getTab(stab);
             setValues(stab, currentTab, olecfg);
         }
     }
-    
+
     protected void setValues(String oid, Ole ocomponents, OleConfig olecfg) {
         GridBagConstraints gc;
         JPanel dataPanel;
@@ -466,7 +469,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JButton bFileChoose, bAux;
         String arraySelect[];
         int columns;
-        
+
         for (String sfield : ocomponents.getFieldList()) {
             fieldproperties = olecfg.getProperties(sfield);
             if (ocomponents.getField(sfield).contains("<html>")) {
@@ -498,10 +501,11 @@ public class OleDialog extends JDialog implements ActionListener {
                 checkbox.setSelected(ocomponents.getBoolean(sfield));
             } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
                 ArrayList<String> selected;
-                if (fieldproperties.getArray("selected") == null)
+                if (fieldproperties.getArray("selected") == null) {
                     selected = new ArrayList();
-                else
-                selected = new ArrayList(fieldproperties.getArray("selected"));
+                } else {
+                    selected = new ArrayList(fieldproperties.getArray("selected"));
+                }
                 list = (OleList) components.get(sfield);
                 list.clear();
                 list.addAllElements(ocomponents.getArray(sfield));
@@ -516,7 +520,7 @@ public class OleDialog extends JDialog implements ActionListener {
             }
         }
     }
-    
+
     protected OleConfig getValues(OleConfig olecfg) {
         ArrayList<String> tabs = new ArrayList(olecfg.getAllTabNames());
         Ole currentTab;
@@ -526,7 +530,7 @@ public class OleDialog extends JDialog implements ActionListener {
         }
         return olecfg;
     }
-    
+
     protected OleConfig getValues(Ole currentTab, OleConfig olecfg) {
         JTextField text;
         JCheckBox checkbox;
@@ -534,7 +538,7 @@ public class OleDialog extends JDialog implements ActionListener {
         JComboBox combobox;
         OleList list;
         Ole fieldproperties;
-        
+
         for (String sfield : currentTab.getFieldList()) {
             fieldproperties = olecfg.getProperties(sfield);
             if (currentTab.getField(sfield).contains("<html>")) {

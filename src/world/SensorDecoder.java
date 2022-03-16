@@ -55,7 +55,8 @@ public class SensorDecoder {
             hMap = new Map2DColor();
             hMap.loadMapRaw("./maps/" + name);
             File toremove= new File("./maps/" + name);
-            toremove.delete();
+            if (toremove.exists())
+                toremove.delete();
             return true;
         } catch (IOException ex) {
         }

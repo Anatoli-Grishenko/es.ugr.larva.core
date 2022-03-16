@@ -12,6 +12,7 @@ import com.eclipsesource.json.JsonObject;
 import data.OleFile;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -106,13 +107,6 @@ public class LARVAAirTrafficControlTiles {
         initGUI();
     }
 
-    public void setTitle(String title) {
-        this.fDashboard.setTitle(title);
-    }
-
-    public String getTitle() {
-        return this.fDashboard.getTitle();
-    }
 
     public void clear() {
         OleFile ofile = new OleFile();
@@ -244,6 +238,7 @@ public class LARVAAirTrafficControlTiles {
             fDashboard.pack();
             fDashboard.show();
         } else {
+            jpXUI.setLayout(new BorderLayout());
             pMain = new JPanel();
             pMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
             pMain.setLayout(new BoxLayout(pMain, BoxLayout.X_AXIS));
@@ -270,7 +265,7 @@ public class LARVAAirTrafficControlTiles {
             // Mount panes
             dpMap.add(mpMap);
             pMain.add(dpMap);            
-            jpXUI.add(pMain);
+            jpXUI.add(pMain, BorderLayout.NORTH);
         }
         refresh();
 
@@ -367,8 +362,8 @@ public class LARVAAirTrafficControlTiles {
         int n = 0, k = 2;
 
         SwingTools.doSwingWait(() -> {
-            fDashboard.validate();
-            this.fDashboard.repaint();
+            pMain.validate();
+            pMain.repaint();
         });
     }
 
