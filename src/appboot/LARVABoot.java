@@ -24,11 +24,14 @@ import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -45,6 +48,7 @@ import swing.OleDialog;
 import swing.OleDrawPane;
 import swing.OleFoldableList;
 import swing.OleToolBar;
+import swing.SwingTools;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
@@ -96,8 +100,8 @@ public class LARVABoot {
     OleFoldableList pTiles;
     JPanel _pServerTiles, _XUI, _seqDiagram;
     JScrollPane psTiles;
-    HashMap <String,Component> shareableGUI;
-    protected JTextArea taMessages,taSequence;
+    HashMap<String, Component> shareableGUI;
+    protected JTextArea taMessages, taSequence;
     protected JTabbedPane tabbedPane;
 
     protected int nlog;
@@ -123,7 +127,7 @@ public class LARVABoot {
     }
 
     protected void initGUI(int style) {
-        shareableGUI  = new HashMap();
+        shareableGUI = new HashMap();
         _style = style % 3;
         _firstContainer = null;
         _containerName = "";
@@ -153,13 +157,12 @@ public class LARVABoot {
             case LIGHT:
                 this._appConfiguration = getClass().getResource("/resources/config/LightBoot.app").toString().replace("file:", "");
                 break;
+            case CLASSIC:
             default:
                 this._appConfiguration = getClass().getResource("/resources/config/ClassicBoot.app").toString().replace("file:", "");
 
         }
         this._configFileName = "./config/Configuration.conf";
-//        this._background = getClass().getResource("/resources/images/grid.png").toString().replace("file:", "");
-//        this._logoUgr = getClass().getResource("/resources/images/logougr_tiny.png").toString();
         app = new OleConfig();
         app.loadFile(this._appConfiguration);
         if (app.isEmpty()) {
@@ -185,7 +188,7 @@ public class LARVABoot {
 
         pTiles = new OleFoldableList(appMain);
 //        pTiles.setMinimumSize(new Dimension(200,120));
-        pTiles.setPreferredSize(new Dimension(150, (int) appMain.getPreferredSize().getHeight()));
+        pTiles.setPreferredSize(new Dimension(150, 1000));
         psTiles = new JScrollPane(pTiles);
         psTiles.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         psTiles.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -202,49 +205,68 @@ public class LARVABoot {
         taMessages.setFont(f);
         pScroll = new JScrollPane(taMessages);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        
+
         OleToolBar otbAux = new OleToolBar(this.appMain);
         OleButton obAux;
         JPanel jpAux;
-       obAux=new OleButton(this.appMain,"Save activity","SAVEAS");
-        obAux.setFlat();
-        obAux.setEmoji();
-        otbAux.addButton(obAux);        
-        obAux=new OleButton(this.appMain,"Clean activity","CANCEL¡");
-        obAux.setFlat();
-        obAux.setEmoji();
+        obAux = new OleButton(this.appMain, "Save activity", "save_alt");
+        obAux.setIcon();
+        obAux.setPreferredSize(new Dimension(20, 20));
+        obAux.setExtraFlat();
         otbAux.addButton(obAux);
- 
-        jpAux= new JPanel();
+        obAux = new OleButton(this.appMain, "Clean activity", "delete");
+        obAux.setPreferredSize(new Dimension(20, 20));
+        obAux.setIcon();
+        obAux.setExtraFlat();
+        otbAux.addButton(obAux);
+
+        jpAux = new JPanel();
         jpAux.setLayout(new BorderLayout());
         jpAux.add(otbAux, BorderLayout.NORTH);
         jpAux.add(pScroll, BorderLayout.CENTER);
-        
+
         tabbedPane.addTab("Activity log", jpAux);
-        shareableGUI.put("Activity log",taMessages);
+        shareableGUI.put("Activity log", taMessages);
         _pServerTiles = new JPanel();
         _pServerTiles.setLayout(new FlowLayout(FlowLayout.LEFT));
         pScroll = new JScrollPane(_pServerTiles);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab("Server agents", pScroll);
-        shareableGUI.put("Server agents",_pServerTiles);
+        shareableGUI.put("Server agents", _pServerTiles);
 
         taSequence = new JTextArea();
         taSequence.setEditable(false);
         taSequence.setWrapStyleWord(true);
-         f = appMain.getFont();
+        f = appMain.getFont();
         f = new Font(Font.MONOSPACED, Font.PLAIN, f.getSize());
         taSequence.setFont(f);
         pScroll = new JScrollPane(taSequence);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        tabbedPane.addTab("Sequence", pScroll);
-        shareableGUI.put("Sequence",taSequence);
+
+        otbAux = new OleToolBar(this.appMain);
+        obAux = new OleButton(this.appMain, "Save sequence", "save_alt");
+        obAux.setIcon();
+        obAux.setPreferredSize(new Dimension(20, 20));
+        obAux.setExtraFlat();
+        otbAux.addButton(obAux);
+        obAux = new OleButton(this.appMain, "Clean sequence", "delete");
+        obAux.setPreferredSize(new Dimension(20, 20));
+        obAux.setIcon();
+        obAux.setExtraFlat();
+        otbAux.addButton(obAux);
+        jpAux = new JPanel();
+        jpAux.setLayout(new BorderLayout());
+        jpAux.add(otbAux, BorderLayout.NORTH);
+        jpAux.add(pScroll, BorderLayout.CENTER);
+
+        tabbedPane.addTab("Sequence", jpAux);
+        shareableGUI.put("Sequence", taSequence);
 
         _XUI = new JPanel();
         pScroll = new JScrollPane(_XUI);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab("XUI", pScroll);
-        shareableGUI.put("XUI",_XUI);
+        shareableGUI.put("XUI", _XUI);
         appMain.getMainPanel().add(tabbedPane, BorderLayout.CENTER);
         appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
                 app.getOptions().getOle("FrameSize").getInt("height", 480)));
@@ -287,6 +309,40 @@ public class LARVABoot {
         }
         if (e.getActionCommand().equals("Passport")) {
             loadPassport();
+        }
+        if (e.getActionCommand().equals("Clean activity")) {
+            this.taMessages.setText("");
+            this.taMessages.validate();
+        }
+        if (e.getActionCommand().equals("Save activity")) {
+            String toSave = taMessages.getText(), filename;
+            filename = OleDialog.doSelectFile("./", "txt");
+            if (filename != null) {
+                try {
+                    PrintStream outP = new PrintStream(new File(filename));
+                    outP.println(toSave);
+                    SwingTools.Info("Sequence diagram saved");
+                } catch (FileNotFoundException ex) {
+                    this.Error("Error saving activity log");
+                }
+            }
+        }
+        if (e.getActionCommand().equals("Clean sequence")) {
+            this.taSequence.setText("");
+            this.taSequence.validate();
+        }
+        if (e.getActionCommand().equals("Save sequence")) {
+            String toSave = taSequence.getText(), filename;
+            filename = OleDialog.doSelectFile("./", "txt");
+            if (filename != null) {
+                try {
+                    PrintStream outP = new PrintStream(new File(filename));
+                    outP.println(toSave);
+                    SwingTools.Info("Activity log saved");
+                } catch (FileNotFoundException ex) {
+                    this.Error("Error saving activity log");
+                }
+            }
         }
         if (e.getActionCommand().equals("Connect")) {
             this.Boot();
@@ -336,20 +392,22 @@ public class LARVABoot {
     protected void showStatus() {
         appMain.cleanStatus();
         if (_connected) {
-            appMain.addStatus(emojis.PLUG, OleApplication.DodgerBlue);
+//            appMain.addStatus(emojis.PLUG, OleApplication.DodgerBlue);
+            appMain.addStatus(appMain.getIconSet().getHighlightIcon("link", 20, 20));
             appMain.addStatus(_host);
-//            appMain.addStatus(oleConfig.getTab("Connection").getString("Hostname", ""));
             appMain.addStatus("(" + _port + ")");
-//            appMain.addStatus("(" + oleConfig.getTab("Connection").getInt("Port", -1) + ")");
         } else {
-            appMain.addStatus(emojis.PLUG, OleApplication.Maroon);
+            appMain.addStatus(appMain.getIconSet().getInactiveIcon("link_off", 20, 20));
+//            appMain.addStatus(emojis.PLUG, OleApplication.Maroon);
             appMain.addStatus(" No connection yet");
         }
         if (oPassport != null && !oPassport.isEmpty()) {
-            appMain.addStatus(emojis.ID, OleApplication.DodgerBlue);
+            appMain.addStatus(appMain.getIconSet().getHighlightIcon("account_circle", 20, 20));
+//            appMain.addStatus(emojis.ID, OleApplication.DodgerBlue);
             appMain.addStatus(oPassport.getName());
         } else {
-            appMain.addStatus(emojis.ID, OleApplication.Maroon);
+            appMain.addStatus(appMain.getIconSet().getInactiveIcon("account_circle", 20, 20));
+//            appMain.addStatus(emojis.ID, OleApplication.Maroon);
             appMain.addStatus(" No passport yet");
         }
     }
@@ -667,7 +725,9 @@ public class LARVABoot {
             }
         }
         if (_tiles.get(_xuiName) == null) {
-            launchAgent(_xuiName, XUIAgent.class);
+            if (oPassport != null) {
+                launchAgent(_xuiName, XUIAgent.class);
+            }
         }
         return this;
     }

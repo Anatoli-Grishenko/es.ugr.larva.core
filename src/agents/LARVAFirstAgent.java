@@ -182,6 +182,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         if (traceRunSteps) {
             addRunStep("MILES03");
         }
+        if (problemName != null) {
+            this.saveSequenceDiagram(problemName + ".seqd");
+        } else {
+            this.saveSequenceDiagram(getName() + ".seqd");
+        }
         super.takeDown();
     }
 
@@ -220,7 +225,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         }
         logger.logMessage(message);
         if (isSwing() && logger.isEcho()) {
-            myText.append(logger.getLastlog()+"");
+            myText.append(logger.getLastlog() + "");
 //            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
             myText.setCaretPosition(Math.max(myText.getText().length(), 0));
         }
@@ -741,6 +746,12 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         try {
             PrintStream out = new PrintStream(new File(filename));
             out.println(getSequenceDiagram());
+            JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
+            if (taSeq != null) {
+                taSeq.append(filename);
+                taSeq.append(getSequenceDiagram());
+                taSeq.validate();
+            }
         } catch (FileNotFoundException ex) {
             Error("Unable to save Sequence Diagram into file " + filename);
         }

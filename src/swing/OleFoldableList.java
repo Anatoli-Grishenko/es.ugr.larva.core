@@ -48,6 +48,8 @@ public class OleFoldableList extends JPanel {
         gc.weighty = 0;
         gc.gridwidth = 1;
         gc.gridheight = 1;
+        gc.ipadx=3;
+        gc.ipady=3;
         gbl.setConstraints(ofpP, gc);
         super.add(ofpP);
         this.validate();
@@ -64,6 +66,8 @@ public class OleFoldableList extends JPanel {
         gc.weighty = 0;
         gc.gridwidth = 1;
         gc.gridheight = 1;
+        gc.ipadx=3;
+        gc.ipady=3;
         gbl.setConstraints(ofpP, gc);
         super.add(ofpP);
         this.validate();

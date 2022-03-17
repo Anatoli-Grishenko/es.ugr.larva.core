@@ -52,13 +52,14 @@ public class AirTrafficControl extends MyDrawPane {
     protected HashMap<String, ATC_Trail> trails;
     protected Color colors[] = {new Color(0, 255, 0), new Color(1, 0, 0), new Color(0, 0, 1),
         new Color(1, 1, 0), new Color(1, 0, 1), new Color(0, 1, 1)};
-    protected JsonArray jsaGoals=new JsonArray();
+    protected JsonArray jsaGoals = new JsonArray();
 
     public AirTrafficControl(Consumer<Graphics2D> function) {
         super(function);
-        this.setLayout(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        this.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         this.setVisible(false);
         this.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+//        this.setPainter(g -> paintMap(g));
         dpMap = new MyDrawPane(g -> paintMap(g));
         dpMap.setVisible(false);
         spMap = new JScrollPane(dpMap);
@@ -127,6 +128,13 @@ public class AirTrafficControl extends MyDrawPane {
         spMap.setVisible(false);
     }
 
+    public void refresh() {
+//        SwingTools.doSwingWait(() -> {
+//            validate();
+//            repaint();
+//        });
+    }
+
     public void setPreferredSize(Dimension d) {
         super.setPreferredSize(d);
         width = (int) d.getWidth();
@@ -176,13 +184,12 @@ public class AirTrafficControl extends MyDrawPane {
             } else if (ID.startsWith("R")) {
                 trails.put(ID, new ATC_Trail(ID, Color.CYAN)); //colors[trails.keySet().size()]));
             } else {
-                trails.put(ID, new ATC_Trail(ID, Color.YELLOW)); //colors[trails.keySet().size()]));
+                trails.put(ID, new ATC_Trail(ID, Color.GREEN)); //colors[trails.keySet().size()]));
             }
         }
         trails.get(ID).pushTrail(new Point3D(x, y, z));
         redecorate = false;
-        validate();
-        repaint();
+        refresh();
     }
 
     public void setBounds(int x, int y, int w, int h) {
@@ -191,22 +198,22 @@ public class AirTrafficControl extends MyDrawPane {
         width = w;
         height = h;
         super.setBounds(x, y, width, height);
-        validate();
-        repaint();
+//        validate();
+//        repaint();
     }
 
     protected void defLayout() {
         this.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         this.setBackground(Color.BLACK);
         dpMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        dpMap.setBackground(Color.BLUE);
         spMap.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        spMap.setBackground(Color.BLACK);
+//        spMap.setBackground(Color.BLACK);
         if (palMap == null) {
             spMap.setPreferredSize(new Dimension((int) this.getBounds().getWidth(), (int) this.getBounds().getHeight()));
             this.add(spMap);
         } else {
             dpPalette = new MyDrawPane(g -> paintPalette(g));
+//           dpPalette = new MyDrawPane(null);
             dpPalette.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
             dpPalette.setBackground(Color.BLACK);
             dpPalette.setPreferredSize(new Dimension(palw, (int) this.getBounds().getHeight()));
@@ -222,9 +229,11 @@ public class AirTrafficControl extends MyDrawPane {
     }
 
     public AirTrafficControl setMap(Color m[][], Palette p) {
-        this.removeAll();
+        System.out.println("dp.setMap");
+        paintpalette = true;
         mapwidth = (m[0].length);
         mapheight = (m.length);
+        System.out.println("setMap " + mapwidth + "," + mapheight);
         map = new Color[getMapWidth()][this.getMapHeight()];
         m2dMap = new Map2DColor(getMapWidth(), this.getMapHeight());
         for (int i = 0; i < getMapWidth(); i++) {
@@ -233,7 +242,6 @@ public class AirTrafficControl extends MyDrawPane {
             }
         }
         palMap = p;
-        setPainter(g -> paintMpMap(g));
         defLayout();
         jsaGoals = new JsonArray();
 
@@ -243,15 +251,14 @@ public class AirTrafficControl extends MyDrawPane {
         return this;
     }
 
-    void paintMpMap(Graphics2D g) {
-        if (paintpalette) {
-            paintPalette((Graphics2D) dpPalette.getGraphics());
-            paintpalette = false;
-        }
-        paintMap((Graphics2D) dpMap.getGraphics());
-    }
-
     protected void paintPalette(Graphics2D g) {
+        if (palMap == null || !paintpalette) {
+            return;
+        }
+        paintpalette = false;
+
+        System.out.println("   Palette");
+
         int ph = 10, h = (int) this.getBounds().getHeight(),
                 pt = (2 * palw) / 3, n = (h - 2 * ph) / ph;
         Font f = g.getFont();
@@ -272,29 +279,34 @@ public class AirTrafficControl extends MyDrawPane {
         g.setFont(f);
     }
 
-    protected void paintMap(Graphics2D g) {
+    public void paintMap(Graphics2D g) {
+        System.out.println("paintMap");
         if (map == null || g == null) {
             return;
         }
         if (redecorate) {
             preDecorateMap(g);
-            g.drawImage(m2dMap.getMap(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
+        }
+        System.out.println("   Map repaint");
+          g.drawImage(m2dMap.getMap(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
+        if (redecorate) {
             postDecorateMap(g);
         }
+        System.out.println("paintMap2");
         for (String s : trails.keySet()) {
             paintTrail(g, s);
-//            if (trails.get(s).size() > 1) {
-//                hideTrailPos(g, s,trails.get(s).size() - 2);
-//            }
-//            if (trails.get(s).size() > 0) {
-//                paintTrailPos(g, s, 0);
-//            }
+            if (trails.get(s).size() > 1) {
+                hideTrailPos(g, s, trails.get(s).size() - 2);
+            }
+            if (trails.get(s).size() > 0) {
+                paintTrailPos(g, s, 0);
+            }
         }
         for (int i = 0; i < jsaGoals.size(); i++) {
             paintGoal(g, jsaGoals.get(i).asObject());
         }
         redecorate = true;
-
+        this.validate();
     }
 
     protected void paintTrail(Graphics2D g, String ID) {
@@ -368,12 +380,16 @@ public class AirTrafficControl extends MyDrawPane {
 
     }
 
+    public void clear() {
+        this.paintpalette=true;
+//        this.removeAll();
+    }
     protected void preDecorateMap(Graphics2D g) {
-        if (map == null) {
-            return;
-        }
-        g.setBackground(Color.darkGray);
-        g.clearRect(0, 0, dpMap.getWidth(), dpMap.getHeight());
+//        if (map == null) {
+//            return;
+//        }
+//        g.setBackground(Color.darkGray);
+//        g.clearRect(0, 0, dpMap.getWidth(), dpMap.getHeight());
     }
 
     protected void postDecorateMap(Graphics2D g) {
@@ -401,8 +417,8 @@ public class AirTrafficControl extends MyDrawPane {
         zoom = z;
         dpMap.setPreferredSize(new Dimension(getMapWidth() * zoom + offsetimg * 2, getMapHeight() * zoom + offsetimg * 2));
         spMap.setViewportView(dpMap);
-        spMap.validate();
-        spMap.repaint();
+//        spMap.validate();
+//        spMap.repaint();
     }
 
     public void setColor(int x, int y, Color c) {

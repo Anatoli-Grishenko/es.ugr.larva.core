@@ -71,6 +71,9 @@ public class OleToolBar extends JPanel {
                 obAux.setEmoji();
                 obAux.setText(" " + obAux.getText().trim() + " ");
             }
+            if (type.equals("icon")) {
+                obAux.setIcon();
+            }
             addButton(obAux);
         }
     }

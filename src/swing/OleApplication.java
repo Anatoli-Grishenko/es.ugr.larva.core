@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -66,10 +67,13 @@ public abstract class OleApplication extends OleFrame {
     protected ArrayList<String> listComponents;
     protected Map2DColor watermarkHeader;
     protected Color colorHeader;
+    protected OleIconSet iconSet;
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;
-        SwingTools.initLookAndFeel(oConfig.getOptions().getString("FlatLaf", "Dark"));
+        String lookaf =oConfig.getOptions().getString("FlatLaf", "Dark");
+        SwingTools.initLookAndFeel(lookaf);
+        iconSet = new OleIconSet(lookaf);
         Ole oAux = olecfg.getOle("FrameSize");
         if (oAux.isEmpty()) {
             setSize(800, 600);
@@ -179,6 +183,10 @@ public abstract class OleApplication extends OleFrame {
         return this.otbToolBar;
     }
 
+    public OleIconSet getIconSet() {
+        return iconSet;
+    }
+
     public abstract void Draw(Graphics2D g);
 
     public void addLabel(Container con, String s) {
@@ -190,6 +198,13 @@ public abstract class OleApplication extends OleFrame {
         JLabel l = new JLabel(s, SwingConstants.LEFT);
         l.setForeground(col);
         con.add(l);
+    }
+
+    public void addStatus(ImageIcon i) {
+        JLabel l = new JLabel("", SwingConstants.LEFT);
+        l.setIcon(i);
+        pStatus.add(l);
+        pStatus.validate();
     }
 
     public void addStatus(String s) {

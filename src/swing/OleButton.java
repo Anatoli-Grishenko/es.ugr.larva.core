@@ -7,6 +7,7 @@ package swing;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -20,12 +21,13 @@ import tools.emojis;
  */
 public class OleButton extends JButton {
 
-    static final int PlainButton = 1;
-    static final int RegularButton = 0;
+    static final int PlainShape = 1;
+    static final int RegularShape = 0;
     static final int IconButton = 2;
     static final int TextButton = 3;
-    static final int EmojiButton = 3;
-    String style, type, command;
+    static final int EmojiButton = 4;
+    int shape, buttontype;
+    String style, type, command, texto;
     Color foreground;
     Component parent;
 
@@ -33,8 +35,11 @@ public class OleButton extends JButton {
         super();
         parent = (Component) p;
         foreground = this.getForeground();
+        texto = text;
         setText(text);
-        setRegular();        
+        setRegular();
+        setType("text");
+        setPreferredSize(new Dimension(24, 24));
         this.command = command;
         setActionCommand(this.command);
         setToolTipText(this.command);
@@ -56,10 +61,12 @@ public class OleButton extends JButton {
 
     public void hideButton() {
         this.setForeground(parent.getBackground());
+//    this.setVisible(false);
     }
 
     public void unHideButton() {
         this.setForeground(foreground);
+//        this.setVisible(true);
     }
 
     public void mouseIn(MouseEvent e) {
@@ -68,12 +75,22 @@ public class OleButton extends JButton {
             setContentAreaFilled(true);
             this.setBorderPainted(true);
         }
+        if (getType().equals("icon")) {
+            if (this.isEnabled()) {
+                this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, getPreferredSize()));
+            }
+        }
     }
 
     public void mouseOut(MouseEvent e) {
         if (getStyle().equals("flat")) {
             setContentAreaFilled(false);
             this.setBorderPainted(false);
+        }
+        if (getType().equals("icon")) {
+            if (this.isEnabled()) {
+                this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, getPreferredSize()));
+            }
         }
     }
 
@@ -88,8 +105,24 @@ public class OleButton extends JButton {
         return this;
     }
 
+    public OleButton setExtraFlat() {
+        setStyle("extraflat");
+        return this;
+    }
+
     public OleButton setRegular() {
         setStyle("regular");
+        return this;
+    }
+
+    public OleButton setIcon() {
+        setType("icon");
+        return this;
+    }
+
+    public OleButton setIcon(Dimension d) {
+        setPreferredSize(d);
+        setType("icon");
         return this;
     }
 
@@ -106,8 +139,13 @@ public class OleButton extends JButton {
     }
 
     public void setStyle(String style) {
-        this.style=style;
+        this.style = style;
         if (style.equals("flat")) {
+            setMargin(new Insets(0, 0, 0, 0));
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+        } else if (style.equals("extraflat")) {
             setMargin(new Insets(0, 0, 0, 0));
             setContentAreaFilled(false);
             setBorderPainted(false);
@@ -127,6 +165,12 @@ public class OleButton extends JButton {
             try {
                 setText((String) emojis.class.getField(getText()).get(getText()));
             } catch (Exception ex) {
+            }
+        } else if (type.equals("icon")) {
+            if (parent instanceof OleApplication) {
+                OleApplication oapp = (OleApplication) parent;
+                this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24, 24));
+                this.setText("");
             }
         }
     }

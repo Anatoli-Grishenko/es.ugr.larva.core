@@ -71,7 +71,7 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         worldh = lastPerception.getWorldMap().getHeight();
         iMaxDistance = worldw + worldh;
         rpbDistance.setMaxValue(iMaxDistance);
-        refresh();
+//        this.repaint();
         return true;
     }
 
@@ -96,8 +96,6 @@ public class LARVAEmbeddedDash extends MyDrawPane {
                 lasty = (int) gps[1];
 
             }
-
-            refresh();
             iIter++;
         } catch (Exception ex) {
             System.err.println("Error processing perceptions");
@@ -119,8 +117,8 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         rpbAngular = new Angular();
         family = "blue";
         // Define sizes
-
-        refresh();
+//        this.validate();
+//        this.repaint();
     }
 
     protected void showMyStatus(Graphics2D g) {
@@ -156,6 +154,9 @@ public class LARVAEmbeddedDash extends MyDrawPane {
 
             }
         }
+//        this.repaint();
+        System.out.println("   Dashboard repaint");
+
     }
 //    protected void DashBoardLayout(Graphics2D g) {
 //        if (lastPerception.isReady()) {
@@ -186,12 +187,12 @@ public class LARVAEmbeddedDash extends MyDrawPane {
 //    }
 
     protected void refresh() {
-        SwingTools.doSwingWait(() -> {
-            this.validate();
-            this.repaint();
-        });
+//        SwingTools.doSwingWait(() -> {
+            System.out.println("   Repaint dashboard");
+//            this.validate();
+//            this.repaint();
+//        });
     }
-
 //    protected void showName(Graphics2D g, int px, int py) {
 //        int x = space + px * skip * factor, y = py * factor;
 //        g.drawString(name, x, y + stringskip);
@@ -454,7 +455,11 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         }
         g.drawImage(SwingTools.toIcon("./images/" + family + "/" + family + "-Angular_" + (int) (Math.round(lastPerception.getAngular() / 45) * 45) + ".png", factor, factor).getImage(), x, y, null);
         g.setColor(Color.WHITE);
-        g.drawString(String.format(" %4.0f º", lastPerception.getAngular()), x + factor, y + stringskip);
+        if (-360 <= lastPerception.getAngular() && lastPerception.getAngular() <= 360) {
+            g.drawString(String.format(" %4.0f º", lastPerception.getAngular()), x + factor, y + stringskip);
+        } else {
+            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
+        }
     }
 
     protected void showDistance(Graphics2D g, int px, int py) {
@@ -468,7 +473,11 @@ public class LARVAEmbeddedDash extends MyDrawPane {
         }
         g.drawImage(SwingTools.toIcon("./images/" + family + "/" + family + "-distance.png", factor, factor).getImage(), x, y, null);
         g.setColor(Color.WHITE);
-        g.drawString(String.format(" %5.1f m", lastPerception.getDistance()), x + factor, y + stringskip);
+        if (lastPerception.getDistance() >= 0) {
+            g.drawString(String.format(" %5.1f m", lastPerception.getDistance()), x + factor, y + stringskip);
+        } else {
+            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
+        }
     }
 
     protected void showDistancePB(Graphics2D g, int px, int py, int w) {

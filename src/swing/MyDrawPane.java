@@ -26,13 +26,12 @@ public class MyDrawPane extends JPanel {
     public void setPainter(Consumer<Graphics2D> function) {
         painter = function;
     }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2D = (Graphics2D) g;
         if (painter != null) {
-            if (myg == null)
-                myg = g2D;
             painter.accept(g2D);
         }
     }
