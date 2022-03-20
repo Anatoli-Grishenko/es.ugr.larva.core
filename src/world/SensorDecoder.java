@@ -11,6 +11,7 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
 import data.Ole;
+import static data.Ole.oletype.BADVALUE;
 import data.OleFile;
 import data.Transform;
 import geometry.Point3D;

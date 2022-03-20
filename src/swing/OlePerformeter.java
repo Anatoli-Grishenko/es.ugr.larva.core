@@ -63,11 +63,6 @@ public class OlePerformeter extends JLabel {
     }
 
     protected void drawGrid(int x) {
-//        for (int y = 0; y < chart.getHeight(); y++) {
-//            if (y == 0|| y == chart.getHeight() - 1) { //|| y % scale == 0 
-//                chart.setColor(chart.getWidth() - x - 1, y, grid);
-//            }
-//        }
         for (int y = 0; y < chart.getHeight(); y++) {
             if (y == 0|| y == chart.getHeight() - 1 || y % scale == 0) { 
                 chart.setColor(chart.getWidth() - x - 1, y, grid);
@@ -81,7 +76,6 @@ public class OlePerformeter extends JLabel {
 
     protected void drawData(int x, int value) {
         int maxy = value * chart.getHeight() / maxValue;
-//        System.out.println("Perf:"+maxy);
         for (int y = 0; y < maxy; y++) {
             chart.setColor(chart.getWidth() - x - 1, chart.getHeight() - y - 1, data);
         }
@@ -92,20 +86,5 @@ public class OlePerformeter extends JLabel {
         super.paintComponent(g);
         g.drawImage(chart.getMap(), 0, 0, null);
     }
-
-//    @Override
-//    public void paintIcon(Component c, Graphics g, int x, int y) {
-//        g.drawImage(chart.getMap(), x, y, parent);
-//    }
-//
-//    @Override
-//    public int getIconWidth() {
-//        return chart.getWidth();
-//    }
-//
-//    @Override
-//    public int getIconHeight() {
-//        return chart.getHeight();
-//    }
 
 }

@@ -100,6 +100,19 @@ public class Point3D {
 //        _dim=dimension;
 //        clear();
 //    }
+    
+    public int getXInt() {
+        return (int)(Math.round(_coord[0]));
+    }
+    
+    public int getYInt() {
+        return (int)(Math.round(_coord[1]));
+    }
+    
+    public double getZInt() {
+        return (int)(Math.round(_coord[2]));
+    }
+    
     public double getX() {
         return _coord[0];
     }
@@ -377,6 +390,10 @@ public class Point3D {
         return new Point3D(getX());
     }
 
+    public Point3D invertY() {
+        setY(getY()-1);
+        return this;
+    }
     @Override
     public Point3D clone() {
         Point3D res = new Point3D(getX(), getY(), getZ());

@@ -5,11 +5,16 @@
  */
 package swing;
 
+import geometry.AngleTransporter;
+import geometry.Point3D;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.function.Consumer;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 /**
  *
@@ -19,9 +24,14 @@ public abstract class OleDrawPane extends JPanel {
 
     protected Graphics2D myg;
     protected Consumer<Graphics2D> drawer;
+    protected static AngleTransporter angleT;
+
     public OleDrawPane() {
         super();
-        drawer = (e)->OleDraw(e);
+        drawer = (e) -> OleDraw(e);
+        if (angleT == null) {
+            angleT = new AngleTransporter(1.0);
+        }
     }
 
     @Override
@@ -45,8 +55,18 @@ public abstract class OleDrawPane extends JPanel {
         return myg;
     }
 
-    public void setOleDraw(Consumer <Graphics2D>draw) {
+    public void setOleDraw(Consumer<Graphics2D> draw) {
         drawer = draw;
     }
+
     abstract public void OleDraw(Graphics2D g);
+
+    public AngleTransporter getAngleT() {
+        return angleT;
+    }
+
+    public void setAngleT(AngleTransporter angleT) {
+        OleDrawPane.angleT = angleT;
+    }
+
 }
