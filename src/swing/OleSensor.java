@@ -50,6 +50,7 @@ public abstract class OleSensor extends JComponent {
     protected HashMap<Double, ImageIcon> readingMarks;
     protected ViewType vType;
     protected OleDrawPane matrixViewer;
+    protected boolean boolValue=false;
 
     // View
     protected int mX, mY, mW, mH;
@@ -520,5 +521,14 @@ public abstract class OleSensor extends JComponent {
     public void setLabels(String[] labels) {
         this.labels = labels;
     }
+
+    public boolean isBoolValue() {
+        return boolValue;
+    }
+
+    public void setBoolValue(boolean boolValue) {
+        this.boolValue = boolValue;
+    }
+
 
 }

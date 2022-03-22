@@ -40,10 +40,10 @@ public class OleRotatory extends OleSensor {
         mainRadius = mW * 0.46;
         markRadius = mW * 0.39;
         textRadius = mW * 0.33;
-        this.rotateText=true;
-        this.baseVisual=90;
-        this.autoRotate=true;
-        this.counterClock=true;
+        this.rotateText = true;
+        this.baseVisual = 90;
+        this.autoRotate = true;
+        this.counterClock = true;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class OleRotatory extends OleSensor {
 //        g.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 //        this.oDrawArc(g, getCenter(), mainRadius - stroke / 2, getMinVisual(), getMaxVisual());
 //        g.setStroke(new BasicStroke(1));
-        
+
         this.drawCircularRuler(g, center, mainRadius, mainRadius, markRadius, textRadius, -1);
         g.setColor(this.getForeground());
         f = parentPane.getFont();
@@ -75,14 +75,17 @@ public class OleRotatory extends OleSensor {
         Point3D p1, p2;
         p1 = parentPane.getAngleT().alphaPoint(90, mainRadius, center);
         p2 = parentPane.getAngleT().alphaPoint(90, 0, center);
-        g.setColor(this.getForeground());      
-        stroke=3;
+        g.setColor(this.getForeground());
+        stroke = 3;
         g.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         this.oDrawLine(g, p1, p2);
         g.setStroke(new BasicStroke(1));
-        
+
         oDrawCounter(g, sRead, parentPane.getAngleT().alphaPoint(90, 0, center),
                 (int) (0.5 * mW), SwingConstants.CENTER, SwingConstants.BOTTOM);
+        g.setColor(this.getForeground());
+        oDrawString(g, getName(), parentPane.getAngleT().alphaPoint(270, dialRadius, center),
+                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
 
         g.setFont(f);
         g.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -107,6 +110,5 @@ public class OleRotatory extends OleSensor {
         }
         return this;
     }
-
 
 }
