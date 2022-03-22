@@ -121,4 +121,20 @@ public class SwingTools {
         con.add(l);
     }
 
+    public static Color doLighter(Color c) {
+        float r=c.getRed(), g=c.getGreen(), b=c.getBlue();
+        r = (float)Math.sqrt(r);
+        g = (float) Math.sqrt(g);
+        b = (float) Math.sqrt(b);
+        return new Color(r,g,b);
+    }
+    
+    public static Color doDarker(Color c) {
+        float ratio=1.5f;
+        int r=c.getRed(), g=c.getGreen(), b=c.getBlue();
+        r = (int) (r/ratio);
+        g = (int)(g/ratio);
+        b = (int)(b/ratio);
+        return new Color(r,g,b);
+    }
 }

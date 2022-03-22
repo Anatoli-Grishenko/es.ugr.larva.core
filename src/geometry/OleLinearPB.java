@@ -19,9 +19,9 @@ import world.Perceptor;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleRoundPB extends OleSensor {
+public class OleLinearPB extends OleSensor {
 
-    public OleRoundPB(OleDrawPane parent, String name) {
+    public OleLinearPB(OleDrawPane parent, String name) {
         super(parent, name);
     }
 
@@ -32,34 +32,30 @@ public class OleRoundPB extends OleSensor {
         stepVisual = lengthVisual / nMarks;
         lengthValue = (maxValue - minValue);
         stepValue = lengthValue / nMarks;
-        mainRadius = mW * 0.46;
-        markRadius = mW * 0.38;
-        textRadius = mW * 0.36;
-        labelRadius = mW * 0.31;
-        barRadius = mW * 0.25;
+        mainRadius = mW * 0.5;
+        markRadius = mW * 0.42;
+        textRadius = mW * 0.4;
+        labelRadius = mW * 0.35;
+        barRadius = mW * 0.29;
         dialRadius = mW * 0.05;
     }
 
     @Override
     public OleSensor layoutSensor(Graphics2D g) {
-        if (showFrame) {
-            g.setColor(Color.GRAY);
-            g.fillRect(mX, mY, mW, mH);
-            g.setColor(Color.DARK_GRAY);
-            g.fillRoundRect(mX + 3, mY + 3, mW - 6, mH - 6, 10, 10);
-        }
+  
+
         g.setColor(this.getBackground());
         this.oFillArc(g, center, mainRadius, 0, 360);
         g.setColor(this.getForeground());
-        this.drawCircularRuler(g, center, 0, labelRadius, mainRadius, markRadius, -1);
+        this.drawCircularRuler(g, center, mainRadius, labelRadius, textRadius, markRadius, -1);
 
         g.setColor(Color.DARK_GRAY);
-        if (!showScale) {
-            this.drawCircularSegment(g, center, mainRadius - stroke / 2, getMinVisual(), getMaxVisual(), stroke - 2, null);
-            stroke = 15;
+        if (!showScale || !showScaleNumbers) {
+            this.drawCircularSegment(g, center, mainRadius - stroke / 2, getMinVisual(), getMaxVisual(), stroke - 2,null);
+            stroke=15;
         } else {
-            stroke = 15;
-//            this.drawCircularSegment(g, center, barRadius, getMinVisual(), getMaxVisual(), stroke - 2, null);
+            stroke=27;
+            this.drawCircularSegment(g, center, barRadius, getMinVisual(), getMaxVisual(), stroke - 2, null);
         }
 
         if (getCurrentValue() == Perceptor.NULLREAD) {
@@ -72,12 +68,15 @@ public class OleRoundPB extends OleSensor {
         g.setFont(f.deriveFont(Font.BOLD));
         oDrawString(g, getName(), parentPane.getAngleT().alphaPoint(270, labelRadius, center),
                 parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
-        oDrawCounter(g, sRead, parentPane.getAngleT().alphaPoint(90, dialRadius, center),
-                (int) (0.5 * mW), SwingConstants.CENTER, SwingConstants.TOP);
-//        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(90, dialRadius, center),
-//                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
+        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(90, dialRadius, center),
+                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
         g.setFont(f);
-
+        if (showScale) {
+            g.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g.setColor(this.getForeground());
+            oDrawArc(g, center, mainRadius, 0.0, 360);
+            g.setStroke(new BasicStroke(1));
+        }
         return this;
     }
 
@@ -87,7 +86,7 @@ public class OleRoundPB extends OleSensor {
 
         if (currentValue != Perceptor.NULLREAD) {
             g.setColor(this.getForeground());
-            if (!showScale || !showScaleNumbers) {
+            if (!showScale || !showScaleNumbers) {                
                 this.drawCircularSegment(g, center, mainRadius - stroke / 2, getMaxVisual() - this.getShiftVisual(), getMaxVisual(), stroke, myPalette);
             } else {
                 this.drawCircularSegment(g, center, barRadius, getMaxVisual() - this.getShiftVisual(), getMaxVisual(), stroke, myPalette);

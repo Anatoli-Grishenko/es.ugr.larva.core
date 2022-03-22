@@ -34,7 +34,7 @@ public class OleDashBoard extends OleDrawPane {
         for (String s : mySensorsVisual.keySet()) {
             mySensorsVisual.get(s).viewSensor(g);
         }
-        System.out.println("Repaint");
+//        System.out.println("Repaint");
    }
 
     public void addSensor(OleSensor oles) {
