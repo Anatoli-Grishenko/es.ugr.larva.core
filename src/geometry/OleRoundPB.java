@@ -85,7 +85,7 @@ public class OleRoundPB extends OleSensor {
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
 
-        if (currentValue != Perceptor.NULLREAD) {
+        if (getCurrentValue() != Perceptor.NULLREAD) {
             g.setColor(this.getForeground());
             if (!showScale || !showScaleNumbers) {
                 this.drawCircularSegment(g, center, mainRadius - stroke / 2, getMaxVisual() - this.getShiftVisual(), getMaxVisual(), stroke, myPalette);

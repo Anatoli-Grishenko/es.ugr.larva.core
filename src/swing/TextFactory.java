@@ -53,7 +53,7 @@ public class TextFactory {
         if (ndigits <= 0) {
             ndigits = 4;
         }
-        sFormat = "%0%" + ndigits + "d";
+        sFormat = "%0" + ndigits + "d";
         sText = String.format(sFormat, value);
         return this;
     }

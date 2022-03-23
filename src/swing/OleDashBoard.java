@@ -5,6 +5,7 @@
  */
 package swing;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -17,13 +18,18 @@ import world.SensorDecoder;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class OleDashBoard extends OleDrawPane {
+    public final Color cDeck=Color.GRAY, cFrame=Color.DARK_GRAY, cGauge=new Color(0,15,0), 
+            cGoal=Color.YELLOW, cPath=Color.PINK, cCompass=new Color(0,75,0), cLabels=SwingTools.doDarker(Color.WHITE); 
 
     protected HashMap<String, OleSensor> mySensorsVisual;
     protected Component myParent;
+    protected SensorDecoder decoder;
 
     public OleDashBoard(Component parent) {
         myParent = parent;
         mySensorsVisual = new HashMap();
+        decoder=new SensorDecoder();
+        this.setLayout(null);
     }
 
     @Override

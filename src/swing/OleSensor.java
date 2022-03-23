@@ -19,12 +19,21 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 import map2D.Palette;
 import world.Perceptor;
 
@@ -46,12 +55,12 @@ public abstract class OleSensor extends JComponent {
     protected double[][] allReadings;
     protected SensorType sType;
     protected int nColumns, nRows, nMarks;
-    protected double currentValue, minValue, maxValue, lengthValue, stepValue;
+    protected double minValue, maxValue, lengthValue, stepValue;
     protected HashMap<Double, ImageIcon> readingMarks;
     protected ViewType vType;
     protected OleDrawPane matrixViewer;
-    protected boolean boolValue=false;
-
+    protected boolean boolValue = false;
+    protected ArrayList<String> bag;
     // View
     protected int mX, mY, mW, mH;
     protected double minVisual, maxVisual;
@@ -65,15 +74,20 @@ public abstract class OleSensor extends JComponent {
     protected int stroke = 27;
     protected Font f, fRead;
     protected String sRead, sfRead, sfText, labels[];
+    protected JTextPane jtBag;
+    protected JScrollPane jsPane;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
 
         setName(name);
         parentPane = parent;
-        this.currentValue = Perceptor.NULLREAD;
-        sfRead = "Courier New";
+        setnRows(1);
+        setnColumns(1);
+        setCurrentValue(Perceptor.NULLREAD);
+        sfRead = "Ubuntu Mono Regular";
         sfText = "Noto Sans Regular";
+        bag = new ArrayList();
     }
 
     @Override
@@ -114,6 +128,9 @@ public abstract class OleSensor extends JComponent {
 
     public void setnColumns(int nColumns) {
         this.nColumns = nColumns;
+        for (int i = 0; i < getnRows(); i++) {
+            allReadings[i] = new double[nColumns];
+        }
     }
 
     public int getnRows() {
@@ -122,30 +139,32 @@ public abstract class OleSensor extends JComponent {
 
     public void setnRows(int nRows) {
         this.nRows = nRows;
+        this.allReadings = new double[nRows][];
     }
 
     public double getCurrentValue() {
-        return currentValue;
+        return allReadings[0][0];
     }
 
     public void setCurrentValue(double currentValue) {
         if (currentValue <= getMinValue()) {
             if (!autoRotate) {
-                this.currentValue = getMinValue();
+                currentValue = getMinValue();
             } else {
-                this.currentValue = (this.lengthValue + currentValue) % this.lengthValue;
+                currentValue = (this.lengthValue + currentValue) % this.lengthValue;
             }
 
         } else if (currentValue >= getMaxValue()) {
             if (!autoRotate) {
-                this.currentValue = getMaxValue();
+                currentValue = getMaxValue();
             } else {
-                this.currentValue = currentValue % this.lengthValue;
+                currentValue = currentValue % this.lengthValue;
             }
 
         } else {
-            this.currentValue = currentValue;
+            currentValue = currentValue;
         }
+        allReadings[0][0] = currentValue;
 //        System.out.println("Settig value to "+currentValue);
     }
 
@@ -255,9 +274,9 @@ public abstract class OleSensor extends JComponent {
             }
             if (this.isAutoRotate()) {
                 if (!counterClock) {
-                    baseVisual = 90 - currentValue;
+                    baseVisual = 90 - getCurrentValue();
                 } else {
-                    baseVisual = currentValue-90;
+                    baseVisual = getCurrentValue() - 90;
                 }
             }
             for (double alpha = getMinVisual(); alpha < getMaxVisual() + stepVisual; alpha += stepVisual) {
@@ -281,9 +300,9 @@ public abstract class OleSensor extends JComponent {
             }
             if (this.isAutoRotate()) {
                 if (!counterClock) {
-                    baseVisual = 90 - currentValue;
+                    baseVisual = 90 - getCurrentValue();
                 } else {
-                    baseVisual = currentValue+90;
+                    baseVisual = getCurrentValue() + 90;
                 }
             }
             for (double alpha = getMinVisual(); alpha < maxScale; alpha += stepVisual) {
@@ -415,7 +434,7 @@ public abstract class OleSensor extends JComponent {
     }
 
     public void oDrawCounter(Graphics2D g, String s, Point3D p, int width, int halign, int valign) {
-        TextFactory tf = new TextFactory(g).setsText(sRead).setsFontName("Courier New").setTextStyle(Font.PLAIN)
+        TextFactory tf = new TextFactory(g).setsText(s).setsFontName("Ubuntu Mono Regular").setTextStyle(Font.PLAIN)
                 .setValign(valign).setHalign(halign).
                 setX(p.getXInt()).setY(p.getYInt())
                 .setWidth(width).validate();
@@ -530,5 +549,27 @@ public abstract class OleSensor extends JComponent {
         this.boolValue = boolValue;
     }
 
+    public ArrayList<String> getBag() {
+        return this.bag;
+    }
 
+    public void addToBag(String s) {
+        bag.add(s);
+        StyleContext sc = StyleContext.getDefaultStyleContext();
+        AttributeSet aset1 = sc.addAttribute(SimpleAttributeSet.EMPTY,
+                StyleConstants.Foreground, this.getForeground()), aset2 = sc.addAttribute(SimpleAttributeSet.EMPTY,
+                        StyleConstants.Family, "Tlwg Mono Regular");
+        AttributeSet aset = sc.addAttributes(aset1, aset2);
+        StyledDocument doc = jtBag.getStyledDocument();
+        try {
+            doc.insertString(doc.getLength(),s+"\n", aset);
+        } catch (BadLocationException ex) {
+            System.err.println("Exception "+ex.toString());
+        }
+        jtBag.setCaretPosition(doc.getLength());
+    }
+
+    public int getBagSize() {
+        return this.bag.size();
+    }
 }

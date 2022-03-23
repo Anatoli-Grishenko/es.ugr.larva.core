@@ -58,15 +58,15 @@ public class OleSemiDial extends OleSensor {
         this.oFillArc(g, center, mainRadius, 0, 360);
         if (myPalette != null) {
             if (showScaleNumbers) {
-                stroke = (int) (mainRadius - markRadius);
+                stroke = (int) (mainRadius - textRadius);
             } else {
                 stroke = (int) (mainRadius - textRadius) * 2;
             }
             g.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             this.oDrawArc(g, getCenter(), mainRadius - stroke / 2, getMinVisual(), getMaxVisual(), myPalette);
             g.setStroke(new BasicStroke(1));
-            if (this.getEndAngle() - this.getStartAngle() <= 180) {
-                g.setColor(this.getBackground());
+            if (Math.abs(this.getEndAngle() - this.getStartAngle()) <= 180) {
+                g.setColor(Color.DARK_GRAY);
                 this.oFillArc(g, center, mainRadius, 181, 359);
             }
         }
@@ -105,7 +105,7 @@ public class OleSemiDial extends OleSensor {
         Point3D p1, p2, p3, p4;
         layoutSensor(g);
         g.setColor(this.getForeground());
-        if (currentValue != Perceptor.NULLREAD) {
+        if (getCurrentValue() != Perceptor.NULLREAD) {
 
             p1 = parentPane.getAngleT().alphaPoint(this.getStartAngle() - this.getShiftVisual(), labelRadius, center);
             p3 = parentPane.getAngleT().alphaPoint(this.getStartAngle() - this.getShiftVisual(), dialRadius, center);

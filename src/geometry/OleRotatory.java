@@ -101,7 +101,7 @@ public class OleRotatory extends OleSensor {
         Point3D p1, p2, p3, p4;
         layoutSensor(g);
         g.setColor(this.getForeground());
-        if (currentValue != Perceptor.NULLREAD) {
+        if (getCurrentValue() != Perceptor.NULLREAD) {
 //            p1 = parentPane.getAngleT().alphaPoint(this.getStartAngle() - this.getShiftVisual(), labelRadius, center);
 //            p3 = parentPane.getAngleT().alphaPoint(this.getStartAngle() - this.getShiftVisual(), dialRadius, center);
 //            p2 = parentPane.getAngleT().alphaPoint(this.getStartAngle() - this.getShiftVisual() + 90, dialRadius, center);

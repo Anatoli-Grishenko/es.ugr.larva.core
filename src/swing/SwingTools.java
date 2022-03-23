@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -122,10 +123,11 @@ public class SwingTools {
     }
 
     public static Color doLighter(Color c) {
-        float r=c.getRed(), g=c.getGreen(), b=c.getBlue();
-        r = (float)Math.sqrt(r);
-        g = (float) Math.sqrt(g);
-        b = (float) Math.sqrt(b);
+        float ratio=1.5f;
+        int r=c.getRed(), g=c.getGreen(), b=c.getBlue();
+        r = (int) (r*ratio);
+        g = (int)(g*ratio);
+        b = (int)(b*ratio);
         return new Color(r,g,b);
     }
     
@@ -137,4 +139,16 @@ public class SwingTools {
         b = (int)(b/ratio);
         return new Color(r,g,b);
     }
+    
+    public static Rectangle doBroad(Rectangle r, int units) {
+        Rectangle res= new Rectangle(r.x-units,r.y-units,r.width+2*units, r.height+2*units);
+        return res;
+    }
+    
+    public static Rectangle doNarrow(Rectangle r, int units) {
+        Rectangle res= new Rectangle(r.x+units,r.y+units,r.width-2*units, r.height-2*units);
+        return res;
+    }
+    
+    
 }

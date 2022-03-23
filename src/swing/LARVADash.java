@@ -141,7 +141,7 @@ public class LARVADash {
             Ole ocontent = new Ole().set(msg.getContent());
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
-            enablesimulation = ocontent.getBoolean("simulator");
+            enablesimulation = true; //ocontent.getBoolean("simulator");
             if (isActivated()) {
                 bGame.setEnabled(enablesimulation);
                 try {
@@ -544,10 +544,7 @@ public class LARVADash {
         pButton = new JPanel(new FlowLayout(FlowLayout.CENTER));
         pButton.setBackground(cBackgr);
 
-        tpLog = new JTextPane();
-        tpLog.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        tpLog.setBackground(this.cStatus);
-        tpLog.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+ 
 
         spLog = new JScrollPane(tpLog);
         spLog.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
