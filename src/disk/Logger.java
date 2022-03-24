@@ -185,7 +185,7 @@ public class Logger {
                 add("record", record);
         String toRecord = json.toString();
         if (_validFile) {
-            PrintWriter outfile;
+            PrintWriter outfile;    
             try {
                 // save log
                 outfile = new PrintWriter(new BufferedWriter(new FileWriter(_filename, true)));
@@ -290,11 +290,12 @@ public class Logger {
 
     public static String trimString(String original, int max) {
         String s = original + "";
-        if (s.length() > max) {
-            return s.substring(0, Math.min(max, s.length())) + "...";
-        } else {
-            return s;
-        }
+//        if (s.length() > max) {
+//            return s.substring(0, Math.min(max, s.length())) + "...";
+//        } else {
+//            return s;
+//        }
+    return s;
     }
 
     public String getLastlog() {

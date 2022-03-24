@@ -7,7 +7,6 @@ package agents;
 
 import data.Ole;
 import data.OleFile;
-import disk.Logger;
 import java.awt.Component;
 import java.util.HashMap;
 import javax.swing.JPanel;
@@ -21,7 +20,7 @@ import swing.LARVAMiniDash;
  *
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
-public class XUIAgent extends LARVAFirstAgent {
+public class XUIAgentOldDash extends LARVAFirstAgent {
 
     enum Status {
         CHECKIN, CHECKOUT, IDLE, HASSESSION, UPDATE, EXIT
@@ -36,11 +35,8 @@ public class XUIAgent extends LARVAFirstAgent {
     @Override
     public void setup() {
         super.setup();
-        logger = new Logger();
         logger.offEcho();
-        logger.onOverwrite();
         logger.onTabular();
-        logger.setLoggerFileName(this.getLocalName()+".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         TheMap = new LARVAAirTrafficControlTiles(_XUI);

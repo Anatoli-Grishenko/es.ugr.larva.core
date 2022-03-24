@@ -5,7 +5,7 @@ package appboot;
 
 import agents.AgentReport;
 import agents.LARVAPayload;
-import agents.XUIAgent;
+import agents.XUIAgentOldDash;
 import data.Ole;
 import data.OleConfig;
 import data.OlePassport;
@@ -726,7 +726,7 @@ public class LARVABoot {
         }
         if (_tiles.get(_xuiName) == null) {
             if (oPassport != null) {
-                launchAgent(_xuiName, XUIAgent.class);
+                launchAgent(_xuiName, XUIAgentOldDash.class);
             }
         }
         return this;

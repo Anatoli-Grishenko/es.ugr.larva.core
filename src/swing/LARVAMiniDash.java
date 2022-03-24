@@ -428,7 +428,7 @@ public class LARVAMiniDash extends LARVADash {
         }
         g.drawImage(SwingTools.toIcon("./images/" + family + "/" + family + "-altitude.png", factor, factor).getImage(), x, y, null);
         g.setColor(Color.WHITE);
-        g.drawString(String.format(" %03d m", lastPerception.getAltitude()), x + factor, y + stringskip);
+        g.drawString(String.format(" %03d m", lastPerception.getGround()), x + factor, y + stringskip);
     }
 
     protected void showAltimeterPB(Graphics2D g, int px, int py, int w) {
@@ -440,7 +440,7 @@ public class LARVAMiniDash extends LARVADash {
             g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
             return;
         }
-        int realv = lastPerception.getAltitude(),
+        int realv = lastPerception.getGround(),
                 maxv = MAXFLIGHT;
         double ratio = 1.0 * realv / maxv;
         rpbAltimeter.setPosition(x, y);
@@ -656,7 +656,7 @@ public class LARVAMiniDash extends LARVADash {
 
     public int getAltitude() {
         if (lastPerception.isReady()) {
-            return lastPerception.getAltitude();
+            return lastPerception.getGround();
         }
         return -1;
     }

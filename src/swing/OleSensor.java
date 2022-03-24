@@ -34,6 +34,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
+import map2D.Map2DColor;
 import map2D.Palette;
 import world.Perceptor;
 
@@ -73,14 +74,15 @@ public abstract class OleSensor extends JComponent {
     protected double mainRadius, markRadius, textRadius, labelRadius, dialRadius, barRadius;
     protected int stroke = 27;
     protected Font f, fRead;
-    protected String sRead, sfRead, sfText, labels[];
+    protected String sRead, sfRead, sfText, labels[], externalSensorName;
     protected JTextPane jtBag;
     protected JScrollPane jsPane;
-
+    protected Map2DColor map;
     public OleSensor(OleDrawPane parent, String name) {
         super();
 
         setName(name);
+        this.attachToExternalSensor(name.toLowerCase());
         parentPane = parent;
         setnRows(1);
         setnColumns(1);
@@ -144,6 +146,22 @@ public abstract class OleSensor extends JComponent {
 
     public double getCurrentValue() {
         return allReadings[0][0];
+    }
+
+    public void setCurrentValue(double currentValue[]) {
+        for (int i = 0; i < currentValue.length; i++) {
+            if (allReadings[0].length>i)
+            allReadings[0][i] = currentValue[i];
+        }
+    }
+
+    public void setCurrentValue(double currentValue[][]) {
+        for (int j = 0; j < currentValue.length; j++) {
+            for (int i = 0; i < currentValue[j].length; i++) {
+            if (allReadings[0].length>i && allReadings.length>j)
+                allReadings[j][i] = currentValue[j][i];
+            }
+        }
     }
 
     public void setCurrentValue(double currentValue) {
@@ -545,7 +563,7 @@ public abstract class OleSensor extends JComponent {
         return boolValue;
     }
 
-    public void setBoolValue(boolean boolValue) {
+    public void setCurrentValue(boolean boolValue) {
         this.boolValue = boolValue;
     }
 
@@ -558,13 +576,13 @@ public abstract class OleSensor extends JComponent {
         StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet aset1 = sc.addAttribute(SimpleAttributeSet.EMPTY,
                 StyleConstants.Foreground, this.getForeground()), aset2 = sc.addAttribute(SimpleAttributeSet.EMPTY,
-                        StyleConstants.Family, "Tlwg Mono Regular");
+                StyleConstants.Family, "Tlwg Mono Regular");
         AttributeSet aset = sc.addAttributes(aset1, aset2);
         StyledDocument doc = jtBag.getStyledDocument();
         try {
-            doc.insertString(doc.getLength(),s+"\n", aset);
+            doc.insertString(doc.getLength(), s + "\n", aset);
         } catch (BadLocationException ex) {
-            System.err.println("Exception "+ex.toString());
+            System.err.println("Exception " + ex.toString());
         }
         jtBag.setCaretPosition(doc.getLength());
     }
@@ -572,4 +590,21 @@ public abstract class OleSensor extends JComponent {
     public int getBagSize() {
         return this.bag.size();
     }
+
+    public void attachToExternalSensor(String externalSensor) {
+        this.externalSensorName = externalSensor;
+    }
+
+    public String getExternalSensor() {
+        return this.externalSensorName;
+    }
+
+    public Map2DColor getMap() {
+        return map;
+    }
+
+    public void setMap(Map2DColor map) {
+        this.map = map;
+    }
+    
 }

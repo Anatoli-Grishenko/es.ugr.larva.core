@@ -8,25 +8,17 @@ package world;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
 import data.Ole;
-import static data.Ole.oletype.BADVALUE;
 import data.OleFile;
 import data.Transform;
 import geometry.Point3D;
 import geometry.Vector3D;
-import glossary.sensors;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.mail.Session;
 import map2D.Map2DColor;
-import map2D.Palette;
-import tools.TimeHandler;
-import static world.Perceptor.NULLREAD;
 
 /**
  *
@@ -55,9 +47,9 @@ public class SensorDecoder {
             String name = mapa.getFileName();
             hMap = new Map2DColor();
             hMap.loadMapRaw("./maps/" + name);
-            File toremove= new File("./maps/" + name);
-            if (toremove.exists())
-                toremove.delete();
+//            File toremove= new File("./maps/" + name);
+//            if (toremove.exists())
+//                toremove.delete();
             return true;
         } catch (IOException ex) {
         }
@@ -148,6 +140,14 @@ public class SensorDecoder {
         return res;
     }
 
+    public double getAltitude() {
+        double[] res = new double[3];
+        if (isReady() && hasSensor("GPS")) {
+            res = fromJsonArray(getSensor("gps").get(0).asArray());
+        }
+        return res[2];
+    }
+
     public int getPayload() {
         if (isReady() && hasSensor("PAYLOAD")) {
             return getSensor("payload").get(0).asInt();
@@ -164,7 +164,7 @@ public class SensorDecoder {
         return -1;
     }
 
-    public int getAltitude() {
+    public int getGround() {
         if (isReady() && hasSensor("ALTITUDE")) {
             return (int) getSensor("altitude").get(0).asDouble();
         }
@@ -317,6 +317,7 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             setSensor(name, jsosensor.get("data").asArray());
+            System.out.println("Sensor: "+name);
         }
         ready = true;
     }

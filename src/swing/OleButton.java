@@ -39,7 +39,7 @@ public class OleButton extends JButton {
         setText(text);
         setRegular();
         setType("text");
-        setPreferredSize(new Dimension(24, 24));
+        setSize(new Dimension(24, 24));
         this.command = command;
         setActionCommand(this.command);
         setToolTipText(this.command);
@@ -77,7 +77,7 @@ public class OleButton extends JButton {
         }
         if (getType().equals("icon")) {
             if (this.isEnabled()) {
-                this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, getPreferredSize()));
+                this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, this.getSize()));
             }
         }
     }
@@ -89,7 +89,7 @@ public class OleButton extends JButton {
         }
         if (getType().equals("icon")) {
             if (this.isEnabled()) {
-                this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, getPreferredSize()));
+                this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, this.getSize()));
             }
         }
     }
@@ -169,10 +169,17 @@ public class OleButton extends JButton {
         } else if (type.equals("icon")) {
             if (parent instanceof OleApplication) {
                 OleApplication oapp = (OleApplication) parent;
-                this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24, 24));
+                this.setIcon(oapp.getIconSet().getRegularIcon(texto, this.getSize().width, this.getSize().height));
                 this.setText("");
             }
         }
     }
 
+    @Override
+    public void setPreferredSize(Dimension d) {
+        super.setPreferredSize(d);
+        OleApplication oapp = (OleApplication) parent;
+        this.setIcon(oapp.getIconSet().getRegularIcon(texto, d.width, d.height));
+
+    }
 }

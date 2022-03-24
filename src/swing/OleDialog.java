@@ -169,7 +169,7 @@ public class OleDialog extends JDialog implements ActionListener {
         switch (e.getActionCommand()) {
             case "OK":
                 output = getValues(output);
-                bresult = true;
+                bresult = true;              
                 dispose();
                 break;
             case "Cancel":

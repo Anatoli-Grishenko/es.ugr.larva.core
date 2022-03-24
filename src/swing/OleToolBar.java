@@ -91,4 +91,10 @@ public class OleToolBar extends JPanel {
         dicComponents.put(ob.getCommand(), ob);
         return this;
     }
+    public OleToolBar removeButton(String name) {
+        OleButton ob = getButton(name);
+        this.remove(ob);
+        dicComponents.remove(name);
+        return this;
+    }
 }

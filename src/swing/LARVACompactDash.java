@@ -236,7 +236,7 @@ public class LARVACompactDash extends LARVADash {
 //                    baseFlight += shft;
 //                }
 //                for (int ih = 0; ih < this.hFlight.getHeight(); ih++) {
-//                    int y1 = (ih * 256) / hFlight.getHeight(), y2 = (int) (gps[2] - lastPerception.getAltitude());
+//                    int y1 = (ih * 256) / hFlight.getHeight(), y2 = (int) (gps[2] - lastPerception.getGround());
 //                    if (y1 < y2) {
 //                        if (this.myLayout == Layout.DASHBOARD) {
 //                            hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - ih, cDodgerB);
