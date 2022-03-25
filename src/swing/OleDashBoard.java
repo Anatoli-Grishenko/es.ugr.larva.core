@@ -359,7 +359,7 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("STEPS").setCurrentValue(decoder.getNSteps());
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getAngular();
-            this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getDistance();
+            this.mySensorsVisual.get("MAP").getAllReadings()[0][2]=decoder.getDistance();
             
             ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
 //            

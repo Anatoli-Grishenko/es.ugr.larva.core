@@ -38,7 +38,8 @@ public class OleMap extends OleSensor implements ActionListener {
     boolean isMap;
     Polygon p;
     int cell;
-    Point3D pCenterTop, pCenter, pGoal;
+    Point3D pCenterTop, pCenter, pGoal, pDistance;
+    TextFactory tf;
 
     public OleMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -102,27 +103,15 @@ public class OleMap extends OleSensor implements ActionListener {
             g.draw(screenPort);
             g.setClip(screenPort);
             Point3D p1, p2;
-            TextFactory tf;
+
             cell = screenPort.width / 8;
             center = new Point3D(screenPort.x + screenPort.width / 2, screenPort.y + screenPort.height - 2 * cell);
             pCenterTop = parentPane.getAngleT().alphaPoint(90, 5.5 * cell, center);
             pCenter = parentPane.getAngleT().alphaPoint(90, 5 * cell, center);
-            pGoal = parentPane.getAngleT().alphaPoint((360 + (int) (this.getAllReadings()[0][1]) + 90) % 360, 5 * cell, center);
-            g.setColor(Color.CYAN);
-            g.setStroke(new BasicStroke(3));
-            this.oDrawLine(g, pGoal, center);
-            g.setStroke(new BasicStroke(1));
-            tf=new TextFactory(g).setPoint(pGoal).setFontSize(20).setValue((int) (this.getAllReadings()[0][1]),3).//setAngle(90+(int) (this.getAllReadings()[0][1]-getCurrentValue()+45)).
-                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM);
-            tf.draw();
+            pGoal = parentPane.getAngleT().alphaPoint((360 + (int) (this.getAllReadings()[0][1]) + 90) % 360, 5.1 * cell, center);
+            pDistance = parentPane.getAngleT().alphaPoint((360 + (int) (this.getAllReadings()[0][1]) + 90) % 360, this.getAllReadings()[0][2], center);
             g.setColor(Color.WHITE);
             this.oDrawLine(g, pCenterTop, center);
-//            p = new Polygon();
-//            p.addPoint(pCenterTop.getXInt(), pCenterTop.getYInt() + cell / 2);
-//            p.addPoint(pCenterTop.getXInt() + cell / 4, pCenterTop.getYInt() - cell / 6);
-//            p.addPoint(pCenterTop.getXInt() - cell / 4, pCenterTop.getYInt() - cell / 6);
-//            p.addPoint(pCenterTop.getXInt(), pCenterTop.getYInt() + cell / 2);
-//            g.draw(p);
             minVisual = 45;
             maxVisual = 135;
             minValue = 0;
@@ -140,8 +129,8 @@ public class OleMap extends OleSensor implements ActionListener {
             for (double alpha = 135; alpha >= 45; alpha -= 5) {
                 p1 = parentPane.getAngleT().alphaPoint(alpha, 5 * cell, center);
                 p2 = parentPane.getAngleT().alphaPoint(alpha, 4.9 * cell, center);
-                this.oDrawLine(g, p1, p2);                
-                if ((int)alpha % 15 == 0) {
+                this.oDrawLine(g, p1, p2);
+                if ((int) alpha % 15 == 0) {
                     tf = new TextFactory(g);
                     tf.setPoint(p2).setValue((360 + (int) (getCurrentValue() + alpha) - 90) % 360).setAngle(90 - (int) alpha).
                             setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
@@ -193,12 +182,61 @@ public class OleMap extends OleSensor implements ActionListener {
                 }
             }
         } else {
+            String sCompass, sGoal, sDistance;
+            g.setClip(screenPort);
             if (getCurrentValue() == Perceptor.NULLREAD) {
                 sRead = "---";
             } else {
-                sRead = String.format("%03d", (int) getCurrentValue());
+                sRead = String.format("[ %03d ]", (int) getCurrentValue());
             }
-            this.oDrawCounter(g, sRead, pCenterTop, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
+            tf = new TextFactory(g);
+            tf.setPoint(pCenterTop).setsText(sRead).
+                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(20).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+            
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y).setsText("Compass: "+sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+
+            g.setColor(Color.MAGENTA);
+            g.setStroke(new BasicStroke(3));
+            this.oDrawLine(g, pDistance, center);
+            g.setStroke(new BasicStroke(1));
+            if (getCurrentValue() == Perceptor.NULLREAD) {
+                sRead = "---";
+            } else {
+                sRead = String.format("(%03d)", (int) (this.getAllReadings()[0][2]));
+            }
+            tf = new TextFactory(g).setPoint(pDistance).setFontSize(20).setsText(sRead).
+                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
+                    setAngle((int) (360 - this.getAllReadings()[0][1]) % 360).validate();
+            tf.draw();
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y+40).setsText("Distance: "+sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+            
+            g.setColor(Color.CYAN);
+            g.setStroke(new BasicStroke(3,0,0,10,new float[]{10},0));
+            this.oDrawLine(g, pGoal, center);
+            g.setStroke(new BasicStroke(1));
+            if (getCurrentValue() == Perceptor.NULLREAD) {
+                sRead = "---";
+            } else {
+                sRead = String.format("< %03d >", (int) (this.getAllReadings()[0][1]));
+            }
+            tf = new TextFactory(g).setPoint(pGoal).setFontSize(20).setsText(sRead).
+                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
+                    setAngle((int) (360 - this.getAllReadings()[0][1]) % 360).validate();
+            tf.draw();
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y+20).setsText("Angle: "+sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+            
+            g.setClip(null);
+//            this.oDrawCounter(g, sRead, pCenterTop, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
         }
         return this;
     }
