@@ -35,16 +35,12 @@ JButton tbAux;
         this.setLayout(null);
         jtBag = new JTextPane();
         jtBag.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-//        jtBag.setBackground(this.getBackground());
-//        jtBag.setForeground(this.getForeground());
         jtBag.setFont(new Font("Tlwg Mono Regular", Font.PLAIN, 12));
     }
 
     @Override
     public void validate() {
         jsPane = new JScrollPane(jtBag);
-//        jtBag.setBounds(6,30,(int)this.getBounds().getWidth()-6,
-//                (int) this.getBounds().getY() -55);
         jtBag.setBackground(Color.BLACK);
         jsPane.setBounds(6,30,(int)this.getBounds().getWidth()-12,
                 (int) this.getBounds().getHeight() -35);

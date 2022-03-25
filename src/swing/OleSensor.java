@@ -5,26 +5,18 @@
  */
 package swing;
 
-import data.Ole;
-import geometry.AngleTransporter;
 import geometry.Point3D;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
@@ -78,6 +70,9 @@ public abstract class OleSensor extends JComponent {
     protected JTextPane jtBag;
     protected JScrollPane jsPane;
     protected Map2DColor map;
+    protected double scale, shiftx, shifty;
+    protected Rectangle screenPort, viewPort;
+
     public OleSensor(OleDrawPane parent, String name) {
         super();
 
@@ -150,16 +145,18 @@ public abstract class OleSensor extends JComponent {
 
     public void setCurrentValue(double currentValue[]) {
         for (int i = 0; i < currentValue.length; i++) {
-            if (allReadings[0].length>i)
-            allReadings[0][i] = currentValue[i];
+            if (allReadings[0].length > i) {
+                allReadings[0][i] = currentValue[i];
+            }
         }
     }
 
     public void setCurrentValue(double currentValue[][]) {
         for (int j = 0; j < currentValue.length; j++) {
             for (int i = 0; i < currentValue[j].length; i++) {
-            if (allReadings[0].length>i && allReadings.length>j)
-                allReadings[j][i] = currentValue[j][i];
+                if (allReadings[0].length > i && allReadings.length > j) {
+                    allReadings[j][i] = currentValue[j][i];
+                }
             }
         }
     }
@@ -268,6 +265,62 @@ public abstract class OleSensor extends JComponent {
         double d = getShiftValue() * this.lengthVisual;
 //        System.out.println("Shift visual "+d);
         return d;
+    }
+
+    public void drawLineRuler(Graphics2D g, Rectangle vPort, int fontSize) {
+        Point3D p1, p2, p3, p4;
+        TextFactory tf;
+        int mark =5;
+
+        g.setColor(Color.WHITE);
+        p1 = new Point3D(vPort.x, vPort.y);
+        p2 = new Point3D(vPort.x + vPort.width, vPort.y);
+        p3 = new Point3D(vPort.x, vPort.y+vPort.height);
+        p4 = new Point3D(vPort.x + vPort.width, vPort.y+vPort.height);
+        this.oDrawLine(g, p1, p2);
+        this.oDrawLine(g, p3, p4);
+        for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
+            p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
+            p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
+            p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y+vPort.height);
+            p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y+vPort.height - mark);
+            oDrawLine(g, p1, p2);
+            oDrawLine(g, p3, p4);
+            if (alpha > getMinValue() && alpha<getMaxValue()) {
+                tf = new TextFactory(g);
+                tf.setPoint(p2).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).setFontSize(10);
+                tf.setValue((int) alpha, 3);
+                tf.draw();
+                tf = new TextFactory(g);
+                tf.setPoint(p4).setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(10);
+                tf.setValue((int) alpha, 3);
+                tf.draw();
+            }
+        }
+        p1 = new Point3D(vPort.x, vPort.y);
+        p2 = new Point3D(vPort.x, vPort.y + vPort.height);
+        p3 = new Point3D(vPort.x+vPort.width, vPort.y);
+        p4 = new Point3D(vPort.x+vPort.width, vPort.y + vPort.height);
+        this.oDrawLine(g, p1, p2);
+        this.oDrawLine(g, p3, p4);
+        for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
+            p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
+            p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
+            p3 = new Point3D(vPort.x+vPort.width, shifty + vPort.y + alpha * scale);
+            p4 = new Point3D(vPort.x+vPort.width -mark, shifty + vPort.y + alpha * scale);
+            oDrawLine(g, p1, p2);
+            oDrawLine(g, p3, p4);
+            if (alpha > getMinValue() && alpha < getMaxValue()) {
+                tf = new TextFactory(g);
+                tf.setPoint(p2).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).setFontSize(10);
+                tf.setValue((int) alpha, 3).setAngle(-90);
+                tf.draw();
+                tf = new TextFactory(g);
+                tf.setPoint(p4).setHalign(SwingConstants.RIGHT).setValign(SwingConstants.BOTTOM).setFontSize(10);
+                tf.setValue((int) alpha, 3).setAngle(-90);
+                tf.draw();
+            }
+        }
     }
 
     public void drawCircularRuler(Graphics2D g, Point3D center, double axisRadius, double markRadius1, double markRadius2, double textRadius, int fontSize) {
@@ -606,5 +659,5 @@ public abstract class OleSensor extends JComponent {
     public void setMap(Map2DColor map) {
         this.map = map;
     }
-    
+
 }

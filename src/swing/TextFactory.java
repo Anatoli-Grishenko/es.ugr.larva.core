@@ -102,7 +102,7 @@ public class TextFactory {
         }
         g.setFont(newFont);
         g.drawString(sText, x, y);
-        g.setFont(newFont);
+        g.setFont(this.oldFont);
     }
 
     protected Rectangle getStringBounds(Graphics2D g2, String str,
@@ -171,7 +171,7 @@ public class TextFactory {
     }
 
     public TextFactory setAngle(int angle) {
-        this.angle = angle;
+        this.angle = (angle+360)%360;
         return this;
     }
 

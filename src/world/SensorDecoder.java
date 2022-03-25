@@ -29,8 +29,8 @@ public class SensorDecoder {
     public static Color cBad = new Color(100, 0, 0);
     protected HashMap<String, JsonArray> indexperception;
     protected JsonArray lastPerception;
-    protected Map2DColor hMap;
-    protected int maxlevel;
+    protected Map2DColor hMap, hMapMargin;
+    protected int maxlevel, mapMargin = 20;
     protected boolean ready, filterreading;
     protected String name, sessionID, commitment;
 
@@ -46,7 +46,14 @@ public class SensorDecoder {
             mapa.saveFile("./maps/");
             String name = mapa.getFileName();
             hMap = new Map2DColor();
-            hMap.loadMapRaw("./maps/" + name);
+            hMap.loadMapNormalize("./maps/" + name);
+            hMapMargin = new Map2DColor(hMap.getWidth() + 2 * mapMargin, hMap.getHeight() + 2 * mapMargin);
+            for (int x = 0; x < hMapMargin.getWidth(); x++) {
+                for (int y = 0; y < hMapMargin.getHeight(); y++) {
+                    hMapMargin.setColor(x, y, hMap.getColor(x-mapMargin, y-mapMargin));
+                }
+            }
+
 //            File toremove= new File("./maps/" + name);
 //            if (toremove.exists())
 //                toremove.delete();
@@ -79,10 +86,11 @@ public class SensorDecoder {
     public Map2DColor getWorldMap() {
         return hMap;
     }
-  
+
     public boolean hasSensor(String sensorname) {
         return isReady() && this.indexperception.keySet().contains(sensorname.toLowerCase());
     }
+
     protected JsonArray getSensor(String sensorname) {
         if (isReady()) {
             if (this.indexperception.keySet().contains(sensorname)) {
@@ -94,16 +102,15 @@ public class SensorDecoder {
 
     public void setSensor(String sensorname, JsonArray reading) {
         indexperception.put(sensorname, reading);
-        lastPerception.add(new JsonObject().add("sensor", sensorname).add("data",reading));
+        lastPerception.add(new JsonObject().add("sensor", sensorname).add("data", reading));
     }
 
     public void clear() {
         indexperception = new HashMap();
         lastPerception = new JsonArray();
         ready = false;
-        
-    }
 
+    }
 
     public boolean getAlive() {
         if (isReady() && hasSensor("ALIVE")) {
@@ -158,8 +165,8 @@ public class SensorDecoder {
     public int getCompass() {
         if (isReady() && hasSensor("COMPASS")) {
             int v = (int) getSensor("compass").get(0).asDouble();
-            v = 360+90-v;   
-            return v%360;            
+            v = 360 + 90 - v;
+            return v % 360;
         }
         return -1;
     }
@@ -181,11 +188,12 @@ public class SensorDecoder {
     public double getAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
-            v = 360+90-v;   
-            if (v>=360)
-                return v-360;            
-            else 
+            v = 360 + 90 - v;
+            if (v >= 360) {
+                return v - 360;
+            } else {
                 return v;
+            }
         }
         return -1;
 //        if (isReady() && hasSensor("ANGULAR")) {
@@ -202,10 +210,9 @@ public class SensorDecoder {
             Point3D me = new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
             Vector3D Busca = new Vector3D(me, p);
 
-            
             int v = (int) Norte.angleXYTo(Busca);;
-            v = 360+90-v;   
-            return v%360;            
+            v = 360 + 90 - v;
+            return v % 360;
         }
         return -1;
     }
@@ -230,33 +237,34 @@ public class SensorDecoder {
         }
         return new String[0];
     }
-    
+
     public String[] getCargo() {
         if (isReady() && hasSensor("CARGO")) {
             return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("cargo"))));
         }
         return new String[0];
     }
-    
+
     public int getNSteps() {
         if (isReady() && hasSensor("NUMSTEPS")) {
             return (int) getSensor("numsteps").get(0).asDouble();
         }
         return -1;
-        
+
     }
 
     public int[][] getVisualData() {
-        JsonArray jsaReading=null;
+        JsonArray jsaReading = null;
         jsaReading = getSensor("visual");
-       if (jsaReading ==null)
+        if (jsaReading == null) {
             jsaReading = getSensor("visualhq");
+        }
         if (isReady() && jsaReading != null) {
             int range = jsaReading.size();
             int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
             for (int i = 0; i < res.length; i++) {
                 for (int j = 0; j < res[0].length; j++) {
-                        res[i][j] = jsaReading.get(i).asArray().get(j).asInt();
+                    res[i][j] = jsaReading.get(i).asArray().get(j).asInt();
                 }
             }
 
@@ -266,16 +274,17 @@ public class SensorDecoder {
     }
 
     public int[][] getLidarData() {
-        JsonArray jsaReading=null;
+        JsonArray jsaReading = null;
         jsaReading = getSensor("lidar");
-       if (jsaReading ==null)
+        if (jsaReading == null) {
             jsaReading = getSensor("lidarhq");
+        }
         if (isReady() && jsaReading != null) {
             int range = jsaReading.size();
             int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
             for (int i = 0; i < res.length; i++) {
                 for (int j = 0; j < res[0].length; j++) {
-                        res[i][j] = jsaReading.get(i).asArray().get(j).asInt();
+                    res[i][j] = jsaReading.get(i).asArray().get(j).asInt();
                 }
             }
 
@@ -285,16 +294,17 @@ public class SensorDecoder {
     }
 
     public int[][] getThermalData() {
-        JsonArray jsaReading=null;
+        JsonArray jsaReading = null;
         jsaReading = getSensor("thermal");
-       if (jsaReading ==null)
+        if (jsaReading == null) {
             jsaReading = getSensor("thermalhq");
+        }
         if (isReady() && jsaReading != null) {
             int range = jsaReading.size();
             int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
             for (int i = 0; i < res.length; i++) {
                 for (int j = 0; j < res[0].length; j++) {
-                        res[i][j] = (int)jsaReading.get(i).asArray().get(j).asDouble();
+                    res[i][j] = (int) jsaReading.get(i).asArray().get(j).asDouble();
                 }
             }
 
@@ -317,7 +327,7 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             setSensor(name, jsosensor.get("data").asArray());
-            System.out.println("Sensor: "+name);
+            System.out.println("Sensor: " + name);
         }
         ready = true;
     }
@@ -362,9 +372,16 @@ public class SensorDecoder {
     public void setCommitment(String commitment) {
         this.commitment = commitment;
     }
-    
-    
-    public String [] getSensorList() {
+
+    public String[] getSensorList() {
         return this.indexperception.keySet().toArray(new String[this.indexperception.keySet().size()]);
+    }
+
+    public int getMapMargin() {
+        return mapMargin;
+    }
+
+    public void setMapMargin(int mapMargin) {
+        this.mapMargin = mapMargin;
     }
 }

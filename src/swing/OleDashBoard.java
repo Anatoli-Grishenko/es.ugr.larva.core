@@ -175,22 +175,6 @@ public class OleDashBoard extends OleDrawPane {
 //        osGround.showScaleNumbers(false);
 //        osGround.validate();
 
-        osHud = new OleRotatory(this, "HUD");
-        osHud.setMinValue(0);
-        osHud.setMaxValue(360);
-        osHud.setMinVisual(0);
-        osHud.setMaxVisual(360);
-        osHud.setnDivisions(36);
-        osHud.showScaleNumbers(true);
-        osHud.setBounds(ww, 00, 4 * ww, 4 * ww);
-        osHud.setForeground(Color.WHITE);
-        osHud.setBackground(Color.BLACK);
-        osHud.showFrame(true);
-        osHud.setCurrentValue(0);
-        osHud.validate();
-        osHud.showScale(true);
-        osHud.showScaleNumbers(false);
-
         osMap = new OleMap(this, "MAP");
         osMap.setBounds(ww, 00, 4 * ww, 4 * ww);
         osMap.setForeground(Color.WHITE);
@@ -334,6 +318,8 @@ public class OleDashBoard extends OleDrawPane {
             int maxlevel = ocontent.getInt("maxflight");
             decoder.setWorldMap(ofile.toString(), maxlevel);
             this.mySensorsVisual.get("MAP").setMap(decoder.getWorldMap());
+            this.mySensorsVisual.get("MAP").validate();
+            this.repaint();            
             res = true;
         }
         if (content.contains("perceptions")) {
@@ -371,6 +357,10 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("ALV").setCurrentValue(decoder.getAlive());
             this.mySensorsVisual.get("TAR").setCurrentValue(decoder.getOnTarget());
             this.mySensorsVisual.get("STEPS").setCurrentValue(decoder.getNSteps());
+            this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
+            this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getAngular();
+            this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getDistance();
+            
             ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
 //            
 //            if (decoder.hasSensor("GPS")) {

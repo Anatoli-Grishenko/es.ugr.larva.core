@@ -40,9 +40,6 @@ public class OleLinear extends OleSensor {
             g.fillRoundRect(mX + 3, mY + 3, mW - 6, mH - 6, 10, 10);
         }
         f = g.getFont();
-//        g.setColor(this.getBackground());
-//        g.fillRect(mX + 3, mY + 3, mW - 6, mH - 6);
-//        g.setStroke(new BasicStroke(1));
         return this;
     }
 
