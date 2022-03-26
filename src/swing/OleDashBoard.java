@@ -41,7 +41,7 @@ public class OleDashBoard extends OleDrawPane {
     OleRotatory orCompass1, osHud;
     OleDiode odLed[] = new OleDiode[10];
     OleLinear olTime, olSteps, olGPS;
-    OleBag olPayload, olCommands;
+    OleBag olPayload, olCommand;
     OleMap osMap;
     Palette pal;
     String sperception="", agentName, otherAgents;
@@ -259,6 +259,15 @@ public class OleDashBoard extends OleDrawPane {
         olPayload.setBounds(xx, yy, 2 * ww2, 9 * hh);
         olPayload.showFrame(true);
         olPayload.validate();
+        xx+=2*ww2;
+        yy=0;
+        olCommand = new OleBag(this, "COMMAND");
+        olCommand.setForeground(Color.GREEN);
+        olCommand.setBackground(Color.DARK_GRAY);
+        olCommand.setBounds(xx, yy, 3 * ww2, 24 * hh);
+        olCommand.showFrame(true);
+        olCommand.validate();
+
         this.addSensor(osAltitude);
         this.addSensor(osBattery);
         this.addSensor(osGround);
@@ -273,6 +282,7 @@ public class OleDashBoard extends OleDrawPane {
         this.addSensor(olTime);
         this.addSensor(olSteps);
         this.addSensor(olPayload);
+        this.addSensor(olCommand);
         
     }
 
@@ -360,135 +370,9 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getAngular();
             this.mySensorsVisual.get("MAP").getAllReadings()[0][2]=decoder.getDistance();
+            this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize())+decoder.getLastTrace());
             
             ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
-//            
-//            if (decoder.hasSensor("GPS")) {
-//                stepbystep += "{GPS";
-//                gps = decoder.getGPS();
-//                lastx = (int) gps[0];
-//                lasty = (int) gps[1];
-//                if (lastx >= 0) {
-////                    mpMap.setTrail(lastx, lasty, this.getGround());
-//                }
-//                stepbystep += "}{FLIGHT";
-//                int shft = 30;
-////                if (hFlight.getWidth() - shft - 1 == iIter - baseFlight) {
-////                    hFlight.shiftLeft(shft);
-////                    baseFlight += shft;
-////                }
-////                for (int ih = 0; ih < this.hFlight.getHeight(); ih++) {
-////                    int y1 = (ih * 256) / hFlight.getHeight(), y2 = (int) (gps[2] - decoder.getGround());
-////                    if (y1 < y2) {
-////                        if (this.myLayout == LARVADash.Layout.DASHBOARD) {
-////                            hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - ih, cDodgerB);
-////                        } else {
-////                            hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - ih, cSoil);
-////                        }
-////                    } else {
-////                        if (this.myLayout == LARVADash.Layout.DASHBOARD) {
-////                            hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - ih, Color.BLACK);
-////                        } else {
-////                            hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - ih, cSky);
-////                        }
-////                    }
-////                    if ((ih * 256) / hFlight.getHeight() > this.iMaxLevel) {
-////                        hFlight.setColor(iIter, hFlight.getHeight() - ih, cBad);
-////                    }
-////                    hFlight.setColor(iIter - baseFlight, hFlight.getHeight() - (int) (hFlight.getHeight() * gps[2] / 256), cTrace);
-////
-////                }
-//            }
-//
-//            if (decoder.getNSteps() == 1) {
-////                this.fDashboard.setTitle("| Session: " + this.decoder.getSession()
-////                        + " |Agent: " + name + " " + fDashboard.getTitle());
-//            }
-//            int[][] sensor;
-//            int rangex, rangey;
-//            Palette palette;
-//            if (decoder.hasSensor("VISUAL") || decoder.hasSensor("VISUALHQ")) {
-//                stepbystep += "}{VISUAL";
-//                iVisual = decoder.getVisualData();
-//                sensor = iVisual;
-//                rangex = sensor[0].length;
-//                rangey = sensor.length;
-////                    palette = getPalette("Visual");
-////                    if (cVisual
-////                            == null) {
-////                        cVisual = new Color[rangex][rangey];
-////                        for (int i = 0; i < rangex; i++) {
-////                            for (int j = 0; j < rangey; j++) {
-////                                cVisual[i][j] = palette.getColor(0);
-////                            }
-////                        }
-////                        mpVisual.setMap(cVisual, palette);
-////                    }
-////                    for (int i = 0;
-////                            i < rangex;
-////                            i++) {
-////                        for (int j = 0; j < rangey; j++) {
-////                            if (sensor[j][i] > decoder.getMaxlevel()) {
-////                                cVisual[i][j] = cBad;
-////                            } else {
-////                                cVisual[i][j] = palette.getColor(sensor[j][i]);
-////                            }
-////                        }
-////                    }
-//            }
-////                if (decoder.hasSensor("LIDAR") || decoder.hasSensor("LIDARHQ")) {
-////                    stepbystep += "}{LIDAR";
-////                    sensor = decoder.getLidarData();
-////                    rangex = sensor[0].length;
-////                    rangey = sensor.length;
-////                    palette = getPalette("Lidar");
-////                    if (cLidar
-////                            == null) {
-////                        cLidar = new Color[rangex][rangey];
-////                        for (int i = 0; i < rangex; i++) {
-////                            for (int j = 0; j < rangey; j++) {
-////                                cLidar[i][j] = palette.getColor(0);
-////                            }
-////                        }
-////                        mpLidar.setMap(cLidar, palette);
-////                    }
-////                    for (int i = 0;
-////                            i < rangex;
-////                            i++) {
-////                        for (int j = 0; j < rangey; j++) {
-////                            if (sensor[j][i] < 0) {
-////                                cLidar[i][j] = cBad;
-////                            } else {
-////                                cLidar[i][j] = palette.getColor(sensor[j][i]);
-////                            }
-////                        }
-////                    }
-////                }
-////                if (decoder.hasSensor("THERMAL") || decoder.hasSensor("THERMALHQ")) {
-////                    stepbystep += "}{THERMAL";
-////                    sensor = decoder.getThermalData();
-////                    iThermal = decoder.getThermalData();
-////                    if (sensor.length
-////                            > 0) {
-////                        rangex = sensor[0].length;
-////                        rangey = sensor.length;
-////                        palette = getPalette("Thermal");
-////                        if (cThermal == null) {
-////                            cThermal = new Color[rangex][rangey];
-////                            for (int i = 0; i < rangex; i++) {
-////                                for (int j = 0; j < rangey; j++) {
-////                                    cThermal[i][j] = palette.getColor(0);
-////                                }
-////                            }
-////                            mpThermal.setMap(cThermal, palette);
-////                        }
-////                        for (int i = 0; i < rangex; i++) {
-////                            for (int j = 0; j < rangey; j++) {
-////                                cThermal[i][j] = palette.getColor(sensor[j][i]);
-////                            }
-////                        }
-////                    }
-////                }
 
             addStatus(decoder.getStatus());
             this.repaint();

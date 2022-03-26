@@ -35,7 +35,6 @@ public class OleMap extends OleSensor implements ActionListener {
     HashMap<String, ArrayList<Point3D>> Trails;
     int narrow = 37, margin = 22;
     OleButton obMap, obHud;
-    boolean isMap;
     Polygon p;
     int cell;
     Point3D pCenterTop, pCenter, pGoal, pDistance;
@@ -161,7 +160,7 @@ public class OleMap extends OleSensor implements ActionListener {
         if (isMap) {
             if (map != null) {
                 g.drawImage(map.getMap(), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
-                g.setColor(Color.GREEN);
+                g.setColor(Color.MAGENTA);
                 Point3D ptrail;
                 int diamond = 5;
                 double xVP, yVP;

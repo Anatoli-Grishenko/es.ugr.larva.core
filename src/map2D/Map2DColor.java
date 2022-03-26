@@ -4,10 +4,14 @@
  */
 package map2D;
 
+import geometry.Point3D;
+import geometry.SimpleVector3D;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import javax.imageio.ImageIO;
 
 /**
@@ -298,6 +302,9 @@ public class Map2DColor {
             return -1;
         }
     }
+    public int getRawLevel(SimpleVector3D p) {
+        return getRawLevel(p.getSource().getXInt(),p.getSource().getYInt());
+    }
     /**
      *
      * Devuelve la altura del mapa en las coordenadas especificadas
@@ -367,6 +374,10 @@ public class Map2DColor {
      */
     public Map2DColor setLevel(double x, double y, int level) {
         return setLevel((int) x, (int) y, level);
+    }
+
+    public Map2DColor setLevel(SimpleVector3D p, int level) {
+        return setLevel((int) p.getSource().getX(), (int) p.getSource().getY(), level);
     }
 
     /**

@@ -14,6 +14,7 @@ import com.eclipsesource.json.JsonObject;
  */
 public class Vector3D {
 
+
 //    public static final Vector3D WINDROSE2D[] = new Vector3D[]{new Vector3D(new Point3D().define(1, 0)), new Vector3D(new Point3D().define(1, 1)),
 //        new Vector3D(new Point3D().define(0, 1)), new Vector3D(new Point3D().define(-1, 1)), new Vector3D(new Point3D().define(-1, 0)),
 //        new Vector3D(new Point3D().define(-1, -1)), new Vector3D(new Point3D().define(0, -1)), new Vector3D(new Point3D().define(1, -1))};

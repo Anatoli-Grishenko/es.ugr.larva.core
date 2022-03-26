@@ -72,6 +72,7 @@ public abstract class OleSensor extends JComponent {
     protected Map2DColor map;
     protected double scale, shiftx, shifty;
     protected Rectangle screenPort, viewPort;
+    protected boolean isMap;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -659,5 +660,11 @@ public abstract class OleSensor extends JComponent {
     public void setMap(Map2DColor map) {
         this.map = map;
     }
-
+    public boolean isMap() {
+        return isMap;
+    }
+    
+    public void setIsMap(boolean b) {
+        isMap=b;
+    }
 }

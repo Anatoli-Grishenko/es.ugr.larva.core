@@ -238,6 +238,13 @@ public class SensorDecoder {
         return new String[0];
     }
 
+    public String getLastTrace() {
+        if (isReady() && hasSensor("TRACE") && getSensor("trace").size()>0) {
+            return getSensor("trace").get(getSensor("trace").size()-1).asString();
+        }
+        return "";
+    }
+
     public String[] getCargo() {
         if (isReady() && hasSensor("CARGO")) {
             return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("cargo"))));

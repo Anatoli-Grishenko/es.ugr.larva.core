@@ -35,7 +35,7 @@ JButton tbAux;
         this.setLayout(null);
         jtBag = new JTextPane();
         jtBag.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-        jtBag.setFont(new Font("Tlwg Mono Regular", Font.PLAIN, 12));
+//        jtBag.setFont(new Font("Free Mono Regular", Font.PLAIN, 12));
     }
 
     @Override
@@ -70,30 +70,6 @@ JButton tbAux;
 //        jsPane.repaint();
 //        jtBag.repaint();
         return this;
-    }
-
-    public int getStartAngle() {
-        return (int) getMaxVisual();
-    }
-
-    public void setStartAngle(int startAngle) {
-        this.setMaxVisual(startAngle);
-    }
-
-    public int getEndAngle() {
-        return (int) getMinVisual();
-    }
-
-    public void setEndAngle(int endAngle) {
-        setMinVisual(endAngle);
-    }
-
-    public int getnDivisions() {
-        return getnMarks();
-    }
-
-    public void setnDivisions(int nDvisions) {
-        setnMarks(nDvisions);
     }
 
 }
