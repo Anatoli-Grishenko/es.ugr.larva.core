@@ -28,6 +28,7 @@ public class SimpleVector3D extends Vector3D {
 
     public SimpleVector3D(int x, int y, int orient) {
         super(new Point3D(x, y), new Point3D(x, y).plus(new Point3D(nextX[orient % 8], nextY[orient % 8])));
+        sOrient = orient % 8;
     }
 
     @Override

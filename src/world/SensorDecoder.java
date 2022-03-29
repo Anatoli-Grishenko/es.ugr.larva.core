@@ -165,8 +165,10 @@ public class SensorDecoder {
     public int getCompass() {
         if (isReady() && hasSensor("COMPASS")) {
             int v = (int) getSensor("compass").get(0).asDouble();
-            v = 360 + 90 - v;
+            v = 360-v;
             return v % 360;
+//            v = 360 + 90 - v;
+//            return v % 360;
         }
         return -1;
     }
@@ -188,12 +190,8 @@ public class SensorDecoder {
     public double getAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
-            v = 360 + 90 - v;
-            if (v >= 360) {
-                return v - 360;
-            } else {
-                return v;
-            }
+//            v = v+getCompass();   
+            return (int)v % 360;
         }
         return -1;
 //        if (isReady() && hasSensor("ANGULAR")) {
@@ -334,7 +332,7 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             setSensor(name, jsosensor.get("data").asArray());
-            System.out.println("Sensor: " + name);
+//            System.out.println("Sensor: " + name);
         }
         ready = true;
     }

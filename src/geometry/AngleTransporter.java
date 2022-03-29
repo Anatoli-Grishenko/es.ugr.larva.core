@@ -45,10 +45,10 @@ public class AngleTransporter {
     }
 
     public double normalizeAngle(double angle) {
-        if (angle < 0) {
+        while (angle < 0) {
             angle += 360;
         }
-        if (angle >= 360) {
+        while (angle >= 360) {
             angle -= 360;
         }
         return angle;

@@ -5,6 +5,7 @@
  */
 package swing;
 
+import geometry.AngleTransporter;
 import geometry.Point3D;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -32,7 +33,7 @@ import world.Perceptor;
 
 /**
  *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+Fvalidate * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public abstract class OleSensor extends JComponent {
 
@@ -45,10 +46,10 @@ public abstract class OleSensor extends JComponent {
     }
 
     // Data
-    protected double[][] allReadings;
+    protected double[][] allReadings, Memory1, Memory2, Memory3;
     protected SensorType sType;
     protected int nColumns, nRows, nMarks;
-    protected double minValue, maxValue, lengthValue, stepValue;
+    protected double minValue, maxValue, lengthValue, stepValue, baseValue;
     protected HashMap<Double, ImageIcon> readingMarks;
     protected ViewType vType;
     protected OleDrawPane matrixViewer;
@@ -56,23 +57,23 @@ public abstract class OleSensor extends JComponent {
     protected ArrayList<String> bag;
     // View
     protected int mX, mY, mW, mH;
-    protected double minVisual, maxVisual;
+    protected double minVisual, maxVisual, stepVisual, lengthVisual, baseVisual = 0, dialVisual, currentVisual;
     protected Point3D center, origin;
     protected OleDrawPane parentPane;
-    protected double stepVisual, lengthVisual, baseVisual = 0;
     protected Palette myPalette;
     protected boolean showScale = true, showScaleNumbers = true, showFrame = false,
-            rotateText = false, autoRotate = false, counterClock = false;
+            rotateText = false, autoRotate = false, counterClock = false, circular = false;
     protected double mainRadius, markRadius, textRadius, labelRadius, dialRadius, barRadius;
     protected int stroke = 27;
     protected Font f, fRead;
     protected String sRead, sfRead, sfText, labels[], externalSensorName;
     protected JTextPane jtBag;
     protected JScrollPane jsPane;
-    protected Map2DColor map;
+    protected Map2DColor map, image1, image2, image3;
     protected double scale, shiftx, shifty;
     protected Rectangle screenPort, viewPort;
     protected boolean isMap;
+    protected AngleTransporter at;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -86,6 +87,8 @@ public abstract class OleSensor extends JComponent {
         sfRead = "Ubuntu Mono Regular";
         sfText = "Noto Sans Regular";
         bag = new ArrayList();
+        baseValue = 0;
+        at = parentPane.getAngleT();
     }
 
     @Override
@@ -128,6 +131,9 @@ public abstract class OleSensor extends JComponent {
         this.nColumns = nColumns;
         for (int i = 0; i < getnRows(); i++) {
             allReadings[i] = new double[nColumns];
+            Memory1[i] = new double[nColumns];
+            Memory2[i] = new double[nColumns];
+            Memory3[i] = new double[nColumns];
         }
     }
 
@@ -138,6 +144,9 @@ public abstract class OleSensor extends JComponent {
     public void setnRows(int nRows) {
         this.nRows = nRows;
         this.allReadings = new double[nRows][];
+        this.Memory1 = new double[nRows][];
+        this.Memory2 = new double[nRows][];
+        this.Memory3 = new double[nRows][];
     }
 
     public double getCurrentValue() {
@@ -162,25 +171,30 @@ public abstract class OleSensor extends JComponent {
         }
     }
 
-    public void setCurrentValue(double currentValue) {
-        if (currentValue <= getMinValue()) {
-            if (!autoRotate) {
-                currentValue = getMinValue();
+    public double validateValue(double value) {
+        if (value <= minValue) {
+            if (circular) {
+                while (value < minValue) {
+                    value += lengthValue;
+                }
             } else {
-                currentValue = (this.lengthValue + currentValue) % this.lengthValue;
+                value = minValue;
             }
-
-        } else if (currentValue >= getMaxValue()) {
-            if (!autoRotate) {
-                currentValue = getMaxValue();
-            } else {
-                currentValue = currentValue % this.lengthValue;
-            }
-
-        } else {
-            currentValue = currentValue;
         }
-        allReadings[0][0] = currentValue;
+        if (value >= maxValue) {
+            if (circular) {
+                while (value >= maxValue) {
+                    value -= lengthValue;
+                }
+            } else {
+                value = maxValue;
+            }
+        }
+        return value;
+    }
+
+    public void setCurrentValue(double currentValue) {
+        allReadings[0][0] = validateValue(currentValue);
 //        System.out.println("Settig value to "+currentValue);
     }
 
@@ -271,23 +285,23 @@ public abstract class OleSensor extends JComponent {
     public void drawLineRuler(Graphics2D g, Rectangle vPort, int fontSize) {
         Point3D p1, p2, p3, p4;
         TextFactory tf;
-        int mark =5;
+        int mark = 5;
 
         g.setColor(Color.WHITE);
         p1 = new Point3D(vPort.x, vPort.y);
         p2 = new Point3D(vPort.x + vPort.width, vPort.y);
-        p3 = new Point3D(vPort.x, vPort.y+vPort.height);
-        p4 = new Point3D(vPort.x + vPort.width, vPort.y+vPort.height);
+        p3 = new Point3D(vPort.x, vPort.y + vPort.height);
+        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
         this.oDrawLine(g, p1, p2);
         this.oDrawLine(g, p3, p4);
         for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
             p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
             p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
-            p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y+vPort.height);
-            p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y+vPort.height - mark);
+            p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
+            p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
             oDrawLine(g, p1, p2);
             oDrawLine(g, p3, p4);
-            if (alpha > getMinValue() && alpha<getMaxValue()) {
+            if (alpha > getMinValue() && alpha < getMaxValue()) {
                 tf = new TextFactory(g);
                 tf.setPoint(p2).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).setFontSize(10);
                 tf.setValue((int) alpha, 3);
@@ -300,15 +314,15 @@ public abstract class OleSensor extends JComponent {
         }
         p1 = new Point3D(vPort.x, vPort.y);
         p2 = new Point3D(vPort.x, vPort.y + vPort.height);
-        p3 = new Point3D(vPort.x+vPort.width, vPort.y);
-        p4 = new Point3D(vPort.x+vPort.width, vPort.y + vPort.height);
+        p3 = new Point3D(vPort.x + vPort.width, vPort.y);
+        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
         this.oDrawLine(g, p1, p2);
         this.oDrawLine(g, p3, p4);
         for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
             p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
             p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
-            p3 = new Point3D(vPort.x+vPort.width, shifty + vPort.y + alpha * scale);
-            p4 = new Point3D(vPort.x+vPort.width -mark, shifty + vPort.y + alpha * scale);
+            p3 = new Point3D(vPort.x + vPort.width, shifty + vPort.y + alpha * scale);
+            p4 = new Point3D(vPort.x + vPort.width - mark, shifty + vPort.y + alpha * scale);
             oDrawLine(g, p1, p2);
             oDrawLine(g, p3, p4);
             if (alpha > getMinValue() && alpha < getMaxValue()) {
@@ -326,78 +340,78 @@ public abstract class OleSensor extends JComponent {
 
     public void drawCircularRuler(Graphics2D g, Point3D center, double axisRadius, double markRadius1, double markRadius2, double textRadius, int fontSize) {
         Point3D p1, p2, ps;
-        double iValue;
         String sValue;
         int textSize;
+        double endScale, initScale=0, initValue=0, endValue=0, stepScale=0, iScale=0, iVisual=0, maxMarks=0;
+
+        g.setColor(this.getForeground());
+        oDrawArc(g, center, axisRadius, minVisual, maxVisual);
         if (fontSize >= 0) {
             textSize = fontSize;
         } else {
             textSize = (int) (Math.round(Math.abs(markRadius2 - markRadius1))) * 30 / 20;
         }
-        if (showScale) {
-            g.setColor(this.getForeground());
-            if (axisRadius > 0) {
-                this.oDrawArc(g, getCenter(), axisRadius, getMinVisual(), getMaxVisual());
-            }
-            if (!counterClock) {
-                iValue = getMaxValue();
+        if (circular) {
+            initValue=initScale = getMinValue();
+            endValue=endScale = getMaxValue();
+            stepScale = stepValue;
+            maxMarks=nMarks;
+        } else {
+            maxMarks=nMarks+1;
+            if (counterClock) {
+                initScale = getMinVisual();
+                initValue= getMaxValue();
+                stepScale = stepVisual;
+                stepValue=-stepValue;
             } else {
-                iValue = getMinValue();
+                initScale = getMaxVisual();
+                initValue= getMinValue();
+                stepScale = -stepVisual;
+                stepValue=stepValue;
             }
-            if (this.isAutoRotate()) {
-                if (!counterClock) {
-                    baseVisual = 90 - getCurrentValue();
-                } else {
-                    baseVisual = getCurrentValue() - 90;
-                }
-            }
-            for (double alpha = getMinVisual(); alpha < getMaxVisual() + stepVisual; alpha += stepVisual) {
-                p1 = parentPane.getAngleT().alphaPoint(alpha + baseVisual, markRadius2, center);
-                p2 = parentPane.getAngleT().alphaPoint(alpha + baseVisual, markRadius1, center);
+
+        }
+//        if (getMinVisual() % 360 == getMaxVisual() % 360) {
+//            maxScale += stepScale;
+//        }
+        g.setColor(this.getForeground());
+
+        for (int mark=0; mark<maxMarks; mark++) {
+            if (showScale) {
+//                if (axisRadius > 0) {
+//                    this.oDrawArc(g, getCenter(), axisRadius, getMinVisual(), getMaxVisual());
+//                }
+                p1 = at.alphaPoint(initScale+mark*stepScale, markRadius2, center);
+                p2 = at.alphaPoint(initScale+mark*stepScale, markRadius1, center);
                 oDrawLine(g, p1, p2);
             }
-        }
-        if (showScaleNumbers) {
-            g.setColor(this.getForeground());
-            double maxScale;
-            if (getMinVisual() % 360 == getMaxVisual() % 360) {
-                maxScale = getMaxVisual();
-            } else {
-                maxScale = getMaxVisual() + stepVisual;
-            }
-            if (!counterClock) {
-                iValue = getMaxValue();
-            } else {
-                iValue = getMinValue();
-            }
-            if (this.isAutoRotate()) {
-                if (!counterClock) {
-                    baseVisual = 90 - getCurrentValue();
-                } else {
-                    baseVisual = getCurrentValue() + 90;
-                }
-            }
-            for (double alpha = getMinVisual(); alpha < maxScale; alpha += stepVisual) {
-                ps = parentPane.getAngleT().alphaPoint(alpha + baseVisual, textRadius, center);
-                sValue = String.format("%4d", (int) iValue);
+            if (showScaleNumbers) {
+                if (!showScale)
+                    textRadius=markRadius2;
+                iScale=(initValue + mark*stepValue);
+                iVisual=(initScale + mark*stepScale+baseValue-baseVisual);
+//                System.out.println(iVisual);
+                ps = at.alphaPoint(iVisual, textRadius, center);
+                sValue = String.format("%4d", (int) iScale);
                 TextFactory tf = new TextFactory(g);
                 if (labels == null) {
-                    tf.setNdigits(-1).setValue((int) iValue);
+                    tf.setsText(sValue);
                 } else {
-                    tf.setsText(labels[(int) (this.getnDivisions() * alpha / getMaxVisual())]);
+                    tf.setsText(labels[mark]);
                 }
                 tf.setPoint(ps).setFontSize(textSize)
                         .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER);
                 if (rotateText) {
-                    tf.setAngle((int) (90 - alpha - baseVisual));
+                    tf.setAngle((int)validateValue(-iVisual+baseValue));
                 }
+                g.setColor(this.getForeground());
                 tf.validate().draw();
 //                iValue -= stepValue;
-                if (!counterClock) {
-                    iValue -= stepValue;
-                } else {
-                    iValue += stepValue;
-                }
+//                if (!counterClock) {
+//                    iValue -= stepValue;
+//                } else {
+//                    iValue += stepValue;
+//                }
             }
         }
     }
@@ -417,8 +431,8 @@ public abstract class OleSensor extends JComponent {
 //            this.oDrawArc(g, getCenter(), mainRadius, getMinVisual(), getMaxVisual());
 //            iValue = getMaxValue();
 //            for (double alpha = getMinVisual(); alpha < getMaxVisual() + stepVisual; alpha += stepVisual) {
-//                p1 = parentPane.getAngleT().alphaPoint(alpha, mainRadius, center);
-//                p2 = parentPane.getAngleT().alphaPoint(alpha, markRadius, center);
+//                p1 = at.alphaPoint(alpha, mainRadius, center);
+//                p2 = at.alphaPoint(alpha, markRadius, center);
 //                oDrawLine(g, p1, p2);
 //            }
 //        }
@@ -426,7 +440,7 @@ public abstract class OleSensor extends JComponent {
 //            g.setColor(this.getForeground());
 //            iValue = getMaxValue();
 //            for (double alpha = getMinVisual(); alpha < getMaxVisual() + stepVisual; alpha += stepVisual) {
-//                ps = parentPane.getAngleT().alphaPoint(alpha, textRadius, center);
+//                ps = at.alphaPoint(alpha, textRadius, center);
 //                sValue = String.format("%4d", (int) iValue);
 //                oDrawString(g, sValue, ps, textSize, SwingConstants.CENTER, SwingConstants.CENTER); //SwingConstants.CENTER, SwingConstants.CENTER);
 //                iValue -= stepValue;
@@ -523,9 +537,9 @@ public abstract class OleSensor extends JComponent {
     public void oDrawArc(Graphics2D g, Point3D center, double radius, double alpha1, double alpha2) {
         double step = 1;
         Point3D p1, p2;
-        p1 = parentPane.getAngleT().alphaPoint(alpha1, radius, center);
+        p1 = at.alphaPoint(alpha1, radius, center);
         for (double alpha = alpha1 + step; alpha <= alpha2; alpha += step) {
-            p2 = parentPane.getAngleT().alphaPoint(alpha, radius, center);
+            p2 = at.alphaPoint(alpha, radius, center);
             oDrawLine(g, p1, p2);
             p1 = p2;
         }
@@ -534,9 +548,9 @@ public abstract class OleSensor extends JComponent {
     public void oDrawArc(Graphics2D g, Point3D center, double radius, double alpha1, double alpha2, Palette p) {
         double step = 1;
         Point3D p1, p2;
-        p1 = parentPane.getAngleT().alphaPoint(alpha1 + baseVisual, radius, center);
+        p1 = at.alphaPoint(alpha1 + baseVisual, radius, center);
         for (double alpha = alpha1 + step; alpha <= alpha2; alpha += step) {
-            p2 = parentPane.getAngleT().alphaPoint(alpha + baseVisual, radius, center);
+            p2 = at.alphaPoint(alpha + baseVisual, radius, center);
             g.setColor(p.getColor((int) ((this.getMaxVisual() - alpha) * this.getMaxValue() / (this.getMaxVisual() - this.getMinVisual()))));
             oDrawLine(g, p1, p2);
             p1 = p2;
@@ -660,11 +674,60 @@ public abstract class OleSensor extends JComponent {
     public void setMap(Map2DColor map) {
         this.map = map;
     }
+
     public boolean isMap() {
         return isMap;
     }
-    
+
     public void setIsMap(boolean b) {
-        isMap=b;
+        isMap = b;
+    }
+
+    public double[][] getMemory1() {
+        return Memory1;
+    }
+
+    public void setMemory1(double[][] Memory1) {
+        this.Memory1 = Memory1;
+    }
+
+    public double[][] getMemory2() {
+        return Memory2;
+    }
+
+    public void setMemory2(double[][] Memory2) {
+        this.Memory2 = Memory2;
+    }
+
+    public double[][] getMemory3() {
+        return Memory3;
+    }
+
+    public void setMemory3(double[][] Memory3) {
+        this.Memory3 = Memory3;
+    }
+
+    public Map2DColor getImage1() {
+        return image1;
+    }
+
+    public void setImage1(Map2DColor image1) {
+        this.image1 = image1;
+    }
+
+    public Map2DColor getImage2() {
+        return image2;
+    }
+
+    public void setImage2(Map2DColor image2) {
+        this.image2 = image2;
+    }
+
+    public Map2DColor getImage3() {
+        return image3;
+    }
+
+    public void setImage3(Map2DColor image3) {
+        this.image3 = image3;
     }
 }

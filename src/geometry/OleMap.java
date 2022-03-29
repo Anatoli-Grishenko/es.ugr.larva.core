@@ -32,13 +32,16 @@ import world.Perceptor;
  */
 public class OleMap extends OleSensor implements ActionListener {
 
-    HashMap<String, ArrayList<Point3D>> Trails;
-    int narrow = 37, margin = 22;
-    OleButton obMap, obHud;
-    Polygon p;
-    int cell;
-    Point3D pCenterTop, pCenter, pGoal, pDistance;
-    TextFactory tf;
+    protected HashMap<String, ArrayList<Point3D>> Trails;
+    protected Polygon hudView[][];
+    protected int narrow = 37, margin = 22;
+    protected OleButton obMap, obHud;
+    protected Polygon p;
+    protected int cell, nLevels, nTiles;
+    protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance;
+    protected TextFactory tf;
+    protected double stepRadius, stepAngle;
+    protected AngleTransporter at;
 
     public OleMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -50,6 +53,7 @@ public class OleMap extends OleSensor implements ActionListener {
         obMap.setBackground(Color.DARK_GRAY);
         obMap.setForeground(Color.WHITE);
         parentPane.add(obMap);
+        at = parentPane.getAngleT();
         obHud = new OleButton(this, "VHud", "VHud");
         obHud.setBackground(Color.DARK_GRAY);
         obHud.setForeground(Color.WHITE);
@@ -101,24 +105,28 @@ public class OleMap extends OleSensor implements ActionListener {
         } else {
             g.draw(screenPort);
             g.setClip(screenPort);
-            Point3D p1, p2;
+            Point3D p0, p1, p2, p3, p4;
+            double radius1, radius2, alpha1, alpha2;
 
             cell = screenPort.width / 8;
             center = new Point3D(screenPort.x + screenPort.width / 2, screenPort.y + screenPort.height - 2 * cell);
-            pCenterTop = parentPane.getAngleT().alphaPoint(90, 5.5 * cell, center);
-            pCenter = parentPane.getAngleT().alphaPoint(90, 5 * cell, center);
-            pGoal = parentPane.getAngleT().alphaPoint((360 + (int) (this.getAllReadings()[0][1]) + 90) % 360, 5.1 * cell, center);
-            pDistance = parentPane.getAngleT().alphaPoint((360 + (int) (this.getAllReadings()[0][1]) + 90) % 360, this.getAllReadings()[0][2], center);
+            pCenterTopFixed = at.alphaPoint(90, 5.7 * cell, center);
+            pCenterFixed = at.alphaPoint(90, 5 * cell, center);
+            if (getImage1() != null) {
+                pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, this.getAllReadings()[0][2]) * lengthVisual / nLevels, center);
+            } else {
+                pDistance = at.alphaPoint(shiftAngularHud(), lengthVisual, center);
+            }
+            this.lengthVisual = center.getY() - pCenterFixed.getY();
+            pVariableTop = at.alphaPoint(shiftAngularHud(), 5.4* cell, center);
+            pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1* cell, center);
             g.setColor(Color.WHITE);
-            this.oDrawLine(g, pCenterTop, center);
+            this.oDrawLine(g, pCenterTopFixed, center);
             minVisual = 45;
             maxVisual = 135;
             minValue = 0;
             maxValue = 360;
-            this.oDrawArc(g, center, 5 * cell, 0, 180);
-            this.oDrawArc(g, center, 4 * cell, 0, 180);
-            this.oDrawArc(g, center, 3 * cell, 0, 180);
-            this.oDrawArc(g, center, 2 * cell, 0, 180);
+
             p = new Polygon();
             p.addPoint(center.getXInt(), center.getYInt());
             p.addPoint(center.getXInt() + cell / 2, center.getYInt() + cell);
@@ -126,14 +134,55 @@ public class OleMap extends OleSensor implements ActionListener {
             p.addPoint(center.getXInt(), center.getYInt());
             g.draw(p);
             for (double alpha = 135; alpha >= 45; alpha -= 5) {
-                p1 = parentPane.getAngleT().alphaPoint(alpha, 5 * cell, center);
-                p2 = parentPane.getAngleT().alphaPoint(alpha, 4.9 * cell, center);
+                p1 = at.alphaPoint(alpha, 5 * cell, center);
+                p2 = at.alphaPoint(alpha, 4.9 * cell, center);
                 this.oDrawLine(g, p1, p2);
                 if ((int) alpha % 15 == 0) {
                     tf = new TextFactory(g);
                     tf.setPoint(p2).setValue((360 + (int) (getCurrentValue() + alpha) - 90) % 360).setAngle(90 - (int) alpha).
                             setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
                     tf.draw();
+                }
+            }
+            if (getImage1() != null) {
+                nLevels = getImage1().getHeight();
+                stepRadius = lengthVisual / (nLevels + 1);
+                hudView = new Polygon[nLevels][];
+                radius1 = stepRadius;
+                g.setColor(Color.DARK_GRAY);
+                nTiles = 1;
+                for (int level = 0; level < nLevels; level++) {
+                    radius2 = (level + 1) * stepRadius;
+
+                    nTiles = 4 * (level) + 1;
+                    alpha1 = 0; //90 - nTiles * stepAngle / 2;
+                    alpha2 = 180; //90 + nTiles * stepAngle / 2;
+                    stepAngle = 180.0 / nTiles;
+
+//                nTiles=4*(nLevels-1)+1;
+//                stepAngle = 180.0 / nTiles;
+//                alpha1 = 90 - nTiles/2 * stepAngle / 2;
+//                alpha2 = 90 + nTiles/2 * stepAngle / 2;
+                    hudView[level] = new Polygon[nTiles];
+//                    System.out.println("Level " + level + " " + nTiles + " tiles, radius: " + radius2 + " every  :" + stepAngle + "º");
+                    for (int tile = 0; tile < nTiles; tile++) {
+                        p0 = at.alphaPoint(alpha2 - tile * stepAngle, radius2, center);
+                        p1 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius2, center);
+                        p2 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius1, center);
+                        p3 = at.alphaPoint(alpha2 - tile * stepAngle, radius1, center);
+                        Polygon p = new Polygon();
+                        p.addPoint(p0.getXInt(), p0.getYInt());
+                        p.addPoint(p1.getXInt(), p1.getYInt());
+                        p.addPoint(p2.getXInt(), p2.getYInt());
+                        p.addPoint(p3.getXInt(), p3.getYInt());
+                        p.addPoint(p0.getXInt(), p0.getYInt());
+                        g.draw(p);
+//                    System.out.println(p0 + "/" + p1 + "/" + p2 + "/" + p3 + "/");
+                        hudView[level][tile] = p;
+                        g.setColor(Color.GRAY);
+                        g.draw(hudView[level][tile]);
+                    }
+                    radius1 = radius2;
                 }
             }
             g.setClip(null);
@@ -153,6 +202,22 @@ public class OleMap extends OleSensor implements ActionListener {
         return this;
     }
 
+    protected int shiftAngularHud() {
+        return ((int)((270+this.getAllReadings()[0][1])*90/this.getAllReadings()[0][0]));
+    }
+    
+    protected int valueAngularHud() {
+        return ((int)(shiftAngularHud()-90+this.getAllReadings()[0][0
+                
+                
+                
+                
+                
+                
+                
+                ]));
+    }
+    
     @Override
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
@@ -182,60 +247,107 @@ public class OleMap extends OleSensor implements ActionListener {
             }
         } else {
             String sCompass, sGoal, sDistance;
+            double radius1 = 0, radius2 = 0, alpha1, alpha2;
+            Point3D p0, p1, p2, p3;
+
             g.setClip(screenPort);
-            if (getCurrentValue() == Perceptor.NULLREAD) {
-                sRead = "---";
-            } else {
-                sRead = String.format("[ %03d ]", (int) getCurrentValue());
+            if (hudView != null && getImage1() != null) {
+                for (int level = 0; level < nLevels; level++) {
+                    nTiles = (level) * 4 + 1;
+                    for (int tile = 0; tile < nTiles; tile++) {
+                        g.setColor(getImage1().getColor(tile, level));
+                        g.draw(hudView[level][tile]);
+                        g.setColor(getImage1().getColor(tile, level));
+                        g.fill(hudView[level][tile]);
+                    }
+                }
             }
-            tf = new TextFactory(g);
-            tf.setPoint(pCenterTop).setsText(sRead).
-                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(20).setTextStyle(Font.BOLD).validate();
+            g.setColor(Color.WHITE);
+                pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, this.getAllReadings()[0][2]) * lengthVisual / nLevels, center);
+            this.oDrawArc(g, center, 15.0 * lengthVisual/nLevels, 0, 180);
+            this.oDrawArc(g, center, 10.0 * lengthVisual/nLevels, 0, 180);
+            this.oDrawArc(g, center, 5.0 * lengthVisual/nLevels, 0, 180);
+            this.oDrawArc(g, center, 2.0*lengthVisual/nLevels, 0, 180);
+            tf= new TextFactory(g).setX((int)(center.getX()+2.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
-            
-            tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y).setsText("Compass: "+sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf= new TextFactory(g).setX((int)(center.getX()-2.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+            tf.draw();
+
+            tf= new TextFactory(g).setX((int)(center.getX()+5.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+            tf.draw();
+            tf= new TextFactory(g).setX((int)(center.getX()-5.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+            tf.draw();
+
+            tf= new TextFactory(g).setX((int)(center.getX()+10.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+            tf.draw();
+            tf= new TextFactory(g).setX((int)(center.getX()-10.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+                    .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
 
             g.setColor(Color.MAGENTA);
             g.setStroke(new BasicStroke(3));
             this.oDrawLine(g, pDistance, center);
             g.setStroke(new BasicStroke(1));
-            if (getCurrentValue() == Perceptor.NULLREAD) {
-                sRead = "---";
-            } else {
-                sRead = String.format("(%03d)", (int) (this.getAllReadings()[0][2]));
-            }
-            tf = new TextFactory(g).setPoint(pDistance).setFontSize(20).setsText(sRead).
-                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle((int) (360 - this.getAllReadings()[0][1]) % 360).validate();
-            tf.draw();
-            tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y+40).setsText("Distance: "+sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
-            tf.draw();
-            
+
             g.setColor(Color.CYAN);
-            g.setStroke(new BasicStroke(3,0,0,10,new float[]{10},0));
-            this.oDrawLine(g, pGoal, center);
+            g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
+            this.oDrawLine(g, pVariableDown, center);
             g.setStroke(new BasicStroke(1));
+
+            g.setColor(Color.WHITE);
             if (getCurrentValue() == Perceptor.NULLREAD) {
                 sRead = "---";
             } else {
-                sRead = String.format("< %03d >", (int) (this.getAllReadings()[0][1]));
+                sRead = String.format("[ %03dº ]", (int) getCurrentValue());
             }
-            tf = new TextFactory(g).setPoint(pGoal).setFontSize(20).setsText(sRead).
-                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle((int) (360 - this.getAllReadings()[0][1]) % 360).validate();
-            tf.draw();
             tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y+20).setsText("Angle: "+sRead).
+            tf.setPoint(pCenterTopFixed).setsText(sRead).
+                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(20).setTextStyle(Font.BOLD).validate();
+            g.setColor(Color.WHITE);
+            tf.draw();
+
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y).setsText("Compass: " + sRead).
                     setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
             tf.draw();
-            
+
+            g.setColor(Color.MAGENTA);
+            if (getCurrentValue() == Perceptor.NULLREAD) {
+                sRead = "---";
+            } else {
+                sRead = String.format(" %03dm ", (int) (this.getAllReadings()[0][2]));
+            }
+            tf = new TextFactory(g).setPoint(pDistance).setFontSize(14).setsText(sRead).
+                    setHalign(SwingConstants.RIGHT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
+                    setAngle(90-shiftAngularHud()).validate();
+            tf.draw();
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y + 40).setsText("Distance: " + sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+
+            g.setColor(Color.CYAN);
+            if (getCurrentValue() == Perceptor.NULLREAD) {
+                sRead = "---";
+            } else {
+                sRead = String.format(" %03dº ", valueAngularHud());
+            }
+            tf = new TextFactory(g).setPoint(pVariableTop).setFontSize(14).setsText(sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
+                    setAngle(90-shiftAngularHud()).validate();
+            tf.draw();
+            tf = new TextFactory(g);
+            tf.setX(screenPort.x).setY(screenPort.y + 20).setsText("Angle: " + sRead).
+                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
+            tf.draw();
+
             g.setClip(null);
-//            this.oDrawCounter(g, sRead, pCenterTop, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
+//            this.oDrawCounter(g, sRead, pCenterTopFixed, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
         }
         return this;
     }

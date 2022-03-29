@@ -31,7 +31,7 @@ import javax.imageio.ImageIO;
  * : BufferedImage getRGB(x,y) problem
  */
 public class Map2DColor {
-
+    public static final Color BADVALUE=new Color(64,0,0);
     protected BufferedImage _map;
     protected int _lmax, _lmin;
     protected double k = 2.261566516;
@@ -325,7 +325,16 @@ public class Map2DColor {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
             return new Color(_map.getRGB(x, y));
         } else {
-            return Color.RED;
+            return Map2DColor.BADVALUE;
+        }
+    }
+
+    public Color getColor(SimpleVector3D p) {
+        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth() && 
+                0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
+            return new Color(_map.getRGB(p.getSource().getXInt(), p.getSource().getYInt()));
+        } else {
+            return Map2DColor.BADVALUE;
         }
     }
 
@@ -360,6 +369,14 @@ public class Map2DColor {
     public Map2DColor setColor(int x, int y, Color c) {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
             this._map.setRGB(x, y, c.getRGB());
+        }
+        return this;
+    }
+
+    public Map2DColor setColor(SimpleVector3D p,  Color c) {
+        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth() && 
+                0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
+            this._map.setRGB(p.getSource().getXInt(), p.getSource().getYInt(), c.getRGB());
         }
         return this;
     }

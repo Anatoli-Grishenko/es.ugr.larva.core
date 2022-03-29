@@ -15,12 +15,15 @@ import geometry.OleRotatory;
 import geometry.OleRoundPB;
 import geometry.OleSemiDial;
 import geometry.Point3D;
+import geometry.PolarSurface;
+import geometry.SimpleVector3D;
 import jade.lang.acl.ACLMessage;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.util.HashMap;
+import map2D.Map2DColor;
 import map2D.Palette;
 import world.SensorDecoder;
 
@@ -42,7 +45,7 @@ public class OleDashBoard extends OleDrawPane {
     OleDiode odLed[] = new OleDiode[10];
     OleLinear olTime, olSteps, olGPS;
     OleBag olPayload, olCommand;
-    OleMap osMap;
+    OleMap osMap, osMap2;
     Palette pal;
     String sperception="", agentName, otherAgents;
     int iTrace, lastx, lasty;
@@ -182,13 +185,20 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.validate();
 
+        osMap2 = new OleMap(this, "AUX");
+        osMap2.setBounds(5*ww, 00, 4 * ww, 4 * ww);
+        osMap2.setForeground(Color.WHITE);
+        osMap2.setBackground(Color.BLACK);
+        osMap2.showFrame(true);
+        osMap2.validate();
+
         olGPS = new OleLinear(this, "GPS");
         olGPS.setForeground(Color.WHITE);
         olGPS.setBackground(Color.DARK_GRAY);
         olGPS.setnColumns(2);
         olGPS.getAllReadings()[0][0] = 100;
         olGPS.getAllReadings()[0][1] = 121;
-        olGPS.setBounds(5 * ww, 00, 2 * ww2, 4 * hh);
+        olGPS.setBounds(9 * ww, 00, 2 * ww2, 4 * hh);
         olGPS.showFrame(true);
         olGPS.validate();
 
@@ -197,7 +207,7 @@ public class OleDashBoard extends OleDrawPane {
         olTime.setBackground(Color.DARK_GRAY);
         olTime.setnColumns(1);
         olTime.getAllReadings()[0][0] = 123;
-        olTime.setBounds(5 * ww, 4 * hh, 2 * ww2, 3 * hh);
+        olTime.setBounds(9 * ww, 4 * hh, 2 * ww2, 3 * hh);
         olTime.showFrame(true);
         olTime.validate();
 
@@ -206,11 +216,11 @@ public class OleDashBoard extends OleDrawPane {
         olSteps.setBackground(Color.DARK_GRAY);
         olSteps.setnColumns(1);
         olSteps.getAllReadings()[0][0] = 123;
-        olSteps.setBounds(5 * ww, 7 * hh, 2 * ww2, 3 * hh);
+        olSteps.setBounds(9 * ww, 7 * hh, 2 * ww2, 3 * hh);
         olSteps.showFrame(true);
         olSteps.validate();
 
-        xx = 5 * ww;
+        xx = 9 * ww;
         yy = 10 * hh;
         odLed[0] = new OleDiode(this, "ALV");
         odLed[0].attachToExternalSensor("alive");
@@ -278,6 +288,7 @@ public class OleDashBoard extends OleDrawPane {
         this.addSensor(odLed[3]);
         this.addSensor(odLed[4]);
         this.addSensor(osMap);
+        this.addSensor(osMap2);
         this.addSensor(olGPS);
         this.addSensor(olTime);
         this.addSensor(olSteps);
@@ -329,6 +340,8 @@ public class OleDashBoard extends OleDrawPane {
             decoder.setWorldMap(ofile.toString(), maxlevel);
             this.mySensorsVisual.get("MAP").setMap(decoder.getWorldMap());
             this.mySensorsVisual.get("MAP").validate();
+            this.mySensorsVisual.get("AUX").setMap(decoder.getWorldMap());
+            this.mySensorsVisual.get("AUX").validate();
             this.repaint();            
             res = true;
         }
@@ -367,13 +380,27 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("ALV").setCurrentValue(decoder.getAlive());
             this.mySensorsVisual.get("TAR").setCurrentValue(decoder.getOnTarget());
             this.mySensorsVisual.get("STEPS").setCurrentValue(decoder.getNSteps());
+            this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize())+decoder.getLastTrace());                        
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1]=decoder.getAngular();
             this.mySensorsVisual.get("MAP").getAllReadings()[0][2]=decoder.getDistance();
-            this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize())+decoder.getLastTrace());
-            
             ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
-
+            
+            this.mySensorsVisual.get("AUX").setCurrentValue(decoder.getCompass());
+            this.mySensorsVisual.get("AUX").getAllReadings()[0][1]=decoder.getAngular();
+            this.mySensorsVisual.get("AUX").getAllReadings()[0][2]=decoder.getDistance();
+            ((OleMap) this.mySensorsVisual.get("AUX")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
+            
+            SimpleVector3D me = new SimpleVector3D((int)decoder.getGPS()[0],
+                                                    (int)decoder.getGPS()[1], (int) (decoder.getCompass())/45);
+            System.out.println("Compass: "+decoder.getCompass());
+            System.out.println("Orientation: "+decoder.getCompass()/45);
+            System.out.println("Angular: "+decoder.getAngular());
+            
+            PolarSurface ps = new PolarSurface(me);
+            ps.setRadius(15);
+            Map2DColor sensor = ps.applyPolarTo(decoder.getWorldMap());
+            mySensorsVisual.get("MAP").setImage1(sensor);
             addStatus(decoder.getStatus());
             this.repaint();
         } catch (Exception ex) {

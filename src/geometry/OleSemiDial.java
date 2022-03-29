@@ -27,21 +27,25 @@ public class OleSemiDial extends OleSensor {
 
     public OleSemiDial(OleDrawPane parent, String name) {
         super(parent, name);
-    }
+         baseValue=0;
+        baseVisual=0;
+        this.counterClock=false;
+        circular=false;   }
 
     @Override
     public void validate() {
         super.validate();
 
         lengthVisual = this.parentPane.getAngleT().getAngularDistance(minVisual, maxVisual);
-        stepVisual = lengthVisual / nMarks;
+        stepVisual = lengthVisual / (nMarks);
         lengthValue = (maxValue - minValue);
-        stepValue = lengthValue / nMarks;
+        stepValue = lengthValue / (nMarks);
         mainRadius = mW * 0.46;
         markRadius = mW * 0.41;
         textRadius = mW * 0.38;
         labelRadius = mW * 0.35;
         dialRadius = mW * 0.05;
+
     }
 
     @Override
@@ -66,7 +70,7 @@ public class OleSemiDial extends OleSensor {
             this.oDrawArc(g, getCenter(), mainRadius - stroke / 2, getMinVisual(), getMaxVisual(), myPalette);
             g.setStroke(new BasicStroke(1));
             if (Math.abs(this.getEndAngle() - this.getStartAngle()) <= 180) {
-                g.setColor(Color.DARK_GRAY);
+                g.setColor(Color.WHITE);
                 this.oFillArc(g, center, mainRadius, 181, 359);
             }
         }
