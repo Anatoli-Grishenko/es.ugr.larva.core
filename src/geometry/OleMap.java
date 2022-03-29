@@ -20,6 +20,7 @@ import javax.swing.SwingConstants;
 import map2D.Map2DColor;
 import swing.OleApplication;
 import swing.OleButton;
+import swing.OleDashBoard;
 import swing.OleDrawPane;
 import swing.OleSensor;
 import swing.SwingTools;
@@ -118,8 +119,8 @@ public class OleMap extends OleSensor implements ActionListener {
                 pDistance = at.alphaPoint(shiftAngularHud(), lengthVisual, center);
             }
             this.lengthVisual = center.getY() - pCenterFixed.getY();
-            pVariableTop = at.alphaPoint(shiftAngularHud(), 5.4* cell, center);
-            pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1* cell, center);
+            pVariableTop = at.alphaPoint(shiftAngularHud(), 5.4 * cell, center);
+            pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1 * cell, center);
             g.setColor(Color.WHITE);
             this.oDrawLine(g, pCenterTopFixed, center);
             minVisual = 45;
@@ -203,21 +204,13 @@ public class OleMap extends OleSensor implements ActionListener {
     }
 
     protected int shiftAngularHud() {
-        return ((int)((270+this.getAllReadings()[0][1])*90/this.getAllReadings()[0][0]));
+        return ((int) ((270 + this.getAllReadings()[0][1]) * 90 / this.getAllReadings()[0][0]));
     }
-    
+
     protected int valueAngularHud() {
-        return ((int)(shiftAngularHud()-90+this.getAllReadings()[0][0
-                
-                
-                
-                
-                
-                
-                
-                ]));
+        return ((int) (shiftAngularHud() - 90 + this.getAllReadings()[0][0]));
     }
-    
+
     @Override
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
@@ -251,41 +244,54 @@ public class OleMap extends OleSensor implements ActionListener {
             Point3D p0, p1, p2, p3;
 
             g.setClip(screenPort);
+            Color cTile;
+            int iGround;
             if (hudView != null && getImage1() != null) {
                 for (int level = 0; level < nLevels; level++) {
                     nTiles = (level) * 4 + 1;
                     for (int tile = 0; tile < nTiles; tile++) {
-                        g.setColor(getImage1().getColor(tile, level));
-                        g.draw(hudView[level][tile]);
+                        cTile = getImage1().getColor(tile, level);
+                        iGround = getImage1().getRawLevel(tile, level);
+
                         g.setColor(getImage1().getColor(tile, level));
                         g.fill(hudView[level][tile]);
+                        if (iGround < 0) {
+                            g.setColor(Map2DColor.BADVALUE);
+                        } else if (iGround > ((OleDashBoard) this.parentPane).decoder.getAltitude()){
+                            g.setColor(Color.RED);
+                        } else {
+                            g.setColor(getImage1().getColor(tile, level));
+                        }
+                        g.setStroke(new BasicStroke(1));
+                        g.draw(hudView[level][tile]);
+                        g.setStroke(new BasicStroke(1));
                     }
                 }
             }
             g.setColor(Color.WHITE);
-                pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, this.getAllReadings()[0][2]) * lengthVisual / nLevels, center);
-            this.oDrawArc(g, center, 15.0 * lengthVisual/nLevels, 0, 180);
-            this.oDrawArc(g, center, 10.0 * lengthVisual/nLevels, 0, 180);
-            this.oDrawArc(g, center, 5.0 * lengthVisual/nLevels, 0, 180);
-            this.oDrawArc(g, center, 2.0*lengthVisual/nLevels, 0, 180);
-            tf= new TextFactory(g).setX((int)(center.getX()+2.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, this.getAllReadings()[0][2]) * lengthVisual / nLevels, center);
+            this.oDrawArc(g, center, 15.0 * lengthVisual / nLevels, 0, 180);
+            this.oDrawArc(g, center, 10.0 * lengthVisual / nLevels, 0, 180);
+            this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
+            this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
+            tf = new TextFactory(g).setX((int) (center.getX() + 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
-            tf= new TextFactory(g).setX((int)(center.getX()-2.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            tf = new TextFactory(g).setX((int) (center.getX() - 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
 
-            tf= new TextFactory(g).setX((int)(center.getX()+5.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            tf = new TextFactory(g).setX((int) (center.getX() + 5.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
-            tf= new TextFactory(g).setX((int)(center.getX()-5.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            tf = new TextFactory(g).setX((int) (center.getX() - 5.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
 
-            tf= new TextFactory(g).setX((int)(center.getX()+10.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            tf = new TextFactory(g).setX((int) (center.getX() + 10.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
-            tf= new TextFactory(g).setX((int)(center.getX()-10.0*lengthVisual/nLevels)).setY(center.getYInt()).setFontSize(10)
+            tf = new TextFactory(g).setX((int) (center.getX() - 10.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
 
@@ -324,7 +330,7 @@ public class OleMap extends OleSensor implements ActionListener {
             }
             tf = new TextFactory(g).setPoint(pDistance).setFontSize(14).setsText(sRead).
                     setHalign(SwingConstants.RIGHT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle(90-shiftAngularHud()).validate();
+                    setAngle(90 - shiftAngularHud()).validate();
             tf.draw();
             tf = new TextFactory(g);
             tf.setX(screenPort.x).setY(screenPort.y + 40).setsText("Distance: " + sRead).
@@ -339,7 +345,7 @@ public class OleMap extends OleSensor implements ActionListener {
             }
             tf = new TextFactory(g).setPoint(pVariableTop).setFontSize(14).setsText(sRead).
                     setHalign(SwingConstants.LEFT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle(90-shiftAngularHud()).validate();
+                    setAngle(90 - shiftAngularHud()).validate();
             tf.draw();
             tf = new TextFactory(g);
             tf.setX(screenPort.x).setY(screenPort.y + 20).setsText("Angle: " + sRead).
@@ -349,6 +355,7 @@ public class OleMap extends OleSensor implements ActionListener {
             g.setClip(null);
 //            this.oDrawCounter(g, sRead, pCenterTopFixed, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
         }
+
         return this;
     }
 

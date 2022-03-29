@@ -33,7 +33,7 @@ import world.Perceptor;
 
 /**
  *
-Fvalidate * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+ * Fvalidate * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public abstract class OleSensor extends JComponent {
 
@@ -74,6 +74,7 @@ public abstract class OleSensor extends JComponent {
     protected Rectangle screenPort, viewPort;
     protected boolean isMap;
     protected AngleTransporter at;
+    protected ArrayList<String> labelSet, textSet;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -342,7 +343,7 @@ public abstract class OleSensor extends JComponent {
         Point3D p1, p2, ps;
         String sValue;
         int textSize;
-        double endScale, initScale=0, initValue=0, endValue=0, stepScale=0, iScale=0, iVisual=0, maxMarks=0;
+        double endScale, initScale = 0, initValue = 0, endValue = 0, stepScale = 0, iScale = 0, iVisual = 0, maxMarks = 0;
 
         g.setColor(this.getForeground());
         oDrawArc(g, center, axisRadius, minVisual, maxVisual);
@@ -352,22 +353,22 @@ public abstract class OleSensor extends JComponent {
             textSize = (int) (Math.round(Math.abs(markRadius2 - markRadius1))) * 30 / 20;
         }
         if (circular) {
-            initValue=initScale = getMinValue();
-            endValue=endScale = getMaxValue();
+            initValue = initScale = getMinValue();
+            endValue = endScale = getMaxValue();
             stepScale = stepValue;
-            maxMarks=nMarks;
+            maxMarks = nMarks;
         } else {
-            maxMarks=nMarks+1;
+            maxMarks = nMarks + 1;
             if (counterClock) {
                 initScale = getMinVisual();
-                initValue= getMaxValue();
+                initValue = getMaxValue();
                 stepScale = stepVisual;
-                stepValue=-stepValue;
+                stepValue = -stepValue;
             } else {
                 initScale = getMaxVisual();
-                initValue= getMinValue();
+                initValue = getMinValue();
                 stepScale = -stepVisual;
-                stepValue=stepValue;
+                stepValue = stepValue;
             }
 
         }
@@ -376,20 +377,21 @@ public abstract class OleSensor extends JComponent {
 //        }
         g.setColor(this.getForeground());
 
-        for (int mark=0; mark<maxMarks; mark++) {
+        for (int mark = 0; mark < maxMarks; mark++) {
             if (showScale) {
 //                if (axisRadius > 0) {
 //                    this.oDrawArc(g, getCenter(), axisRadius, getMinVisual(), getMaxVisual());
 //                }
-                p1 = at.alphaPoint(initScale+mark*stepScale, markRadius2, center);
-                p2 = at.alphaPoint(initScale+mark*stepScale, markRadius1, center);
+                p1 = at.alphaPoint(initScale + mark * stepScale, markRadius2, center);
+                p2 = at.alphaPoint(initScale + mark * stepScale, markRadius1, center);
                 oDrawLine(g, p1, p2);
             }
             if (showScaleNumbers) {
-                if (!showScale)
-                    textRadius=markRadius2;
-                iScale=(initValue + mark*stepValue);
-                iVisual=(initScale + mark*stepScale+baseValue-baseVisual);
+                if (!showScale) {
+                    textRadius = markRadius2;
+                }
+                iScale = (initValue + mark * stepValue);
+                iVisual = (initScale + mark * stepScale + baseValue - baseVisual);
 //                System.out.println(iVisual);
                 ps = at.alphaPoint(iVisual, textRadius, center);
                 sValue = String.format("%4d", (int) iScale);
@@ -402,7 +404,7 @@ public abstract class OleSensor extends JComponent {
                 tf.setPoint(ps).setFontSize(textSize)
                         .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER);
                 if (rotateText) {
-                    tf.setAngle((int)validateValue(-iVisual+baseValue));
+                    tf.setAngle((int) validateValue(-iVisual + baseValue));
                 }
                 g.setColor(this.getForeground());
                 tf.validate().draw();
@@ -729,5 +731,16 @@ public abstract class OleSensor extends JComponent {
 
     public void setImage3(Map2DColor image3) {
         this.image3 = image3;
+    }
+
+    public void addLabel(String label, String value) {
+        if (labelSet != null) {
+            labelSet.add(label.substring(0, Math.min(12, label.length())));
+            textSet.add(value.substring(0, Math.min(20, value.length())));
+        }
+    }
+
+    public boolean containsLabel(String label) {
+        return labelSet.contains(label);
     }
 }

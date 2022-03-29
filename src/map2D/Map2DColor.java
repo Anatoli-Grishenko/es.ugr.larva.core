@@ -31,7 +31,8 @@ import javax.imageio.ImageIO;
  * : BufferedImage getRGB(x,y) problem
  */
 public class Map2DColor {
-    public static final Color BADVALUE=new Color(64,0,0);
+
+    public static final Color BADVALUE = new Color(64, 0, 0);
     protected BufferedImage _map;
     protected int _lmax, _lmin;
     protected double k = 2.261566516;
@@ -79,8 +80,7 @@ public class Map2DColor {
      *
      * @param width Number con columns
      * @param height Number of rows
-     * @param c The default color
-     * image
+     * @param c The default color image
      */
     public Map2DColor(int width, int height, Color c) {
         _lmax = _lmin = -1;
@@ -99,7 +99,7 @@ public class Map2DColor {
      *
      * @param filename Nombre del fichero
      * @throws IOException Fallos de manejo del fichero
-     * @return A coy of the same instance 
+     * @return A coy of the same instance
      */
 //    public Map2DColor loadMap(String filename) throws IOException {
 //        File f;
@@ -138,10 +138,10 @@ public class Map2DColor {
         return this;
     }
 
-    public  Map2DColor shiftLeft(int pix) {
+    public Map2DColor shiftLeft(int pix) {
         for (int y = 0; y < getHeight(); y++) {
-            for (int x = 0; x < getWidth()-pix; x++) {
-                _map.setRGB(x, y, _map.getRGB(x+pix, y));
+            for (int x = 0; x < getWidth() - pix; x++) {
+                _map.setRGB(x, y, _map.getRGB(x + pix, y));
             }
         }
         return this;
@@ -150,7 +150,7 @@ public class Map2DColor {
     protected Map2DColor normalize() {
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
-                _map.setRGB(x, y, this.applyAlphaLevel(getColor(x,y)).getRGB());
+                _map.setRGB(x, y, this.applyAlphaLevel(getColor(x, y)).getRGB());
             }
         }
         return this;
@@ -297,14 +297,21 @@ public class Map2DColor {
      */
     public int getRawLevel(int x, int y) {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
-            return new Color(_map.getRGB(x, y)).getGreen();
+            Color cAux = new Color(_map.getRGB(x, y));
+            if (cAux.getRed() > 0 && cAux.getGreen() == 0 && cAux.getBlue() == 0) {
+                return -1;
+            } else {
+                return cAux.getGreen();
+            }
         } else {
             return -1;
         }
     }
+
     public int getRawLevel(SimpleVector3D p) {
-        return getRawLevel(p.getSource().getXInt(),p.getSource().getYInt());
+        return getRawLevel(p.getSource().getXInt(), p.getSource().getYInt());
     }
+
     /**
      *
      * Devuelve la altura del mapa en las coordenadas especificadas
@@ -315,7 +322,12 @@ public class Map2DColor {
      */
     public int getStepLevel(int x, int y) {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
-            return getRawLevel(x,y)/5*5;
+            Color cAux = new Color(_map.getRGB(x, y));
+            if (cAux.getRed() > 0 && cAux.getGreen() == 0 && cAux.getBlue() == 0) {
+                return -1;
+            } else {
+                return getRawLevel(x, y) / 5 * 5;
+            }
         } else {
             return -1;
         }
@@ -330,8 +342,8 @@ public class Map2DColor {
     }
 
     public Color getColor(SimpleVector3D p) {
-        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth() && 
-                0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
+        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth()
+                && 0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
             return new Color(_map.getRGB(p.getSource().getXInt(), p.getSource().getYInt()));
         } else {
             return Map2DColor.BADVALUE;
@@ -373,9 +385,9 @@ public class Map2DColor {
         return this;
     }
 
-    public Map2DColor setColor(SimpleVector3D p,  Color c) {
-        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth() && 
-                0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
+    public Map2DColor setColor(SimpleVector3D p, Color c) {
+        if (this.hasMap() && 0 <= p.getSource().getXInt() && p.getSource().getXInt() < this.getWidth()
+                && 0 <= p.getSource().getYInt() && p.getSource().getYInt() < this.getHeight()) {
             this._map.setRGB(p.getSource().getXInt(), p.getSource().getYInt(), c.getRGB());
         }
         return this;
