@@ -130,8 +130,8 @@ public class OleMap extends OleSensor implements ActionListener {
 
             p = new Polygon();
             p.addPoint(center.getXInt(), center.getYInt());
-            p.addPoint(center.getXInt() + cell / 2, center.getYInt() + cell);
-            p.addPoint(center.getXInt() - cell / 2, center.getYInt() + cell);
+            p.addPoint(center.getXInt() + cell / 5, center.getYInt() + cell / 5);
+            p.addPoint(center.getXInt() - cell / 5, center.getYInt() + cell / 5);
             p.addPoint(center.getXInt(), center.getYInt());
             g.draw(p);
             for (double alpha = 135; alpha >= 45; alpha -= 5) {
@@ -167,17 +167,33 @@ public class OleMap extends OleSensor implements ActionListener {
                     hudView[level] = new Polygon[nTiles];
 //                    System.out.println("Level " + level + " " + nTiles + " tiles, radius: " + radius2 + " every  :" + stepAngle + "º");
                     for (int tile = 0; tile < nTiles; tile++) {
-                        p0 = at.alphaPoint(alpha2 - tile * stepAngle, radius2, center);
-                        p1 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius2, center);
-                        p2 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius1, center);
-                        p3 = at.alphaPoint(alpha2 - tile * stepAngle, radius1, center);
                         Polygon p = new Polygon();
-                        p.addPoint(p0.getXInt(), p0.getYInt());
-                        p.addPoint(p1.getXInt(), p1.getYInt());
-                        p.addPoint(p2.getXInt(), p2.getYInt());
-                        p.addPoint(p3.getXInt(), p3.getYInt());
-                        p.addPoint(p0.getXInt(), p0.getYInt());
-                        g.draw(p);
+                        if (level != 0) {
+                            p0 = at.alphaPoint(alpha2 - tile * stepAngle, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius2, center);
+                            p2 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius1, center);
+                            p3 = at.alphaPoint(alpha2 - tile * stepAngle, radius1, center);
+                            p.addPoint(p0.getXInt(), p0.getYInt());
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p.addPoint(p2.getXInt(), p2.getYInt());
+                            p.addPoint(p3.getXInt(), p3.getYInt());
+                            p.addPoint(p0.getXInt(), p0.getYInt());
+                        } else {
+                            p0 = at.alphaPoint(alpha2 - (tile+1) *5* stepAngle/5, radius2, center);
+                            p.addPoint(p0.getXInt(), p0.getYInt());
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 4*stepAngle/5, radius2, center);
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 3*stepAngle/5, radius2, center);
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 2* stepAngle/5, radius2, center);
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 1*stepAngle/5, radius2, center);
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 0*stepAngle/5, radius2, center);
+                            p.addPoint(p1.getXInt(), p1.getYInt());
+                            p.addPoint(p0.getXInt(), p0.getYInt());
+                        }
+//                        g.draw(p);
 //                    System.out.println(p0 + "/" + p1 + "/" + p2 + "/" + p3 + "/");
                         hudView[level][tile] = p;
                         g.setColor(Color.GRAY);
@@ -257,7 +273,7 @@ public class OleMap extends OleSensor implements ActionListener {
                         g.fill(hudView[level][tile]);
                         if (iGround < 0) {
                             g.setColor(Map2DColor.BADVALUE);
-                        } else if (iGround > ((OleDashBoard) this.parentPane).decoder.getAltitude()){
+                        } else if (iGround > ((OleDashBoard) this.parentPane).decoder.getAltitude()) {
                             g.setColor(Color.RED);
                         } else {
                             g.setColor(getImage1().getColor(tile, level));

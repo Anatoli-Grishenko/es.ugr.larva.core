@@ -27,10 +27,11 @@ public class OleSemiDial extends OleSensor {
 
     public OleSemiDial(OleDrawPane parent, String name) {
         super(parent, name);
-         baseValue=0;
-        baseVisual=0;
-        this.counterClock=false;
-        circular=false;   }
+        baseValue = 0;
+        baseVisual = 0;
+        this.counterClock = false;
+        circular = false;
+    }
 
     @Override
     public void validate() {
@@ -51,6 +52,9 @@ public class OleSemiDial extends OleSensor {
     @Override
 
     public OleSensor layoutSensor(Graphics2D g) {
+        if (isHidden()) {
+            return this;
+        }
 
         if (showFrame) {
             g.setColor(Color.GRAY);
@@ -85,7 +89,7 @@ public class OleSemiDial extends OleSensor {
         }
         g.setColor(this.getForeground());
         f = parentPane.getFont();
-        g.setFont(f.deriveFont(Font.BOLD));
+        //g.setFont(f.deriveFont(Font.BOLD));
         Point3D target = parentPane.getAngleT().alphaPoint(270, labelRadius, center);
 //        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(270, labelRadius, center),
 //                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.BOTTOM);
@@ -99,12 +103,26 @@ public class OleSemiDial extends OleSensor {
         g.setColor(this.getForeground());
         oDrawArc(g, center, mainRadius, 0.0, 360);
         g.setStroke(new BasicStroke(1));
+        if (alertLimit != Perceptor.NULLREAD) {
+            if (this.isAlertValue()) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(this.getBackground());
+            }
+            g.fillArc(mX + 10, mY + 10, 10, 10, 0, 360);
+            g.setColor(this.getForeground());
+            g.setStroke(new BasicStroke(2));
+            g.drawArc(mX + 10, mY + 10, 10, 10, 0, 360);
+            g.setStroke(new BasicStroke(1));
+        }
         return this;
     }
 
- 
     @Override
     public OleSensor viewSensor(Graphics2D g) {
+        if (isHidden()) {
+            return this;
+        }
 
         Point3D p1, p2, p3, p4;
         layoutSensor(g);
@@ -123,6 +141,5 @@ public class OleSemiDial extends OleSensor {
         }
         return this;
     }
-
 
 }

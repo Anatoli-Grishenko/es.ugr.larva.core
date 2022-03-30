@@ -53,7 +53,7 @@ public abstract class OleSensor extends JComponent {
     protected HashMap<Double, ImageIcon> readingMarks;
     protected ViewType vType;
     protected OleDrawPane matrixViewer;
-    protected boolean boolValue = false;
+    protected boolean boolValue = false, hidden = false;
     protected ArrayList<String> bag;
     // View
     protected int mX, mY, mW, mH;
@@ -62,9 +62,10 @@ public abstract class OleSensor extends JComponent {
     protected OleDrawPane parentPane;
     protected Palette myPalette;
     protected boolean showScale = true, showScaleNumbers = true, showFrame = false,
-            rotateText = false, autoRotate = false, counterClock = false, circular = false;
+            rotateText = false, autoRotate = false, counterClock = false, circular = false,
+            alertValue = false, alertBelow;
     protected double mainRadius, markRadius, textRadius, labelRadius, dialRadius, barRadius;
-    protected int stroke = 27;
+    protected int stroke = 27, alertLimit = Perceptor.NULLREAD;
     protected Font f, fRead;
     protected String sRead, sfRead, sfText, labels[], externalSensorName;
     protected JTextPane jtBag;
@@ -196,6 +197,21 @@ public abstract class OleSensor extends JComponent {
 
     public void setCurrentValue(double currentValue) {
         allReadings[0][0] = validateValue(currentValue);
+        if (this.alertBelow) {
+            if (getCurrentValue() < alertLimit) {
+                this.setAlertValue((true));
+            } else {
+                this.setAlertValue((false));
+            }
+        }
+        if (!this.alertBelow) {
+            if (getCurrentValue() > alertLimit) {
+                this.setAlertValue((true));
+            } else {
+                this.setAlertValue((false));
+            }
+        }
+
 //        System.out.println("Settig value to "+currentValue);
     }
 
@@ -743,4 +759,31 @@ public abstract class OleSensor extends JComponent {
     public boolean containsLabel(String label) {
         return labelSet.contains(label);
     }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    public boolean isAlertValue() {
+        return alertValue;
+    }
+
+    public void setAlertValue(boolean alertValue) {
+        this.alertValue = alertValue;
+    }
+
+    public void setAlertLimitBelow(int value) {
+        this.alertBelow = true;
+        alertLimit = value;
+    }
+
+    public void setAlertLimitAbove(int value) {
+        this.alertBelow = false;
+        alertLimit = value;
+    }
+
 }

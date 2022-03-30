@@ -42,6 +42,10 @@ public class OleRoundPB extends OleSensor {
 
     @Override
     public OleSensor layoutSensor(Graphics2D g) {
+        if (isHidden()) {
+            return this;
+        }
+
         if (showFrame) {
             g.setColor(Color.GRAY);
             g.fillRect(mX, mY, mW, mH);
@@ -77,12 +81,28 @@ public class OleRoundPB extends OleSensor {
 //        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(90, dialRadius, center),
 //                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
         g.setFont(f);
+        if (alertLimit != Perceptor.NULLREAD) {
+            if (this.isAlertValue()) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(this.getBackground());
+            }
+            g.fillArc(mX + 10, mY + 10, 10, 10, 0, 360);
+            g.setColor(this.getForeground());
+            g.setStroke(new BasicStroke(2));
+            g.drawArc(mX + 10, mY + 10, 10, 10, 0, 360);
+            g.setStroke(new BasicStroke(1));
+        }
 
         return this;
     }
 
     @Override
     public OleSensor viewSensor(Graphics2D g) {
+        if (isHidden()) {
+            return this;
+        }
+
         layoutSensor(g);
 
         if (getCurrentValue() != Perceptor.NULLREAD) {

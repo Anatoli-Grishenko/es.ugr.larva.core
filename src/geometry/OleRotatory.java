@@ -53,6 +53,8 @@ public class OleRotatory extends OleSensor {
 
     public OleSensor layoutSensor(Graphics2D g) {
         Point3D p1, p2;
+        if (isHidden())
+            return this;
         currentVisual=getCurrentValue()+baseValue;
         if (showFrame) {
             g.setColor(Color.GRAY);
@@ -113,7 +115,8 @@ public class OleRotatory extends OleSensor {
 
     @Override
     public OleSensor viewSensor(Graphics2D g) {
-
+        if (isHidden())
+            return this;
         Point3D p1, p2, p3, p4;
         layoutSensor(g);
         g.setColor(this.getForeground());
