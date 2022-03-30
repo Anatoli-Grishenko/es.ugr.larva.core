@@ -40,7 +40,6 @@ public class XUIAgentOldDash extends LARVAFirstAgent {
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         TheMap = new LARVAAirTrafficControlTiles(_XUI);
-        Info("Setting Death Star up");
         exit = false;
     }
 

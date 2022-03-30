@@ -8,14 +8,15 @@ package agents;
 import data.Ole;
 import data.OleFile;
 import disk.Logger;
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.HashMap;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import messaging.ACLMessageTools;
-import swing.LARVAAirTrafficControlTiles;
-import swing.LARVAMiniDash;
+import swing.OleDashBoard;
 
 /**
  *
@@ -28,10 +29,9 @@ public class XUIAgent extends LARVAFirstAgent {
     }
     Status myStatus;
 
-    protected HashMap<String, LARVAMiniDash> AgentDash;
-    protected LARVAAirTrafficControlTiles TheMap;
-    protected String sessionKey="";
-    JPanel _XUI,_Server;
+    protected OleDashBoard myDashBoard;
+    protected String sessionKey = "";
+    JPanel _XUI, _Server;
 
     @Override
     public void setup() {
@@ -40,10 +40,12 @@ public class XUIAgent extends LARVAFirstAgent {
         logger.offEcho();
         logger.onOverwrite();
         logger.onTabular();
-        logger.setLoggerFileName(this.getLocalName()+".json");
+        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
-        TheMap = new LARVAAirTrafficControlTiles(_XUI);
+        myDashBoard = new OleDashBoard(_XUI, "XUI");
+        myDashBoard.setPreferredSize(new Dimension(1600,800));
+        _XUI.add(myDashBoard, BorderLayout.WEST);
         Info("Setting Death Star up");
         exit = false;
     }
@@ -83,7 +85,7 @@ public class XUIAgent extends LARVAFirstAgent {
             return Status.EXIT;
         }
         this.DFSetMyServices(new String[]{"XUI " + userID});
-        TheMap.clear();
+//        TheMap.clear();
         return Status.IDLE;
     }
 
@@ -94,22 +96,17 @@ public class XUIAgent extends LARVAFirstAgent {
 
     public Status myIdle() {
         inbox = this.LARVAblockingReceive();
-        Info("Received: "+ACLMessageTools.fancyWriteACLM(inbox, false));
+        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
             this.sessionKey = inbox.getConversationId();
-            Ole ocontent = new Ole(inbox.getContent());
-            OleFile ofile = new OleFile(ocontent.getOle("surface"));
-            int maxlevel = ocontent.getInt("maxflight");
-            TheMap.clear();
-            TheMap.setWorldMap(ofile.toString(), maxlevel, ocontent.getField("palette"));            
-        }else
-        if (inbox.getContent().contains("perceptions")) {
-            TheMap.feedPerception(inbox.getContent());            
-        }else
-        if (inbox.getContent().contains("goals")) {
-            TheMap.feedGoals(inbox.getContent());            
+            myDashBoard.preProcessACLM(inbox.getContent());
+        } else if (inbox.getContent().contains("perceptions")) {
+            myDashBoard.preProcessACLM(inbox.getContent());
+        } else if (inbox.getContent().contains("goals")) {
+            myDashBoard.preProcessACLM(inbox.getContent());
+//            TheMap.feedGoals(inbox.getContent());            
         }
         return Status.IDLE;
     }
-    
- }
+
+}

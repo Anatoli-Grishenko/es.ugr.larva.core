@@ -5,6 +5,8 @@
  */
 package geometry;
 
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -39,7 +41,7 @@ public class OleMap extends OleSensor implements ActionListener {
     protected OleButton obMap, obHud;
     protected Polygon p;
     protected int cell, nLevels, nTiles;
-    protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance;
+    protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
     protected double stepRadius, stepAngle;
     protected AngleTransporter at;
@@ -112,6 +114,7 @@ public class OleMap extends OleSensor implements ActionListener {
             cell = screenPort.width / 8;
             center = new Point3D(screenPort.x + screenPort.width / 2, screenPort.y + screenPort.height - 2 * cell);
             pCenterTopFixed = at.alphaPoint(90, 5.7 * cell, center);
+            pHead = at.alphaPoint(90, 10, center);
             pCenterFixed = at.alphaPoint(90, 5 * cell, center);
             if (getImage1() != null) {
                 pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, this.getAllReadings()[0][2]) * lengthVisual / nLevels, center);
@@ -128,12 +131,12 @@ public class OleMap extends OleSensor implements ActionListener {
             minValue = 0;
             maxValue = 360;
 
-            p = new Polygon();
-            p.addPoint(center.getXInt(), center.getYInt());
-            p.addPoint(center.getXInt() + cell / 5, center.getYInt() + cell / 5);
-            p.addPoint(center.getXInt() - cell / 5, center.getYInt() + cell / 5);
-            p.addPoint(center.getXInt(), center.getYInt());
-            g.draw(p);
+//            p = new Polygon();
+//            p.addPoint(center.getXInt(), center.getYInt());
+//            p.addPoint(center.getXInt() + cell / 5, center.getYInt() + cell / 5);
+//            p.addPoint(center.getXInt() - cell / 5, center.getYInt() + cell / 5);
+//            p.addPoint(center.getXInt(), center.getYInt());
+//            g.draw(p);
             for (double alpha = 135; alpha >= 45; alpha -= 5) {
                 p1 = at.alphaPoint(alpha, 5 * cell, center);
                 p2 = at.alphaPoint(alpha, 4.9 * cell, center);
@@ -179,17 +182,17 @@ public class OleMap extends OleSensor implements ActionListener {
                             p.addPoint(p3.getXInt(), p3.getYInt());
                             p.addPoint(p0.getXInt(), p0.getYInt());
                         } else {
-                            p0 = at.alphaPoint(alpha2 - (tile+1) *5* stepAngle/5, radius2, center);
+                            p0 = at.alphaPoint(alpha2 - (tile + 1) * 5 * stepAngle / 5, radius2, center);
                             p.addPoint(p0.getXInt(), p0.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 4*stepAngle/5, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 4 * stepAngle / 5, radius2, center);
                             p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 3*stepAngle/5, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 3 * stepAngle / 5, radius2, center);
                             p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 2* stepAngle/5, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 2 * stepAngle / 5, radius2, center);
                             p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 1*stepAngle/5, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 1 * stepAngle / 5, radius2, center);
                             p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 0*stepAngle/5, radius2, center);
+                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 0 * stepAngle / 5, radius2, center);
                             p.addPoint(p1.getXInt(), p1.getYInt());
                             p.addPoint(p0.getXInt(), p0.getYInt());
                         }
@@ -220,11 +223,13 @@ public class OleMap extends OleSensor implements ActionListener {
     }
 
     protected int shiftAngularHud() {
-        return ((int) ((270 + this.getAllReadings()[0][1]) * 90 / this.getAllReadings()[0][0]));
+        return (int) (valueAngularHud() - this.getAllReadings()[0][0]+360+90) % 360;
+//        return (int) (valueAngularHud() - this.getAllReadings()[0][0] + 90 + 360) % 360;
     }
 
     protected int valueAngularHud() {
-        return ((int) (shiftAngularHud() - 90 + this.getAllReadings()[0][0]));
+        return (int)this.getAllReadings()[0][1];
+//        return ((int) (270 + this.getAllReadings()[0][1]) % 360);
     }
 
     @Override
@@ -253,6 +258,10 @@ public class OleMap extends OleSensor implements ActionListener {
                     g.setStroke(new BasicStroke(1));
                     g.drawString(name, (int) viewX(ptrail.getX()), (int) viewY(ptrail.getY()) - diamond);
                 }
+                for (int i = 0; i < jsaGoals.size(); i++) {
+                    paintGoalMap(g, jsaGoals.get(i).asObject());
+                }
+
             }
         } else {
             String sCompass, sGoal, sDistance;
@@ -267,12 +276,12 @@ public class OleMap extends OleSensor implements ActionListener {
                     nTiles = (level) * 4 + 1;
                     for (int tile = 0; tile < nTiles; tile++) {
                         cTile = getImage1().getColor(tile, level);
-                        iGround = getImage1().getRawLevel(tile, level);
+                        iGround = getImage1().getStepLevel(tile, level);
 
                         g.setColor(getImage1().getColor(tile, level));
                         g.fill(hudView[level][tile]);
                         if (iGround < 0) {
-                            g.setColor(Map2DColor.BADVALUE);
+                            g.setColor(Color.RED);
                         } else if (iGround > ((OleDashBoard) this.parentPane).decoder.getAltitude()) {
                             g.setColor(Color.RED);
                         } else {
@@ -290,6 +299,13 @@ public class OleMap extends OleSensor implements ActionListener {
             this.oDrawArc(g, center, 10.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
+            this.oDrawArc(g, center, 1.0 * lengthVisual / nLevels, 0, 180);
+            p = new Polygon();
+            p.addPoint(pHead.getXInt(), pHead.getYInt());
+            p.addPoint(center.getXInt() - 10, center.getYInt());
+            p.addPoint(center.getXInt() + 10, center.getYInt());
+            p.addPoint(pHead.getXInt(), pHead.getYInt());
+            g.draw(p);
             tf = new TextFactory(g).setX((int) (center.getX() + 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();
@@ -313,12 +329,12 @@ public class OleMap extends OleSensor implements ActionListener {
 
             g.setColor(Color.MAGENTA);
             g.setStroke(new BasicStroke(3));
-            this.oDrawLine(g, pDistance, center);
+            this.oDrawLine(g, pDistance, pHead);
             g.setStroke(new BasicStroke(1));
 
             g.setColor(Color.CYAN);
             g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
-            this.oDrawLine(g, pVariableDown, center);
+            this.oDrawLine(g, pVariableDown, pHead);
             g.setStroke(new BasicStroke(1));
 
             g.setColor(Color.WHITE);
@@ -395,6 +411,19 @@ public class OleMap extends OleSensor implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         isMap = !isMap;
+    }
+
+    protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
+        Point3D p = new Point3D(jsgoal.getString("position", ""));
+        int diam1 = 10, diam2 = 5;
+        g.setColor(Color.YELLOW);
+        g.drawOval((int)viewX(p.getX())-diam2, 
+                (int)(viewY(p.getY()))-diam2, 
+                diam1, diam1);
+//        g.drawOval((int)(viewPort.x+viewPort.width*p.getX()/map.getWidth()), 
+//                (int)(viewPort.y+viewPort.height*p.getY()/map.getHeight()), 
+//                diam1, diam1);
+
     }
 
 }

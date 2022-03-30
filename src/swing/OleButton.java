@@ -116,6 +116,7 @@ public class OleButton extends JButton {
     }
 
     public OleButton setIcon() {
+        setPreferredSize(new Dimension(24,24));
         setType("icon");
         return this;
     }

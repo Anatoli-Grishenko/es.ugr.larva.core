@@ -372,8 +372,11 @@ public class Map2DColor {
      */
     public Map2DColor setLevel(int x, int y, int level) {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
-            _map.setRGB(x, y, new Color(level, level, level).getRGB());
-//            _map.setRGB(x, y,  this.applyAlphaLevel(level).getRGB());
+            if (level >= 0) {
+                _map.setRGB(x, y, new Color(level, level, level).getRGB());
+            } else {
+                _map.setRGB(x, y, Map2DColor.BADVALUE.getRGB());
+            }
         }
         return this;
     }

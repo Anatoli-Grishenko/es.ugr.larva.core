@@ -5,6 +5,7 @@
  */
 package swing;
 
+import com.eclipsesource.json.JsonArray;
 import geometry.AngleTransporter;
 import geometry.Point3D;
 import java.awt.BasicStroke;
@@ -76,6 +77,7 @@ public abstract class OleSensor extends JComponent {
     protected boolean isMap;
     protected AngleTransporter at;
     protected ArrayList<String> labelSet, textSet;
+    public JsonArray jsaGoals = new JsonArray();
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -784,6 +786,14 @@ public abstract class OleSensor extends JComponent {
     public void setAlertLimitAbove(int value) {
         this.alertBelow = false;
         alertLimit = value;
+    }
+
+    public JsonArray getJsaGoals() {
+        return jsaGoals;
+    }
+
+    public void setJsaGoals(JsonArray jsaGoals) {
+        this.jsaGoals = jsaGoals;
     }
 
 }

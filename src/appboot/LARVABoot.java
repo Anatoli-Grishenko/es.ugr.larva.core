@@ -5,6 +5,7 @@ package appboot;
 
 import agents.AgentReport;
 import agents.LARVAPayload;
+import agents.XUIAgent;
 import agents.XUIAgentOldDash;
 import data.Ole;
 import data.OleConfig;
@@ -210,14 +211,13 @@ public class LARVABoot {
         OleButton obAux;
         JPanel jpAux;
         obAux = new OleButton(this.appMain, "Save activity", "save_alt");
-        obAux.setIcon();
-        obAux.setPreferredSize(new Dimension(20, 20));
         obAux.setExtraFlat();
+        obAux.setIcon(new Dimension(20, 20));
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean activity", "delete");
         obAux.setPreferredSize(new Dimension(20, 20));
-        obAux.setIcon();
         obAux.setExtraFlat();
+        obAux.setIcon(new Dimension(20, 20));
         otbAux.addButton(obAux);
 
         jpAux = new JPanel();
@@ -245,13 +245,12 @@ public class LARVABoot {
 
         otbAux = new OleToolBar(this.appMain);
         obAux = new OleButton(this.appMain, "Save sequence", "save_alt");
-        obAux.setIcon();
-        obAux.setPreferredSize(new Dimension(20, 20));
+        obAux.setIcon(new Dimension(20, 20));
+
         obAux.setExtraFlat();
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean sequence", "delete");
-        obAux.setPreferredSize(new Dimension(20, 20));
-        obAux.setIcon();
+        obAux.setIcon(new Dimension(20, 20));
         obAux.setExtraFlat();
         otbAux.addButton(obAux);
         jpAux = new JPanel();
@@ -263,6 +262,7 @@ public class LARVABoot {
         shareableGUI.put("Sequence", taSequence);
 
         _XUI = new JPanel();
+        _XUI.setLayout(new BorderLayout());
         pScroll = new JScrollPane(_XUI);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab("XUI", pScroll);
@@ -726,7 +726,7 @@ public class LARVABoot {
         }
         if (_tiles.get(_xuiName) == null) {
             if (oPassport != null) {
-                launchAgent(_xuiName, XUIAgentOldDash.class);
+                launchAgent(_xuiName, XUIAgent.class);
             }
         }
         return this;

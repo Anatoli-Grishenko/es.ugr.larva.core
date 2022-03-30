@@ -32,14 +32,19 @@ public class OleToolBar extends JPanel {
 
     public OleToolBar(OleApplication oapp) {
         super();
-        setLayout(new FlowLayout(FlowLayout.LEFT));
+        FlowLayout fl= new FlowLayout(FlowLayout.LEFT);
+        fl.setHgap(12);
+        setLayout(fl);
+        
         dicComponents = new HashMap();
         parent = oapp;
     }
 
     public OleToolBar(OleApplication oapp, OleConfig olecfg) {
         super();
-        setLayout(new FlowLayout(FlowLayout.LEFT));
+        FlowLayout fl= new FlowLayout(FlowLayout.LEFT);
+        fl.setHgap(12);
+        setLayout(fl);
         dicComponents = new HashMap();
         parent = oapp;
         Ole oTool = olecfg.getTab("ToolBar"), ocontent;
@@ -72,6 +77,7 @@ public class OleToolBar extends JPanel {
                 obAux.setText(" " + obAux.getText().trim() + " ");
             }
             if (type.equals("icon")) {
+                obAux.setExtraFlat();
                 obAux.setIcon();
             }
             addButton(obAux);

@@ -116,7 +116,7 @@ public class PolarSurface {
             thisLevel = pSurface.get(level+1);
             for (int x = 0; x < thisLevel.size(); x++) {
                 svFrom = thisLevel.get(x);
-                res.setColor(x, level, m.getColor(svFrom));
+                res.setLevel(x, level, m.getRawLevel(svFrom));
             }
         }
         return res;

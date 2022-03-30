@@ -46,7 +46,7 @@ public class SensorDecoder {
             mapa.saveFile("./maps/");
             String name = mapa.getFileName();
             hMap = new Map2DColor();
-            hMap.loadMapNormalize("./maps/" + name);
+            hMap.loadMapRaw("./maps/" + name);
             hMapMargin = new Map2DColor(hMap.getWidth() + 2 * mapMargin, hMap.getHeight() + 2 * mapMargin);
             for (int x = 0; x < hMapMargin.getWidth(); x++) {
                 for (int y = 0; y < hMapMargin.getHeight(); y++) {
@@ -190,6 +190,7 @@ public class SensorDecoder {
     public double getAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
+            v=360-v+360;
 //            v = v+getCompass();   
             return (int)v % 360;
         }
