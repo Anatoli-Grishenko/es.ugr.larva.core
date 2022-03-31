@@ -7,6 +7,7 @@ package agents;
 
 import data.Ole;
 import data.OleConfig;
+import data.OleFile;
 import data.OleSet;
 import data.Transform;
 import swing.LARVAFrame;
@@ -36,7 +37,9 @@ import swing.LARVACompactDash;
 import swing.LARVADash;
 import swing.LARVADash.Layout;
 import swing.OleApplication;
+import swing.SwingTools;
 import tools.emojis;
+import world.SensorDecoder;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -77,7 +80,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected JPanel myPane, myMap;
     protected JScrollPane myScrPane;
     protected JTextArea myText;
-    protected LARVADash myDashboard;
+    protected SensorDecoder myDecoder;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
 
@@ -132,6 +135,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
+        myDecoder = new SensorDecoder();
     }
 
     @Override
@@ -383,11 +387,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 //                sd.addSequence(aux);
             }
         }
-        if (myDashboard != null && msg.getContent() != null
-                && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
-                || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
-            msg = ACLMessageTools.addDashMark(msg);
-        }
+//        if (msg.getContent() != null
+//                && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
+//                || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
+//            msg = ACLMessageTools.addDashMark(msg);
+//        }
         this.send(msg);
         Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
         myReport.setOutBox(myReport.getOutBox() + 1);
@@ -404,23 +408,32 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      */
     protected ACLMessage LARVAblockingReceive() {
         ACLMessage res;
-        boolean repeat = false;
+        boolean repeat;
         do {
+            repeat = false;
             res = blockingReceive();
-            if (res != null && ACLMessageTools.isDashACL(res)) {
-                res = ACLMessageTools.cleanDashMark(res);
-                repeat = myDashboard.preProcessACLM(res);
-            } else {
-                if (res.getContent() != null && res.getContent().contains("filedata")
-                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
-                    myDashboard.preProcessACLM(res);
+            if (res != null && res.getContent().contains("filedata")) {
+                Info("Updating decoder world");
+                Ole ocontent = new Ole().set(res.getContent());
+                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+                int maxlevel = ocontent.getInt("maxflight");
+                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                if (!getLocalName().startsWith("XUI")) {
+                    repeat = true;
                 }
+            }
+            if (res != null && res.getContent().contains("perceptions")) {
+                Info("Updating decoder perceptions");
+                myDecoder.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
         Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+
         sd.addSequence(res);
+
         this.checkReceivedMessage(res);
+
         myReport.setInBox(myReport.getInBox() + 1);
         return res;
     }
@@ -432,15 +445,19 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             addRunStep("MILES13");
         }
         do {
-            res = blockingReceive(milis);
-            if (res != null && ACLMessageTools.isDashACL(res)) {
-                res = ACLMessageTools.cleanDashMark(res);
-                repeat = myDashboard.preProcessACLM(res);
-            } else {
-                if (res.getContent() != null && res.getContent().contains("filedata")
-                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
-                    myDashboard.preProcessACLM(res);
+            repeat = false;
+            res = blockingReceive();
+            if (res != null && res.getContent().contains("filedata")) {
+                Ole ocontent = new Ole().set(res.getContent());
+                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+                int maxlevel = ocontent.getInt("maxflight");
+                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                if (!getLocalName().startsWith("XUI")) {
+                    repeat = true;
                 }
+            }
+            if (res != null && res.getContent().contains("perceptions")) {
+                myDecoder.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -458,15 +475,19 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             addRunStep("MILES13");
         }
         do {
-            res = blockingReceive(t);
-            if (res != null && ACLMessageTools.isDashACL(res)) {
-                res = ACLMessageTools.cleanDashMark(res);
-                repeat = myDashboard.preProcessACLM(res);
-            } else {
-                if (res.getContent() != null && res.getContent().contains("filedata")
-                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
-                    myDashboard.preProcessACLM(res);
+            repeat = false;
+            res = blockingReceive();
+            if (res != null && res.getContent().contains("filedata")) {
+                Ole ocontent = new Ole().set(res.getContent());
+                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+                int maxlevel = ocontent.getInt("maxflight");
+                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                if (!getLocalName().startsWith("XUI")) {
+                    repeat = true;
                 }
+            }
+            if (res != null && res.getContent().contains("perceptions")) {
+                myDecoder.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -485,15 +506,19 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             addRunStep("MILES13");
         }
         do {
-            res = blockingReceive(t, milis);
-            if (res != null && ACLMessageTools.isDashACL(res)) {
-                res = ACLMessageTools.cleanDashMark(res);
-                repeat = myDashboard.preProcessACLM(res);
-            } else {
-                if (res.getContent() != null && res.getContent().contains("filedata")
-                        && res.getReplyWith() != null && res.getReplyWith().contains("Recruit")) {
-                    myDashboard.preProcessACLM(res);
+            repeat = false;
+            res = blockingReceive();
+            if (res != null && res.getContent().contains("filedata")) {
+                Ole ocontent = new Ole().set(res.getContent());
+                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+                int maxlevel = ocontent.getInt("maxflight");
+                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                if (!getLocalName().startsWith("XUI")) {
+                    repeat = true;
                 }
+            }
+            if (res != null && res.getContent().contains("perceptions")) {
+                myDecoder.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -626,8 +651,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      *
      */
     public void doActivateLARVADash() {
-        myDashboard.setActivated(true);
-        myDashboard.initGUI();
+//        myDashboard.setActivated(true);
+//        myDashboard.initGUI();
     }
 
     /**

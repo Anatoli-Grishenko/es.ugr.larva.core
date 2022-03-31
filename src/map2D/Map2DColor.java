@@ -32,7 +32,7 @@ import javax.imageio.ImageIO;
  */
 public class Map2DColor {
 
-    public static final Color BADVALUE = new Color(64, 0, 0);
+    public static final Color BADVALUE = new Color(100, 0, 0);
     protected BufferedImage _map;
     protected int _lmax, _lmin;
     protected double k = 2.261566516;

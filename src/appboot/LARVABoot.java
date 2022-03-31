@@ -24,6 +24,8 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -186,7 +188,12 @@ public class LARVABoot {
         };
         appMain.getMainPanel().removeAll();
         appMain.getMainPanel().setLayout(new BorderLayout());
-
+        appMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        appMain.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                sShutdown.release();
+            }
+        });
         pTiles = new OleFoldableList(appMain);
 //        pTiles.setMinimumSize(new Dimension(200,120));
         pTiles.setPreferredSize(new Dimension(150, 1000));
@@ -207,17 +214,16 @@ public class LARVABoot {
         pScroll = new JScrollPane(taMessages);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
-        OleToolBar otbAux = new OleToolBar(this.appMain);
+        OleToolBar otbAux = new OleToolBar(this.appMain, 12);
         OleButton obAux;
         JPanel jpAux;
         obAux = new OleButton(this.appMain, "Save activity", "save_alt");
-        obAux.setExtraFlat();
         obAux.setIcon(new Dimension(20, 20));
+        obAux.setExtraFlat();
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean activity", "delete");
-        obAux.setPreferredSize(new Dimension(20, 20));
-        obAux.setExtraFlat();
         obAux.setIcon(new Dimension(20, 20));
+        obAux.setExtraFlat();
         otbAux.addButton(obAux);
 
         jpAux = new JPanel();
@@ -243,10 +249,9 @@ public class LARVABoot {
         pScroll = new JScrollPane(taSequence);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
-        otbAux = new OleToolBar(this.appMain);
+        otbAux = new OleToolBar(this.appMain, 12);
         obAux = new OleButton(this.appMain, "Save sequence", "save_alt");
         obAux.setIcon(new Dimension(20, 20));
-
         obAux.setExtraFlat();
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean sequence", "delete");
@@ -304,6 +309,7 @@ public class LARVABoot {
 //        System.out.println("Listener  working");
         if (e.getActionCommand().equals("Exit")) {
             if (appMain.Confirm("Kill all agents and exit?")) {
+//                this.Exit();
                 this.sShutdown.release();
             }
         }
@@ -647,6 +653,7 @@ public class LARVABoot {
         otAux.showSummary();
         pTiles.validate();
         _tiles.put(name, otAux);
+        shareableGUI.put("TILE " + name, otAux);
         return this;
     }
 

@@ -38,6 +38,7 @@ public class OleAgentTile extends OleFoldablePane {
     JLabel mylLabel, mylLabel2;
     AgentReport myReport;
     OlePerformeter olpTime, olpInbox, olpOutbox;
+    OleToolBar oltbMain, oltbExternal;
 
     public OleAgentTile(OleApplication parent, AgentReport report) {
         super(parent, new JLabelRobot(parent,report.getAgentName()));
@@ -67,12 +68,15 @@ public class OleAgentTile extends OleFoldablePane {
         this.getFoldablePane().add(ofpAgent);
         this.getFoldablePane().add(mylLabel2);
 
-        OleToolBar oltbAux = new OleToolBar(parent);
-        oltbAux.setPreferredSize(new Dimension(100, 25));
-        oltbAux.addButton(mybOn);
-        oltbAux.addButton(mybOff);
+        oltbMain = new OleToolBar(parent,0);
+        oltbMain.setPreferredSize(new Dimension(100, 25));
+        oltbExternal = new OleToolBar(parent,0);
+        oltbExternal.setPreferredSize(new Dimension(100, 25));
+        oltbMain.addButton(mybOn);
+        oltbMain.addButton(mybOff);
 
-        this.getFoldablePane().add(oltbAux);
+        this.getFoldablePane().add(oltbMain);
+        this.getFoldablePane().add(oltbExternal);
 
         JLabel jlAux;
         jlAux = new JLabel("CPU Load");
@@ -149,6 +153,9 @@ public class OleAgentTile extends OleFoldablePane {
             mylLabel2.validate();
         }
         this.validate();
+    }
+    public OleToolBar getExternalToolBar() {
+        return this.oltbExternal;
     }
 }
 

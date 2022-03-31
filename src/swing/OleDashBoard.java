@@ -185,7 +185,7 @@ public class OleDashBoard extends OleDrawPane {
 //        osBattery.setPalette(pal);
         osBattery.showScale(true);
         osBattery.showScaleNumbers(true);
-        osBattery.setAlertLimitBelow(3400);
+        osBattery.setAlertLimitBelow(300);
         osBattery.validate();
 
         olGPS = new OleLinear(this, "GPS");
@@ -628,7 +628,7 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1] = decoder.getAngular();
             this.mySensorsVisual.get("MAP").getAllReadings()[0][2] = decoder.getDistance();
-            ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
+            ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), decoder.getGPSVector());
 
             this.mySensorsVisual.get("AUX").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("AUX").getAllReadings()[0][1] = decoder.getAngular();
@@ -652,6 +652,7 @@ public class OleDashBoard extends OleDrawPane {
             this.repaint();
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
+            ex.printStackTrace(System.out);
             System.exit(1);
         }
     }

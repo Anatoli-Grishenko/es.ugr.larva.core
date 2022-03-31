@@ -30,19 +30,19 @@ public class OleToolBar extends JPanel {
     OleFrame parent;
     HashMap<String, Component> dicComponents;
 
-    public OleToolBar(OleApplication oapp) {
+    public OleToolBar(OleApplication oapp, int hgap) {
         super();
-        FlowLayout fl= new FlowLayout(FlowLayout.LEFT);
-        fl.setHgap(12);
+        FlowLayout fl = new FlowLayout(FlowLayout.LEFT);
+        fl.setHgap(hgap);
         setLayout(fl);
-        
+
         dicComponents = new HashMap();
         parent = oapp;
     }
 
     public OleToolBar(OleApplication oapp, OleConfig olecfg) {
         super();
-        FlowLayout fl= new FlowLayout(FlowLayout.LEFT);
+        FlowLayout fl = new FlowLayout(FlowLayout.LEFT);
         fl.setHgap(12);
         setLayout(fl);
         dicComponents = new HashMap();
@@ -95,12 +95,24 @@ public class OleToolBar extends JPanel {
     public OleToolBar addButton(OleButton ob) {
         this.add(ob);
         dicComponents.put(ob.getCommand(), ob);
+        this.validate();
         return this;
     }
+
     public OleToolBar removeButton(String name) {
         OleButton ob = getButton(name);
         this.remove(ob);
         dicComponents.remove(name);
+        this.validate();
+        return this;
+    }
+
+    public OleToolBar removeAllButtons() {
+        for (String name : getButtonList()) {
+            OleButton ob = getButton(name);
+            this.remove(ob);
+        }
+        dicComponents.clear();
         return this;
     }
 }

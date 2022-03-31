@@ -12,6 +12,7 @@ import data.Ole;
 import data.OleFile;
 import data.Transform;
 import geometry.Point3D;
+import geometry.SimpleVector3D;
 import geometry.Vector3D;
 import java.awt.Color;
 import java.io.File;
@@ -25,8 +26,6 @@ import map2D.Map2DColor;
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class SensorDecoder {
-
-    public static Color cBad = new Color(100, 0, 0);
     protected HashMap<String, JsonArray> indexperception;
     protected JsonArray lastPerception;
     protected Map2DColor hMap, hMapMargin;
@@ -39,7 +38,7 @@ public class SensorDecoder {
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
-        this.maxlevel = maxlevel;
+        setMaxlevel(maxlevel);
         OleFile mapa = new OleFile();
         try {
             mapa.set(content);
@@ -50,7 +49,13 @@ public class SensorDecoder {
             hMapMargin = new Map2DColor(hMap.getWidth() + 2 * mapMargin, hMap.getHeight() + 2 * mapMargin);
             for (int x = 0; x < hMapMargin.getWidth(); x++) {
                 for (int y = 0; y < hMapMargin.getHeight(); y++) {
-                    hMapMargin.setColor(x, y, hMap.getColor(x-mapMargin, y-mapMargin));
+                    if (hMap.getRawLevel(x - mapMargin, y - mapMargin) > getMaxlevel()) {
+                        hMapMargin.setColor(x, y, Map2DColor.BADVALUE);
+                        hMap.setColor(x-mapMargin, y-mapMargin, Map2DColor.BADVALUE);
+                    } else {
+                        hMapMargin.setColor(x, y, hMap.getColor(x - mapMargin, y - mapMargin));
+
+                    }
                 }
             }
 
@@ -136,7 +141,7 @@ public class SensorDecoder {
     }
 
     public boolean isReady() {
-        return ready;
+        return true;
     }
 
     public double[] getGPS() {
@@ -150,9 +155,9 @@ public class SensorDecoder {
     public double getAltitude() {
         double[] res = new double[3];
         if (isReady() && hasSensor("GPS")) {
-            res = fromJsonArray(getSensor("gps").get(0).asArray());
+            return getGPS()[2];
         }
-        return res[2];
+        return -1;
     }
 
     public int getPayload() {
@@ -162,10 +167,24 @@ public class SensorDecoder {
         return -1;
     }
 
+    public SimpleVector3D getGPSVector() {
+        return new SimpleVector3D((int)getGPS()[0], (int)getGPS()[1],getOrientation());
+    }
+    
+    
+    public int getOrientation() {
+        return getCompass()/45;
+    }
+    
+    public Point3D getGPSPosition() {
+        return new Point3D(getGPS()[0], getGPS()[1]);
+    }
+    
+    
     public int getCompass() {
         if (isReady() && hasSensor("COMPASS")) {
             int v = (int) getSensor("compass").get(0).asDouble();
-            v = 360-v;
+            v = 360 - v;
             return v % 360;
 //            v = 360 + 90 - v;
 //            return v % 360;
@@ -190,9 +209,9 @@ public class SensorDecoder {
     public double getAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
-            v=360-v+360;
+            v = 360 - v + 360;
 //            v = v+getCompass();   
-            return (int)v % 360;
+            return (int) v % 360;
         }
         return -1;
 //        if (isReady() && hasSensor("ANGULAR")) {
@@ -238,8 +257,8 @@ public class SensorDecoder {
     }
 
     public String getLastTrace() {
-        if (isReady() && hasSensor("TRACE") && getSensor("trace").size()>0) {
-            return getSensor("trace").get(getSensor("trace").size()-1).asString();
+        if (isReady() && hasSensor("TRACE") && getSensor("trace").size() > 0) {
+            return getSensor("trace").get(getSensor("trace").size() - 1).asString();
         }
         return "";
     }
@@ -369,6 +388,7 @@ public class SensorDecoder {
         sessionID = jsoperception.getString("sessionID", "unknown");
         commitment = jsoperception.getString("commitment", "");
         fromJson(jsoperception.get("perceptions").asArray());
+        ready=true;
     }
 
     public String getCommitment() {
@@ -390,4 +410,9 @@ public class SensorDecoder {
     public void setMapMargin(int mapMargin) {
         this.mapMargin = mapMargin;
     }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
+    }
+
 }
