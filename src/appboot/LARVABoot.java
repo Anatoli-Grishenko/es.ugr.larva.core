@@ -218,12 +218,14 @@ public class LARVABoot {
         OleButton obAux;
         JPanel jpAux;
         obAux = new OleButton(this.appMain, "Save activity", "save_alt");
-        obAux.setIcon(new Dimension(20, 20));
-        obAux.setExtraFlat();
+        obAux.setIcon();
+//        obAux.setIcon(new Dimension(20, 20));
+//        obAux.setExtraFlat();
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean activity", "delete");
-        obAux.setIcon(new Dimension(20, 20));
-        obAux.setExtraFlat();
+        obAux.setIcon();
+//        obAux.setIcon(new Dimension(20, 20));
+//        obAux.setExtraFlat();
         otbAux.addButton(obAux);
 
         jpAux = new JPanel();
@@ -251,12 +253,14 @@ public class LARVABoot {
 
         otbAux = new OleToolBar(this.appMain, 12);
         obAux = new OleButton(this.appMain, "Save sequence", "save_alt");
-        obAux.setIcon(new Dimension(20, 20));
-        obAux.setExtraFlat();
+        obAux.setIcon();
+//        obAux.setIcon(new Dimension(20, 20));
+//        obAux.setExtraFlat();
         otbAux.addButton(obAux);
         obAux = new OleButton(this.appMain, "Clean sequence", "delete");
-        obAux.setIcon(new Dimension(20, 20));
-        obAux.setExtraFlat();
+        obAux.setIcon();
+//        obAux.setIcon(new Dimension(20, 20));
+//        obAux.setExtraFlat();
         otbAux.addButton(obAux);
         jpAux = new JPanel();
         jpAux.setLayout(new BorderLayout());

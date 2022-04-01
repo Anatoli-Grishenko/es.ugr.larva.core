@@ -26,12 +26,14 @@ import map2D.Map2DColor;
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class SensorDecoder {
+
     protected HashMap<String, JsonArray> indexperception;
     protected JsonArray lastPerception;
     protected Map2DColor hMap, hMapMargin;
     protected int maxlevel, mapMargin = 20;
     protected boolean ready, filterreading;
     protected String name, sessionID, commitment;
+    protected Point3D lastPosition;
 
     public SensorDecoder() {
         clear();
@@ -51,7 +53,7 @@ public class SensorDecoder {
                 for (int y = 0; y < hMapMargin.getHeight(); y++) {
                     if (hMap.getRawLevel(x - mapMargin, y - mapMargin) > getMaxlevel()) {
                         hMapMargin.setColor(x, y, Map2DColor.BADVALUE);
-                        hMap.setColor(x-mapMargin, y-mapMargin, Map2DColor.BADVALUE);
+                        hMap.setColor(x - mapMargin, y - mapMargin, Map2DColor.BADVALUE);
                     } else {
                         hMapMargin.setColor(x, y, hMap.getColor(x - mapMargin, y - mapMargin));
 
@@ -113,8 +115,8 @@ public class SensorDecoder {
     public void clear() {
         indexperception = new HashMap();
         lastPerception = new JsonArray();
+        lastPosition=null;
         ready = false;
-
     }
 
     public boolean getAlive() {
@@ -141,7 +143,7 @@ public class SensorDecoder {
     }
 
     public boolean isReady() {
-        return true;
+        return ready;
     }
 
     public double[] getGPS() {
@@ -168,19 +170,22 @@ public class SensorDecoder {
     }
 
     public SimpleVector3D getGPSVector() {
-        return new SimpleVector3D((int)getGPS()[0], (int)getGPS()[1],getOrientation());
+//        return new SimpleVector3D((int)getGPS()[0], (int)getGPS()[1],getOrientation());
+        if (lastPosition == null) {
+            return new SimpleVector3D(getGPSPosition(), getGPSPosition());
+        } else {
+            return new SimpleVector3D(lastPosition, getGPSPosition());
+        }
     }
-    
-    
+
     public int getOrientation() {
-        return getCompass()/45;
+        return getCompass() / 45;
     }
-    
+
     public Point3D getGPSPosition() {
-        return new Point3D(getGPS()[0], getGPS()[1]);
+        return new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
     }
-    
-    
+
     public int getCompass() {
         if (isReady() && hasSensor("COMPASS")) {
             int v = (int) getSensor("compass").get(0).asDouble();
@@ -272,7 +277,8 @@ public class SensorDecoder {
 
     public int getNSteps() {
         if (isReady() && hasSensor("NUMSTEPS")) {
-            return (int) getSensor("numsteps").get(0).asDouble();
+            return this.getTrace().length;
+//            return (int) getSensor("numsteps").get(0).asDouble();
         }
         return -1;
 
@@ -347,7 +353,7 @@ public class SensorDecoder {
     }
 
     public void fromJson(JsonArray jsareading) {
-        clear();
+//        clear();
         for (int i = 0; i < jsareading.size(); i++) {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
@@ -358,7 +364,7 @@ public class SensorDecoder {
     }
 
     public void fromOle(ArrayList<Ole> oreading) {
-        clear();
+//        clear();
         for (Ole osensor : oreading) {
             String sensorname = osensor.getField("sensor");
             setSensor(sensorname, Transform.toJsonArray(new ArrayList(osensor.getArray("data"))));
@@ -383,12 +389,17 @@ public class SensorDecoder {
     }
 
     public void feedPerception(String content) {
+        try {
+            lastPosition = this.getGPSPosition();
+        } catch (Exception ex) {
+            lastPosition = null;
+        }
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
         commitment = jsoperception.getString("commitment", "");
         fromJson(jsoperception.get("perceptions").asArray());
-        ready=true;
+        ready = true;
     }
 
     public String getCommitment() {

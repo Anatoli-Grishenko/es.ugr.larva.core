@@ -7,6 +7,8 @@ package geometry;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import static geometry.SimpleVector3D.nextX;
+import static geometry.SimpleVector3D.nextY;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -15,9 +17,11 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.RescaleOp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import map2D.Map2DColor;
 import swing.OleApplication;
@@ -27,6 +31,7 @@ import swing.OleDrawPane;
 import swing.OleSensor;
 import swing.SwingTools;
 import swing.TextFactory;
+import tools.emojis;
 import world.Perceptor;
 import world.SensorDecoder;
 
@@ -41,7 +46,7 @@ public class OleMap extends OleSensor implements ActionListener {
     protected int narrow = 37, margin = 22;
     protected OleButton obMap, obHud;
     protected Polygon p;
-    protected int cell, nLevels, nTiles;
+    protected int cell, nLevels, nTiles, trailSize = 200;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
     protected double stepRadius, stepAngle;
@@ -238,29 +243,34 @@ public class OleMap extends OleSensor implements ActionListener {
     @Override
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
-
+        String label;
         if (isMap) {
             if (map != null) {
-                g.drawImage(map.getMap(), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
-                g.setColor(Color.MAGENTA);
-                SimpleVector3D ptrail;
-                int diamond = 5;
+                RescaleOp darken = new RescaleOp(0.5f, 0, null);
+                g.drawImage(darken.filter(map.getMap(), null), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
+                SimpleVector3D ptrail, ptext, ppoint;
                 double xVP, yVP;
+                Color c;
                 for (String name : Trails.keySet()) {
-                    ptrail = Trails.get(name).get(Trails.get(name).size() - 1);
-                    xVP = viewX(ptrail.getSource().getX());
-                    yVP = viewY(ptrail.getSource().getY());
-                    p = new Polygon();
-                    p.addPoint((int) (xVP) - diamond, (int) (yVP));
-                    p.addPoint((int) (xVP), (int) (yVP) - diamond);
-                    p.addPoint((int) (xVP) + diamond, (int) (yVP));
-                    p.addPoint((int) (xVP), (int) (yVP) + diamond);
-                    p.addPoint((int) (xVP) - diamond, (int) (yVP));
+                    for (int i = 1; i < Trails.get(name).size(); i++) {                        
+                        ptrail = Trails.get(name).get(i);
+                        c = map.getColor(ptrail);
+//                        c = new Color(c.getRed(),255,c.getBlue());
+//                        g.setColor(new Color(0, (Trails.get(name).size() - i) *c.getRed()/ Trails.get(name).size(), 0));
+                        g.setColor(Color.GREEN);
+                        g.fillArc(viewX(ptrail.getTarget().getX()), viewY(ptrail.getTarget().getY()), 5,5, 0, 360);
+                    }
+                    g.setColor(Color.GREEN);
+                    ptrail = Trails.get(name).get(0);
+                    p = this.TraceRomboid(ptrail, 5);
                     g.setStroke(new BasicStroke(2));
                     g.drawPolygon(p);
-                    this.oDrawLine(g, viewP(ptrail.getSource()), viewP(ptrail.getSource().clone().plus(ptrail.canonical().scalar(2))));
+                    p = this.TraceCourse(ptrail, 20);
+                    g.drawPolygon(p);
                     g.setStroke(new BasicStroke(1));
-                    g.drawString(name, (int) viewX(ptrail.getSource().getX()), (int) viewY(ptrail.getSource().getY()) - diamond);
+                    System.out.println("Course: " + ptrail.getSource().toString() + "->" + ptrail.getTarget().toString());
+                    g.setStroke(new BasicStroke(1));
+                    this.traceLabel(g, ptrail, 25, name);
                 }
                 for (int i = 0; i < jsaGoals.size(); i++) {
                     paintGoalMap(g, jsaGoals.get(i).asObject());
@@ -399,7 +409,7 @@ public class OleMap extends OleSensor implements ActionListener {
                 g.setColor(SwingTools.doLighter(Map2DColor.BADVALUE));
                 sRead = String.format(" %03dm ", externalDecoder.getMaxlevel());
                 tf = new TextFactory(g);
-                tf.setX(screenPort.x+screenPort.width-150).setY(screenPort.y).setsText("MaxFlight: " + sRead).
+                tf.setX(screenPort.x + screenPort.width - 150).setY(screenPort.y).setsText("MaxFlight: " + sRead).
                         setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
                 tf.draw();
             }
@@ -415,18 +425,23 @@ public class OleMap extends OleSensor implements ActionListener {
             Trails.put(name, new ArrayList());
         }
         Rectangle r = SwingTools.doNarrow(this.getBounds(), 6);
-        Trails.get(name).add(p);
+        Trails.get(name).add(0, p);
+        if (Trails.get(name).size() > trailSize) {
+            Trails.get(name).remove(Trails.get(name).size() - 1);
+        }
+
     }
 
     public Point3D viewP(Point3D p) {
-        return new Point3D(viewX(p.getXInt()),viewY(p.getYInt()));
-    }
-    public double viewX(double x) {
-        return viewPort.x + (x + 0.4) * scale;
+        return new Point3D(viewX(p.getX()), viewY(p.getY()));
     }
 
-    public double viewY(double y) {
-        return viewPort.y + (y + 0.4) * scale;
+    public int viewX(double x) {
+        return (int) (viewPort.x + (x + 0.4) * scale);
+    }
+
+    public int viewY(double y) {
+        return (int) (viewPort.y + (y + 0.4) * scale);
     }
 
     @Override
@@ -447,4 +462,87 @@ public class OleMap extends OleSensor implements ActionListener {
 
     }
 
+    public Polygon TraceRomboid(SimpleVector3D sv, int length) {
+        int xsv = viewX(sv.getTarget().getX()), ysv = viewY(sv.getTarget().getY());
+        p = new Polygon();
+        p.addPoint(xsv - length, ysv);
+        p.addPoint(xsv, ysv - length);
+        p.addPoint(xsv + length, ysv);
+        p.addPoint(xsv, ysv + length);
+        p.addPoint(xsv - length, ysv);
+        return p;
+    }
+
+//    public Polygon TraceTriangle(SimpleVector3D sv, int length) {
+//        int xsv = viewX(sv.getTarget().getX()), ysv = viewY(sv.getTarget().getY());
+//        Point3D p;
+//        Polygon t=new Polygon();
+//        p = at.alphaPoint(sv.getsOrient()*45, length, sv.getTarget());
+//        t.addPoint(viewX(p.getX()), viewY(p.getY()));
+//        p = at.alphaPoint(sv.getsOrient()*45, length, sv.getTarget());
+//        t.addPoint(viewX(p.getX()), viewY(p.getY()));
+//        return p;
+//    }
+    public Polygon TraceCourse(SimpleVector3D sv, int length) {
+        int xsv = viewX(sv.getTarget().getX()), ysv = viewY(sv.getTarget().getY()), xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
+        p = new Polygon();
+        p.addPoint(xsv, ysv);
+        p.addPoint(xsv2, ysv2);
+        p.addPoint(xsv, ysv);
+        return p;
+    }
+
+//    public void traceLabel(Graphics2D g, SimpleVector3D sv, int length, String name) {
+//        int xl = viewX(sv.getTarget().getXInt()) + length, yl = viewY(sv.getTarget().getYInt()), halign, valign;
+//        int n = 0;
+//        String s, climb;
+//        JLabel jl;
+//        halign = SwingConstants.LEFT;
+//        valign = SwingConstants.CENTER;
+//        yl = viewY(sv.getTarget().getYInt());
+//        s = name;
+//        if (sv.canonical().getTarget().getZ() > 0) {
+//            climb = emojis.UPRIGHTARROW; //"+";
+//        } else if (sv.canonical().getTarget().getZ() < 0) {
+//            climb = emojis.DOWNRIGHTARROW;
+//        } else {
+//            climb = " ";
+//        }
+//        s = s+"\n"+String.format("%03d %2s %s", (int) sv.getTarget().getZInt(), SimpleVector3D.Dir[sv.getsOrient()], climb);
+//        jl=new JLabel(s);
+//        jl.setFont(g.getFont().deriveFont(Font.BOLD));
+//        
+//        g.setStroke(new BasicStroke(2));
+//        g.drawLine(viewX(sv.getTarget().getX()), viewY(sv.getTarget().getY()), xl, yl);
+//        g.setStroke(new BasicStroke(1));
+//    }
+    public void traceLabel(Graphics2D g, SimpleVector3D sv, int length, String name) {
+        int xl = viewX(sv.getTarget().getXInt()) + length, yl = viewY(sv.getTarget().getYInt()), halign, valign;
+        int n = 0;
+        TextFactory tf;
+        String s, climb;
+        JLabel jl;
+        halign = SwingConstants.LEFT;
+        valign = SwingConstants.CENTER;
+        yl = viewY(sv.getTarget().getYInt());
+        s = name;
+        g.setColor(Color.GREEN);
+        tf = new TextFactory(g);
+        tf.setX(xl).setY(yl).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
+        tf.draw();
+        if (sv.canonical().getTarget().getZ() > 0) {
+            climb = "+";
+        } else if (sv.canonical().getTarget().getZ() < 0) {
+            climb = "-";
+        } else {
+            climb = " ";
+        }
+        s = String.format("%03d%s %2s", (int) sv.getTarget().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
+        tf = new TextFactory(g);
+        tf.setX(xl).setY(yl + 14).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
+        tf.draw();
+        g.setStroke(new BasicStroke(2));
+        g.drawLine(viewX(sv.getTarget().getX()), viewY(sv.getTarget().getY()), xl, yl);
+        g.setStroke(new BasicStroke(1));
+    }
 }

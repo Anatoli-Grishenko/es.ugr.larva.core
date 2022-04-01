@@ -67,8 +67,11 @@ public class OleToolBar extends JPanel {
                     obAux.setRegular();
                     break;
                 case "flat":
-                default:
                     obAux.setFlat();
+                    break;
+                case "extraflat":
+                default:
+                    obAux.setExtraFlat();
                     break;
             }
             if (type.equals("emoji")) {
@@ -77,7 +80,6 @@ public class OleToolBar extends JPanel {
                 obAux.setText(" " + obAux.getText().trim() + " ");
             }
             if (type.equals("icon")) {
-                obAux.setExtraFlat();
                 obAux.setIcon();
             }
             addButton(obAux);

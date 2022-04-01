@@ -140,6 +140,16 @@ public class Vector3D {
         }
 
     }
+    
+    public Vector3D left90() {
+        return new Vector3D(this.getSource(), this.getSource().plus(
+                new Point3D(-this.canonical().getTarget().getY(), this.canonical().getTarget().getX())));
+    }
+
+    public Vector3D right90() {
+        return new Vector3D(this.getSource(), this.getSource().plus(
+                new Point3D(-this.canonical().getTarget().getY(), -this.canonical().getTarget().getX())));
+    }
 
     public Vector3D to2D() {
         return new Vector3D(this.getSource().to2D(), this.getTarget().to2D());

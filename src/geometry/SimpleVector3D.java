@@ -14,21 +14,36 @@ import com.eclipsesource.json.JsonObject;
  */
 public class SimpleVector3D extends Vector3D {
 
-    public static final int N = 0, NW = 1, W = 2, SW = 3, S = 4, SE = 5, E = 6, NE = 7;
-    public static final String Dir[] = new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE"};
-    public static final int nextX[] = new int[]{0, -1, -1, -1, 0, 1, 1, 1};
-    public static final int nextY[] = new int[]{-1, -1, 0, 1, 1, 1, 0, -1};
+    public static final int N = 0, NW = 1, W = 2, SW = 3, S = 4, SE = 5, E = 6, NE = 7, ST = 8;
+    public static final String Dir[] = new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE", ""};
+    public static final int nextX[] = new int[]{0, -1, -1, -1, 0, 1, 1, 1, 0};
+    public static final int nextY[] = new int[]{-1, -1, 0, 1, 1, 1, 0, -1, 0};
+    public static final int inverse[][] = new int[][]{{1, 2, 3}, {0, 8, 4}, {7,6,5}};
 
     protected int sOrient;
 
     public SimpleVector3D(Point3D t, int orientation) {
-        super(t, new Point3D(t.getX() + nextX[orientation % 8], t.getY() + nextY[orientation % 8]));
+        super(t, new Point3D(t.getX() + nextX[orientation % 8], t.getY() + nextY[orientation % 8], 0));
         sOrient = orientation % 8;
     }
 
     public SimpleVector3D(int x, int y, int orient) {
-        super(new Point3D(x, y), new Point3D(x, y).plus(new Point3D(nextX[orient % 8], nextY[orient % 8])));
+        super(new Point3D(x, y, 0), new Point3D(x, y, 0).plus(new Point3D(nextX[orient % 8], nextY[orient % 8], 0)));
         sOrient = orient % 8;
+    }
+
+    public SimpleVector3D(Point3D s, Point3D t) {
+        super(s, t);
+        sOrient = getInverseOrientation();
+    }
+
+    public int getInverseOrientation() {
+        int r = this.canonical().getTarget().getXInt() + 1, c = this.canonical().getTarget().getYInt() + 1;
+        if (0 <= r && r < 3 && 0 <= c && c < 3) {
+            return inverse[r][c];
+        } else {
+            return 8;
+        }
     }
 
     @Override
@@ -77,13 +92,12 @@ public class SimpleVector3D extends Vector3D {
     }
 
     public SimpleVector3D myRear() {
-        return new SimpleVector3D(new Point3D(this.getSource().getX() + nextX[right(right(right(right(getsOrient()))))], 
+        return new SimpleVector3D(new Point3D(this.getSource().getX() + nextX[right(right(right(right(getsOrient()))))],
                 this.getSource().getY() + nextY[right(right(right(right(sOrient))))]), getsOrient());
     }
 
-    
     public SimpleVector3D myRearLeft() {
-        return new SimpleVector3D(new Point3D(this.getSource().getX() + nextX[left(left(left(getsOrient())))], 
+        return new SimpleVector3D(new Point3D(this.getSource().getX() + nextX[left(left(left(getsOrient())))],
                 this.getSource().getY() + nextY[left(left(left(sOrient)))]), getsOrient());
     }
 

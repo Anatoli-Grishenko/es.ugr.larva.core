@@ -31,6 +31,7 @@ import java.util.HashMap;
 import javax.swing.JPanel;
 import map2D.Map2DColor;
 import map2D.Palette;
+import tools.TimeHandler;
 import world.SensorDecoder;
 
 /**
@@ -60,6 +61,7 @@ public class OleDashBoard extends OleDrawPane {
     int iTrace, lastx, lasty;
     double arrayReading[], gps[];
     int iVisual[][], iLidar[][], iThermal[][];
+    TimeHandler tstart;
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -422,7 +424,7 @@ public class OleDashBoard extends OleDrawPane {
         olSteps.setForeground(Color.WHITE);
         olSteps.setBackground(Color.DARK_GRAY);
         olSteps.setnColumns(1);
-        olSteps.getAllReadings()[0][0] = 123;
+        olSteps.getAllReadings()[0][0] = 0;
         olSteps.setBounds(9 * ww, 7 * hh + hLabels, 2 * ww2, 3 * hh);
         olSteps.showFrame(true);
         olSteps.validate();
@@ -562,6 +564,7 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("AUX").setMap(decoder.getWorldMap());
             this.mySensorsVisual.get("AUX").validate();
             this.repaint();
+            tstart = new TimeHandler();
             res = true;
         }
         if (content.contains("perceptions")) {
@@ -578,13 +581,6 @@ public class OleDashBoard extends OleDrawPane {
     }
 
     public void feedPerception(String perception) {
-        if (!perception.equals(sperception)) {
-            feedPerceptionLocal(perception);
-            sperception = perception;
-        }
-    }
-
-    protected void feedPerceptionLocal(String perception) {
         String stepbystep = "";
         try {
             decoder.feedPerception(perception);
@@ -623,7 +619,8 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("Energy").setHidden(this.mySensorsVisual.get("AUX").isMap);
             this.mySensorsVisual.get("ALV").setCurrentValue(decoder.getAlive());
             this.mySensorsVisual.get("TAR").setCurrentValue(decoder.getOnTarget());
-            this.mySensorsVisual.get("STEPS").setCurrentValue(decoder.getNSteps());
+            this.mySensorsVisual.get("STEPS").getAllReadings()[0][0] =decoder.getNSteps();
+            this.mySensorsVisual.get("TIME").getAllReadings()[0][0] =tstart.elapsedTimeSecs(new TimeHandler());
             this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + decoder.getLastTrace());
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1] = decoder.getAngular();

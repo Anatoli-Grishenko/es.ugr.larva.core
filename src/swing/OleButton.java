@@ -75,7 +75,7 @@ public class OleButton extends JButton {
             setContentAreaFilled(true);
             this.setBorderPainted(true);
         }
-        if (getType().equals("icon")) {
+        if (getStyle().equals("extraflat") && getType().equals("icon")) {
             if (this.isEnabled()) {
                 this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, this.getSize()));
             }
@@ -87,7 +87,7 @@ public class OleButton extends JButton {
             setContentAreaFilled(false);
             this.setBorderPainted(false);
         }
-        if (getType().equals("icon")) {
+        if (getStyle().equals("extraflat") && getType().equals("icon")) {
             if (this.isEnabled()) {
                 this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, this.getSize()));
             }
@@ -116,7 +116,7 @@ public class OleButton extends JButton {
     }
 
     public OleButton setIcon() {
-        setPreferredSize(new Dimension(24,24));
+//        setPreferredSize(new Dimension(24,24));
         setType("icon");
         return this;
     }
@@ -170,8 +170,14 @@ public class OleButton extends JButton {
         } else if (type.equals("icon")) {
             if (parent instanceof OleApplication) {
                 OleApplication oapp = (OleApplication) parent;
-                this.setIcon(oapp.getIconSet().getRegularIcon(texto, this.getSize().width, this.getSize().height));
-                this.setText("");
+                if (getStyle().equals("extraflat")) {
+                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, this.getSize().width, this.getSize().height));
+                    this.setText("");
+                } else { //if (getStyle().equals("flat")) {
+                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24, 24));
+                    this.setText(command);
+                }
+
             }
         }
     }
