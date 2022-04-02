@@ -52,7 +52,7 @@ public class OleDashBoard extends OleDrawPane {
     OleRoundPB osGround;
     OleRotatory orCompass1, osHud;
     OleDiode odLed[] = new OleDiode[10];
-    OleLinear olTime, olSteps, olGPS;
+    OleLinear olTime, olSteps, olGPS,olBurnt;
     OleBag olPayload, olCommand;
     OleMap osMap, osMap2;
     OleLabels topLabels;
@@ -205,7 +205,7 @@ public class OleDashBoard extends OleDrawPane {
         olTime.setBackground(Color.DARK_GRAY);
         olTime.setnColumns(1);
         olTime.getAllReadings()[0][0] = 123;
-        olTime.setBounds(8 * ww, 4 * hh + hLabels, 2 * ww2, 3 * hh);
+        olTime.setBounds(8 * ww, 4 * hh + hLabels, 2 * ww2, 2 * hh);
         olTime.showFrame(true);
         olTime.validate();
 
@@ -214,9 +214,18 @@ public class OleDashBoard extends OleDrawPane {
         olSteps.setBackground(Color.DARK_GRAY);
         olSteps.setnColumns(1);
         olSteps.getAllReadings()[0][0] = 123;
-        olSteps.setBounds(8 * ww, 7 * hh + hLabels, 2 * ww2, 3 * hh);
+        olSteps.setBounds(8 * ww, 6 * hh + hLabels, 2 * ww2, 2 * hh);
         olSteps.showFrame(true);
         olSteps.validate();
+
+        olBurnt = new OleLinear(this, "BURNT");
+        olBurnt.setForeground(this.cLabels);
+        olBurnt.setBackground(Color.DARK_GRAY);
+        olBurnt.setnColumns(1);
+        olBurnt.getAllReadings()[0][0] = 123;
+        olBurnt.setBounds(8 * ww, 8 * hh + hLabels, 2 * ww2, 2 * hh);
+        olBurnt.showFrame(true);
+        olBurnt.validate();
 
         xx = 8 * ww;
         yy = 10 * hh + hLabels;
@@ -245,26 +254,26 @@ public class OleDashBoard extends OleDrawPane {
         odLed[2].validate();
         yy += hh;
 
-        odLed[3] = new OleDiode(this, "SND");
-        odLed[3].setBounds(xx, yy, 2 * ww2, hh);
-        odLed[3].setForeground(OleApplication.DodgerBlue);
-        odLed[3].setBackground(Color.DARK_GRAY);
-        odLed[3].showFrame(true);
-        odLed[3].validate();
-        yy += hh;
-
-        odLed[4] = new OleDiode(this, "RCV");
-        odLed[4].setBounds(xx, yy, 2 * ww2, hh);
-        odLed[4].setForeground(OleApplication.Maroon);
-        odLed[4].setBackground(Color.BLACK);
-        odLed[4].showFrame(true);
-        odLed[4].validate();
-        yy += hh;
+//        odLed[3] = new OleDiode(this, "SND");
+//        odLed[3].setBounds(xx, yy, 2 * ww2, hh);
+//        odLed[3].setForeground(OleApplication.DodgerBlue);
+//        odLed[3].setBackground(Color.DARK_GRAY);
+//        odLed[3].showFrame(true);
+//        odLed[3].validate();
+//        yy += hh;
+//
+//        odLed[4] = new OleDiode(this, "RCV");
+//        odLed[4].setBounds(xx, yy, 2 * ww2, hh);
+//        odLed[4].setForeground(OleApplication.Maroon);
+//        odLed[4].setBackground(Color.BLACK);
+//        odLed[4].showFrame(true);
+//        odLed[4].validate();
+//        yy += hh;
 
         olPayload = new OleBag(this, "PAYLOAD");
         olPayload.setForeground(Color.YELLOW);
         olPayload.setBackground(Color.DARK_GRAY);
-        olPayload.setBounds(xx, yy, 2 * ww2, 9 * hh);
+        olPayload.setBounds(xx, yy, 2 * ww2, 11 * hh);
         olPayload.showFrame(true);
         olPayload.validate();
         xx += 2 * ww2;
@@ -287,12 +296,13 @@ public class OleDashBoard extends OleDrawPane {
         this.addSensor(odLed[0]);
         this.addSensor(odLed[1]);
         this.addSensor(odLed[2]);
-        this.addSensor(odLed[3]);
-        this.addSensor(odLed[4]);
+//        this.addSensor(odLed[3]);
+//        this.addSensor(odLed[4]);
         this.addSensor(osMap);
         this.addSensor(olGPS);
         this.addSensor(olTime);
         this.addSensor(olSteps);
+        this.addSensor(olBurnt);
         this.addSensor(olPayload);
         this.addSensor(olCommand);
         this.addSensor(topLabels);
@@ -554,7 +564,7 @@ public class OleDashBoard extends OleDrawPane {
         System.out.println("Preprocess");
 
         if (content.contains("filedata")) {
-                System.out.println("filedata");
+            System.out.println("filedata");
             Ole ocontent = new Ole().set(content);
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
@@ -563,17 +573,18 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("MAP").validate();
             this.mySensorsVisual.get("AUX").setMap(decoder.getWorldMap());
             this.mySensorsVisual.get("AUX").validate();
+            ((OleMap) this.mySensorsVisual.get("MAP")).clearTrail();            
             this.repaint();
             tstart = new TimeHandler();
             res = true;
         }
         if (content.contains("perceptions")) {
-                System.out.println("perceptions");
+            System.out.println("perceptions");
             this.feedPerception(content);
             res = false;
         }
         if (content.contains("goals")) {
-                System.out.println("goals");
+            System.out.println("goals");
             this.feedGoals(content);
             res = false;
         }
@@ -619,9 +630,14 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("Energy").setHidden(this.mySensorsVisual.get("AUX").isMap);
             this.mySensorsVisual.get("ALV").setCurrentValue(decoder.getAlive());
             this.mySensorsVisual.get("TAR").setCurrentValue(decoder.getOnTarget());
-            this.mySensorsVisual.get("STEPS").getAllReadings()[0][0] =decoder.getNSteps();
-            this.mySensorsVisual.get("TIME").getAllReadings()[0][0] =tstart.elapsedTimeSecs(new TimeHandler());
+            this.mySensorsVisual.get("PAY").setCurrentValue(decoder.getCargo().length > 0);
+            this.mySensorsVisual.get("BURNT").getAllReadings()[0][0] = decoder.getEnergyBurnt();
+            this.mySensorsVisual.get("STEPS").getAllReadings()[0][0] = decoder.getNSteps();
+            this.mySensorsVisual.get("TIME").getAllReadings()[0][0] = tstart.elapsedTimeSecs(new TimeHandler());
             this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + decoder.getLastTrace());
+            if (mySensorsVisual.get("PAYLOAD").getBag().size() < decoder.getCargo().length) {
+                this.mySensorsVisual.get("PAYLOAD").addToBag(String.format("%03d  %s", decoder.getCargo().length, decoder.getCargo()[decoder.getCargo().length-1]));
+            }
             this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
             this.mySensorsVisual.get("MAP").getAllReadings()[0][1] = decoder.getAngular();
             this.mySensorsVisual.get("MAP").getAllReadings()[0][2] = decoder.getDistance();
@@ -634,12 +650,11 @@ public class OleDashBoard extends OleDrawPane {
 
             SimpleVector3D me = new SimpleVector3D((int) decoder.getGPS()[0],
                     (int) decoder.getGPS()[1], (int) (decoder.getCompass()) / 45);
-            
-            System.out.println("Compass: " + decoder.getCompass());
-            System.out.println("Orientation: " + decoder.getCompass() / 45);
-            System.out.println("Angular: " + decoder.getAngular());
-            System.out.println("XY: " + decoder.getGPS()[0]+", "+decoder.getGPS()[1]);
 
+//            System.out.println("Compass: " + decoder.getCompass());
+//            System.out.println("Orientation: " + decoder.getCompass() / 45);
+//            System.out.println("Angular: " + decoder.getAngular());
+//            System.out.println("XY: " + decoder.getGPS()[0]+", "+decoder.getGPS()[1]);
             PolarSurface ps = new PolarSurface(me);
             ps.setRadius(15);
             Map2DColor sensor = ps.applyPolarTo(decoder.getWorldMap());
@@ -653,7 +668,8 @@ public class OleDashBoard extends OleDrawPane {
             System.exit(1);
         }
     }
-   public void feedGoals(String goals) {
+
+    public void feedGoals(String goals) {
         try {
             JsonObject jso = Json.parse(goals).asObject();
             mySensorsVisual.get("MAP").setJsaGoals(jso.get("goals").asArray());
@@ -661,5 +677,5 @@ public class OleDashBoard extends OleDrawPane {
         } catch (Exception ex) {
 
         }
-    }    
+    }
 }

@@ -275,10 +275,11 @@ public class LARVABoot {
         pScroll = new JScrollPane(_XUI);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab("XUI", pScroll);
+        tabbedPane.setSelectedIndex(3);
         shareableGUI.put("XUI", _XUI);
         appMain.getMainPanel().add(tabbedPane, BorderLayout.CENTER);
         appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
-                app.getOptions().getOle("FrameSize").getInt("height", 480)));
+                app.getOptions().getOle("FrameSize").getInt("height", 480)));        
         showStatus();
         if (new File(_configFileName).exists()) {
             oleConfig = new OleConfig();

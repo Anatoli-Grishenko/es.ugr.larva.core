@@ -252,13 +252,13 @@ public class OleMap extends OleSensor implements ActionListener {
                 double xVP, yVP;
                 Color c;
                 for (String name : Trails.keySet()) {
-                    for (int i = 1; i < Trails.get(name).size(); i++) {                        
+                    for (int i = 1; i < Trails.get(name).size(); i++) {
                         ptrail = Trails.get(name).get(i);
                         c = map.getColor(ptrail);
 //                        c = new Color(c.getRed(),255,c.getBlue());
 //                        g.setColor(new Color(0, (Trails.get(name).size() - i) *c.getRed()/ Trails.get(name).size(), 0));
                         g.setColor(Color.GREEN);
-                        g.fillArc(viewX(ptrail.getTarget().getX()), viewY(ptrail.getTarget().getY()), 5,5, 0, 360);
+                        g.fillArc(viewX(ptrail.getTarget().getX()), viewY(ptrail.getTarget().getY()), 5, 5, 0, 360);
                     }
                     g.setColor(Color.GREEN);
                     ptrail = Trails.get(name).get(0);
@@ -349,10 +349,11 @@ public class OleMap extends OleSensor implements ActionListener {
             tf.draw();
 
             g.setColor(Color.MAGENTA);
-            g.setStroke(new BasicStroke(3));
-            this.oDrawLine(g, pDistance, pHead);
-            g.setStroke(new BasicStroke(1));
-
+            if (this.getAllReadings()[0][2] != Perceptor.NULLREAD) {
+                g.setStroke(new BasicStroke(3));
+                this.oDrawLine(g, pDistance, pHead);
+                g.setStroke(new BasicStroke(1));
+            }
             g.setColor(Color.CYAN);
             g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
             this.oDrawLine(g, pVariableDown, pHead);
@@ -376,7 +377,7 @@ public class OleMap extends OleSensor implements ActionListener {
             tf.draw();
 
             g.setColor(Color.MAGENTA);
-            if (getCurrentValue() == Perceptor.NULLREAD) {
+            if (this.getAllReadings()[0][2] == Perceptor.NULLREAD) {
                 sRead = "---";
             } else {
                 sRead = String.format(" %03dm ", (int) (this.getAllReadings()[0][2]));
@@ -420,6 +421,9 @@ public class OleMap extends OleSensor implements ActionListener {
         return this;
     }
 
+    public void clearTrail() {
+        Trails.clear();
+    }
     public void addTrail(String name, SimpleVector3D p) {
         if (Trails.get(name) == null) {
             Trails.put(name, new ArrayList());
@@ -531,15 +535,15 @@ public class OleMap extends OleSensor implements ActionListener {
         tf.setX(xl).setY(yl).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
         if (sv.canonical().getTarget().getZ() > 0) {
-            climb = "+";
+            climb = emojis.UPRIGHTARROW;//"+";
         } else if (sv.canonical().getTarget().getZ() < 0) {
-            climb = "-";
+            climb = emojis.DOWNRIGHTARROW; //"-";
         } else {
-            climb = " ";
+            climb = emojis.RIGHTARROW; //" ";
         }
-        s = String.format("%03d%s %2s", (int) sv.getTarget().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
+        s = String.format("%03d%s%s", (int) sv.getTarget().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
         tf = new TextFactory(g);
-        tf.setX(xl).setY(yl + 14).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
+        tf.setX(xl).setY(yl + 14).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
         g.setStroke(new BasicStroke(2));
         g.drawLine(viewX(sv.getTarget().getX()), viewY(sv.getTarget().getY()), xl, yl);
