@@ -52,7 +52,7 @@ public class OleDashBoard extends OleDrawPane {
     OleRoundPB osGround;
     OleRotatory orCompass1, osHud;
     OleDiode odLed[] = new OleDiode[10];
-    OleLinear olTime, olSteps, olGPS,olBurnt;
+    OleLinear olTime, olSteps, olGPS, olBurnt;
     OleBag olPayload, olCommand;
     OleMap osMap, osMap2;
     OleLabels topLabels;
@@ -61,6 +61,7 @@ public class OleDashBoard extends OleDrawPane {
     int iTrace, lastx, lasty;
     double arrayReading[], gps[];
     int iVisual[][], iLidar[][], iThermal[][];
+    String lastPerception = "";
     TimeHandler tstart;
 
     public OleDashBoard(Component parent, String nameagent) {
@@ -82,6 +83,23 @@ public class OleDashBoard extends OleDrawPane {
         for (String s : layoutSensors) {
             mySensorsVisual.get(s).viewSensor(g);
         }
+//        if (decoder.getVisualData().length > 0) {
+//            Map2DColor m;
+//            int zoom = 4;
+//            g.setColor(Color.WHITE);
+//            m = decoder.getFullZenitalVisual();
+//            g.drawImage(m.getMap(), 0, 700, m.getWidth() * 3, m.getHeight() * 3, null);
+//            g.drawRect(0, 700, m.getWidth() * 3, m.getHeight() * 3);
+//            m = decoder.getRelativeVisual();
+//            g.drawImage(m.getMap(), 200, 700, m.getWidth() * 4, m.getHeight() * 4, null);
+//            g.drawRect(200, 700, m.getWidth() * 4, m.getHeight() * 4);
+//            m = decoder.getRelativeVisual();
+//            g.drawImage(m.getMap(), 400, 700, m.getWidth() * 4, m.getHeight() * 4, null);
+//            g.drawRect(400, 700, m.getWidth() * 4, m.getHeight() * 4);
+//            m = decoder.getPolarVisual();
+//            g.drawImage(m.getMap(), 600, 700, m.getWidth() * 4, m.getHeight() * 4, null);
+//            g.drawRect(600, 700, m.getWidth() * 4, m.getHeight() * 4);
+//        }
 //        System.out.println("Repaint");
     }
 
@@ -146,7 +164,6 @@ public class OleDashBoard extends OleDrawPane {
         osAltitude.setPalette(pal);
         osAltitude.showScale(true);
         osAltitude.showScaleNumbers(true);
-        osAltitude.setAlertLimitAbove(240);
 //        osAltitude.showFrame(true);
         osAltitude.validate();
 
@@ -269,7 +286,6 @@ public class OleDashBoard extends OleDrawPane {
 //        odLed[4].showFrame(true);
 //        odLed[4].validate();
 //        yy += hh;
-
         olPayload = new OleBag(this, "PAYLOAD");
         olPayload.setForeground(Color.YELLOW);
         olPayload.setBackground(Color.DARK_GRAY);
@@ -561,7 +577,7 @@ public class OleDashBoard extends OleDrawPane {
 
     public boolean preProcessACLM(String content) {
         boolean res = false;
-        System.out.println("Preprocess");
+        System.out.println("DashBoard Preprocess");
 
         if (content.contains("filedata")) {
             System.out.println("filedata");
@@ -573,28 +589,29 @@ public class OleDashBoard extends OleDrawPane {
             this.mySensorsVisual.get("MAP").validate();
             this.mySensorsVisual.get("AUX").setMap(decoder.getWorldMap());
             this.mySensorsVisual.get("AUX").validate();
-            ((OleMap) this.mySensorsVisual.get("MAP")).clearTrail();            
-            this.repaint();
+            ((OleMap) this.mySensorsVisual.get("MAP")).clearTrail();
             tstart = new TimeHandler();
             res = true;
-        }
-        if (content.contains("perceptions")) {
-            System.out.println("perceptions");
+        } else if (content.contains("perceptions")) {
+            System.out.println("DashBoard perceptions");
             this.feedPerception(content);
             res = false;
-        }
-        if (content.contains("goals")) {
-            System.out.println("goals");
+        } else if (content.contains("goals")) {
+            System.out.println("DashBoard goals");
             this.feedGoals(content);
             res = false;
         }
+        this.repaint();
+
         return res;
     }
 
     public void feedPerception(String perception) {
         String stepbystep = "";
+
         try {
             decoder.feedPerception(perception);
+//            System.out.println(decoder.printStatus(" Dashboard of " + decoder.getName()));
             if (decoder.getAlive()) {
                 cLabels = SwingTools.doDarker(Color.WHITE);
             } else {
@@ -619,33 +636,45 @@ public class OleDashBoard extends OleDrawPane {
                     topLabels.addLabel("SSID", decoder.getSessionID());
                 }
             }
-            this.mySensorsVisual.get("GPS").setCurrentValue(decoder.getGPS());
-            this.mySensorsVisual.get("Compass").setCurrentValue(decoder.getCompass());
-            this.mySensorsVisual.get("Compass").setHidden(this.mySensorsVisual.get("AUX").isMap);
-            this.mySensorsVisual.get("Ground").setCurrentValue(decoder.getGround());
-            this.mySensorsVisual.get("Ground").setHidden(this.mySensorsVisual.get("AUX").isMap);
-            this.mySensorsVisual.get("Altitude").setCurrentValue(decoder.getGPS()[2]);
-            this.mySensorsVisual.get("Altitude").setHidden(this.mySensorsVisual.get("AUX").isMap);
-            this.mySensorsVisual.get("Energy").setCurrentValue(decoder.getEnergy());
-            this.mySensorsVisual.get("Energy").setHidden(this.mySensorsVisual.get("AUX").isMap);
-            this.mySensorsVisual.get("ALV").setCurrentValue(decoder.getAlive());
-            this.mySensorsVisual.get("TAR").setCurrentValue(decoder.getOnTarget());
-            this.mySensorsVisual.get("PAY").setCurrentValue(decoder.getCargo().length > 0);
-            this.mySensorsVisual.get("BURNT").getAllReadings()[0][0] = decoder.getEnergyBurnt();
-            this.mySensorsVisual.get("STEPS").getAllReadings()[0][0] = decoder.getNSteps();
-            this.mySensorsVisual.get("TIME").getAllReadings()[0][0] = tstart.elapsedTimeSecs(new TimeHandler());
-            this.mySensorsVisual.get("COMMAND").addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + decoder.getLastTrace());
-            if (mySensorsVisual.get("PAYLOAD").getBag().size() < decoder.getCargo().length) {
-                this.mySensorsVisual.get("PAYLOAD").addToBag(String.format("%03d  %s", decoder.getCargo().length, decoder.getCargo()[decoder.getCargo().length-1]));
-            }
-            this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
-            this.mySensorsVisual.get("MAP").getAllReadings()[0][1] = decoder.getAngular();
-            this.mySensorsVisual.get("MAP").getAllReadings()[0][2] = decoder.getDistance();
-            ((OleMap) this.mySensorsVisual.get("MAP")).addTrail(decoder.getName(), decoder.getGPSVector());
+            osAltitude.setAlertLimitAbove(decoder.getMaxlevel());
+            olGPS.setCurrentValue(decoder.getGPS());
+            orCompass1.setCurrentValue(decoder.getCompass());
+            orCompass1.setHidden(this.mySensorsVisual.get("AUX").isMap);
+            osGround.setCurrentValue(decoder.getGround());
+            osGround.setHidden(this.mySensorsVisual.get("AUX").isMap);
+            osAltitude.setCurrentValue(decoder.getGPS()[2]);
+            osAltitude.setHidden(this.mySensorsVisual.get("AUX").isMap);
+            osBattery.setCurrentValue(decoder.getEnergy());
+            osBattery.setHidden(this.mySensorsVisual.get("AUX").isMap);
+            odLed[0].setCurrentValue(decoder.getAlive());
+            odLed[1].setCurrentValue(decoder.getOnTarget());
+            odLed[2].setCurrentValue(decoder.getCargo().length > 0);
+            olBurnt.setCurrentValue(decoder.getEnergyBurnt());
+            olSteps.setCurrentValue(decoder.getNSteps());
+            olTime.setCurrentValue(tstart.elapsedTimeSecs(new TimeHandler()));
 
-            this.mySensorsVisual.get("AUX").setCurrentValue(decoder.getCompass());
-            this.mySensorsVisual.get("AUX").getAllReadings()[0][1] = decoder.getAngular();
-            this.mySensorsVisual.get("AUX").getAllReadings()[0][2] = decoder.getDistance();
+            String newBag[] = decoder.getTrace();
+            if (newBag.length > olCommand.getBagSize()) {
+                for (int i = olCommand.getBagSize(); i < newBag.length; i++) {
+                    olCommand.addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + newBag[i]);
+                }
+            }        
+            osAltitude.setAlertLimitAbove(decoder.getMaxlevel()-10);
+
+            String newCargo[] = decoder.getCargo();
+            if (newCargo.length > olPayload.getBag().size()) {
+                for (int i = olPayload.getBagSize(); i < newCargo.length; i++) {
+                    olPayload.addToBag(String.format("%03d ", this.mySensorsVisual.get("PAYLOAD").getBagSize()) + newCargo[i]);
+                }
+            }
+//            this.mySensorsVisual.get("MAP").setCurrentValue(decoder.getCompass());
+//            this.mySensorsVisual.get("MAP").getAllReadings()[0][1] = decoder.getAngular();
+//            this.mySensorsVisual.get("MAP").getAllReadings()[0][2] = decoder.getDistance();
+            osMap.addTrail(decoder.getName(), decoder.getGPSVector());
+
+//            this.mySensorsVisual.get("AUX").setCurrentValue(decoder.getCompass());
+//            this.mySensorsVisual.get("AUX").getAllReadings()[0][1] = decoder.getAngular();
+//            this.mySensorsVisual.get("AUX").getAllReadings()[0][2] = decoder.getDistance();
 //            ((OleMap) this.mySensorsVisual.get("AUX")).addTrail(decoder.getName(), new Point3D(decoder.getGPS()[0], decoder.getGPS()[1]));
 
             SimpleVector3D me = new SimpleVector3D((int) decoder.getGPS()[0],
@@ -658,10 +687,8 @@ public class OleDashBoard extends OleDrawPane {
             PolarSurface ps = new PolarSurface(me);
             ps.setRadius(15);
             Map2DColor sensor = ps.applyPolarTo(decoder.getWorldMap());
-            mySensorsVisual.get("MAP").setImage1(sensor);
-            mySensorsVisual.get("AUX").setImage1(sensor);
             addStatus(decoder.getStatus());
-            this.repaint();
+            lastPerception = perception;
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
             ex.printStackTrace(System.out);

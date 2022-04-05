@@ -148,11 +148,11 @@ public class Map2DColor {
     }
 
     protected Map2DColor normalize() {
-        for (int y = 0; y < getHeight(); y++) {
-            for (int x = 0; x < getWidth(); x++) {
-                _map.setRGB(x, y, this.applyAlphaLevel(getColor(x, y)).getRGB());
-            }
-        }
+//        for (int y = 0; y < getHeight(); y++) {
+//            for (int x = 0; x < getWidth(); x++) {
+//                _map.setRGB(x, y, this.applyAlphaLevel(getColor(x, y)).getRGB());
+//            }
+//        }
         return this;
     }
 

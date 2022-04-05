@@ -20,6 +20,8 @@ import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 import data.Ole;
 import data.OleConfig;
+import geometry.PolarSurface;
+import geometry.SimpleVector3D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -388,13 +390,14 @@ public class World {
         ArrayList<Thing> detectable = getDetectableList(p);
         Point3D point;
         Point3D pini, pend;
-        Vector3D vectororientation;
+        SimpleVector3D vectororientation;
         point = who.getPosition();
-
         vectororientation = who.getVector();
         int range = p.getRange(), orientation = who.getOrientation();
         Point3D prange;
         Point3D observable;
+        PolarSurface ps = new PolarSurface(vectororientation);
+        ps.setRadius(range/2+1);
         double x1, y1, x2, y2, incrx;
         if (range == 1) { // single rangle
             x1 = point.getX();
@@ -475,7 +478,7 @@ public class World {
                                     partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector3D(observable, t.getPosition())));
                                 }
                             }
-                            if (property == PROPERTY.ORIENTATION) {
+                            if (property == PROPERTY.ORIENTATION) {                                
                                 partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(who.getVector()));
                             }
 

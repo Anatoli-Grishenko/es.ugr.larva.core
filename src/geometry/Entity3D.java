@@ -20,27 +20,34 @@ import java.util.Comparator;
 public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 
     protected String _name, _key;
-    protected Point3D _position, _size,_center;
-    protected int _sorientation; 
+    protected SimpleVector3D _vector;
+    protected Point3D _size,_center;
+//    protected int _sorientation; 
     protected Color _color;
 
 
     public Entity3D(String name) {
         _name = name;
         _key = getAlphaNumKey(16);
-        _sorientation = direction.EAST.ordinal();
+//        _sorientation = direction.EAST.ordinal();
        setPosition(new Point3D(0,0,0));
        setSize(new Point3D(1,1,0));
     }
 
      public Entity3D(Point3D position, Color color) {
-        _position = position;
+         setPosition(position);
+         _color = color;
+        _name = getHexaKey();
+    }
+    
+     public Entity3D(SimpleVector3D vposition, Color color) {
+        _vector = vposition;
         _color = color;
         _name = getHexaKey();
     }
     
     public Entity3D() {
-        _position = new Point3D(0,0,0);
+        _vector = new SimpleVector3D(new Point3D(0,0,0), SimpleVector3D.N);
         _color = Color.WHITE;
         _name = getHexaKey();
     } 
@@ -63,8 +70,14 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public final Entity3D setPosition(Point3D p) {
-        _position = p.clone();
-        _center = _position.clone();
+        _vector = new SimpleVector3D(p,SimpleVector3D.N);
+        _center = _vector.getSource().clone();
+        return this;
+    }
+
+    public final Entity3D setPosition(SimpleVector3D p) {
+        _vector = p.clone();
+        _center = _vector.getSource().clone();
         return this;
     }
 
@@ -78,7 +91,11 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
     
    public Point3D getPosition() {
-        return _position;
+        return _vector.getSource();
+    }
+
+   public SimpleVector3D getVector() {
+        return _vector;
     }
 
     public final Entity3D setSize(Point3D p) {
@@ -96,7 +113,7 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public int getDimension() {
-        return _position.getDimension();
+        return _vector.getSource().getDimension();
     }
 
 
@@ -106,26 +123,26 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public Entity3D setOrientation(int orientation) {
-        _sorientation = orientation % 8;
+        this._vector.setsOrient(orientation);
         return this;
     }
     
 
     public int getOrientation() {
-        return _sorientation;
+        return _vector.getsOrient();
     }
     
-    public Vector3D getVector(){
-        return new Vector3D(getPosition(),getPosition().clone().plus(Compass.SHIFT[_sorientation]));
-    }
+//    public Vector3D getVector(){
+//        return new Vector3D(getPosition(),getPosition().clone().plus(Compass.SHIFT[_sorientation]));
+//    }
     
     public Entity3D move(Vector3D shift) {
-        getPosition().plus(shift.canonical().getTarget());
+        getVector().plus(shift.canonical().getTarget());
         return this;
     }
 
     public Entity3D moveForward(int units) {
-        return move(Compass.SHIFT[getOrientation()].clone().scalar(units));
+        return move(this.getVector().canonical().clone().scalar(units));
     }
     
     public Entity3D moveUp(int units) {
@@ -146,11 +163,11 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public static int rotateLeft(int sdirection) {
-        return (sdirection + 7) % 8;
+        return (sdirection + 1) % 8;
     }
 
     public static int rotateRight(int sdirection) {
-        return (sdirection + 1) % 8;
+        return (sdirection + 7) % 8;
     }
 
     public static int Opposite(int sdirection) {

@@ -173,11 +173,12 @@ public class OleButton extends JButton {
                 if (getStyle().equals("extraflat")) {
                     this.setIcon(oapp.getIconSet().getRegularIcon(texto, this.getSize().width, this.getSize().height));
                     this.setText("");
-                } else { //if (getStyle().equals("flat")) {
-                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24, 24));
+                }
+                if (getStyle().equals("flat")) {
+                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24,24));
                     this.setText(command);
                 }
-
+                
             }
         }
     }

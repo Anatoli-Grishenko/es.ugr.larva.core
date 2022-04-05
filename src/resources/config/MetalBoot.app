@@ -13,7 +13,7 @@
     },
     "properties": {
         "ToolBar":{
-            "style":"regular",
+            "style":"flat",
             "type":"icon"
         },
         "Header":{

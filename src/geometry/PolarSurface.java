@@ -6,8 +6,10 @@
 package geometry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import map2D.Map2DColor;
+import world.Perceptor;
 
 /**
  *
@@ -67,7 +69,7 @@ public class PolarSurface {
         }
     }
 
-    public Map2DColor applyTo(Map2DColor m) {
+    public Map2DColor applyRelativeTo(Map2DColor m) {
         SimpleVector3D sv;
         Map2DColor res = new Map2DColor(this.getNLevels(), this.getNLevels());
         for (int level = 1; level <= this.getNLevels(); level++) {
@@ -81,13 +83,13 @@ public class PolarSurface {
         return res;
     }
 
-    public Map2DColor applyNormalTo(Map2DColor m) {
+    public Map2DColor applyAbsoluteTo(Map2DColor m) {
         SimpleVector3D svRes, svFrom;
         ArrayList<SimpleVector3D> thisLevel;
-        Map2DColor res = new Map2DColor(2*this.getNLevels()-1, this.getNLevels());
-        for (int level =0; level <this.getNLevels(); level++) {
-            thisLevel = pSurface.get(level+1);
-            svRes = new SimpleVector3D(getNLevels()-level-1, getNLevels()-1, SimpleVector3D.N);
+        Map2DColor res = new Map2DColor(2 * this.getNLevels() - 1, this.getNLevels());
+        for (int level = 0; level < this.getNLevels(); level++) {
+            thisLevel = pSurface.get(level + 1);
+            svRes = new SimpleVector3D(getNLevels() - level - 1, getNLevels() - 1, SimpleVector3D.N);
 //            svFrom = thisLevel.get(0);
 //            res.setColor(svRes, m.getColor(svFrom));
 //            System.out.println("Level: "+(level+1)+"  "+thisLevel.size()+" points");
@@ -95,9 +97,9 @@ public class PolarSurface {
                 svFrom = thisLevel.get(x);
 //                System.out.println(svFrom.getSource()+"->"+svRes.getSource()+"...");
                 res.setColor(svRes, m.getColor(svFrom));
-                if (x  < level) {
+                if (x < level) {
                     svRes = svRes.myFront();
-                } else if (x  < thisLevel.size() - level-1) {
+                } else if (x < thisLevel.size() - level - 1) {
                     svRes = svRes.myRight();
                 } else {
                     svRes = svRes.myRear();
@@ -111,9 +113,9 @@ public class PolarSurface {
     public Map2DColor applyPolarTo(Map2DColor m) {
         SimpleVector3D svRes, svFrom;
         ArrayList<SimpleVector3D> thisLevel;
-        Map2DColor res = new Map2DColor((this.getNLevels()-1) * 4 + 1, this.getNLevels());
+        Map2DColor res = new Map2DColor((this.getNLevels() - 1) * 4 + 1, this.getNLevels());
         for (int level = 0; level < this.getNLevels(); level++) {
-            thisLevel = pSurface.get(level+1);
+            thisLevel = pSurface.get(level + 1);
             for (int x = 0; x < thisLevel.size(); x++) {
                 svFrom = thisLevel.get(x);
                 res.setLevel(x, level, m.getRawLevel(svFrom));
@@ -121,4 +123,69 @@ public class PolarSurface {
         }
         return res;
     }
+
+    public int[][] applyPolarTo(int m[][]) {
+        SimpleVector3D svRes, svFrom;
+        ArrayList<SimpleVector3D> thisLevel;
+        int res[][] = new int[(this.getNLevels() - 1) * 4 + 1][this.getNLevels()];
+        for (int[] row : res) {
+            Arrays.fill(row, Perceptor.NULLREAD);
+        }
+        for (int level = 0; level < this.getNLevels(); level++) {
+            thisLevel = pSurface.get(level + 1);
+            for (int x = 0; x < thisLevel.size(); x++) {
+                svFrom = thisLevel.get(x);
+                res[x][level] = m[svFrom.getSource().getXInt()][svFrom.getSource().getYInt()];
+            }
+        }
+        return res;
+    }
+
+    public int[][] applyAbsoluteTo(int m[][]) {
+        SimpleVector3D sv;
+        int res[][] = new int[2 * this.getNLevels() - 1][2 * this.getNLevels() - 1];
+        for (int[] row : res) {
+            Arrays.fill(row, Perceptor.NULLREAD);
+        }
+        for (int level = 0; level < this.getNLevels(); level++) {
+            for (int x = 0; x < this.getLevel(level + 1).size(); x++) {
+                sv = this.getLevel(level + 1).get(x);
+                res[sv.getSource().getXInt()][sv.getSource().getYInt()]
+                        = m[sv.getSource().getXInt()][sv.getSource().getYInt()];
+            }
+        }
+        return res;
+    }
+
+    public int[][] applyRelativeTo(int m[][]) {
+        SimpleVector3D svRes, svFrom;
+        ArrayList<SimpleVector3D> thisLevel;
+        int res[][] = new int[2 * this.getNLevels() - 1][this.getNLevels()];
+        for (int[] row : res) {
+            Arrays.fill(row, Perceptor.NULLREAD);
+        }
+        for (int level = 0; level < this.getNLevels(); level++) {
+            thisLevel = pSurface.get(level + 1);
+            svRes = new SimpleVector3D(getNLevels() - level - 1, getNLevels() - 1, SimpleVector3D.N);
+//            svFrom = thisLevel.get(0);
+//            res.setColor(svRes, m.getColor(svFrom));
+//            System.out.println("Level: "+(level+1)+"  "+thisLevel.size()+" points");
+            for (int x = 0; x < thisLevel.size(); x++) {
+                svFrom = thisLevel.get(x);
+//                System.out.println(svFrom.getSource()+"->"+svRes.getSource()+"...");
+                res[svRes.getSource().getXInt()][svRes.getSource().getYInt()]
+                        = m[svFrom.getSource().getXInt()][svFrom.getSource().getYInt()];
+                if (x < level) {
+                    svRes = svRes.myFront();
+                } else if (x < thisLevel.size() - level - 1) {
+                    svRes = svRes.myRight();
+                } else {
+                    svRes = svRes.myRear();
+                }
+            }
+//            System.out.println();
+        }
+        return res;
+    }
+
 }

@@ -8,8 +8,8 @@ package glossary;
 /**
  * Support for naming and using all possible directions in a 3D Space.<p>
  */
-public enum direction {NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,
-            SOUTHWEST, WEST, NORTHWEST, UP, DOWN, FORWARD,BACKWARD,LEFT,RIGTH};    
+public enum direction {NORTH,NORTWEST,WEST,SOUTHWEST,SOUTH,
+            SOUTHEAST, EAST, NORTHEAST, UP, DOWN, FORWARD,BACKWARD,LEFT,RIGTH};    
 //public enum direction {NORTH,NORTHEAST,EAST,SOUTHEAST,SOUTH,
 //            SOUTHWEST, WEST, NORTHWEST, UP, DOWN, FORWARD,BACKWARD,LEFT,RIGTH};    
 

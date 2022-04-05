@@ -11,6 +11,7 @@ import world.World;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import geometry.SimpleVector3D;
 import glossary.Roles;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -82,8 +83,8 @@ public class liveBot extends Thing {
     }
 
     public void fromJson(JsonObject update) {
-        _position = new Point3D(update.getInt("x", -1),
-                update.getInt("y", -1), update.getInt("z", -1));
+        _vector = new SimpleVector3D(new Point3D(update.getInt("x", -1),
+                update.getInt("y", -1), update.getInt("z", -1)), SimpleVector3D.N);
         energylevel = update.getInt("energy", -1);
         altitude = update.getInt("altitude", -1);
         angle = update.getDouble("angle", 0);
@@ -152,7 +153,7 @@ public class liveBot extends Thing {
 
     @Override
     public Point3D getPosition() {
-        return this._position;
+        return this._vector.getSource();
     }
 
     public int getEnergyBurnt() {

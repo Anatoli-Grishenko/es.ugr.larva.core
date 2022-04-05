@@ -290,12 +290,12 @@ public class Logger {
 
     public static String trimString(String original, int max) {
         String s = original + "";
-//        if (s.length() > max) {
-//            return s.substring(0, Math.min(max, s.length())) + "...";
-//        } else {
-//            return s;
-//        }
-    return s;
+        if (s.length() > max) {
+            return s.substring(0, Math.min(max, s.length())) + "...";
+        } else {
+            return s;
+        }
+//    return s;
     }
 
     public String getLastlog() {

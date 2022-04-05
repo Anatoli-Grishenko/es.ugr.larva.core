@@ -412,6 +412,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         do {
             repeat = false;
             res = blockingReceive();
+            Info("Pre-receiving");
             if (res != null && res.getContent().contains("filedata")) {
                 Info("Updating decoder world");
                 Ole ocontent = new Ole().set(res.getContent());

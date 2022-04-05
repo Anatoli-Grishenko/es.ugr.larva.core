@@ -18,23 +18,26 @@ public class SimpleVector3D extends Vector3D {
     public static final String Dir[] = new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE", ""};
     public static final int nextX[] = new int[]{0, -1, -1, -1, 0, 1, 1, 1, 0};
     public static final int nextY[] = new int[]{-1, -1, 0, 1, 1, 1, 0, -1, 0};
-    public static final int inverse[][] = new int[][]{{1, 2, 3}, {0, 8, 4}, {7,6,5}};
+    public static final int inverse[][] = new int[][]{{1, 2, 3}, {0, 8, 4}, {7, 6, 5}};
 
     protected int sOrient;
 
     public SimpleVector3D(Point3D t, int orientation) {
-        super(t, new Point3D(t.getX() + nextX[orientation % 8], t.getY() + nextY[orientation % 8], 0));
+        super(t, new Point3D(t.getX() + nextX[orientation % 8], t.getY() + nextY[orientation % 8], t.getZ()));
         sOrient = orientation % 8;
     }
 
     public SimpleVector3D(int x, int y, int orient) {
-        super(new Point3D(x, y, 0), new Point3D(x, y, 0).plus(new Point3D(nextX[orient % 8], nextY[orient % 8], 0)));
+        super(new Point3D(x, y, 0), new Point3D(x, y, 0).plus(new Point3D(nextX[orient % 8], nextY[orient % 8],0)));
         sOrient = orient % 8;
     }
 
     public SimpleVector3D(Point3D s, Point3D t) {
         super(s, t);
-        sOrient = getInverseOrientation();
+       int aux=getInverseOrientation();
+       if (aux !=8) {           
+           sOrient=aux;
+       }
     }
 
     public int getInverseOrientation() {
@@ -63,8 +66,9 @@ public class SimpleVector3D extends Vector3D {
         return sOrient;
     }
 
-    public void setsOrient(int sOrient) {
-        this.sOrient = (sOrient + 8) % 8;
+    public void setsOrient(int orient) {
+        this.sOrient = (orient + 8) % 8;
+        setTarget(new Point3D(getSource().getX() + nextX[sOrient % 8], getSource().getY() + nextY[sOrient % 8], getSource().getZ()));
     }
 
     public SimpleVector3D myLeft() {
@@ -109,9 +113,21 @@ public class SimpleVector3D extends Vector3D {
         return myRear();
     }
 
+    public SimpleVector3D plus(Point3D p) {
+        this.getSource().plus(p);
+        this.getTarget().plus(p);
+        return this;
+    }
+
+    public SimpleVector3D minus(Point3D p) {
+        this.getSource().minus(p);
+        this.getTarget().minus(p);
+        return this;
+    }
+
     @Override
     public String toString() {
-        return getSource().toString();
+        return getSource().toString() + "--(" + this.getsOrient() + "|" +Compass.NAME[this.getsOrient()]+"|"+ this.canonical().getTarget().toString() + ")-->" + getTarget().toString();
     }
 
 }

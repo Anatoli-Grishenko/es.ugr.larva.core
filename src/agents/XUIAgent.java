@@ -96,12 +96,13 @@ public class XUIAgent extends LARVAFirstAgent {
 
     public Status myIdle() {
         inbox = this.LARVAblockingReceive();
-        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
+//        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
+        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
             this.sessionKey = inbox.getConversationId();
             myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("perceptions")) {
-            myDashBoard.preProcessACLM(inbox.getContent());
+            myDashBoard.preProcessACLM(inbox.getContent());            
         } else if (inbox.getContent().contains("goals")) {
             myDashBoard.preProcessACLM(inbox.getContent());
 //            TheMap.feedGoals(inbox.getContent());            
