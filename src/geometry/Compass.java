@@ -18,7 +18,7 @@ public class Compass {
         new Vector3D(new Point3D(1, -1)), new Vector3D(new Point3D(0, 0, 1)), new Vector3D(new Point3D(0, 0, -1))};
     public static final int[] ANGLE = {0, 45, 90, 135, 180, 225, 270, 315, 0, 0};
     public static final String NAME[] = new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE", ""};
-    public static final int NORTH = 0, NORTWEST = NORTH + 1, WEST = NORTH + 2, SOUTHWEST = NORTH + 3, SOUTH = NORTH + 4, SOUTHEAST = NORTH + 5, EAST = NORTH + 6, NORTHEAST = NORTH + 7, UP = 8, DOWN = 9;
+    public static final int NORTH = 0, NORTHWEST = NORTH + 1, WEST = NORTH + 2, SOUTHWEST = NORTH + 3, SOUTH = NORTH + 4, SOUTHEAST = NORTH + 5, EAST = NORTH + 6, NORTHEAST = NORTH + 7, UP = 8, DOWN = 9;
     public static final Vector3D[] VECTOR = new Vector3D[]{new Vector3D(new Point3D(0, -1)), new Vector3D(new Point3D(-1, -1)), new Vector3D(new Point3D(-1, 0)), new Vector3D(new Point3D(-1, 1)),
         new Vector3D(new Point3D(0, 1)), new Vector3D(new Point3D(1, 1)), new Vector3D(new Point3D(1, 0)),
         new Vector3D(new Point3D(1, -1)), new Vector3D(new Point3D(0, 0, 1)), new Vector3D(new Point3D(0, 0, -1))};

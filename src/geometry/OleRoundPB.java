@@ -11,8 +11,11 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import javax.swing.SwingConstants;
 import swing.OleApplication;
+import swing.OleDashBoard;
 import swing.OleDrawPane;
 import swing.OleSensor;
+import swing.TextFactory;
+import tools.emojis;
 import world.Perceptor;
 
 /**
@@ -113,6 +116,13 @@ public class OleRoundPB extends OleSensor {
                 this.drawCircularSegment(g, center, barRadius, getMaxVisual() - this.getShiftVisual(), getMaxVisual(), stroke, myPalette);
             }
 
+        } else {
+            g.setColor(OleDashBoard.cBad);
+            TextFactory tf = new TextFactory(g);
+            tf.setPoint(center).setsFontName(Font.MONOSPACED).setFontSize(64)
+                    .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER)
+                    .setsText(emojis.WARNING).validate();
+            tf.draw();                    
         }
         return this;
     }

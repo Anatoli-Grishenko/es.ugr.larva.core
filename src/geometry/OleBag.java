@@ -38,6 +38,13 @@ JButton tbAux;
         jtBag.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
 //        jtBag.setFont(new Font("Free Mono Regular", Font.PLAIN, 12));
     }
+    
+@Override
+    public void clear() {
+        super.clear();
+        this.bag.clear();
+        jtBag.setText("");
+    }
 
     @Override
     public void validate() {

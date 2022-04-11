@@ -11,9 +11,11 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import javax.swing.SwingConstants;
 import swing.OleApplication;
+import swing.OleDashBoard;
 import swing.OleDrawPane;
 import swing.OleSensor;
 import swing.TextFactory;
+import tools.emojis;
 import world.Perceptor;
 
 /**
@@ -24,6 +26,8 @@ public class OleLinear extends OleSensor {
 
     public OleLinear(OleDrawPane parent, String name) {
         super(parent, name);
+        this.minValue=0;
+        this.maxValue=Integer.MAX_VALUE;
     }
 
     @Override
@@ -66,33 +70,17 @@ public class OleLinear extends OleSensor {
                 }
             }
 
+        } else {
+            g.setColor(OleDashBoard.cBad);
+            TextFactory tf = new TextFactory(g);
+            tf.setPoint(center).setsFontName(Font.MONOSPACED).setFontSize(64)
+                    .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER)
+                    .setsText(emojis.WARNING).validate();
+            tf.draw();                    
         }
         g.setFont(f);
         return this;
     }
 
-    public int getStartAngle() {
-        return (int) getMaxVisual();
-    }
-
-    public void setStartAngle(int startAngle) {
-        this.setMaxVisual(startAngle);
-    }
-
-    public int getEndAngle() {
-        return (int) getMinVisual();
-    }
-
-    public void setEndAngle(int endAngle) {
-        setMinVisual(endAngle);
-    }
-
-    public int getnDivisions() {
-        return getnMarks();
-    }
-
-    public void setnDivisions(int nDvisions) {
-        setnMarks(nDvisions);
-    }
 
 }

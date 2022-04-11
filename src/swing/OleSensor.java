@@ -176,27 +176,31 @@ public abstract class OleSensor extends JComponent {
     }
 
     public double validateValue(double value) {
-        if (value <= minValue) {
+        if (value < minValue) {
             if (circular) {
                 while (value < minValue) {
                     value += lengthValue;
                 }
             } else {
-                value = minValue;
+                value = Perceptor.NULLREAD;
             }
         }
-        if (value >= maxValue) {
+        if (value > maxValue) {
             if (circular) {
                 while (value >= maxValue) {
                     value -= lengthValue;
                 }
             } else {
-                value = maxValue;
+                value = Perceptor.NULLREAD;
             }
         }
         return value;
     }
 
+    public void clear(){
+        setCurrentValue(this.getMinValue());
+    }
+    
     public void setCurrentValue(double currentValue) {
         allReadings[0][0] = validateValue(currentValue);
         if (this.alertBelow) {

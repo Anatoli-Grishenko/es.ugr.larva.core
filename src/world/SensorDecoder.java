@@ -5,6 +5,7 @@
  */
 package world;
 
+import ai.TracePositions;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -37,6 +38,8 @@ public class SensorDecoder {
     protected boolean ready, filterreading;
     protected String name, sessionID, commitment, sLastPerception = "";
     protected SimpleVector3D lastPosition;
+    protected TracePositions myTrace;
+    protected double lastDistance;
 
     public SensorDecoder() {
         clear();
@@ -120,6 +123,8 @@ public class SensorDecoder {
     public void clear() {
         indexperception = new HashMap();
         lastPerception = new JsonArray();
+        myTrace = new TracePositions();
+        lastDistance=Integer.MAX_VALUE;
         ready = false;
     }
 
@@ -186,6 +191,18 @@ public class SensorDecoder {
         return new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
     }
 
+    public Point3D getGPSPosition(int n) {
+        return myTrace.getLastPosition(n);
+    }
+
+    public Point3D getGPSComingPosition() {
+        return getGPSVector().getTarget();
+    }
+
+    public TracePositions getAllGPSPositions() {
+        return myTrace;
+    }
+
     public int getCompass() {
         if (isReady() && hasSensor("COMPASS")) {
             int v = (int) getSensor("compass").get(0).asDouble();
@@ -210,8 +227,54 @@ public class SensorDecoder {
         }
         return -1;
     }
+    
+    public double getDifferentialDistance() {
+        return getDistance()-lastDistance;
+    }
 
-    public double getAngular() {
+    public boolean isCloser(){
+        return getDifferentialDistance()<0;
+    }
+    
+    public boolean isFarther(){
+        return getDifferentialDistance()>0;
+    }
+    
+    public int getCompassLeft() {
+        return (getCompass()+45+360)%360;
+    }
+
+    public int getCompassRight() {
+        return (getCompass()-45+360)%360;
+    }
+
+    public double getRelativeAngular() {
+        if (isReady() && hasSensor("ANGULAR")) {
+            double a = getAbsoluteAngular(), c = getCompass();
+            if (a>c) {
+                if (a-c<=180) {
+                    return a-c;            
+                }else {
+                    return -(c+360-a);
+                }
+            } else {
+                if (c-a<180) {
+                    return a-c;            
+                }else {
+                    return -(a+360-c);
+                }
+
+            }
+//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
+//                return getAbsoluteAngular() - getCompass();
+//            } else {
+//                return -(getCompass() - (getAbsoluteAngular()));
+//            }
+        }
+        return -1;
+    }
+
+    public double getAbsoluteAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
             v = 360 - v + 360;
@@ -219,15 +282,9 @@ public class SensorDecoder {
             return (int) v % 360;
         }
         return -1;
-//        if (isReady() && hasSensor("ANGULAR")) {
-//            int v = (int) getSensor("angular").get(0).asDouble();
-//            v = 360+90-v;   
-//            return v%360;            
-//        }
-//        return -1;
     }
 
-    public double getAngular(Point3D p) {
+    public double getAbsoluteAngularTo(Point3D p) {
         if (isReady() && hasSensor("ANGULAR")) {
             Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
             Point3D me = new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
@@ -384,8 +441,9 @@ public class SensorDecoder {
     }
 
     public int[][] getRelativeVisual() {
-        if (getVisualData()==null)
+        if (getVisualData() == null) {
             return null;
+        }
         int initial[][] = this.getVisualData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
@@ -396,8 +454,9 @@ public class SensorDecoder {
     }
 
     public int[][] getRelativeLidar() {
-        if (getLidarData()==null)
+        if (getLidarData() == null) {
             return null;
+        }
         int initial[][] = this.getLidarData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
@@ -408,8 +467,9 @@ public class SensorDecoder {
     }
 
     public int[][] getRelativeThermal() {
-        if (getThermalData()==null)
+        if (getThermalData() == null) {
             return null;
+        }
         int initial[][] = this.getThermalData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
@@ -419,7 +479,7 @@ public class SensorDecoder {
         return res;
     }
 
-    public int[][] getVisualData() {
+    protected int[][] getVisualData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("visual");
         if (jsaReading == null) {
@@ -440,7 +500,7 @@ public class SensorDecoder {
         return null;
     }
 
-    public int[][] getLidarData() {
+    protected int[][] getLidarData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("lidar");
         if (jsaReading == null) {
@@ -460,7 +520,7 @@ public class SensorDecoder {
         return null;
     }
 
-    public int[][] getThermalData() {
+    protected int[][] getThermalData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("thermal");
         if (jsaReading == null) {
@@ -529,10 +589,11 @@ public class SensorDecoder {
             return;
         }
         try {
-            lastPosition = this.getGPSVector();
+            lastPosition = this.getGPSVector();            
         } catch (Exception ex) {
             lastPosition = null;
         }
+        
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
@@ -540,6 +601,8 @@ public class SensorDecoder {
         fromJson(jsoperception.get("perceptions").asArray());
         sLastPerception = content;
         ready = true;
+        myTrace.addUniquePosition(this.getGPSPosition());
+        lastDistance = getDistance();
     }
 
     public String getCommitment() {
@@ -579,165 +642,187 @@ public class SensorDecoder {
 
         res = "Under request from " + requester + "\n";
         res += "|  Status of: " + getName() + "\n";
-        res += "|  X:" + (int) getGPS()[0] + " Y:" + (int) getGPS()[1] + " Z:" + (int) getAltitude() + "\n";
+        res += "| |Memory:\n";
+        res += "| |(" + myTrace.size() + ") " + this.getGPSPosition(1) + "\n";
+        res += "| |\n";
+        res += "|  X:" + getGPSPosition().getXInt() + " Y:" + getGPSPosition().getYInt() + " Z:" + (int) getAltitude() + "\n";
         res += "|  G:" + (int) getGround() + "m" + "\n";
-        res += "|  C:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "\n";
+        res += "|  C:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "º\n";
         res += "|  --> :" + getGPSVector().toString() + "\n";
-        res += "| D: " + (int) getDistance() + "m  A:" + getAngular() + "\n";
-        int visual[][] = getVisualData(), lidar[][] = getLidarData(), thermal[][] = getThermalData();
-        line = "";
-        for (int y = 0; y < visual.length; y++) {
+        res += "| D: " + (int) getDistance() + "m  A:" + getAbsoluteAngular() + "º/" + getRelativeAngular() + "º\n";
+        res += "| |\n";
+        res += "| |Coming move " + this.getGPSComingPosition() + "\n";
+        int polar[][] = this.getPolarLidar();
+        for (int y = 0; y < 3; y++) {
             if (y == 0) {
-                line = "| V|";
+                line = "|PL|";
             } else {
                 line = "|  |";
             }
-            for (int x = 0; x < visual[0].length; x++) {
-                if (visual[x][y] == Perceptor.NULLREAD) {
+            for (int x = 0; x < polar[0].length; x++) {
+                if (polar[x][y] == Perceptor.NULLREAD) {
                     line += "XXX|";
                 } else {
-                    line += String.format("%03d|", visual[x][y]);
-                }
-            }
-            if (y == 0) {
-                line += "  L|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < lidar[0].length; x++) {
-                if (lidar[x][y] == Perceptor.NULLREAD) {
-                    line += "XXX|";
-                } else {
-                    line += String.format("%03d|", lidar[x][y]);
-                }
-            }
-            if (y == 0) {
-                line += "  T|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < thermal[0].length; x++) {
-                if (thermal[x][y] == Perceptor.NULLREAD) {
-                    line += "XXX|";
-                } else {
-                    line += String.format("%03d|", thermal[x][y]);
+                    line += String.format("%03d|", polar[x][y]);
                 }
             }
             res += line + "\n";
         }
-        res += "\n";
-        visual = this.getAbsoluteVisual();
-        lidar = getAbsoluteLidar();
-        thermal = getAbsoluteThermal();
-        line = "";
-        for (int y = 0; y < visual.length; y++) {
-            if (y == 0) {
-                line = "|AV|";
-            } else {
-                line = "|  |";
-            }
-            for (int x = 0; x < visual.length; x++) {
-                if (y < visual[0].length) {
-                    if (visual[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", visual[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            if (y == 0) {
-                line += " AL|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < lidar.length; x++) {
-                if (y < lidar[0].length) {
-                    if (lidar[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", lidar[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            if (y == 0) {
-                line += " AT|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < thermal.length; x++) {
-                if (y < thermal[0].length) {
-                    if (thermal[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", thermal[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            res += line + "\n";
-        }
-        res += "\n";
-        visual = this.getRelativeVisual();
-        lidar = getRelativeLidar();
-        thermal = getRelativeThermal();
-        line = "";
-        for (int y = 0; y < visual.length; y++) {
-            if (y == 0) {
-                line = "|RV|";
-            } else {
-                line = "|  |";
-            }
-            for (int x = 0; x < visual.length; x++) {
-                if (y < visual[0].length) {
-                    if (visual[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", visual[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            if (y == 0) {
-                line += " RL|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < lidar.length; x++) {
-                if (y < lidar[0].length) {
-                    if (lidar[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", lidar[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            if (y == 0) {
-                line += " RT|";
-            } else {
-                line += "   |";
-            }
-            for (int x = 0; x < thermal.length; x++) {
-                if (y < thermal[0].length) {
-                    if (thermal[x][y] == Perceptor.NULLREAD) {
-                        line += "XXX|";
-                    } else {
-                        line += String.format("%03d|", thermal[x][y]);
-                    }
-                } else {
-                    line += "   |";
-                }
-            }
-            res += line + "\n";
-        }
-        res += "|\n\n";
+
+//        int visual[][] = getVisualData(), lidar[][] = getLidarData(), thermal[][] = getThermalData();
+//        line = "";
+//        for (int y = 0; y < visual.length; y++) {
+//            if (y == 0) {
+//                line = "| V|";
+//            } else {
+//                line = "|  |";
+//            }
+//            for (int x = 0; x < visual[0].length; x++) {
+//                if (visual[x][y] == Perceptor.NULLREAD) {
+//                    line += "XXX|";
+//                } else {
+//                    line += String.format("%03d|", visual[x][y]);
+//                }
+//            }
+//            if (y == 0) {
+//                line += "  L|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < lidar[0].length; x++) {
+//                if (lidar[x][y] == Perceptor.NULLREAD) {
+//                    line += "XXX|";
+//                } else {
+//                    line += String.format("%03d|", lidar[x][y]);
+//                }
+//            }
+//            if (y == 0) {
+//                line += "  T|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < thermal[0].length; x++) {
+//                if (thermal[x][y] == Perceptor.NULLREAD) {
+//                    line += "XXX|";
+//                } else {
+//                    line += String.format("%03d|", thermal[x][y]);
+//                }
+//            }
+//            res += line + "\n";
+//        }
+//        res += "\n";
+//        visual = this.getAbsoluteVisual();
+//        lidar = getAbsoluteLidar();
+//        thermal = getAbsoluteThermal();
+//        line = "";
+//        for (int y = 0; y < visual.length; y++) {
+//            if (y == 0) {
+//                line = "|AV|";
+//            } else {
+//                line = "|  |";
+//            }
+//            for (int x = 0; x < visual.length; x++) {
+//                if (y < visual[0].length) {
+//                    if (visual[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", visual[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            if (y == 0) {
+//                line += " AL|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < lidar.length; x++) {
+//                if (y < lidar[0].length) {
+//                    if (lidar[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", lidar[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            if (y == 0) {
+//                line += " AT|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < thermal.length; x++) {
+//                if (y < thermal[0].length) {
+//                    if (thermal[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", thermal[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            res += line + "\n";
+//        }
+//        res += "\n";
+//        visual = this.getRelativeVisual();
+//        lidar = getRelativeLidar();
+//        thermal = getRelativeThermal();
+//        line = "";
+//        for (int y = 0; y < visual.length; y++) {
+//            if (y == 0) {
+//                line = "|RV|";
+//            } else {
+//                line = "|  |";
+//            }
+//            for (int x = 0; x < visual.length; x++) {
+//                if (y < visual[0].length) {
+//                    if (visual[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", visual[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            if (y == 0) {
+//                line += " RL|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < lidar.length; x++) {
+//                if (y < lidar[0].length) {
+//                    if (lidar[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", lidar[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            if (y == 0) {
+//                line += " RT|";
+//            } else {
+//                line += "   |";
+//            }
+//            for (int x = 0; x < thermal.length; x++) {
+//                if (y < thermal[0].length) {
+//                    if (thermal[x][y] == Perceptor.NULLREAD) {
+//                        line += "XXX|";
+//                    } else {
+//                        line += String.format("%03d|", thermal[x][y]);
+//                    }
+//                } else {
+//                    line += "   |";
+//                }
+//            }
+//            res += line + "\n";
+//        }
+//        res += "|\n\n";
         return res;
     }
 }

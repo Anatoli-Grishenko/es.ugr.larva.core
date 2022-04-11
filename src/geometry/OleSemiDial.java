@@ -14,9 +14,11 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.Rectangle2D;
 import javax.swing.SwingConstants;
+import swing.OleDashBoard;
 import swing.OleDrawPane;
 import swing.OleSensor;
 import swing.TextFactory;
+import tools.emojis;
 import world.Perceptor;
 
 /**
@@ -138,6 +140,13 @@ public class OleSemiDial extends OleSensor {
 //            this.oDrawLine(g, p3,p2);
 //            this.oDrawLine(g, p2,p4);
 //            this.oDrawLine(g, p4,p1);
+        } else {
+            g.setColor(OleDashBoard.cBad);
+            TextFactory tf = new TextFactory(g);
+            tf.setPoint(center).setsFontName(Font.MONOSPACED).setFontSize(64)
+                    .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER)
+                    .setsText(emojis.WARNING).validate();
+            tf.draw();                    
         }
         return this;
     }

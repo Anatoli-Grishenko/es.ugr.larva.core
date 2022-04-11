@@ -6,7 +6,6 @@ package appboot;
 import agents.AgentReport;
 import agents.LARVAPayload;
 import agents.XUIAgent;
-import agents.XUIAgentOldDash;
 import data.Ole;
 import data.OleConfig;
 import data.OlePassport;

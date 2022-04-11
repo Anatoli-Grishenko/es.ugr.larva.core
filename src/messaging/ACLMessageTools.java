@@ -11,7 +11,6 @@ import static disk.Logger.trimString;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.Iterator;
-import swing.LARVADash;
 
 /**
  *
@@ -185,22 +184,22 @@ public class ACLMessageTools {
         return incoming;
     }
 
-    public static boolean isDashACL(ACLMessage msg) {
-        return msg.getReplyWith() != null && msg.getReplyWith().contains(LARVADash.MARK);
-    }
-
-    public static ACLMessage cleanDashMark(ACLMessage msg) {
-        msg.setReplyWith(msg.getReplyWith().replace(LARVADash.MARK, ""));
-        return msg;
-    }
-
-    public static ACLMessage addDashMark(ACLMessage msg) {
-        if (msg.getReplyWith() == null) {
-            msg.setReplyWith("");
-        }
-        msg.setReplyWith(msg.getReplyWith() + " " + LARVADash.MARK);
-        return msg;
-    }
+//    public static boolean isDashACL(ACLMessage msg) {
+//        return msg.getReplyWith() != null && msg.getReplyWith().contains(LARVADash.MARK);
+//    }
+//
+//    public static ACLMessage cleanDashMark(ACLMessage msg) {
+//        msg.setReplyWith(msg.getReplyWith().replace(LARVADash.MARK, ""));
+//        return msg;
+//    }
+//
+//    public static ACLMessage addDashMark(ACLMessage msg) {
+//        if (msg.getReplyWith() == null) {
+//            msg.setReplyWith("");
+//        }
+//        msg.setReplyWith(msg.getReplyWith() + " " + LARVADash.MARK);
+//        return msg;
+//    }
 
     public static AID getMainReceiver(ACLMessage msg) {
         Iterator it;

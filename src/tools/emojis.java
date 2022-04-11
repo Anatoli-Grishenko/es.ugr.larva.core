@@ -61,6 +61,8 @@ public class emojis {
             RADIOACTIVE = "\u2622\uFe0f",
             UPRIGHTARROW = "\u2197\uFE0F",
             DOWNRIGHTARROW = "\u2198\uFE0F",
+            UPARROW="⬆️",
+            DOWNARROW="⬇️",
             HAMMERWRENCH = "\uD83D\uDEE0\uFE0F",
             ANTENNABARS = "\ud83d\udcf6",
             BLACKHEART = "\ud83d\udda4",

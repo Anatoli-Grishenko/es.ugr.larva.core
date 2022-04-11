@@ -33,9 +33,6 @@ import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.getAllReceivers;
 import messaging.SequenceDiagram;
-import swing.LARVACompactDash;
-import swing.LARVADash;
-import swing.LARVADash.Layout;
 import swing.OleApplication;
 import swing.SwingTools;
 import tools.emojis;
@@ -80,7 +77,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected JPanel myPane, myMap;
     protected JScrollPane myScrPane;
     protected JTextArea myText;
-    protected SensorDecoder myDecoder;
+    protected SensorDecoder Deco;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
 
@@ -135,7 +132,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
-        myDecoder = new SensorDecoder();
+        Deco = new SensorDecoder();
     }
 
     @Override
@@ -222,7 +219,6 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      *
      * @param message The informative message
      */
-    @Override
     protected void Info(String message) {
         if (traceRunSteps) {
             addRunStep("MILES02");
@@ -412,20 +408,17 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         do {
             repeat = false;
             res = blockingReceive();
-            Info("Pre-receiving");
             if (res != null && res.getContent().contains("filedata")) {
-                Info("Updating decoder world");
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                Deco.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Info("Updating decoder perceptions");
-                myDecoder.feedPerception(res.getContent());
+                Deco.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -452,13 +445,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                Deco.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                myDecoder.feedPerception(res.getContent());
+                Deco.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -482,13 +475,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                Deco.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                myDecoder.feedPerception(res.getContent());
+                Deco.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -513,13 +506,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                myDecoder.setWorldMap(ofile.toString(), maxlevel);
+                Deco.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                myDecoder.feedPerception(res.getContent());
+                Deco.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -590,6 +583,22 @@ public class LARVAFirstAgent extends LARVABaseAgent {
      */
     @Override
     public void Alert(String message) {
+        if (isSwing()) {
+            JOptionPane.showMessageDialog(null,
+                    message, "Agent " + getLocalName(), JOptionPane.WARNING_MESSAGE);
+        } else {
+            Info(message);
+        }
+    }
+
+    /**
+     * It shows a message to the user and waits until the user confirms it has
+     * read it
+     *
+     * @param message
+     */
+    @Override
+    public void Message(String message) {
         if (isSwing()) {
             JOptionPane.showMessageDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);

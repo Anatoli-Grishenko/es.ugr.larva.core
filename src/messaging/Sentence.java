@@ -5,7 +5,6 @@
  */
 package messaging;
 
-import swing.LARVADash;
 
 /**
  *
@@ -43,8 +42,8 @@ public class Sentence {
     }
     
     public Sentence parseSentence(String sentence) {
-        if (sentence.contains(LARVADash.MARK))
-            sentence = sentence.replace(LARVADash.MARK, "");
+//        if (sentence.contains(LARVADash.MARK))
+//            sentence = sentence.replace(LARVADash.MARK, "");
         this.sentence = sentence;
         this.sentenceTokens = this.sentence.split(" ");
         token=0;

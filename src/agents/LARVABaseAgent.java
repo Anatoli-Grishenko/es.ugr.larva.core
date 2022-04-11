@@ -400,12 +400,16 @@ public class LARVABaseAgent extends Agent {
      *
      * @param message The informative message
      */
+    protected void Message(String message) {
+        logger.logMessage(message);
+    }
+
     protected void Info(String message) {
         logger.logMessage(message);
     }
 
     protected void Alert(String message) {
-        Info(message);
+        Message(message);
     }
 
     /**

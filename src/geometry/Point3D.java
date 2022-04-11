@@ -109,7 +109,7 @@ public class Point3D {
         return (int)(Math.round(_coord[1]));
     }
     
-    public double getZInt() {
+    public int getZInt() {
         return (int)(Math.round(_coord[2]));
     }
     

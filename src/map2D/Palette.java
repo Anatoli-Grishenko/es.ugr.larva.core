@@ -12,7 +12,7 @@ import static crypto.Keygen.getHexaKey;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
-import static swing.LARVADash.cBad;
+import swing.OleDashBoard;
 import static world.Perceptor.NULLREAD;
 
 /**
@@ -109,7 +109,7 @@ public class Palette {
         if (level != NULLREAD && 0 <= level && level < palette.size()) {
             return palette.get(level);
         } else {
-            return cBad;
+            return OleDashBoard.cBad;
         }
     }
 
