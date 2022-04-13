@@ -261,7 +261,7 @@ public class SensorDecoder {
                 if (c-a<180) {
                     return a-c;            
                 }else {
-                    return -(a+360-c);
+                    return (a+360-c);
                 }
 
             }
@@ -645,11 +645,13 @@ public class SensorDecoder {
         res += "| |Memory:\n";
         res += "| |(" + myTrace.size() + ") " + this.getGPSPosition(1) + "\n";
         res += "| |\n";
+        res += "|  EN:" + getEnergy() + "W \n";
         res += "|  X:" + getGPSPosition().getXInt() + " Y:" + getGPSPosition().getYInt() + " Z:" + (int) getAltitude() + "\n";
-        res += "|  G:" + (int) getGround() + "m" + "\n";
-        res += "|  C:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "º\n";
+        res += "|  GR:" + (int) getGround() + "m" + "\n";
+        res += "|  CO:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "º\n";
         res += "|  --> :" + getGPSVector().toString() + "\n";
-        res += "| D: " + (int) getDistance() + "m  A:" + getAbsoluteAngular() + "º/" + getRelativeAngular() + "º\n";
+        res += "| DI: " + (int) getDistance() + "m  AN:" + getAbsoluteAngular() + "º/" + getRelativeAngular() + "º\n";
+        res += "| CA: ("+getCargo().length+")   " + Transform.toArrayList(this.getCargo()) +"\n";
         res += "| |\n";
         res += "| |Coming move " + this.getGPSComingPosition() + "\n";
         int polar[][] = this.getPolarLidar();

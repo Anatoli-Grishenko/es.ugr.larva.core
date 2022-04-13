@@ -36,7 +36,7 @@ public class RuleBaseSystem {
     }
 
     public boolean isFirable() {
-        return listFirables().size() > 0;
+        return isActive() && listFirables().size() > 0;
     }
 
     public ArrayList<String> listFirables() {

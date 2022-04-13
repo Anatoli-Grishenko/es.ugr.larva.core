@@ -256,8 +256,8 @@ public class OleMap extends OleSensor implements ActionListener {
                         ptrail = Trails.get(name).get(i);
                         c = map.getColor(ptrail);
 //                        c = new Color(c.getRed(),255,c.getBlue());
-//                        g.setColor(new Color(0, (Trails.get(name).size() - i) *c.getRed()/ Trails.get(name).size(), 0));
-                        g.setColor(SwingTools.doDarker(OleDashBoard.cTrack));
+                        g.setColor(new Color(0, (Trails.get(name).size() - i) *255/ Trails.get(name).size(), 0));
+//                        g.setColor(SwingTools.doDarker(OleDashBoard.cTrack));
                         g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        g.fillArc(viewX(ptrail.getSource().getX())-3, viewY(ptrail.getSource().getY())-3, 6, 6, 0, 360);
                     }

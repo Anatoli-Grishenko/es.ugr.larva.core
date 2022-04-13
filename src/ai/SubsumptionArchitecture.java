@@ -139,19 +139,26 @@ public class SubsumptionArchitecture {
     }
 
     public ArrayList<String> fire() {
-        ArrayList<String> res = new ArrayList(), firables = new ArrayList();
+        ArrayList<String> res = new ArrayList(), firables = new ArrayList(), inhibited = new ArrayList();
         ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
         Collections.sort(sorted);
         RuleBaseSystem rbs;
-//        Collections.reverse(sorted);
+        Collections.reverse(sorted);
         this.Output.clear();
-        firables = this.listFirableModules();
-        Collections.reverse(firables);
-        for (String firable : firables) {
-            String firing = Titles.get(firable).fireAll().get(0);
-            if (firing.length() > 0) {
-                Output.put(firable, firing);
-                res.add(Output.get(firable));
+        for (int priority : sorted) {
+            Priorities.get(priority).setActive(true);
+        }
+        for (int priority : sorted) {
+            String firable = Priorities.get(priority).getTitle();
+            if (Titles.get(firable).isFirable()) {
+                String firing = Titles.get(firable).fireAll().get(0);
+                for (String inhibit : Inhibit.get(firable)) {
+                    inhibitModule(inhibit);
+                }
+                if (firing.length() > 0) {
+                    Output.put(firable, firing);
+                    res.add(Output.get(firable));
+                }
             }
         }
         return res;
@@ -159,7 +166,7 @@ public class SubsumptionArchitecture {
 
     @Override
     public String toString() {
-        String res = "";
+        String res = "\n";
         ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
         Collections.sort(sorted);
         ArrayList<String> inhibitedModules = this.listInhibitedModules();

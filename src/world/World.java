@@ -128,35 +128,35 @@ public class World {
                 break;
             case "N":
                 res.setX(width / 2);
-                res.setY(0);
+                res.setY(1);
                 break;
             case "S":
                 res.setX(width / 2);
-                res.setY(height);
+                res.setY(height-2);
                 break;
             case "E":
-                res.setX(width - 1);
+                res.setX(width - 2);
                 res.setY(height / 2);
                 break;
             case "W":
-                res.setX(0);
+                res.setX(1);
                 res.setY(height / 2);
                 break;
             case "NE":
-                res.setX(width - 1);
-                res.setY(0);
+                res.setX(width - 2);
+                res.setY(1);
                 break;
             case "SE":
-                res.setX(width - 1);
-                res.setY(height - 1);
+                res.setX(width - 2);
+                res.setY(height - 2);
                 break;
             case "SW":
-                res.setX(0);
-                res.setY(height - 1);
+                res.setX(1);
+                res.setY(height - 2);
                 break;
             case "NW":
-                res.setX(0);
-                res.setY(0);
+                res.setX(1);
+                res.setY(1);
                 break;
             default:
                 do {
