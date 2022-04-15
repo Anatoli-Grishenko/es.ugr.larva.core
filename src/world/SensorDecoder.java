@@ -637,10 +637,27 @@ public class SensorDecoder {
         }
     }
 
+    public int getLidarFront() {
+        return getPolarLidar()[2][0];
+    }
+    public int getLidarLeft() {
+        return getPolarLidar()[1][0];
+    }
+    public int getLidarLeftmost() {
+        return getPolarLidar()[0][0];
+    }
+    public int getLidarRight() {
+        return getPolarLidar()[3][0];
+    }
+    public int getLidarRightmost() {
+        return getPolarLidar()[4][0];
+    }
+    
     public String printStatus(String requester) {
         String res = "", line;
 
         res = "Under request from " + requester + "\n";
+        res += "|  "+getNSteps()+"\n";
         res += "|  Status of: " + getName() + "\n";
         res += "| |Memory:\n";
         res += "| |(" + myTrace.size() + ") " + this.getGPSPosition(1) + "\n";

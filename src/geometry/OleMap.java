@@ -252,14 +252,24 @@ public class OleMap extends OleSensor implements ActionListener {
                 double xVP, yVP;
                 Color c;
                 for (String name : Trails.keySet()) {
-                    for (int i = 2; i < Trails.get(name).size(); i++) {
+                    for (int i = 1; i < Trails.get(name).size(); i++) {
                         ptrail = Trails.get(name).get(i);
+                        if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
+//                            tf = new TextFactory(g).setsText(String.format("%03d", this.externalDecoder.getNSteps()))
+//                                    .setPoint(viewP(ptrail.getSource())).setFontSize(10)
+//                                    .setValign(SwingConstants.CENTER).setHalign(SwingConstants.CENTER).validate();
+//                            tf.draw();
+//                            this.oDrawCounter(g, String.format("%03d", this.externalDecoder.getNSteps()-i),
+//                                    viewP(ptrail.getSource()),30, SwingConstants.CENTER, SwingConstants.CENTER);
+                        }
                         c = map.getColor(ptrail);
-//                        c = new Color(c.getRed(),255,c.getBlue());
-                        g.setColor(new Color(0, (Trails.get(name).size() - i) *255/ Trails.get(name).size(), 0));
-//                        g.setColor(SwingTools.doDarker(OleDashBoard.cTrack));
-                        g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
-//                        g.fillArc(viewX(ptrail.getSource().getX())-3, viewY(ptrail.getSource().getY())-3, 6, 6, 0, 360);
+                        g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                        if (scale < 7) {
+                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+                        } else {
+                            p = this.TraceBot(ptrail, 8, 10);
+                            g.drawPolygon(p);
+                        }
                     }
                     g.setColor(OleDashBoard.cTrack);
                     ptrail = externalDecoder.getGPSVector();
@@ -270,15 +280,19 @@ public class OleMap extends OleSensor implements ActionListener {
 //                    } else {
 //                        prevTrail = Trails.get(name).get(0);
 //                    }
+                    g.setStroke(new BasicStroke(2));
+                    if (scale < 7) {
+                        p = this.TraceRegularPolygon(ptrail, 4, 5);
+                        g.drawPolygon(p);
+                        p = this.TraceCourse(ptrail, 20);
+                        g.drawPolygon(p);
+                    } else {
+                        p = this.TraceBot(ptrail, 8, 10);
+                        g.drawPolygon(p);
+                    }
 
-                    p = this.TraceRegularPolygon(ptrail, 4, 5);
 //                    p = this.TraceRegularStar(ptrail, 6, 30, 15);
 //                    p = this.TraceRomboid(ptrail, 5);
-                    g.setStroke(new BasicStroke(1));
-                    g.drawPolygon(p);
-                    p = this.TraceCourse(ptrail, 20);
-                    g.drawPolygon(p);
-                    g.setStroke(new BasicStroke(2));
                     g.setStroke(new BasicStroke(1));
                     this.traceLabel(g, ptrail, prevTrail, 25, name, viewPort);
                 }
@@ -471,7 +485,7 @@ public class OleMap extends OleSensor implements ActionListener {
 
     protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
         SimpleVector3D p = new SimpleVector3D(new Point3D(jsgoal.getString("position", "")), Compass.NORTH);
-        int diam1 = 5, diam2 = 2;
+        int diam1 = 10, diam2 = diam1 / 2;
         g.setColor(OleDashBoard.cGoal);
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
 //        g.drawOval((int) viewX(p.getSource().getX()) - diam2,
@@ -494,13 +508,47 @@ public class OleMap extends OleSensor implements ActionListener {
         return p;
     }
 
-    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1) {
+    public Polygon TraceBot(SimpleVector3D sv, int npoints, int radius1) {
+        int rotate = 90;
         int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
         Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
         double alpha;
         p = new Polygon();
         for (int np = 0; np < npoints; np++) {
-            p1 = at.alphaPoint(360 / npoints * np, radius1, pxsv);
+            p1 = at.alphaPoint(360 / npoints * np + sv.getsOrient() * 45 + rotate, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+        }
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, 0, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1) {
+//        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+//        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+//        double alpha;
+//        p = new Polygon();
+//        for (int np = 0; np < npoints; np++) {
+//            p1 = at.alphaPoint(360 / npoints * np, radius1, pxsv);
+//            p.addPoint(p1.getXInt(), p1.getYInt());
+//        }
+//        p1 = at.alphaPoint(0, radius1, pxsv);
+//        p.addPoint(p1.getXInt(), p1.getYInt());
+//        return p;
+        return this.TraceRegularPolygon(sv, npoints, radius1, 0);
+    }
+
+    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1, int rotate) {
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha;
+        p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(360 / npoints * np - rotate, radius1, pxsv);
             p.addPoint(p1.getXInt(), p1.getYInt());
         }
         p1 = at.alphaPoint(0, radius1, pxsv);
@@ -576,22 +624,22 @@ public class OleMap extends OleSensor implements ActionListener {
             pLabel = at.alphaPoint(225, length, viewP(sv.getSource()));
             halign = SwingConstants.RIGHT;
             valign = SwingConstants.CENTER;
-            pIncrement=new Point3D(-1,+1);
+            pIncrement = new Point3D(-1, +1);
         } else if (pSource.getX() > viewPort.width / 2 && pSource.getY() > viewPort.height / 2) { //SE
             pLabel = at.alphaPoint(135, length, viewP(sv.getSource()));
             halign = SwingConstants.RIGHT;
             valign = SwingConstants.CENTER;
-            pIncrement=new Point3D(-1,-1);
+            pIncrement = new Point3D(-1, -1);
         } else if (pSource.getX() < viewPort.width / 2 && pSource.getY() < viewPort.height / 2) { // NW
             pLabel = at.alphaPoint(315, length, viewP(sv.getSource()));
             halign = SwingConstants.LEFT;
             valign = SwingConstants.CENTER;
-            pIncrement=new Point3D(+1,+1);
+            pIncrement = new Point3D(+1, +1);
         } else {
             pLabel = at.alphaPoint(45, length, viewP(sv.getSource())); // SW
             halign = SwingConstants.LEFT;
             valign = SwingConstants.CENTER;
-            pIncrement=new Point3D(1,-1);
+            pIncrement = new Point3D(1, -1);
         }
         int n = 0;
         TextFactory tf;
@@ -602,7 +650,6 @@ public class OleMap extends OleSensor implements ActionListener {
         tf = new TextFactory(g);
         tf.setPoint(pLabel).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
-        
 
         SimpleVector3D last = new SimpleVector3D(prevsv.getSource(), sv.getSource());
         if (last.canonical().getTarget().getZ() > 0) {

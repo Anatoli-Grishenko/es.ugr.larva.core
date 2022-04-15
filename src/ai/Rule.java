@@ -14,10 +14,11 @@ import java.util.function.Supplier;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Rule {
+
     String label;
     BooleanSupplier Condition;
-    Supplier <String> Body;
-    public boolean condition;
+    Supplier<String> Body;
+    public boolean condition, debug = false;
 
     public Rule(String label, BooleanSupplier Condition, Supplier<String> Body) {
         this.label = label;
@@ -41,24 +42,37 @@ public class Rule {
         this.Condition = Condition;
     }
 
-    public Supplier <String> getBody() {
+    public Supplier<String> getBody() {
         return Body;
     }
 
-    public void setBody(Supplier <String> Body) {
+    public void setBody(Supplier<String> Body) {
         this.Body = Body;
     }
-    
+
     public boolean isFirable() {
         return Condition.getAsBoolean();
     }
+
     public String fire() {
         if (this.isFirable()) {
-            return Body.get();
+            if (debug) {
+                return "||R>" + this.getLabel() + "||A>" + Body.get();
+            } else {
+                return Body.get();
+            }
         }
         return "";
-    }   
-    
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
 }
 ///*
 // * To change this license header, choose License Headers in Project Properties.

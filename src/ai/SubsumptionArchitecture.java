@@ -8,7 +8,6 @@ package ai;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  *
@@ -21,6 +20,8 @@ public class SubsumptionArchitecture {
     protected HashMap<String, String> Output;
     protected HashMap<String, ArrayList<String>> Inhibit;
     protected HashMap<String, ArrayList<String>> Supress;
+    protected boolean debug;
+    protected ArrayList<String> plan, inhibitedModules, supressedModules, firableRules, firableModules;
 
     public SubsumptionArchitecture() {
         Titles = new HashMap();
@@ -28,6 +29,22 @@ public class SubsumptionArchitecture {
         Output = new HashMap();
         Inhibit = new HashMap();
         Supress = new HashMap();
+    }
+
+    public ArrayList<String> getInhibitedModules() {
+        return inhibitedModules;
+    }
+
+    public ArrayList<String> getSupressedModules() {
+        return supressedModules;
+    }
+
+    public ArrayList<String> getFirableRules() {
+        return firableRules;
+    }
+
+    public ArrayList<String> getFirableModules() {
+        return firableModules;
     }
 
     public int size() {
@@ -53,83 +70,63 @@ public class SubsumptionArchitecture {
 
     public boolean isFirable() {
         for (String layer : Titles.keySet()) {
-            if (Titles.get(layer).listFirables().size() > 0) {
+            if (Titles.get(layer).listFirablesRules().size() > 0) {
                 return true;
             }
         }
         return false;
     }
 
-    public ArrayList<String> listFirableRules() {
-        ArrayList<String> result = new ArrayList(), aux;
-        ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
-        Collections.sort(sorted);
-//        Collections.reverse(sorted);
-        for (int priority : sorted) {
-            aux = Priorities.get(priority).listFirables();
-            if (aux.size() > 0) {
-                for (String rulename : aux) {
-                    result.add("" + priority + "::" + Priorities.get(priority).getTitle() + "::" + rulename);
-                }
-            }
+    public void deactivateModule(String module) {
+        if (Titles.get(module) != null) {
+            Titles.get(module).setActive(false);
         }
-        return result;
     }
 
-    public void inhibitModule(String module) {
-        Titles.get(module).setActive(false);
-//        for (String other : Inhibit.get(module)) {
-//            inhibitModule(other);
-//        }
-    }
-
-    public ArrayList<String> listInhibitedModules() {
+    public void arrangeModules() {
         ArrayList<String> result = new ArrayList(), aux;
         ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
         Collections.sort(sorted);
         RuleBaseSystem rbs;
         Collections.reverse(sorted);
+        firableRules = new ArrayList();
         for (int priority : sorted) {
             Priorities.get(priority).setActive(true);
+            aux = Priorities.get(priority).listFirablesRules();
+            if (aux.size() > 0) {
+                for (String rulename : aux) {
+                    firableRules.add("" + priority + "::" + Priorities.get(priority).getTitle() + "::" + rulename);
+                }
+            }
         }
+        inhibitedModules = new ArrayList();
+        supressedModules = new ArrayList();
         for (int priority : sorted) {
             rbs = Priorities.get(priority);
-            if (rbs.isFirable() && rbs.isActive()) {
+            if (rbs.isActive()) {
                 if (Inhibit.get(rbs.getTitle()) != null) {
                     for (String inhibit : Inhibit.get(rbs.getTitle())) {
-                        inhibitModule(inhibit);
+                        inhibitedModules.add(inhibit);
+                        deactivateModule(inhibit);
+                    }
+                }
+                if (rbs.isFirable() && Supress.get(rbs.getTitle()) != null) {
+                    for (String inhibit : Supress.get(rbs.getTitle())) {
+                        supressedModules.add(inhibit);
+                        deactivateModule(inhibit);
                     }
                 }
             }
         }
-        Collections.reverse(sorted);
-        for (int priority : sorted) {
-            rbs = Priorities.get(priority);
-            if (!rbs.isActive()) {
-                result.add(rbs.getTitle());
-            }
-        }
-        return result;
-    }
-
-    public ArrayList<String> listFirableModules() {
-        ArrayList<String> result = new ArrayList(), aux, inhibited;
-        ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
-        Collections.sort(sorted);
-        RuleBaseSystem rbs;
-//        Collections.reverse(sorted);
-        inhibited = this.listInhibitedModules();
-        for (int priority : sorted) {
-            rbs = Priorities.get(priority);
-            if (rbs.isFirable() && !inhibited.contains(rbs.getTitle())) {
-                result.add(rbs.getTitle());
-            }
-        }
-        return result;
     }
 
     public SubsumptionArchitecture inhibit(String fromLayer, String toLayer) {
         Inhibit.get(fromLayer).add(toLayer);
+        return this;
+    }
+
+    public SubsumptionArchitecture supress(String fromLayer, String toLayer) {
+        Supress.get(fromLayer).add(toLayer);
         return this;
     }
 
@@ -145,40 +142,79 @@ public class SubsumptionArchitecture {
         RuleBaseSystem rbs;
         Collections.reverse(sorted);
         this.Output.clear();
+        plan = new ArrayList();
+        arrangeModules();
         for (int priority : sorted) {
-            Priorities.get(priority).setActive(true);
-        }
-        for (int priority : sorted) {
-            String firable = Priorities.get(priority).getTitle();
-            if (Titles.get(firable).isFirable()) {
-                String firing = Titles.get(firable).fireAll().get(0);
-                for (String inhibit : Inhibit.get(firable)) {
-                    inhibitModule(inhibit);
-                }
-                if (firing.length() > 0) {
-                    Output.put(firable, firing);
-                    res.add(Output.get(firable));
+            String module = Priorities.get(priority).getTitle();
+            if (Titles.get(module).isFirable() && Titles.get(module).isActive()) {
+                for (String firing : Titles.get(module).fireAll()) {
+                    if (debug) {
+                        firing = "||M>" + Titles.get(module).getTitle() + firing;
+                    }
+//                    if (firing.length() > 0) {
+                        Output.put(module, firing);
+                        plan.add(firing);
+//                    }
                 }
             }
         }
-        return res;
+        return plan;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+        for (RuleBaseSystem rbs : this.Titles.values()) {
+            rbs.setDebug(debug);
+        }
+    }
+
+    public ArrayList<String> getPlan() {
+        return plan;
+    }
+
+    public String getPlan(int i) {
+        if (i > plan.size()) {
+            return "";
+        }
+        if (this.isDebug()) {
+            String splan[] = plan.get(i).split("\\|\\|");
+            if (splan.length < 1) {
+                return "";
+            }
+            if (splan.length < 3) {
+                return getPlan(i + 1);
+            }
+            return splan[3].replace("A>", "");
+        } else {
+            return plan.get(i);
+        }
+    }
+
+    public boolean isEmpty() {
+        return plan == null || plan.size() < 1;
     }
 
     @Override
     public String toString() {
         String res = "\n";
+        arrangeModules();
         ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
         Collections.sort(sorted);
-        ArrayList<String> inhibitedModules = this.listInhibitedModules();
-//        Collections.reverse(sorted);
         RuleBaseSystem r;
         for (int p : sorted) {
             r = Priorities.get(p);
-            res += "" + p + " || " + String.format("%-20s\t", r.getTitle()) + (Inhibit.get(r.getTitle()) == null ? "" : "[I]" + Inhibit.get(r.getTitle())) + "\n";
+            res += "" + p + " || " + String.format("%-20s\t", r.getTitle());
+            res += (Inhibit.get(r.getTitle()) == null ? "\t" : "[I]" + Inhibit.get(r.getTitle()) + "\t")
+                    + (Supress.get(r.getTitle()) == null ? "\t" : "[S]" + Supress.get(r.getTitle())) + "\n";
             for (int i = 0; i < r.size(); i++) {
                 res += "\t|" + String.format("%-20s\t", r.getRule(i).getLabel())
                         + " " + (r.getRule(i).isFirable() ? "*\t" : "\t")
-                        + " " + (inhibitedModules.contains(r.getTitle()) ? "X\t" : "\t")
+                        + " " + (inhibitedModules.contains(r.getTitle()) ? "I\t" : "\t")
+                        + " " + (supressedModules.contains(r.getTitle()) ? "S\t" : "\t")
                         + "\n";
             }
         }

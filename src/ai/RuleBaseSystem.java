@@ -16,7 +16,7 @@ public class RuleBaseSystem {
     protected ArrayList<Rule> myRules;
     protected int priority;
     protected String title;
-    protected boolean active;
+    protected boolean active, debug = false;
 
     public RuleBaseSystem() {
         myRules = new ArrayList();
@@ -36,10 +36,10 @@ public class RuleBaseSystem {
     }
 
     public boolean isFirable() {
-        return isActive() && listFirables().size() > 0;
+        return listFirablesRules().size() > 0;
     }
 
-    public ArrayList<String> listFirables() {
+    public ArrayList<String> listFirablesRules() {
         ArrayList<String> res = new ArrayList();
         for (Rule r : myRules) {
             if (r.isFirable()) {
@@ -106,6 +106,17 @@ public class RuleBaseSystem {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+        for (Rule r : this.myRules) {
+            r.setDebug(debug);
+        }
     }
 
 }
