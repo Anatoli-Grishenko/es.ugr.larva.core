@@ -5,6 +5,8 @@
  */
 package agents;
 
+import ai.Decisor;
+import ai.Environment;
 import data.Ole;
 import data.OleConfig;
 import data.OleFile;
@@ -77,7 +79,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected JPanel myPane, myMap;
     protected JScrollPane myScrPane;
     protected JTextArea myText;
-    protected SensorDecoder Deco;
+//    protected SensorDecoder Deco;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
 
@@ -94,6 +96,8 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
+    protected Environment Environment;
+    protected Decisor Decisor;
 
     /**
      * Main JADE setup
@@ -132,7 +136,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
-        Deco = new SensorDecoder();
+        Environment = new Environment();
     }
 
     @Override
@@ -412,13 +416,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Deco.setWorldMap(ofile.toString(), maxlevel);
+                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Deco.feedPerception(res.getContent());
+                Environment.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -445,13 +449,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Deco.setWorldMap(ofile.toString(), maxlevel);
+                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Deco.feedPerception(res.getContent());
+                Environment.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -475,13 +479,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Deco.setWorldMap(ofile.toString(), maxlevel);
+                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Deco.feedPerception(res.getContent());
+                Environment.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -506,13 +510,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Deco.setWorldMap(ofile.toString(), maxlevel);
+                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Deco.feedPerception(res.getContent());
+                Environment.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);

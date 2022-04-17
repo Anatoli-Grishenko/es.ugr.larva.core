@@ -18,7 +18,8 @@ public class Rule {
     String label;
     BooleanSupplier Condition;
     Supplier<String> Body;
-    public boolean condition, debug = false;
+    boolean debug = false;
+    String outcome;
 
     public Rule(String label, BooleanSupplier Condition, Supplier<String> Body) {
         this.label = label;
@@ -34,20 +35,23 @@ public class Rule {
         return label;
     }
 
-    public void setLabel(String label) {
+    public Rule setLabel(String label) {
         this.label = label;
+        return this;
     }
 
-    public void setCondition(BooleanSupplier Condition) {
+    public Rule setCondition(BooleanSupplier Condition) {
         this.Condition = Condition;
+        return this;
     }
 
     public Supplier<String> getBody() {
         return Body;
     }
 
-    public void setBody(Supplier<String> Body) {
+    public Rule setBody(Supplier<String> Body) {
         this.Body = Body;
+        return this;
     }
 
     public boolean isFirable() {
@@ -55,14 +59,16 @@ public class Rule {
     }
 
     public String fire() {
+        String outcome="";
         if (this.isFirable()) {
             if (debug) {
-                return "||R>" + this.getLabel() + "||A>" + Body.get();
+                outcome= "||R>" + this.getLabel() + "||A>" + Body.get();
             } else {
-                return Body.get();
+                outcome= Body.get();
             }
         }
-        return "";
+        setOutcome(outcome);
+        return outcome;
     }
 
     public boolean isDebug() {
@@ -71,6 +77,14 @@ public class Rule {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public String getOutcome() {
+        return outcome;
+    }
+
+    public void setOutcome(String outcome) {
+        this.outcome = outcome;
     }
 
 }

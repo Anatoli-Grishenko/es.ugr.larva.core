@@ -13,13 +13,18 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.RescaleOp;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
@@ -52,6 +57,7 @@ public class OleMap extends OleSensor implements ActionListener {
     protected double stepRadius, stepAngle;
     protected AngleTransporter at;
     protected SensorDecoder externalDecoder;
+    protected ArrayList<Map2DColor> sprites;
 
     public OleMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -71,6 +77,14 @@ public class OleMap extends OleSensor implements ActionListener {
         externalDecoder = ((OleDashBoard) this.parentPane).decoder;
         setnRows(1);
         setnColumns(3);
+        sprites = new ArrayList();
+        try {
+            for (int i = 0; i < 8; i++) {
+                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/bot" + i + ".png").toString().replace("file:", "")));
+            }
+        } catch (IOException ex) {
+        }
+        hasGrid = true;
     }
 
     @Override
@@ -101,7 +115,9 @@ public class OleMap extends OleSensor implements ActionListener {
         g.fill(screenPort);
         if (isMap) {
             if (map != null) {
-                scale = viewPort.getWidth() / map.getMap().getWidth();
+                if (externalDecoder.getWorldMap() != null) {
+                    scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
+                }
                 setMinValue(0);
                 setMaxValue(map.getWidth());
                 setMinVisual(viewPort.x);
@@ -110,10 +126,13 @@ public class OleMap extends OleSensor implements ActionListener {
                 stepVisual = lengthVisual / nMarks;
                 lengthValue = (maxValue - minValue);
                 stepValue = lengthValue / nMarks;
+                stepValue2 = 1;
                 setnDivisions(10);
-                drawLineRuler(g, screenPort, 10);
             }
         } else {
+            if (externalDecoder.getWorldMap() != null) {
+                scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
+            }
             g.draw(screenPort);
             g.setClip(screenPort);
             Point3D p0, p1, p2, p3, p4;
@@ -264,12 +283,14 @@ public class OleMap extends OleSensor implements ActionListener {
                         }
                         c = map.getColor(ptrail);
                         g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
-                        if (scale < 7) {
-                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
-                        } else {
-                            p = this.TraceBot(ptrail, 8, 10);
-                            g.drawPolygon(p);
-                        }
+                        g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+//                        if (scale < 7) {
+//                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+//                        } else {
+//
+//                            p = this.TraceBot(ptrail, 8, 10);
+//                            g.drawPolygon(p);
+//                        }
                     }
                     g.setColor(OleDashBoard.cTrack);
                     ptrail = externalDecoder.getGPSVector();
@@ -287,8 +308,10 @@ public class OleMap extends OleSensor implements ActionListener {
                         p = this.TraceCourse(ptrail, 20);
                         g.drawPolygon(p);
                     } else {
-                        p = this.TraceBot(ptrail, 8, 10);
-                        g.drawPolygon(p);
+                        g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(), viewX(ptrail.getSource().getXInt()) - 12, viewY(ptrail.getSource().getYInt()) - 12, null); //(int)scale*10,(int)scale*10, Image.SCALE_SMOOTH),  0,0,null);
+//                                viewX(ptrail.getSource().getXInt())-(int)scale/2, viewY(ptrail.getSource().getYInt())-(int)scale/2, null);
+//                        p = this.TraceBot(ptrail, 8, 10);
+//                        g.drawPolygon(p);
                     }
 
 //                    p = this.TraceRegularStar(ptrail, 6, 30, 15);
@@ -299,7 +322,7 @@ public class OleMap extends OleSensor implements ActionListener {
                 for (int i = 0; i < jsaGoals.size(); i++) {
                     paintGoalMap(g, jsaGoals.get(i).asObject());
                 }
-
+                drawLineRuler(g, screenPort, 10);
             }
         } else {
             String sCompass, sGoal, sDistance;
@@ -334,6 +357,9 @@ public class OleMap extends OleSensor implements ActionListener {
                             cStroke = cTile;
                             cBackground = cTile;
                         }
+                        if (this.isHasGrid()) {
+                            cStroke = Color.DARK_GRAY;
+                        }
                         g.setColor(cBackground);
                         g.fill(hudView[level][tile]);
                         g.setColor(cStroke);
@@ -350,12 +376,17 @@ public class OleMap extends OleSensor implements ActionListener {
             this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 1.0 * lengthVisual / nLevels, 0, 180);
-            p = new Polygon();
-            p.addPoint(pHead.getXInt(), pHead.getYInt());
-            p.addPoint(center.getXInt() - 10, center.getYInt());
-            p.addPoint(center.getXInt() + 10, center.getYInt());
-            p.addPoint(pHead.getXInt(), pHead.getYInt());
-            g.draw(p);
+            if (scale < 7) {
+                p = new Polygon();
+                p.addPoint(pHead.getXInt(), pHead.getYInt());
+                p.addPoint(center.getXInt() - 10, center.getYInt());
+                p.addPoint(center.getXInt() + 10, center.getYInt());
+                p.addPoint(pHead.getXInt(), pHead.getYInt());
+                g.draw(p);
+            } else {
+                g.drawImage(sprites.get(0).getMap(), center.getXInt() - 12, center.getYInt() - 12, null);
+
+            }
             tf = new TextFactory(g).setX((int) (center.getX() + 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
                     .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
             tf.draw();

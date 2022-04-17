@@ -39,6 +39,14 @@ public class RuleBaseSystem {
         return listFirablesRules().size() > 0;
     }
 
+    public ArrayList<String> listAllRules() {
+        ArrayList<String> res = new ArrayList();
+        for (Rule r : myRules) {
+            res.add(r.getLabel());
+        }
+        return res;
+    }
+
     public ArrayList<String> listFirablesRules() {
         ArrayList<String> res = new ArrayList();
         for (Rule r : myRules) {
@@ -98,6 +106,14 @@ public class RuleBaseSystem {
         } else {
             return null;
         }
+    }
+
+    public Rule getRule(String label) {
+        for (Rule r: myRules ) {
+            if (r.getLabel().equals(label))
+                return r;
+        }
+        return null;
     }
 
     public boolean isActive() {

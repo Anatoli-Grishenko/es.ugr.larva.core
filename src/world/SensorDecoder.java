@@ -653,6 +653,24 @@ public class SensorDecoder {
         return getPolarLidar()[4][0];
     }
     
+    public boolean[][] getRadarData() {
+        int w=this.getLidarData()[0].length, h=this.getLidarData().length;
+        boolean res [][] = new boolean[w][h];
+        for (int x=0; x<w; x++)
+            for (int y=0; y< h; y++)
+                res[x][y] = getLidarData()[x][y]<0;
+        return res;
+    }
+    
+    public int[][] getDistancesData() {
+        int w=this.getThermalData()[0].length, h=this.getThermalData().length;
+        int res [][] = new int[w][h];
+        for (int x=0; x<w; x++)
+            for (int y=0; y< h; y++)
+                res[x][y] = getThermalData()[x][y];
+        return res;
+    }
+    
     public String printStatus(String requester) {
         String res = "", line;
 

@@ -50,7 +50,7 @@ public abstract class OleSensor extends JComponent {
     protected double[][] allReadings, Memory1, Memory2, Memory3;
     protected SensorType sType;
     protected int nColumns, nRows, nMarks;
-    protected double minValue, maxValue, lengthValue, stepValue, baseValue;
+    protected double minValue, maxValue, lengthValue, stepValue, stepValue2, baseValue;
     protected HashMap<Double, ImageIcon> readingMarks;
     protected ViewType vType;
     protected OleDrawPane matrixViewer;
@@ -74,7 +74,7 @@ public abstract class OleSensor extends JComponent {
     protected Map2DColor map, image1, image2, image3;
     protected double scale, shiftx, shifty;
     protected Rectangle screenPort, viewPort;
-    protected boolean isMap;
+    protected boolean isMap, hasGrid;
     protected AngleTransporter at;
     protected ArrayList<String> labelSet, textSet;
     public JsonArray jsaGoals = new JsonArray();
@@ -197,10 +197,10 @@ public abstract class OleSensor extends JComponent {
         return value;
     }
 
-    public void clear(){
+    public void clear() {
         setCurrentValue(this.getMinValue());
     }
-    
+
     public void setCurrentValue(double currentValue) {
         allReadings[0][0] = validateValue(currentValue);
         if (this.alertBelow) {
@@ -322,15 +322,19 @@ public abstract class OleSensor extends JComponent {
             p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
             p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
             p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
-            oDrawLine(g, p1, p2);
-            oDrawLine(g, p3, p4);
+            if (this.isHasGrid()) {
+                oDrawLine(g, p1, p3);
+            } else {
+                oDrawLine(g, p1, p2);
+                oDrawLine(g, p3, p4);
+            }
             if (alpha > getMinValue() && alpha < getMaxValue()) {
                 tf = new TextFactory(g);
-                tf.setPoint(p2).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).setFontSize(10);
+                tf.setPoint(p2).setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(10);
                 tf.setValue((int) alpha, 3);
                 tf.draw();
                 tf = new TextFactory(g);
-                tf.setPoint(p4).setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(10);
+                tf.setPoint(p4).setHalign(SwingConstants.LEFT).setValign(SwingConstants.BOTTOM).setFontSize(10);
                 tf.setValue((int) alpha, 3);
                 tf.draw();
             }
@@ -359,6 +363,24 @@ public abstract class OleSensor extends JComponent {
                 tf.draw();
             }
         }
+        if (this.isHasGrid()) {
+            g.setColor(Color.DARK_GRAY);
+            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
+                p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
+                p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
+                p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
+                p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
+                oDrawLine(g, p2, p4);
+            }
+            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
+                p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
+                p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
+                p3 = new Point3D(vPort.x + vPort.width, shifty + vPort.y + alpha * scale);
+                p4 = new Point3D(vPort.x + vPort.width - mark, shifty + vPort.y + alpha * scale);
+                oDrawLine(g, p2,p4);
+            }
+        }
+
     }
 
     public void drawCircularRuler(Graphics2D g, Point3D center, double axisRadius, double markRadius1, double markRadius2, double textRadius, int fontSize) {
@@ -392,7 +414,6 @@ public abstract class OleSensor extends JComponent {
                 stepScale = -stepVisual;
                 stepValue = stepValue;
             }
-
         }
 //        if (getMinVisual() % 360 == getMaxVisual() % 360) {
 //            maxScale += stepScale;
@@ -798,6 +819,14 @@ public abstract class OleSensor extends JComponent {
 
     public void setJsaGoals(JsonArray jsaGoals) {
         this.jsaGoals = jsaGoals;
+    }
+
+    public boolean isHasGrid() {
+        return hasGrid;
+    }
+
+    public void setHasGrid(boolean hasGrid) {
+        this.hasGrid = hasGrid;
     }
 
 }
