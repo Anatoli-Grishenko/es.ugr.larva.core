@@ -5,6 +5,7 @@
  */
 package ai;
 
+import java.util.ArrayList;
 import world.SensorDecoder;
 import world.World;
 
@@ -15,9 +16,12 @@ import world.World;
 public class Environment {
    protected SensorDecoder Perceptions;
    protected World World;
+   ArrayList <Environment> Memory;
    
    public Environment() {
        Perceptions = new SensorDecoder();
+       Memory=new ArrayList();
+       
    }
     public SensorDecoder getPerceptions() {
         return Perceptions;

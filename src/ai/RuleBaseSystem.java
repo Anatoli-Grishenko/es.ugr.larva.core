@@ -128,11 +128,12 @@ public class RuleBaseSystem {
         return debug;
     }
 
-    public void setDebug(boolean debug) {
+    public RuleBaseSystem setDebug(boolean debug) {
         this.debug = debug;
         for (Rule r : this.myRules) {
             r.setDebug(debug);
         }
+        return this;
     }
 
 }

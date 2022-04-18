@@ -19,6 +19,10 @@ public class DecisionSet extends ArrayList<Choice>{
         super();
     }
     
+    public DecisionSet addChoice(Choice c) {
+        this.add(c);
+        return this;
+    }
     public Choice getChoice(String label) {
         for (Choice mc : this) {
             if (mc.getLabel().equals(label))

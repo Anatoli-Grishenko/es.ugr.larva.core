@@ -7,6 +7,7 @@ package agents;
 
 import ai.Decisor;
 import ai.Environment;
+import console.Console;
 import data.Ole;
 import data.OleConfig;
 import data.OleFile;
@@ -393,7 +394,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 //            msg = ACLMessageTools.addDashMark(msg);
 //        }
         this.send(msg);
-        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false));
+        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false)+Console.defText(Console.white));
         myReport.setOutBox(myReport.getOutBox() + 1);
         sd.addSequence(msg);
     }

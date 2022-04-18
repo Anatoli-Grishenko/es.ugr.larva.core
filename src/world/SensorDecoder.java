@@ -124,7 +124,7 @@ public class SensorDecoder {
         indexperception = new HashMap();
         lastPerception = new JsonArray();
         myTrace = new TracePositions();
-        lastDistance=Integer.MAX_VALUE;
+        lastDistance = Integer.MAX_VALUE;
         ready = false;
     }
 
@@ -227,41 +227,41 @@ public class SensorDecoder {
         }
         return -1;
     }
-    
+
     public double getDifferentialDistance() {
-        return getDistance()-lastDistance;
+        return getDistance() - lastDistance;
     }
 
-    public boolean isCloser(){
-        return getDifferentialDistance()<0;
+    public boolean isCloser() {
+        return getDifferentialDistance() < 0;
     }
-    
-    public boolean isFarther(){
-        return getDifferentialDistance()>0;
+
+    public boolean isFarther() {
+        return getDifferentialDistance() > 0;
     }
-    
+
     public int getCompassLeft() {
-        return (getCompass()+45+360)%360;
+        return (getCompass() + 45 + 360) % 360;
     }
 
     public int getCompassRight() {
-        return (getCompass()-45+360)%360;
+        return (getCompass() - 45 + 360) % 360;
     }
 
     public double getRelativeAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double a = getAbsoluteAngular(), c = getCompass();
-            if (a>c) {
-                if (a-c<=180) {
-                    return a-c;            
-                }else {
-                    return -(c+360-a);
+            if (a > c) {
+                if (a - c <= 180) {
+                    return a - c;
+                } else {
+                    return -(c + 360 - a);
                 }
             } else {
-                if (c-a<180) {
-                    return a-c;            
-                }else {
-                    return (a+360-c);
+                if (c - a < 180) {
+                    return a - c;
+                } else {
+                    return (a + 360 - c);
                 }
 
             }
@@ -589,11 +589,11 @@ public class SensorDecoder {
             return;
         }
         try {
-            lastPosition = this.getGPSVector();            
+            lastPosition = this.getGPSVector();
         } catch (Exception ex) {
             lastPosition = null;
         }
-        
+
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
@@ -640,42 +640,57 @@ public class SensorDecoder {
     public int getLidarFront() {
         return getPolarLidar()[2][0];
     }
+
     public int getLidarLeft() {
         return getPolarLidar()[1][0];
     }
+
     public int getLidarLeftmost() {
         return getPolarLidar()[0][0];
     }
+
     public int getLidarRight() {
         return getPolarLidar()[3][0];
     }
+
     public int getLidarRightmost() {
         return getPolarLidar()[4][0];
     }
-    
-    public boolean[][] getRadarData() {
-        int w=this.getLidarData()[0].length, h=this.getLidarData().length;
-        boolean res [][] = new boolean[w][h];
-        for (int x=0; x<w; x++)
-            for (int y=0; y< h; y++)
-                res[x][y] = getLidarData()[x][y]<0;
+
+    public int[][] getRadarData() {
+        int data[][] = this.getLidarData();
+        int w = data[0].length, h = data.length;
+        int res[][] = new int[w][h];
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (data[x][y] == Perceptor.NULLREAD) {
+                    res[x][y] = data[x][y];
+                } else if (data[x][y] < 0) {
+                    res[x][y] = 1;
+                } else {
+                    res[x][y] = 0;
+                }
+            }
+        }
         return res;
     }
-    
+
     public int[][] getDistancesData() {
-        int w=this.getThermalData()[0].length, h=this.getThermalData().length;
-        int res [][] = new int[w][h];
-        for (int x=0; x<w; x++)
-            for (int y=0; y< h; y++)
+        int w = this.getThermalData()[0].length, h = this.getThermalData().length;
+        int res[][] = new int[w][h];
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
                 res[x][y] = getThermalData()[x][y];
+            }
+        }
         return res;
     }
-    
+
     public String printStatus(String requester) {
         String res = "", line;
 
         res = "Under request from " + requester + "\n";
-        res += "|  "+getNSteps()+"\n";
+        res += "|  " + getNSteps() + "\n";
         res += "|  Status of: " + getName() + "\n";
         res += "| |Memory:\n";
         res += "| |(" + myTrace.size() + ") " + this.getGPSPosition(1) + "\n";
@@ -686,7 +701,7 @@ public class SensorDecoder {
         res += "|  CO:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "º\n";
         res += "|  --> :" + getGPSVector().toString() + "\n";
         res += "| DI: " + (int) getDistance() + "m  AN:" + getAbsoluteAngular() + "º/" + getRelativeAngular() + "º\n";
-        res += "| CA: ("+getCargo().length+")   " + Transform.toArrayList(this.getCargo()) +"\n";
+        res += "| CA: (" + getCargo().length + ")   " + Transform.toArrayList(this.getCargo()) + "\n";
         res += "| |\n";
         res += "| |Coming move " + this.getGPSComingPosition() + "\n";
         int polar[][] = this.getPolarLidar();

@@ -11,6 +11,7 @@ import ai.DecisionSet;
 import ai.Environment;
 import ai.Rule;
 import ai.RuleBaseSystem;
+import console.Console;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +28,8 @@ public class Subsumption extends Decisor {
     protected HashMap<String, ArrayList<String>> Inhibit;
     protected HashMap<String, ArrayList<String>> Supress;
     protected boolean debug;
-    protected ArrayList<String> plan, inhibitedModules, supressedModules, firableRules, firableModules;
+    protected ArrayList<String> inhibitedModules, supressedModules, firableRules, firableModules;
+    DecisionSet primaryDS;
 
     @Override
     public double getUtility(Environment e, Choice c) {
@@ -51,14 +53,15 @@ public class Subsumption extends Decisor {
 
     @Override
     public DecisionSet MakeHighestDecision(Environment E) {
-        DecisionSet result = new DecisionSet();
+//        DecisionSet result = new DecisionSet();
         this.fire();
-        for (String s : this.getPlan()) {
-            String[]sdebug=s.split("\\|\\|");
-            result.add(new Choice(sdebug[3].replace("A>", "")).
-                    setUtility(Titles.get(sdebug[1].replace("M>", "")).getPriority()));
-        }
-        return result;
+//        
+//        for (String s : this.getPlan()) {
+//            String[] sdebug = s.split("\\|\\|");
+//            result.add(new Choice(sdebug[3].replace("A>", "")).
+//                    setUtility(Titles.get(sdebug[1].replace("M>", "")).getPriority()));
+//        }
+        return DecisionSet;
     }
 
     public Subsumption() {
@@ -68,7 +71,8 @@ public class Subsumption extends Decisor {
         Output = new HashMap();
         Inhibit = new HashMap();
         Supress = new HashMap();
-        this.setDebug(true);
+        this.setDebug(false);
+        primaryDS = new DecisionSet();
     }
 
     public ArrayList<String> getInhibitedModules() {
@@ -101,7 +105,7 @@ public class Subsumption extends Decisor {
     }
 
     public Subsumption addLayer(String Title, int priority) {
-        RuleBaseSystem r = new RuleBaseSystem().setPriority(priority).setTitle(Title);
+        RuleBaseSystem r = new RuleBaseSystem().setPriority(priority).setTitle(Title).setDebug(this.isDebug());
         Titles.put(Title, r);
         Priorities.put(priority, r);
         Inhibit.put(Title, new ArrayList());
@@ -138,7 +142,6 @@ public class Subsumption extends Decisor {
         Collections.sort(sorted);
         RuleBaseSystem rbs;
         Collections.reverse(sorted);
-        this.setDebug(true);
         firableRules = new ArrayList();
         for (int priority : sorted) {
             Priorities.get(priority).setActive(true);
@@ -182,34 +185,36 @@ public class Subsumption extends Decisor {
 
     public Subsumption addRule(String Layer, Rule r) {
         getLayer(Layer).addRule(r);
-        this.addChoice(new Choice(r.getLabel()));
+        primaryDS.addChoice(new Choice(r.getLabel()));
         return this;
     }
 
-    public ArrayList<String> fire() {
+    public void fire() {
         ArrayList<String> res = new ArrayList(), firables = new ArrayList(), inhibited = new ArrayList();
         ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
         Collections.sort(sorted);
         RuleBaseSystem rbs;
         Collections.reverse(sorted);
         this.Output.clear();
-        plan = new ArrayList();
         computeElegibility();
+        for (Choice c : DecisionSet) {
+            c.setUtility(Choice.MIN_UTILITY).setEligible(false);
+        }
         for (int priority : sorted) {
             String module = Priorities.get(priority).getTitle();
             if (Titles.get(module).isFirable() && Titles.get(module).isActive()) {
                 for (String firing : Titles.get(module).fireAll()) {
+                    DecisionSet.getChoice(firing).setMaxUtility(priority).setEligible(true);
                     if (debug) {
                         firing = "||M>" + Titles.get(module).getTitle() + firing;
                     }
 //                    if (firing.length() > 0) {
                     Output.put(module, firing);
-                    plan.add(firing);
 //                    }
                 }
             }
         }
-        return plan;
+        Collections.sort(DecisionSet);
     }
 
     public boolean isDebug() {
@@ -223,55 +228,17 @@ public class Subsumption extends Decisor {
         }
     }
 
-    public ArrayList<String> getPlan() {
-        return plan;
-    }
-
-    public String getPlanOutcome(int i) {
-        if (i > plan.size()) {
-            return "";
-        }
-        if (this.isDebug()) {
-            String splan[] = plan.get(i).split("\\|\\|");
-            if (splan.length < 1) {
-                return "";
-            }
-            if (splan.length < 3) {
-                return getPlanOutcome(i + 1);
-            }
-            return splan[3].replace("A>", "");
-        } else {
-            return plan.get(i);
-        }
-    }
-    
-    public String getPlanRule(int i) {
-        if (i > plan.size()) {
-            return "";
-        }
-        if (this.isDebug()) {
-            String splan[] = plan.get(i).split("\\|\\|");
-            if (splan.length < 1) {
-                return "";
-            }
-            if (splan.length < 3) {
-                return getPlanOutcome(i + 1);
-            }
-            return splan[2].replace("R>", "");
-        } else {
-            return plan.get(i);
-        }
-    }
-    
     public Rule getRule(String rulelabel) {
         for (String module : Titles.keySet()) {
-            if (Titles.get(module).listAllRules().contains(rulelabel))
+            if (Titles.get(module).listAllRules().contains(rulelabel)) {
                 return Titles.get(module).getRule(rulelabel);
+            }
         }
         return null;
     }
+
     public boolean isEmpty() {
-        return plan == null || plan.size() < 1;
+        return DecisionSet.get(0).getUtility() == Choice.MIN_UTILITY;
     }
 
     @Override
@@ -283,18 +250,64 @@ public class Subsumption extends Decisor {
         RuleBaseSystem r;
         for (int p : sorted) {
             r = Priorities.get(p);
-            res += "" + p + " || " + String.format("%-20s\t", r.getTitle());
-            res += (Inhibit.get(r.getTitle()) == null ? "\t" : "[I]" + Inhibit.get(r.getTitle()) + "\t")
+            if (r.isActive()) {
+                res += Console.defText(Console.gray);
+            } else {
+                res += Console.defText(Console.lightred);
+            }
+            res += "  " + String.format("%4d", p) + " ";
+            if (sorted.indexOf(p) == sorted.size() - 1) {
+                res += Console.windowFrames[0].charAt(2);
+            } else {
+                res += Console.windowFrames[0].charAt(10);
+            }
+            res += String.format("%-10s", r.getTitle());
+            res += " " + (Inhibit.get(r.getTitle()) == null ? "" : "\t[I]" + Inhibit.get(r.getTitle()) + "\t")
                     + (Supress.get(r.getTitle()) == null ? "\t" : "[S]" + Supress.get(r.getTitle())) + "\n";
             for (int i = 0; i < r.size(); i++) {
-                res += "\t|" + String.format("%-20s\t", r.getRule(i).getLabel())
-                        + " " + (r.getRule(i).isFirable() ? "*\t" : "\t")
+                if (!r.isActive()) {
+                    res += Console.defText(Console.lightred);
+                } else if (r.getRule(i).isFirable()) {
+                    res += Console.defText(Console.lightgreen);
+                } else {
+                    res += Console.defText(Console.gray);
+                }
+                if (i < r.size() - 1) {
+                    res += "       " + Console.windowFrames[0].charAt(5) + "   " + Console.windowFrames[0].charAt(10);
+                } else {
+                    res += "       " + Console.windowFrames[0].charAt(5) + "   " + Console.windowFrames[0].charAt(2);
+                }
+                res += " " + String.format("%-20s\t", r.getRule(i).getLabel())
+                        + " " + (r.getRule(i).isFirable() ? "A\t" : "\t")
                         + " " + (inhibitedModules.contains(r.getTitle()) ? "I\t" : "\t")
                         + " " + (supressedModules.contains(r.getTitle()) ? "S\t" : "\t")
                         + "\n";
             }
         }
+        res += "  A=" + DecisionSet + "\n";
         return res;
     }
 
+//    public String toString() {
+//        String res = "\n";
+//        computeElegibility();
+//        ArrayList<Integer> sorted = new ArrayList(Priorities.keySet());
+//        Collections.sort(sorted);
+//        RuleBaseSystem r;
+//        for (int p : sorted) {
+//            r = Priorities.get(p);
+//            res += "\t" + p + " || " + String.format("%-20s\t", r.getTitle());
+//            res += "\t" +(Inhibit.get(r.getTitle()) == null ? "\t" : "[I]" + Inhibit.get(r.getTitle()) + "\t")
+//                    + (Supress.get(r.getTitle()) == null ? "\t" : "[S]" + Supress.get(r.getTitle())) + "\n";
+//            for (int i = 0; i < r.size(); i++) {
+//                res += "\t" +"\t|" + String.format("%-20s\t", r.getRule(i).getLabel())
+//                        + " " + (r.getRule(i).isFirable() ? "*\t" : "\t")
+//                        + " " + (inhibitedModules.contains(r.getTitle()) ? "I\t" : "\t")
+//                        + " " + (supressedModules.contains(r.getTitle()) ? "S\t" : "\t")
+//                        + "\n";
+//            }
+//        }
+//        return res;
+//    }
+//
 }

@@ -593,7 +593,7 @@ public class Console {
 
         return this;
     }
-
+    
     public Console doGrid(int x, int y, int x2, int y2) {
         for (int i = y; i <= y2; i++) {
             setCursorXY(x, i);

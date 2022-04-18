@@ -10,14 +10,14 @@ package ai;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Choice implements Comparable {
-
+    public static final double MIN_UTILITY=Integer.MIN_VALUE, MAX_UTILITY=Integer.MAX_VALUE;
     String label;
     double utility;
     boolean eligible;
 
     public Choice(String label) {
         this.label = label;
-        utility = Double.MIN_VALUE;
+        utility = Choice.MIN_UTILITY;
     }
 
     public String getLabel() {
@@ -33,6 +33,15 @@ public class Choice implements Comparable {
         return utility;
     }
 
+    public Choice setMaxUtility(double utility) {
+        this.utility = Math.max(utility, this.getUtility());
+        return this;
+    }
+    public Choice setMinUtility(double utility) {
+        this.utility = Math.max(utility, this.getUtility());
+        return this;
+    }
+    
     public Choice setUtility(double utility) {
         this.utility = utility;
         return this;
@@ -64,7 +73,7 @@ public class Choice implements Comparable {
         String res = "";
 
         res = this.getLabel();
-        if (getUtility() != Double.MIN_VALUE) {
+        if (getUtility() != Choice.MIN_UTILITY) {
             res += "," + String.format("%03d", (int)this.getUtility());
         }
         if (eligible) {
