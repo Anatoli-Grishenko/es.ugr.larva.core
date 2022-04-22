@@ -25,7 +25,7 @@ public class DecisionSet extends ArrayList<Choice>{
     }
     public Choice getChoice(String label) {
         for (Choice mc : this) {
-            if (mc.getLabel().equals(label))
+            if (mc.getName().equals(label))
                 return mc;
         }
         return null;
@@ -33,7 +33,7 @@ public class DecisionSet extends ArrayList<Choice>{
     
     public boolean contains(Choice c) {
         for (Choice mc : this) {
-            if (mc.getLabel().equals(c.getLabel()))
+            if (mc.getName().equals(c.getName()))
                 return true;
         }
         return false;
@@ -53,11 +53,18 @@ public class DecisionSet extends ArrayList<Choice>{
     public DecisionSet extractEligibles(){
         DecisionSet res = new DecisionSet();
         for (Choice c : this){
-            if (c.isEligible())
+            if (c.isValid())
                 res.add(c);
         }
         return res;
     }
     
+    public Choice Best(){
+        return this.get(0);
+    }
+    
+    public Choice SecondBest(){
+        return this.get(1);
+    }
     
 }

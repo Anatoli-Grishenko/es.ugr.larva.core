@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Environment;
+package ai;
 
+import Environment.Environment;
 import ai.Decisor;
 import ai.Choice;
 import ai.DecisionSet;
-import ai.Environment;
 import ai.Rule;
 import ai.RuleBaseSystem;
 import console.Console;
@@ -34,7 +34,7 @@ public class Subsumption extends Decisor {
     @Override
     public double getUtility(Environment e, Choice c) {
         for (String which : Titles.keySet()) {
-            if (Titles.get(which).listAllRules().contains(c.getLabel())) {
+            if (Titles.get(which).listAllRules().contains(c.getName())) {
                 return Titles.get(which).getPriority();
             }
         }
@@ -44,7 +44,7 @@ public class Subsumption extends Decisor {
     @Override
     public boolean getElegibility(Environment e, Choice c) {
         for (String which : Titles.keySet()) {
-            if (Titles.get(which).listAllRules().contains(c.getLabel())) {
+            if (Titles.get(which).listAllRules().contains(c.getName())) {
                 return Titles.get(which).isActive();
             }
         }
@@ -52,7 +52,7 @@ public class Subsumption extends Decisor {
     }
 
     @Override
-    public DecisionSet MakeHighestDecision(Environment E) {
+    public DecisionSet MakeBestDecision(Environment E) {
 //        DecisionSet result = new DecisionSet();
         this.fire();
 //        
@@ -198,13 +198,13 @@ public class Subsumption extends Decisor {
         this.Output.clear();
         computeElegibility();
         for (Choice c : DecisionSet) {
-            c.setUtility(Choice.MIN_UTILITY).setEligible(false);
+            c.setUtility(Choice.MIN_UTILITY).setValid(false);
         }
         for (int priority : sorted) {
             String module = Priorities.get(priority).getTitle();
             if (Titles.get(module).isFirable() && Titles.get(module).isActive()) {
                 for (String firing : Titles.get(module).fireAll()) {
-                    DecisionSet.getChoice(firing).setMaxUtility(priority).setEligible(true);
+                    DecisionSet.getChoice(firing).setMaxUtility(priority).setValid(true);
                     if (debug) {
                         firing = "||M>" + Titles.get(module).getTitle() + firing;
                     }
@@ -300,7 +300,7 @@ public class Subsumption extends Decisor {
 //            res += "\t" +(Inhibit.get(r.getTitle()) == null ? "\t" : "[I]" + Inhibit.get(r.getTitle()) + "\t")
 //                    + (Supress.get(r.getTitle()) == null ? "\t" : "[S]" + Supress.get(r.getTitle())) + "\n";
 //            for (int i = 0; i < r.size(); i++) {
-//                res += "\t" +"\t|" + String.format("%-20s\t", r.getRule(i).getLabel())
+//                res += "\t" +"\t|" + String.format("%-20s\t", r.getRule(i).getName())
 //                        + " " + (r.getRule(i).isFirable() ? "*\t" : "\t")
 //                        + " " + (inhibitedModules.contains(r.getTitle()) ? "I\t" : "\t")
 //                        + " " + (supressedModules.contains(r.getTitle()) ? "S\t" : "\t")

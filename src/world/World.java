@@ -510,7 +510,7 @@ public class World {
                         }
                     }
                 } else {
-                    if (xyreading.get(0).isNumber()) {
+                    if (xyreading.get(0).isNumber()) { /// 
 //                        int max = xyreading.get(0).asInt();
 //                        for (JsonValue v : xyreading) {
 //                            if (v.asInt() > max) {

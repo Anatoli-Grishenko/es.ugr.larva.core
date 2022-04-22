@@ -23,6 +23,12 @@ public class Compass {
         new Vector3D(new Point3D(0, 1)), new Vector3D(new Point3D(1, 1)), new Vector3D(new Point3D(1, 0)),
         new Vector3D(new Point3D(1, -1)), new Vector3D(new Point3D(0, 0, 1)), new Vector3D(new Point3D(0, 0, -1))};
 
+    public static int Left(int compass) {
+        return (compass+45)%360;
+    }
+    public static int Right(int compass) {
+        return (compass+315)%360;
+    }
     public static int getIndex(direction d) {
         return d.ordinal();
     }

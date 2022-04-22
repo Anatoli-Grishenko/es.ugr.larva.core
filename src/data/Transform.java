@@ -15,6 +15,7 @@ import java.util.List;
 import data.Ole;
 import data.Ole.oletype;
 // JsonArray <--> ArrayList <--> Array <-- Enum
+
 /**
  * Class of static methods for transforming some objects into
  * JsonObject/jsonArray
@@ -139,4 +140,27 @@ public class Transform {
 
     }
 
+    public static int[][] shift(int original[][], int incrx, int incry, int badvalue) {
+        int w = original.length, h = original[0].length, result[][] = new int[w][h];
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (0 <= x + incrx && x + incrx < w && 0 <= y + incry && y + incry < h) {
+                    result[x][y] = original[x + incrx][y + incry];
+                } else {
+                    result[x][y] = badvalue;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static int centroid(int original[][], int incrx, int incry, int badvalue) {
+        int w = original.length, h = original[0].length, x = w / 2, y = h / 2;
+        if (0 <= x + incrx && x + incrx < w && 0 <= y + incry && y + incry < h) {
+            return original[x + incrx][y + incry];
+        } else {
+            return badvalue;
+        }
+
+    }
 }

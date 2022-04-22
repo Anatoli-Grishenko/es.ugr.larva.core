@@ -11,21 +11,21 @@ package ai;
  */
 public class Choice implements Comparable {
     public static final double MIN_UTILITY=Integer.MIN_VALUE, MAX_UTILITY=Integer.MAX_VALUE;
-    String label;
+    String name;
     double utility;
-    boolean eligible;
+    boolean valid;
 
     public Choice(String label) {
-        this.label = label;
+        this.name = label;
         utility = Choice.MIN_UTILITY;
     }
 
-    public String getLabel() {
-        return label;
+    public String getName() {
+        return name;
     }
 
-    public Choice setLabel(String label) {
-        this.label = label;
+    public Choice setName(String label) {
+        this.name = label;
         return this;
     }
 
@@ -47,12 +47,12 @@ public class Choice implements Comparable {
         return this;
     }
 
-    public boolean isEligible() {
-        return eligible;
+    public boolean isValid() {
+        return valid;
     }
 
-    public Choice setEligible(boolean eligible) {
-        this.eligible = eligible;
+    public Choice setValid(boolean eligible) {
+        this.valid = eligible;
         return this;
     }
 
@@ -72,11 +72,11 @@ public class Choice implements Comparable {
     public String toString() {
         String res = "";
 
-        res = this.getLabel();
+        res = this.getName();
         if (getUtility() != Choice.MIN_UTILITY) {
             res += "," + String.format("%03d", (int)this.getUtility());
         }
-        if (eligible) {
+        if (valid) {
             res = "[+" + res + "+]";
         } else {
             res = "{-" + res + "-}";

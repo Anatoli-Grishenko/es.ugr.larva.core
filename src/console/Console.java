@@ -24,7 +24,7 @@ import static crypto.Keygen.getAlphaNumKey;
 public class Console {
 
     protected Process _pconsole;
-    protected String _consoleinputfile, _tty;
+    protected String _consoleinputfile, _tty, buffer;
     protected PrintStream _outTo;
     protected InputStream _inFrom;
 
@@ -223,6 +223,7 @@ public class Console {
     public Console print(String s) {
         try {
             this.out().append(s);
+            buffer+=s;
         } catch (Exception ex) {
             System.err.println("Console " + _title + "Error while printing text" + ex.toString());
             System.exit(1);
@@ -233,6 +234,7 @@ public class Console {
 
     public Console println(String s) {
         print(s).print("\n");
+        buffer += s+"\n";
         _cursorx = 1;
         _cursory++;
         return this;
@@ -476,6 +478,7 @@ public class Console {
 
     public Console clearScreen() {
         print(defclearScreen());
+        buffer = "";
         return this;
     }
 
@@ -851,4 +854,7 @@ public class Console {
         return this;
     }
 
+    public String getBuffer() {
+        return buffer;
+    }
 }

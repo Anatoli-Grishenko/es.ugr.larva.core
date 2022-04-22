@@ -6,7 +6,9 @@
 package agents;
 
 import ai.Decisor;
-import ai.Environment;
+import Environment.Environment;
+import ai.Choice;
+import ai.DecisionSet;
 import console.Console;
 import data.Ole;
 import data.OleConfig;
@@ -25,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -97,8 +100,60 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
-    protected Environment Environment;
+    
+    protected Environment E;
+    protected DecisionSet A;
     protected Decisor Decisor;
+
+    protected Choice Ag(Environment E, DecisionSet A) {
+        if (G(E)) {
+            return null;
+        } else if (A.isEmpty()) {
+            return null;
+        } else {
+            A = Prioritize(E, A);
+            return A.Best();
+        }
+    }
+
+    protected DecisionSet Prioritize(Environment E, DecisionSet A) {
+        for (Choice a : A) {
+            if (a.getName().equals("IDLE") && V(E, a)) {
+                a.setUtility(Choice.MAX_UTILITY / 1000);
+            } else if (V(E, a)) {
+                a.setUtility(U(T(E, a)));
+            } else {
+                a.setUtility(Choice.MAX_UTILITY);
+            }
+        }
+        Collections.sort(A);
+        Collections.reverse(A);
+        return A;
+    }
+
+    protected Environment T(Environment E, Choice a) {
+        if (V(E, a)) {
+            return E.simmulate(a);
+        } else {
+            return null;
+        }
+    }
+
+    protected double U(Environment E) {
+        return Choice.MAX_UTILITY;
+    }
+
+    protected boolean V(Environment E, Choice a) {
+        return true;
+    }
+
+    protected boolean V(Environment E) {
+        return true;
+    }
+
+    protected boolean G(Environment E) {
+        return false;
+    }
 
     /**
      * Main JADE setup
@@ -137,7 +192,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
-        Environment = new Environment();
+        E = new Environment();
     }
 
     @Override
@@ -394,7 +449,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 //            msg = ACLMessageTools.addDashMark(msg);
 //        }
         this.send(msg);
-        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false)+Console.defText(Console.white));
+        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false) + Console.defText(Console.white));
         myReport.setOutBox(myReport.getOutBox() + 1);
         sd.addSequence(msg);
     }
@@ -417,13 +472,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Environment.getPerceptions().feedPerception(res.getContent());
+                E.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -450,13 +505,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Environment.getPerceptions().feedPerception(res.getContent());
+                E.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -480,13 +535,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Environment.getPerceptions().feedPerception(res.getContent());
+                E.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -511,13 +566,13 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                Environment.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                Environment.getPerceptions().feedPerception(res.getContent());
+                E.getPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);

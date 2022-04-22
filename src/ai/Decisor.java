@@ -5,6 +5,7 @@
  */
 package ai;
 
+import Environment.Environment;
 import ai.DecisionSet;
 import ai.Choice;
 
@@ -38,7 +39,7 @@ public abstract class Decisor {
 
     public abstract boolean getElegibility(Environment e, Choice c);
 
-    public abstract DecisionSet MakeHighestDecision(Environment e);
+    public abstract DecisionSet MakeBestDecision(Environment e);
 //    {
 //        for (Choice ch : DecisionSet) {
 //            ch.setUtility(this.getUtility(e, ch));
@@ -47,12 +48,5 @@ public abstract class Decisor {
 //        return DecisionSet.sortAscending().extractEligibles();
 //    }
 
-    public DecisionSet MakeLowestDecision(Environment e) {
-        for (Choice ch : DecisionSet) {
-            ch.setUtility(this.getUtility(e, ch));
-            ch.setEligible(this.getElegibility(e, ch));
-        }
-        return DecisionSet.sortDescending().extractEligibles();
-    }
 
 }

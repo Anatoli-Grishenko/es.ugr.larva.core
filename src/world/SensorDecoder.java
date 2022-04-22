@@ -479,7 +479,7 @@ public class SensorDecoder {
         return res;
     }
 
-    protected int[][] getVisualData() {
+    public int[][] getVisualData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("visual");
         if (jsaReading == null) {
@@ -500,7 +500,7 @@ public class SensorDecoder {
         return null;
     }
 
-    protected int[][] getLidarData() {
+    public int[][] getLidarData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("lidar");
         if (jsaReading == null) {
@@ -520,7 +520,7 @@ public class SensorDecoder {
         return null;
     }
 
-    protected int[][] getThermalData() {
+    public int[][] getThermalData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor("thermal");
         if (jsaReading == null) {
@@ -531,7 +531,7 @@ public class SensorDecoder {
             int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
             for (int i = 0; i < res.length; i++) {
                 for (int j = 0; j < res[0].length; j++) {
-                    res[j][i] = (int) jsaReading.get(i).asArray().get(j).asDouble();
+                    res[j][i] = (int)(jsaReading.get(i).asArray().get(j).asDouble()*100);
                 }
             }
 
@@ -593,7 +593,6 @@ public class SensorDecoder {
         } catch (Exception ex) {
             lastPosition = null;
         }
-
         JsonObject jsoperception = Json.parse(content).asObject();
         name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
@@ -637,55 +636,64 @@ public class SensorDecoder {
         }
     }
 
-    public int getLidarFront() {
-        return getPolarLidar()[2][0];
-    }
 
-    public int getLidarLeft() {
-        return getPolarLidar()[1][0];
-    }
-
-    public int getLidarLeftmost() {
-        return getPolarLidar()[0][0];
-    }
-
-    public int getLidarRight() {
-        return getPolarLidar()[3][0];
-    }
-
-    public int getLidarRightmost() {
-        return getPolarLidar()[4][0];
-    }
-
-    public int[][] getRadarData() {
-        int data[][] = this.getLidarData();
-        int w = data[0].length, h = data.length;
-        int res[][] = new int[w][h];
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                if (data[x][y] == Perceptor.NULLREAD) {
-                    res[x][y] = data[x][y];
-                } else if (data[x][y] < 0) {
-                    res[x][y] = 1;
-                } else {
-                    res[x][y] = 0;
-                }
-            }
-        }
-        return res;
-    }
-
-    public int[][] getDistancesData() {
-        int w = this.getThermalData()[0].length, h = this.getThermalData().length;
-        int res[][] = new int[w][h];
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                res[x][y] = getThermalData()[x][y];
-            }
-        }
-        return res;
-    }
-
+//    public int[][] getShortRadar() {
+//        int reading[][] = new int[3][3], original[][] = getLidarData();
+//        int cx = original[0].length / 2, cy = original.length / 2;
+//        for (int y = -1; y < 2; y++) {
+//            for (int x = -1; x < 2; x++) {
+//                if (original[cx+x][cy+y]<0)
+//                    reading[x + 1][y + 1] = 1;
+//                else
+//                    reading[x + 1][y + 1] = 0;
+//            }
+//        }
+//        return reading;
+//    }
+//
+//    public int[][] getShortLidar() {
+//        int reading[][] = new int[3][3], original[][] = getLidarData();
+//        int cx = original[0].length / 2, cy = original.length / 2;
+//        for (int y = -1; y < 2; y++) {
+//            for (int x = -1; x < 2; x++) {
+//                reading[x + 1][y + 1] = original[cx + x][cy + y];
+//            }
+//        }
+//        return reading;
+//    }
+//
+//    public int[][] getShortVisual() {
+//        int reading[][] = new int[3][3], original[][] = getVisualData();
+//        int cx = original[0].length / 2, cy = original.length / 2;
+//        for (int y = -1; y < 2; y++) {
+//            for (int x = -1; x < 2; x++) {
+//                reading[x + 1][y + 1] = original[cx + x][cy + y];
+//            }
+//        }
+//        return reading;
+//    }
+//
+//    public int[][] getShortDistances() {
+//        int reading[][] = new int[3][3];
+//        int original[][] = getThermalData();
+//        int cx = original[0].length / 2, cy = original.length / 2;
+//        for (int y = -1; y < 2; y++) {
+//            for (int x = -1; x < 2; x++) {
+//                reading[x + 1][y + 1] = original[cx + x][cy + y];
+//            }
+//        }
+//        return reading;
+////    return getThermalData();
+//    }
+//
+//    public int[] getShortPolar() {
+//        int [] reading = new int[5];
+//        for (int i=0; i<5; i++){
+//            reading[i]= getPolarLidar()[i][1];
+//        }
+//        return reading;
+//    }
+    
     public String printStatus(String requester) {
         String res = "", line;
 
@@ -877,4 +885,5 @@ public class SensorDecoder {
 //        res += "|\n\n";
         return res;
     }
+
 }
