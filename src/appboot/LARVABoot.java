@@ -282,7 +282,7 @@ public class LARVABoot {
         shareableGUI.put("XUI", _XUI);
         appMain.getMainPanel().add(tabbedPane, BorderLayout.CENTER);
         appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
-                app.getOptions().getOle("FrameSize").getInt("height", 480)));        
+                app.getOptions().getOle("FrameSize").getInt("height", 480)));
         showStatus();
         if (new File(_configFileName).exists()) {
             oleConfig = new OleConfig();
@@ -380,6 +380,18 @@ public class LARVABoot {
             String name = e.getActionCommand().split((" "))[1];
             _stoppingAgents.add(name);
 //            stopAgent(name);
+        }
+        if (e.getActionCommand().startsWith("Configure ")) {
+            OleConfig problemCfg = new OleConfig();
+            problemCfg.loadFile("config/Problems.conf");
+            SwingTools.doSwingWait(() -> {
+                OleDialog odOptions = new OleDialog(this.appMain, "Please choose problem options");
+                if (odOptions.run(problemCfg)) {
+                    odOptions.getResult().saveAsFile("./config/", "Problems.conf", true);
+                }
+            });
+            problemCfg.loadFile("config/Problems.conf");
+
         }
 //        System.out.println("Listener  ending");
         this.doJade.release(1);

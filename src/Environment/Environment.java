@@ -11,6 +11,8 @@ import com.eclipsesource.json.JsonObject;
 import data.Transform;
 import geometry.Compass;
 import geometry.Point3D;
+import geometry.PolarSurface;
+import geometry.SimpleVector3D;
 import java.util.ArrayList;
 import world.Perceptor;
 import world.SensorDecoder;
@@ -34,7 +36,7 @@ public class Environment {
             relativeangular = Perceptor.NULLREAD;
     protected boolean alive, ontarget;
     protected Point3D position;
-    protected int[][] shortRadar, shortDistances, shortLidar, shortVisual;
+    protected SimpleVector3D gpsVector;
     protected int[][] visualData, lidarData, thermalData;
     protected int[] shortPolar;
     protected String cargo[];
@@ -42,10 +44,6 @@ public class Environment {
     public Environment() {
         Perceptions = new SensorDecoder();
         Memory = new ArrayList();
-        shortRadar = new int[3][3];
-        shortDistances = new int[3][3];
-        shortLidar = new int[3][3];
-        shortVisual = new int[3][3];
         shortPolar = new int[5];
     }
 
@@ -70,20 +68,22 @@ public class Environment {
     }
 
     public Environment simmulate(Choice a) {
+        double y, x;
         String action = a.getName();
         Environment result = new Environment();
         result.setX(this.getX());
         result.setY(this.getY());
         result.setZ(this.getZ());
-        result.setPosition(this.getPosition());
-        result.setCompass(this.getCompass());
-        result.setAltitude(this.getAltitude());
-        result.setGround(this.getGround());
-        result.setEnergy(this.getEnergy());
-        result.setMaxlevel(this.getMaxlevel());
-        result.setCompass(this.getCompass());
-        result.setNsteps(this.getNsteps() + 1);
-        result.setDistance(this.getDistance());
+        result.gpsVector=this.getGPSVector();
+        result.position= this.getPosition();
+        result.gpsVector = this.getGPSVector();
+        result.compass = this.getCompass();
+        result.altitude = this.getAltitude();
+        result.ground = this.getGround();
+        result.energy = this.getEnergy();
+        result.maxlevel = this.getMaxlevel();
+        result.nsteps = this.getNsteps() + 1;
+        result.distance= this.getDistance();
         result.incrx = 0;
         result.incry = 0;
         result.worldWidth = this.getWorldWidth();
@@ -94,43 +94,53 @@ public class Environment {
                 result.incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
                 result.setX(this.getX() + result.incrx);
                 result.setY(this.getY() + result.incry);
-                result.setGround(this.getAltitude() - this.getVisualFront());
-                result.setDistance(this.getThermalFront());
-                result.setEnergy(result.getEnergy() - 1);
-                result.setPosition(new Point3D(result.getX(), result.getY(), result.getZ()));
+                result.ground = this.getAltitude() - this.getVisualFront();
+                result.distance = this.getThermalFront() / 100.0;
+                result.energy = result.getEnergy() - 1;
+                result.position = new Point3D(result.getX(), result.getY(), result.getZ());
+                result.gpsVector = new SimpleVector3D(result.position, this.getGPSVector().getsOrient());
+                y = this.getDistance() * Math.sin(Math.toRadians(this.getRelativeangular() + 90));
+                x = this.getDistance() * Math.cos(Math.toRadians(this.getRelativeangular() + 90));
+                result.relativeangular = Math.toDegrees(Math.acos((y + incry) / result.getDistance()));
                 break;
             case "LEFT":
-                result.setCompass((45 + getCompass()) % 360);
-                result.setEnergy(result.getEnergy() - 1);
+                result.compass = (45 + getCompass()) % 360;
+                result.energy = result.getEnergy() - 1;
+                result.gpsVector = new SimpleVector3D(result.position, result.compass/45);
+                result.relativeangular = (this.relativeangular+45)%360;
                 break;
             case "RIGHT":
-                result.setCompass((315 + getCompass()) % 360);
-                result.setEnergy(result.getEnergy() - 1);
+                result.compass = (315 + getCompass()) % 360;
+                result.energy = result.getEnergy() - 1;
+                result.gpsVector = new SimpleVector3D(result.position, result.compass/45);
+                result.relativeangular = (this.relativeangular+270)%360;
                 break;
             case "UP":
                 result.setZ(result.getZ() + 5);
-                result.setAltitude(result.getAltitude() + 5);
-                result.setGround(result.getAltitude() + 5);
-                result.setEnergy(result.getEnergy() - 5);
-                result.setPosition(new Point3D(result.getX(), result.getY(), result.getZ()));
+                result.altitude = result.getAltitude() + 5;
+                result.ground = result.getAltitude() + 5;
+                result.energy = result.getEnergy() - 5;
+                result.position = new Point3D(result.getX(), result.getY(), result.getZ());
+                result.gpsVector = new SimpleVector3D(result.position, this.getGPSVector().getsOrient());
                 break;
             case "DOWN":
                 result.setZ(result.getZ() - 5);
-                result.setAltitude(result.getAltitude() - 5);
-                result.setGround(result.getAltitude() - 5);
-                result.setEnergy(result.getEnergy() - 5);
-                result.setPosition(new Point3D(result.getX(), result.getY(), result.getZ()));
+                result.altitude = result.getAltitude() - 5;
+                result.ground = result.getAltitude() - 5;
+                result.energy = result.getEnergy() - 5;
+                result.position = new Point3D(result.getX(), result.getY(), result.getZ());
+                result.gpsVector = new SimpleVector3D(result.position, this.getGPSVector().getsOrient());
                 break;
             case "IDLE":
                 break;
             case "RECHARGE":
                 if (result.getGround() == 0) {
-                    result.setEnergy(liveBot.MAXENERGY);
+                    result.energy = liveBot.MAXENERGY;
                 }
                 break;
             case "CAPTURE":
                 if (result.getGround() == 0 && Transform.centroid(thermalData, 0, 0, -1) == 0) {
-                    result.setCargo(new String[]{"SOMETHING"});
+                    result.cargo = new String[]{"SOMETHING"};
                 }
                 break;
             default:
@@ -150,26 +160,22 @@ public class Environment {
         setX(Perceptions.getGPSPosition().getXInt());
         setY(Perceptions.getGPSPosition().getYInt());
         setZ(Perceptions.getGPSPosition().getZInt());
-        setPosition(Perceptions.getGPSPosition());
-        setAltitude(getZ());
-        setGround(Perceptions.getGround());
-        setCompass(Perceptions.getCompass());
-        setEnergy(Perceptions.getEnergy());
-        setDistance(Perceptions.getDistance());
-        setAngular(Perceptions.getAbsoluteAngular());
-        setRelativeangular(Perceptions.getRelativeAngular());
-        setMaxlevel(Perceptions.getMaxlevel());
+        this.position = Perceptions.getGPSPosition();
+        this.gpsVector = Perceptions.getGPSVector();
+        this.altitude=getZ();
+        this.ground = Perceptions.getGround();
+        this.compass=Perceptions.getCompass();
+        this.energy = Perceptions.getEnergy();
+        this.distance = Perceptions.getDistance();
+        this.angular  = Perceptions.getAbsoluteAngular();
+        this.relativeangular = Perceptions.getRelativeAngular();
+        this.maxlevel= Perceptions.getMaxlevel();
         setNsteps(Perceptions.getNSteps());
-        setCargo(Perceptions.getCargo());
+        this.cargo = Perceptions.getCargo();
         setOntarget(Perceptions.getOnTarget());
         setAlive(Perceptions.getAlive());
         this.worldWidth = Perceptions.getWorldMap().getWidth();
         this.worldHeight = Perceptions.getWorldMap().getHeight();
-        this.setShortDistances(getShort(thermalData));
-        this.setShortLidar(getShort(lidarData));
-        this.setShortVisual(getShort(visualData));
-        this.setShortPolar(getPolar(lidarData));
-
         incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
         incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
         incrz = 5;
@@ -203,106 +209,64 @@ public class Environment {
         return ground;
     }
 
-    public void setGround(int ground) {
-        this.ground = ground;
-    }
-
     public int getCompass() {
         return compass;
-    }
-
-    public void setCompass(int compass) {
-        this.compass = compass;
     }
 
     public double getEnergy() {
         return energy;
     }
 
-    public void setEnergy(double energy) {
-        this.energy = energy;
-    }
-
     public double getDistance() {
         return distance;
-    }
-
-    public void setDistance(double distance) {
-        this.distance = distance;
     }
 
     public double getAngular() {
         return angular;
     }
 
-    public void setAngular(double angular) {
-        this.angular = angular;
-    }
-
     public double getRelativeangular() {
         return relativeangular;
     }
 
-    public void setRelativeangular(double relativeangular) {
-        this.relativeangular = relativeangular;
-    }
-
     public int[][] getShortRadar() {
-        int r[][] = getShortLidar();
-        for (int x = 0; x < 3; x++) {
-            for (int y = 0; y < 3; y++) {
-                if (r[x][y] < 0) {
-                    r[x][y] = 1;
+        int res[][] = this.getShortGeneral(lidarData);
+        for (int x = 0; x < res.length; x++) {
+            for (int y = 0; y < res[0].length; y++) {
+                if (res[x][y] < 0) {
+                    res[x][y] = 1;
                 } else {
-                    r[x][y] = 0;
+                    res[x][y] = 0;
                 }
             }
         }
-        return r;
-    }
-
-    public void setShortRadar(int[][] shortRadar) {
-        this.shortRadar = shortRadar;
+        return res;
     }
 
     public int[][] getShortDistances() {
-        return shortDistances;
-    }
-
-    public void setShortDistances(int[][] shortDistances) {
-        this.shortDistances = shortDistances;
+        return this.getShortGeneral(thermalData);
     }
 
     public int[] getShortPolar() {
-        return shortPolar;
-    }
-
-    public void setShortPolar(int[] shortPolar) {
-        this.shortPolar = shortPolar;
+        int result[] = new int[5];
+        result[0] = getLeftmostGeneral(lidarData);
+        result[1] = getLeftGeneral(lidarData);
+        result[2] = getFrontGeneral(lidarData);
+        result[3] = getRightGeneral(lidarData);
+        result[4] = getRightmostGeneral(lidarData);
+        return result;
     }
 
     public int getAltitude() {
         return altitude;
     }
 
-    public void setAltitude(int altitude) {
-        this.altitude = altitude;
-    }
-
     public int[][] getShortLidar() {
-        return shortLidar;
-    }
-
-    public void setShortLidar(int[][] shortLidar) {
-        this.shortLidar = shortLidar;
+        return this.getShortGeneral(lidarData);
     }
 
     public int[][] getShortVisual() {
-        return shortVisual;
-    }
-
-    public void setShortVisual(int[][] shortVisual) {
-        this.shortVisual = shortVisual;
+        return this.getShortGeneral(visualData);
     }
 
     public int getNsteps() {
@@ -349,10 +313,6 @@ public class Environment {
         return cargo;
     }
 
-    public void setCargo(String[] cargo) {
-        this.cargo = cargo;
-    }
-
     public int getNSensors() {
         return Perceptions.getSensorList().length;
     }
@@ -361,11 +321,7 @@ public class Environment {
         return position;
     }
 
-    public void setPosition(Point3D position) {
-        this.position = position;
-    }
-
-    protected int[][] getShort(int[][] data) {
+    protected int[][] getShortGeneral(int[][] data) {
         int result[][] = new int[3][3];
         for (int x = 0; x < result[0].length; x++) {
             for (int y = 0; y < result.length; y++) {
@@ -375,107 +331,176 @@ public class Environment {
         return result;
     }
 
-    protected int[] getPolar(int[][] data) {
-        int result[] = new int[5];
-        result[0] = getLeftmost(data);
-        result[1] = getLeft(data);
-        result[2] = getFront(data);
-        result[3] = getRight(data);
-        result[4] = getRightmost(data);
-        return result;
+    public int[][] getPolarGeneral(int[][] data) {
+        int initial[][] = data, res[][];
+        SimpleVector3D myv = this.getGPSVector();
+        int mww = initial[0].length, mhh = initial.length;
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        ps.setRadius(mhh / 2 + 1);
+        res = ps.applyPolarTo(initial);
+        return res;
     }
 
-    protected int getHere(int[][] data) {
-        return Transform.centroid(data, 0,0, Perceptor.NULLREAD);
+    public int[][] getAbsoluteGeneral(int[][] data) {
+        int initial[][] = data, res[][];
+        SimpleVector3D myv = this.getGPSVector();
+        int mww = initial[0].length, mhh = initial.length;
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        ps.setRadius(mhh / 2 + 1);
+        res = ps.applyAbsoluteTo(initial);
+        return res;
     }
 
-    protected int getFront(int[][] data) {
+    public int[][] getRelativeGeneral(int[][] data) {
+        int initial[][] = data, res[][];
+        SimpleVector3D myv = this.getGPSVector();
+        int mww = initial[0].length, mhh = initial.length / 2 + 1;
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()));
+        ps.setRadius(mww / 2 + 1);
+        res = ps.applyRelativeTo(initial);
+        return res;
+    }
+
+   
+
+    protected int getHereGeneral(int[][] data) {
+        return Transform.centroid(data, 0, 0, Perceptor.NULLREAD);
+    }
+
+    protected int getFrontGeneral(int[][] data) {
         return Transform.centroid(data, (int) Compass.SHIFT[this.getCompass() / 45].moduloX(),
                 (int) Compass.SHIFT[this.getCompass() / 45].moduloY(), Perceptor.NULLREAD);
     }
 
-    protected int getLeft(int[][] data) {
+    protected int getLeftGeneral(int[][] data) {
         return Transform.centroid(data, (int) Compass.SHIFT[Compass.Left(this.getCompass()) / 45].moduloX(),
                 (int) Compass.SHIFT[Compass.Left(this.getCompass()) / 45].moduloY(), Perceptor.NULLREAD);
     }
 
-    public int getLeftmost(int[][] data) {
+    public int getLeftmostGeneral(int[][] data) {
         return Transform.centroid(data, (int) Compass.SHIFT[Compass.Left(Compass.Left(this.getCompass())) / 45].moduloX(),
                 (int) Compass.SHIFT[Compass.Left(Compass.Left(this.getCompass())) / 45].moduloY(), Perceptor.NULLREAD);
     }
 
-    protected int getRight(int[][] data) {
+    protected int getRightGeneral(int[][] data) {
         return Transform.centroid(data, (int) Compass.SHIFT[Compass.Right(this.getCompass()) / 45].moduloX(),
                 (int) Compass.SHIFT[Compass.Right(this.getCompass()) / 45].moduloY(), Perceptor.NULLREAD);
     }
 
-    public int getRightmost(int[][] data) {
+    public int getRightmostGeneral(int[][] data) {
         return Transform.centroid(data, (int) Compass.SHIFT[Compass.Right(Compass.Right(this.getCompass())) / 45].moduloX(),
                 (int) Compass.SHIFT[Compass.Right(Compass.Right(this.getCompass())) / 45].moduloY(), Perceptor.NULLREAD);
     }
 
     public int getLidarFront() {
-        return getFront(lidarData);
+        return getFrontGeneral(lidarData);
     }
 
     public int getLidarLeft() {
-        return getLeft(lidarData);
+        return getLeftGeneral(lidarData);
     }
 
     public int getLidarLeftmost() {
-        return getLeftmost(lidarData);
+        return getLeftmostGeneral(lidarData);
     }
 
     public int getLidarRight() {
-        return getRight(lidarData);
+        return getRightGeneral(lidarData);
     }
 
     public int getLidarRightmost() {
-        return getRightmost(lidarData);
+        return getRightmostGeneral(lidarData);
     }
 
     public int getVisualFront() {
-        return getFront(visualData);
+        return getFrontGeneral(visualData);
     }
 
     public int getVisualLeft() {
-        return getLeft(visualData);
+        return getLeftGeneral(visualData);
     }
 
     public int getVisualLeftmost() {
-        return getLeftmost(visualData);
+        return getLeftmostGeneral(visualData);
     }
 
     public int getVisualRight() {
-        return getRight(visualData);
+        return getRightGeneral(visualData);
     }
 
     public int getVisualRightmost() {
-        return getRightmost(visualData);
+        return getRightmostGeneral(visualData);
     }
 
     public int getThermalFront() {
-        return getFront(thermalData);
+        return getFrontGeneral(thermalData);
     }
 
     public int getThermalLeft() {
-        return getLeft(thermalData);
+        return getLeftGeneral(thermalData);
     }
 
     public int getThermalLeftmost() {
-        return getLeftmost(thermalData);
+        return getLeftmostGeneral(thermalData);
     }
 
     public int getThermalRight() {
-        return getRight(thermalData);
+        return getRightGeneral(thermalData);
     }
 
     public int getThermalRightmost() {
-        return getRightmost(thermalData);
+        return getRightmostGeneral(thermalData);
     }
 
     public int getThermalHere() {
-        return getHere(thermalData);
+        return getHereGeneral(thermalData);
     }
 
+    public int getVisualHere() {
+        return getHereGeneral(visualData);
+    }
+
+    public int getLidarHere() {
+        return getHereGeneral(lidarData);
+    }
+
+    private SimpleVector3D getGPSVector() {
+        return this.gpsVector;
+    }
+
+    public int[][] getAbsoluteVisual(){
+        return this.getAbsoluteGeneral(visualData);
+    }
+    
+    public int[][] getAbsoluteLidar(){
+        return this.getAbsoluteGeneral(lidarData);
+    }
+    
+    public int[][] getAbsoluteThermal(){
+        return this.getAbsoluteGeneral(thermalData);
+    }
+    
+    public int[][] getPolarVisual(){
+        return this.getPolarGeneral(visualData);
+    }
+    
+    public int[][] getPolarLidar(){
+        return this.getPolarGeneral(lidarData);
+    }
+    
+    public int[][] getPolarThermal(){
+        return this.getPolarGeneral(thermalData);
+    }
+    public int[][] getRelativeVisual(){
+        return this.getRelativeGeneral(visualData);
+    }
+    
+    public int[][] getRelativeLidar(){
+        return this.getRelativeGeneral(lidarData);
+    }
+    
+    public int[][] getRelativeThermal(){
+        return this.getRelativeGeneral(thermalData);
+    }
+    
 }

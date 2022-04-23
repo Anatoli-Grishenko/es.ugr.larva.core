@@ -84,7 +84,7 @@ public class OleMap extends OleSensor implements ActionListener {
             }
         } catch (IOException ex) {
         }
-        hasGrid = false;
+        hasGrid = true;
     }
 
     @Override

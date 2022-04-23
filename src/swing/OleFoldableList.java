@@ -29,7 +29,7 @@ public class OleFoldableList extends JPanel {
     public OleFoldableList(Component p) {
         parent = p;
         gbl = new GridBagLayout();
-        gbl.columnWidths = new int[]{0, 0, 0, 0,0,0, 0, 0, 0, 0};
+        gbl.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         gbl.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         gbl.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 1.0, Double.MIN_VALUE};
         gbl.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
@@ -57,6 +57,7 @@ public class OleFoldableList extends JPanel {
     
     @Override
     public Component add(Component ofpP) {
+        super.add(ofpP);
         gc = new GridBagConstraints(0, npanes++, 1, 1, 1, 0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0);
         gc.gridx = 0;
         gc.gridy = npanes++;
@@ -69,8 +70,7 @@ public class OleFoldableList extends JPanel {
         gc.ipadx=3;
         gc.ipady=3;
         gbl.setConstraints(ofpP, gc);
-        super.add(ofpP);
-        this.validate();
+        this.revalidate();
         return this;
     }
 }

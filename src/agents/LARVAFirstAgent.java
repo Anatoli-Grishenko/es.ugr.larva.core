@@ -22,6 +22,9 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -30,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -39,7 +43,10 @@ import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.getAllReceivers;
 import messaging.SequenceDiagram;
+import swing.OleAgentTile;
 import swing.OleApplication;
+import swing.OleButton;
+import swing.OleToolBar;
 import swing.SwingTools;
 import tools.emojis;
 import world.SensorDecoder;
@@ -76,7 +83,7 @@ import world.SensorDecoder;
  * </ul>
  *
  */
-public class LARVAFirstAgent extends LARVABaseAgent {
+public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     // JFrame from launcher
     protected OleApplication myApp;
@@ -100,10 +107,16 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
-    
+
     protected Environment E;
     protected DecisionSet A;
-    protected Decisor Decisor;
+
+    Semaphore SWaitButtons;
+    boolean cont = false, each = true, remote = false;
+    OleAgentTile externalTile;
+    OleToolBar externalTB;
+    OleButton olbContinue, olbPause, olbNext, olbUntil;
+    int nUntil;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -118,9 +131,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
 
     protected DecisionSet Prioritize(Environment E, DecisionSet A) {
         for (Choice a : A) {
-            if (a.getName().equals("IDLE") && V(E, a)) {
+            if (a.getName().equals("IDLE") && Va(E, a)) {
                 a.setUtility(Choice.MAX_UTILITY / 1000);
-            } else if (V(E, a)) {
+            } else if (Va(E, a)) {
                 a.setUtility(U(T(E, a)));
             } else {
                 a.setUtility(Choice.MAX_UTILITY);
@@ -132,7 +145,7 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     }
 
     protected Environment T(Environment E, Choice a) {
-        if (V(E, a)) {
+        if (Va(E, a)) {
             return E.simmulate(a);
         } else {
             return null;
@@ -143,11 +156,11 @@ public class LARVAFirstAgent extends LARVABaseAgent {
         return Choice.MAX_UTILITY;
     }
 
-    protected boolean V(Environment E, Choice a) {
+    protected boolean Va(Environment E, Choice a) {
         return true;
     }
 
-    protected boolean V(Environment E) {
+    protected boolean Ve(Environment E) {
         return true;
     }
 
@@ -192,12 +205,28 @@ public class LARVAFirstAgent extends LARVABaseAgent {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
         }
+        SWaitButtons = new Semaphore(0);
         E = new Environment();
     }
 
     @Override
     public void postExecute() {
         myReport.tick();
+    }
+
+    @Override
+    public void preExecute() {
+        if (remote) {
+            if (!cont) {
+                if (nUntil > 0 && nUntil == this.getNCycles()) {
+                    cont = false;
+                }
+                try {
+                    this.SWaitButtons.acquire();
+                } catch (Exception ex) {
+                }
+            }
+        }
     }
 
     /**
@@ -242,6 +271,9 @@ public class LARVAFirstAgent extends LARVABaseAgent {
     public void takeDown() {
         if (traceRunSteps) {
             addRunStep("MILES03");
+        }
+        if (remote) {
+            closeRemote();
         }
         if (problemName != null) {
             this.saveSequenceDiagram(problemName + ".seqd");
@@ -870,4 +902,67 @@ public class LARVAFirstAgent extends LARVABaseAgent {
             }
         }
     }
+
+    protected void closeRemote() {
+        externalTB.removeAll();
+    }
+
+    protected void openRemote() {
+        OleApplication parentApp = this.payload.getParent();
+        externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
+        externalTB = externalTile.getExternalToolBar();
+        externalTB.removeAllButtons();
+        int sizeButtons = 25;
+        olbContinue = new OleButton(parentApp, "CONTINUE", "play_circle");
+        olbContinue.setExtraFlat();
+        olbContinue.setIcon(new Dimension(sizeButtons, sizeButtons));
+        olbContinue.addActionListener(this);
+        externalTB.addButton(olbContinue);
+
+        olbPause = new OleButton(parentApp, "PAUSE", "pause_circle");
+        olbPause.setExtraFlat();
+        olbPause.setIcon(new Dimension(sizeButtons, sizeButtons));
+        olbPause.addActionListener(this);
+        externalTB.addButton(olbPause);
+
+        olbNext = new OleButton(parentApp, "NEXT", "not_started");
+        olbNext.setExtraFlat();
+        olbNext.setIcon(new Dimension(sizeButtons, sizeButtons));
+        olbNext.addActionListener(this);
+        externalTB.addButton(olbNext);
+        olbUntil = new OleButton(parentApp, "UNTIL", "history");
+        olbUntil.setExtraFlat();
+        olbUntil.setIcon(new Dimension(sizeButtons, sizeButtons));
+        olbUntil.addActionListener(this);
+        externalTB.addButton(olbUntil);
+
+        remote = true;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()) {
+            case "CONTINUE":
+                this.SWaitButtons.release();
+                this.cont = true;
+                break;
+            case "PAUSE":
+                this.SWaitButtons.release();
+                this.cont = false;
+                break;
+            case "NEXT":
+                this.SWaitButtons.release();
+                break;
+            case "UNTIL":
+                try {
+                nUntil = Integer.parseInt(this.inputLine("Please execute the agent until it reachesthe following steps"));
+            } catch (Exception ex) {
+                nUntil = -1;
+            }
+            this.cont = true;
+            this.SWaitButtons.release();
+            break;
+        }
+    }
+
 }

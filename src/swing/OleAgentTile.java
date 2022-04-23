@@ -31,10 +31,10 @@ public class OleAgentTile extends OleFoldablePane {
     public static enum Status {
         OFF, ON
     };
-    final int width = 150, height = 10;
+    final int width = 150, height = 10, icon=25;
     OleApplication myParent;
     Status myStatus;
-    OleButton mybOn, mybOff, mybSwitch;
+    OleButton mybOn, mybOff, mybSwitch, mybConfig;
     JLabel mylLabel, mylLabel2;
     AgentReport myReport;
     OlePerformeter olpTime, olpInbox, olpOutbox;
@@ -50,45 +50,50 @@ public class OleAgentTile extends OleFoldablePane {
         mylLabel2 = new JLabel();
         if (myReport.getOwnerName() == null) {
             mylLabel2.setText("Unidentified");
-            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("no_accounts", new Dimension(16, 16)));
+            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("no_accounts", new Dimension(icon, icon)));
         } else {
             mylLabel2.setText(myReport.getOwnerName().substring(0, 10));
-            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("account_circle", new Dimension(16, 16)));
+            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("account_circle", new Dimension(icon,icon)));
         }
-        mybOn = new OleButton(parent, "Activate " + myReport.getAgentName(), "play_circle");
+        mybOn = new OleButton(parent, "Activate " + myReport.getAgentName(), "play_arrow");
         mybOn.setExtraFlat();
-        mybOn.setIcon(new Dimension(20, 20));
-        mybOff = new OleButton(parent, "Deactivate " + myReport.getAgentName(), "highlight_off");
+        mybOn.setIcon(new Dimension(icon,icon));
+        
+        mybOff = new OleButton(parent, "Deactivate " + myReport.getAgentName(), "eject");
         mybOff.setExtraFlat();
-        mybOff.setIcon(new Dimension(20, 20));
-        olpTime = new OlePerformeter(this, 100, 26, 2000);
-        olpInbox = new OlePerformeter(this, 100, 26, 5);
-        olpOutbox = new OlePerformeter(this, 100, 26, 5);
+        mybOff.setIcon(new Dimension(icon, icon));
+        mybConfig = new OleButton(parent, "Configure " + myReport.getAgentName(), "settings");
+        mybConfig.setExtraFlat();
+        mybConfig.setIcon(new Dimension(icon, icon));
+        olpTime = new OlePerformeter(this, 100, icon, 2000);
+        olpInbox = new OlePerformeter(this, 100, icon, 5);
+        olpOutbox = new OlePerformeter(this, 100, icon, 5);
         OleFoldableList ofpAgent = new OleFoldableList(this);
         this.getFoldablePane().add(ofpAgent);
         this.getFoldablePane().add(mylLabel2);
 
-        oltbMain = new OleToolBar(parent,0);
+        oltbMain = new OleToolBar(parent,5);
         oltbMain.setPreferredSize(new Dimension(100, 25));
-        oltbExternal = new OleToolBar(parent,0);
+        oltbExternal = new OleToolBar(parent,5);
         oltbExternal.setPreferredSize(new Dimension(100, 25));
         oltbMain.addButton(mybOn);
         oltbMain.addButton(mybOff);
+        oltbMain.addButton(mybConfig);
 
         this.getFoldablePane().add(oltbMain);
         this.getFoldablePane().add(oltbExternal);
 
         JLabel jlAux;
         jlAux = new JLabel("CPU Load");
-        jlAux.setIcon(myParent.getIconSet().getRegularIcon("speed", new Dimension(16, 16)));
+        jlAux.setIcon(myParent.getIconSet().getRegularIcon("speed", new Dimension(icon, icon)));
         this.getFoldablePane().add(jlAux);
         this.getFoldablePane().add(olpTime);
         jlAux = new JLabel("Messages IN");
-        jlAux.setIcon(myParent.getIconSet().getRegularIcon("message", new Dimension(16, 16)));
+        jlAux.setIcon(myParent.getIconSet().getRegularIcon("message", new Dimension(icon, icon)));
         this.getFoldablePane().add(jlAux);
         this.getFoldablePane().add(olpInbox);
         jlAux = new JLabel("Messages OUT");
-        jlAux.setIcon(myParent.getIconSet().getRegularIcon("comment", new Dimension(16, 16)));
+        jlAux.setIcon(myParent.getIconSet().getRegularIcon("comment", new Dimension(icon, icon)));
         this.getFoldablePane().add(jlAux);
         this.getFoldablePane().add(olpOutbox);
         this.validate();
@@ -145,11 +150,11 @@ public class OleAgentTile extends OleFoldablePane {
     public void updateReport() {
         if (myReport.getOwnerName() == null) {
             mylLabel2.setText(" Unidentified");
-            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("no_accounts", new Dimension(16, 16)));
+            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("no_accounts", new Dimension(icon, icon)));
             mylLabel2.validate();
         } else {
             mylLabel2.setText(myReport.getOwnerName().substring(0, 10));
-            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("account_circle", new Dimension(16, 16)));
+            mylLabel2.setIcon(myParent.getIconSet().getRegularIcon("account_circle", new Dimension(icon, icon)));
             mylLabel2.validate();
         }
         this.validate();
@@ -162,7 +167,7 @@ public class OleAgentTile extends OleFoldablePane {
 class JLabelRobot extends JLabel {
     JLabelRobot(OleApplication parent, String text) {
         super(text);
-        setIcon(parent.getIconSet().getRegularIcon("adb", new Dimension(16, 16)));
+        setIcon(parent.getIconSet().getRegularIcon("adb", new Dimension(25,25)));
     }
 }
 

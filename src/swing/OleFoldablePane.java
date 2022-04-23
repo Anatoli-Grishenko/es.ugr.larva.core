@@ -106,13 +106,15 @@ public class OleFoldablePane extends JPanel implements ActionListener {
         obControl.setText(unfold);
         obControl.setActionCommand("unfold");
         jpContent.setVisible(false);
+        jpContent.revalidate();
     }
 
     public void doUnfold() {
         folded = false;
         obControl.setText(fold);
         obControl.setActionCommand("fold");
-        jpContent.setVisible(true);
+        jpContent.setVisible(true);        
+        jpContent.revalidate();
     }
 
     public void doActivate() {

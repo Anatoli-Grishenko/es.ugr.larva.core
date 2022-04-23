@@ -9,7 +9,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import map2D.Map2DColor;
@@ -30,12 +32,14 @@ public class OlePerformeter extends JLabel {
         super();
         parent = p;
         chart = new Map2DColor(width, height);
-        setPreferredSize(new Dimension(width, height));
+        this.setBounds(new Rectangle(width, height));
+//        setPreferredSize(new Dimension(width, height));
         maxValue = maxvalue;
         counter = 0;
         background = parent.getBackground();
         grid = Color.BLACK;
         data = OleApplication.DodgerBlue;
+        this.setIcon(new ImageIcon(chart.getMap()));
         init();
     }
 
@@ -45,6 +49,7 @@ public class OlePerformeter extends JLabel {
         drawBackground(0);
         drawGrid(0);
         drawData(0, value);
+        this.setIcon(new ImageIcon(chart.getMap()));
         this.repaint();
     }
 
@@ -53,6 +58,7 @@ public class OlePerformeter extends JLabel {
             drawBackground(x);
             drawGrid(x);
         }
+        this.revalidate();
         this.repaint();
     }
 
@@ -81,10 +87,10 @@ public class OlePerformeter extends JLabel {
         }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g.drawImage(chart.getMap(), 0, 0, null);
-    }
+//    @Override
+//    protected void paintComponent(Graphics g) {
+//        super.paintComponent(g);
+//        g.drawImage(chart.getMap(), 0, 0, null);
+//    }
 
 }
