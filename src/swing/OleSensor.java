@@ -811,6 +811,11 @@ public abstract class OleSensor extends JComponent {
     public void setAlertLimitAbove(int value) {
         this.alertBelow = false;
         alertLimit = value;
+        this.myPalette.addWayPoint(0, Color.BLACK);
+        this.myPalette.addWayPoint((int)((value-this.getMinValue())*100/(this.getMaxValue()-this.getMinValue())),Color.BLACK);
+        this.myPalette.addWayPoint(100, Color.RED);
+        this.myPalette.fillWayPoints(255);
+        this.revalidate();
     }
 
     public JsonArray getJsaGoals() {

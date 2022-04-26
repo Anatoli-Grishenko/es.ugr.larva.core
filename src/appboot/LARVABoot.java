@@ -109,7 +109,7 @@ public class LARVABoot {
     protected int nlog;
     protected String who, name;
     protected String sResult;
-    protected boolean bResult;
+    protected boolean bResult, showPerformance;
     protected String sMessages;
     protected Semaphore sShutdown, doSwing, doJade;
     protected OleConfig oleConfig;
@@ -450,9 +450,8 @@ public class LARVABoot {
         this.selectConnection(host, port);
         showStatus();
         if (_connected) {
-//            appMain.getToolBar().getButton("Passport").setEnabled(false);
+            appMain.getToolBar().getButton("Passport").setEnabled(false);
             appMain.getToolBar().getButton("Connect").setEnabled(false);
-            appMain.getToolBar().getButton("Options").setEnabled(false);
         }
         return this;
     }
@@ -473,7 +472,7 @@ public class LARVABoot {
         if (_connected) {
 //            appMain.getToolBar().getButton("Passport").setEnabled(false);
             appMain.getToolBar().getButton("Connect").setEnabled(false);
-            appMain.getToolBar().getButton("Options").setEnabled(false);
+//            appMain.getToolBar().getButton("Options").setEnabled(false);
         }
         return this;
     }

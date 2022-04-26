@@ -65,6 +65,8 @@ public class OleDashBoard extends OleDrawPane {
     int iVisual[][], iLidar[][], iThermal[][];
     String lastPerception = "";
     TimeHandler tstart;
+    boolean showTrail;
+    int trailSize;
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -125,6 +127,7 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.setIsMap(true);
         osMap.validate();
+        
 
         osHud = new OleMap(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
@@ -160,8 +163,7 @@ public class OleDashBoard extends OleDrawPane {
         osAltitude.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
         pal = new Palette();
         pal.addWayPoint(0, Color.BLACK);
-        pal.addWayPoint(80, this.cGauge);
-        pal.addWayPoint(100, Color.RED);
+        pal.addWayPoint(100,this.cGauge);
         pal.fillWayPoints(255);
         osAltitude.setPalette(pal);
         osAltitude.showScale(true);
@@ -345,10 +347,10 @@ public class OleDashBoard extends OleDrawPane {
 
     public boolean preProcessACLM(String content) {
         boolean res = false;
-        System.out.println("DashBoard Preprocess");
+//        System.out.println("DashBoard Preprocess");
 
         if (content.contains("filedata")) {
-            System.out.println("filedata");
+//            System.out.println("filedata");
             Ole ocontent = new Ole().set(content);
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
@@ -359,11 +361,11 @@ public class OleDashBoard extends OleDrawPane {
             this.osAltitude.setAlertLimitAbove(maxlevel-10);
             res = true;
         } else if (content.contains("perceptions")) {
-            System.out.println("DashBoard perceptions");
+//            System.out.println("DashBoard perceptions");
             this.feedPerception(content);
             res = false;
         } else if (content.contains("goals")) {
-            System.out.println("DashBoard goals");
+//            System.out.println("DashBoard goals");
             this.feedGoals(content);
             res = false;
         }
@@ -460,4 +462,23 @@ public class OleDashBoard extends OleDrawPane {
 
         }
     }
+
+    public boolean isShowTrail() {
+        return showTrail;
+    }
+
+    public void setShowTrail(boolean showTrail) {
+        this.showTrail = showTrail;
+        this.osMap.setShowTrail(showTrail);
+    }
+
+    public int getTrailSize() {
+        return trailSize;
+    }
+
+    public void setTrailSize(int trailSize) {
+        this.trailSize = trailSize;
+        this.osMap.setTrailSize(trailSize);
+    }
+    
 }

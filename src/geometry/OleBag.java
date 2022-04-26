@@ -76,7 +76,7 @@ JButton tbAux;
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
 //        jsPane.repaint();
-//        jtBag.repaint();
+        jtBag.repaint();
         return this;
     }
 

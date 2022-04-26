@@ -31,6 +31,8 @@ public class XUIAgent extends LARVAFirstAgent {
 
     protected OleDashBoard myDashBoard;
     protected String sessionKey = "";
+    protected boolean showTrail = false;
+    protected int trailSize = 0;
     JPanel _XUI, _Server;
 
     @Override
@@ -44,10 +46,19 @@ public class XUIAgent extends LARVAFirstAgent {
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         myDashBoard = new OleDashBoard(_XUI, "XUI");
-        myDashBoard.setPreferredSize(new Dimension(1600,800));
+        myDashBoard.setPreferredSize(new Dimension(1600, 800));
         _XUI.add(myDashBoard, BorderLayout.WEST);
+        if (oleConfig != null) {
+            showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
+            trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
+            myDashBoard.setTrailSize(trailSize);
+            myDashBoard.setShowTrail(showTrail);
+        }
         Info("Setting Death Star up");
-        exit = false;
+        this.doNotExit();
+        this.showConsole=false;
+        this.frameDelay=0;
+        this.cont=true;
     }
 
     @Override
@@ -73,6 +84,7 @@ public class XUIAgent extends LARVAFirstAgent {
 
     @Override
     public void takeDown() {
+        myDashBoard.removeAll();
         MyCheckout();
         Info("Taking down and deleting agent");
         super.takeDown();
@@ -102,7 +114,7 @@ public class XUIAgent extends LARVAFirstAgent {
             this.sessionKey = inbox.getConversationId();
             myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("perceptions")) {
-            myDashBoard.preProcessACLM(inbox.getContent());            
+            myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("goals")) {
             myDashBoard.preProcessACLM(inbox.getContent());
 //            TheMap.feedGoals(inbox.getContent());            

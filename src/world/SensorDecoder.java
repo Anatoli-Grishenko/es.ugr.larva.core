@@ -274,6 +274,29 @@ public class SensorDecoder {
         return -1;
     }
 
+    public double getRelativeAngularto(Point3D p) {
+            double a = getAbsoluteAngularTo(p), c = getCompass();
+            if (a > c) {
+                if (a - c <= 180) {
+                    return a - c;
+                } else {
+                    return -(c + 360 - a);
+                }
+            } else {
+                if (c - a < 180) {
+                    return a - c;
+                } else {
+                    return (a + 360 - c);
+                }
+
+            }
+//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
+//                return getAbsoluteAngular() - getCompass();
+//            } else {
+//                return -(getCompass() - (getAbsoluteAngular()));
+//            }
+    }
+
     public double getAbsoluteAngular() {
         if (isReady() && hasSensor("ANGULAR")) {
             double v = getSensor("angular").get(0).asDouble();
@@ -285,16 +308,48 @@ public class SensorDecoder {
     }
 
     public double getAbsoluteAngularTo(Point3D p) {
-        if (isReady() && hasSensor("ANGULAR")) {
             Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
-            Point3D me = new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
+            Point3D me = getGPSPosition();
             Vector3D Busca = new Vector3D(me, p);
 
+            int v = (int) Norte.angleXYTo(Busca);
+            v = 360 - v + 360;
+//            v = v+getCompass();   
+            return (int) v % 360;        
+    }
+
+    public double getAbsoluteAngularTo(Point3D orig, Point3D dest) {
+            Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
+            Point3D me = orig;
+            Vector3D Busca = new Vector3D(me, dest);
+
             int v = (int) Norte.angleXYTo(Busca);;
-            v = 360 + 90 - v;
-            return v % 360;
-        }
-        return -1;
+            v = 270-v;
+//            v = v+getCompass();   
+            return (int) v % 360;        
+    }
+
+    public double getRelativeAngularto(Point3D orig, int compass, Point3D dest) {
+            double a = getAbsoluteAngularTo(orig, dest), c = compass;
+            if (a > c) {
+                if (a - c <= 180) {
+                    return a - c;
+                } else {
+                    return -(c + 360 - a);
+                }
+            } else {
+                if (c - a < 180) {
+                    return a - c;
+                } else {
+                    return (a + 360 - c);
+                }
+
+            }
+//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
+//                return getAbsoluteAngular() - getCompass();
+//            } else {
+//                return -(getCompass() - (getAbsoluteAngular()));
+//            }
     }
 
     public double getEnergy() {
@@ -585,9 +640,9 @@ public class SensorDecoder {
     }
 
     public void feedPerception(String content) {
-        if (sLastPerception.equals(content)) {
-            return;
-        }
+//        if (sLastPerception.equals(content)) {
+//            return;
+//        }
         try {
             lastPosition = this.getGPSVector();
         } catch (Exception ex) {

@@ -5,7 +5,6 @@
  */
 package agents;
 
-import ai.Decisor;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
@@ -15,11 +14,8 @@ import data.OleConfig;
 import data.OleFile;
 import data.OleSet;
 import data.Transform;
-import swing.LARVAFrame;
 import disk.Logger;
 import jade.core.AID;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.awt.Dimension;
@@ -31,25 +27,19 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
-import static messaging.ACLMessageTools.getAllReceivers;
 import messaging.SequenceDiagram;
 import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleButton;
 import swing.OleToolBar;
-import swing.SwingTools;
-import tools.emojis;
-import world.SensorDecoder;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -111,12 +101,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected Environment E;
     protected DecisionSet A;
 
-    Semaphore SWaitButtons;
-    boolean cont = false, each = true, remote = false;
+    protected Semaphore SWaitButtons;
+    protected boolean cont = true, each = true, remote = false;
     OleAgentTile externalTile;
     OleToolBar externalTB;
     OleButton olbContinue, olbPause, olbNext, olbUntil;
-    int nUntil;
+    protected int nUntil, iUntil = 0, frameDelay=0;
+    protected boolean showConsole = false, showRemote = false;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -204,29 +195,46 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             } else {
                 myReport = new AgentReport(getName(), this.getClass(), 100);
             }
+            this.frameDelay = oleConfig.getTab("Display").getInt("Frame delay", -1);
+            showConsole = this.oleConfig.getTab("Display").getBoolean("Show console");
+            showRemote = this.oleConfig.getTab("Display").getBoolean("Show remote");
         }
         SWaitButtons = new Semaphore(0);
         E = new Environment();
+        if (showRemote)
+            openRemote();
     }
 
     @Override
     public void postExecute() {
         myReport.tick();
+        if (this.frameDelay > 0) {
+            try {
+                Thread.sleep(this.frameDelay);
+            } catch (InterruptedException ex) {
+            }
+        }
     }
 
     @Override
     public void preExecute() {
+        waitRemoteSemaphore();
+    }
+
+    protected void waitRemoteSemaphore() {
         if (remote) {
+            iUntil++;
+            if (cont && nUntil > 0 && nUntil == iUntil) {
+                cont = false;
+            }
             if (!cont) {
-                if (nUntil > 0 && nUntil == this.getNCycles()) {
-                    cont = false;
-                }
                 try {
                     this.SWaitButtons.acquire();
                 } catch (Exception ex) {
                 }
             }
         }
+
     }
 
     /**
@@ -271,6 +279,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void takeDown() {
         if (traceRunSteps) {
             addRunStep("MILES03");
+        }
+        if (this.SWaitButtons.availablePermits() == 0) {
+            this.SWaitButtons.release();
         }
         if (remote) {
             closeRemote();
@@ -908,6 +919,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected void openRemote() {
+        this.cont = false;
         OleApplication parentApp = this.payload.getParent();
         externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
         externalTB = externalTile.getExternalToolBar();

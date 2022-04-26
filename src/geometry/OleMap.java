@@ -5,15 +5,11 @@
  */
 package geometry;
 
-import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import static geometry.SimpleVector3D.nextX;
-import static geometry.SimpleVector3D.nextY;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -22,14 +18,8 @@ import java.awt.image.RescaleOp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import map2D.Map2DColor;
-import swing.OleApplication;
 import swing.OleButton;
 import swing.OleDashBoard;
 import swing.OleDrawPane;
@@ -51,7 +41,8 @@ public class OleMap extends OleSensor implements ActionListener {
     protected int narrow = 37, margin = 22;
     protected OleButton obMap, obHud;
     protected Polygon p;
-    protected int cell, nLevels, nTiles, trailSize = 200;
+    protected int cell, nLevels, nTiles, trailSize = 200, limitScale = 7;
+    protected boolean showTrail;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
     protected double stepRadius, stepAngle;
@@ -80,11 +71,11 @@ public class OleMap extends OleSensor implements ActionListener {
         sprites = new ArrayList();
         try {
             for (int i = 0; i < 8; i++) {
-                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/bot" + i + ".png").toString().replace("file:", "")));
+                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/explorer" + i + ".png").toString().replace("file:", "")));
             }
         } catch (IOException ex) {
         }
-        hasGrid = true;
+        hasGrid = false;
     }
 
     @Override
@@ -117,6 +108,11 @@ public class OleMap extends OleSensor implements ActionListener {
             if (map != null) {
                 if (externalDecoder.getWorldMap() != null) {
                     scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
+                    if (scale < limitScale) {
+                        hasGrid = false;
+                    } else {
+                        hasGrid = true;
+                    }
                 }
                 setMinValue(0);
                 setMaxValue(map.getWidth());
@@ -128,6 +124,7 @@ public class OleMap extends OleSensor implements ActionListener {
                 stepValue = lengthValue / nMarks;
                 stepValue2 = 1;
                 setnDivisions(10);
+
             }
         } else {
             if (externalDecoder.getWorldMap() != null) {
@@ -271,19 +268,21 @@ public class OleMap extends OleSensor implements ActionListener {
                 double xVP, yVP;
                 Color c;
                 for (String name : Trails.keySet()) {
-                    for (int i = 1; i < Trails.get(name).size(); i++) {
-                        ptrail = Trails.get(name).get(i);
-                        if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
+                    if (this.isShowTrail()) {
+
+                        for (int i = 1; i < Trails.get(name).size(); i++) {
+                            ptrail = Trails.get(name).get(i);
+                            if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
 //                            tf = new TextFactory(g).setsText(String.format("%03d", this.externalDecoder.getNSteps()))
 //                                    .setPoint(viewP(ptrail.getSource())).setFontSize(10)
 //                                    .setValign(SwingConstants.CENTER).setHalign(SwingConstants.CENTER).validate();
 //                            tf.draw();
 //                            this.oDrawCounter(g, String.format("%03d", this.externalDecoder.getNSteps()-i),
 //                                    viewP(ptrail.getSource()),30, SwingConstants.CENTER, SwingConstants.CENTER);
-                        }
-                        c = map.getColor(ptrail);
-                        g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
-                        g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+                            }
+                            c = map.getColor(ptrail);
+                            g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        if (scale < 7) {
 //                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        } else {
@@ -291,7 +290,9 @@ public class OleMap extends OleSensor implements ActionListener {
 //                            p = this.TraceBot(ptrail, 8, 10);
 //                            g.drawPolygon(p);
 //                        }
+                        }
                     }
+
                     g.setColor(OleDashBoard.cTrack);
                     ptrail = externalDecoder.getGPSVector();
                     prevTrail = externalDecoder.getPreviousGPSVector();
@@ -302,13 +303,13 @@ public class OleMap extends OleSensor implements ActionListener {
 //                        prevTrail = Trails.get(name).get(0);
 //                    }
                     g.setStroke(new BasicStroke(2));
-                    if (scale < 7) {
+                    if (scale < limitScale) {
                         p = this.TraceRegularPolygon(ptrail, 4, 5);
                         g.drawPolygon(p);
                         p = this.TraceCourse(ptrail, 20);
                         g.drawPolygon(p);
                     } else {
-                        g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(), viewX(ptrail.getSource().getXInt()) - 12, viewY(ptrail.getSource().getYInt()) - 12, null); //(int)scale*10,(int)scale*10, Image.SCALE_SMOOTH),  0,0,null);
+                        g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(), viewX(ptrail.getSource().getXInt()) - 12, viewY(ptrail.getSource().getYInt()) - 12,(int)scale ,(int)scale,null); //(int)scale*10,(int)scale*10, Image.SCALE_SMOOTH),  0,0,null);
 //                                viewX(ptrail.getSource().getXInt())-(int)scale/2, viewY(ptrail.getSource().getYInt())-(int)scale/2, null);
 //                        p = this.TraceBot(ptrail, 8, 10);
 //                        g.drawPolygon(p);
@@ -331,12 +332,13 @@ public class OleMap extends OleSensor implements ActionListener {
 
             g.setClip(screenPort);
             Color cTile, cBackground, cStroke;
-            int iGround, lTile;
+            int iGround, lTile, tTile;
             if (hudView != null && externalDecoder.getPolarVisual() != null) {
                 for (int level = 0; level < nLevels; level++) {
                     nTiles = (level) * 4 + 1;
                     for (int tile = 0; tile < nTiles; tile++) {
                         lTile = externalDecoder.getPolarVisual()[tile][level];
+                        tTile = externalDecoder.getPolarThermal()[tile][level];
                         if (lTile >= 0) {
                             cTile = new Color(lTile, lTile, lTile);
                         } else {
@@ -344,7 +346,10 @@ public class OleMap extends OleSensor implements ActionListener {
                         }
                         iGround = lTile;
 
-                        if (iGround < 0) {
+                        if (tTile == 0) {
+                            cStroke = OleDashBoard.cGoal;
+                            cBackground = cStroke;
+                        } else if (iGround < 0) {
                             cStroke = OleDashBoard.cBad;
                             cBackground = OleDashBoard.cBad;
                         } else if (iGround > externalDecoder.getMaxlevel()) {
@@ -376,7 +381,7 @@ public class OleMap extends OleSensor implements ActionListener {
             this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
             this.oDrawArc(g, center, 1.0 * lengthVisual / nLevels, 0, 180);
-            if (scale < 7) {
+            if (scale < limitScale) {
                 p = new Polygon();
                 p.addPoint(pHead.getXInt(), pHead.getYInt());
                 p.addPoint(center.getXInt() - 10, center.getYInt());
@@ -384,7 +389,7 @@ public class OleMap extends OleSensor implements ActionListener {
                 p.addPoint(pHead.getXInt(), pHead.getYInt());
                 g.draw(p);
             } else {
-                g.drawImage(sprites.get(0).getMap(), center.getXInt() - 12, center.getYInt() - 12, null);
+                g.drawImage(sprites.get(0).getMap(), center.getXInt() - 18, center.getYInt() - 12, 36,36,null);
 
             }
             tf = new TextFactory(g).setX((int) (center.getX() + 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
@@ -491,7 +496,7 @@ public class OleMap extends OleSensor implements ActionListener {
         }
         Rectangle r = SwingTools.doNarrow(this.getBounds(), 6);
         Trails.get(name).add(0, p);
-        if (Trails.get(name).size() > trailSize) {
+        if (Trails.get(name).size() > getTrailSize()) {
             Trails.get(name).remove(Trails.get(name).size() - 1);
         }
 
@@ -516,7 +521,7 @@ public class OleMap extends OleSensor implements ActionListener {
 
     protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
         SimpleVector3D p = new SimpleVector3D(new Point3D(jsgoal.getString("position", "")), Compass.NORTH);
-        int diam1 = 10, diam2 = diam1 / 2;
+        int diam1 = 6, diam2 = diam1 / 2;
         g.setColor(OleDashBoard.cGoal);
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
 //        g.drawOval((int) viewX(p.getSource().getX()) - diam2,
@@ -699,4 +704,21 @@ public class OleMap extends OleSensor implements ActionListener {
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
     }
+
+    public int getTrailSize() {
+        return trailSize;
+    }
+
+    public void setTrailSize(int trailSize) {
+        this.trailSize = trailSize;
+    }
+
+    public boolean isShowTrail() {
+        return showTrail;
+    }
+
+    public void setShowTrail(boolean showTrail) {
+        this.showTrail = showTrail;
+    }
+
 }
