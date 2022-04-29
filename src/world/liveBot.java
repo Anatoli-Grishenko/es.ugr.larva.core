@@ -82,6 +82,7 @@ public class liveBot extends Thing {
         return jsdrone;
     }
 
+    @Override
     public void fromJson(JsonObject update) {
         _vector = new SimpleVector3D(new Point3D(update.getInt("x", -1),
                 update.getInt("y", -1), update.getInt("z", -1)), SimpleVector3D.N);

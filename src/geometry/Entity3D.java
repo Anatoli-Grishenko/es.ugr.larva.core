@@ -22,7 +22,6 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     protected String _name, _key;
     protected SimpleVector3D _vector;
     protected Point3D _size,_center;
-//    protected int _sorientation; 
     protected Color _color;
 
 

@@ -34,12 +34,11 @@ import world.SensorDecoder;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleMap extends OleSensor implements ActionListener {
+public class OleMap extends OleSensor  {
 
     protected HashMap<String, ArrayList<SimpleVector3D>> Trails;
     protected Polygon hudView[][];
     protected int narrow = 37, margin = 22;
-    protected OleButton obMap, obHud;
     protected Polygon p;
     protected int cell, nLevels, nTiles, trailSize = 200, limitScale = 7;
     protected boolean showTrail;
@@ -54,17 +53,8 @@ public class OleMap extends OleSensor implements ActionListener {
         super(parent, name);
         this.setLayout(null);
         Trails = new HashMap();
-        isMap = false;
-        obMap = new OleButton(this, "VMap", "VMap");
-        obMap.setText("VMap");
-        obMap.setBackground(Color.DARK_GRAY);
-        obMap.setForeground(Color.WHITE);
-        parentPane.add(obMap);
+        isMap = true;
         at = parentPane.getAngleT();
-        obHud = new OleButton(this, "VHud", "VHud");
-        obHud.setBackground(Color.DARK_GRAY);
-        obHud.setForeground(Color.WHITE);
-        parentPane.add(obHud);
         externalDecoder = ((OleDashBoard) this.parentPane).decoder;
         setnRows(1);
         setnColumns(3);
@@ -84,18 +74,14 @@ public class OleMap extends OleSensor implements ActionListener {
 
         viewPort = SwingTools.doNarrow(this.getBounds(), narrow);
         screenPort = SwingTools.doNarrow(this.getBounds(), margin);
-        viewPort.y += 16;
-        screenPort.y += 16;
+//        viewPort.y += 16;
+//        screenPort.y += 16;
         shiftx = viewPort.x - screenPort.x;
         shifty = viewPort.y - screenPort.y;
-        obMap.setBounds(screenPort.x, mY + 10, 75, 20);
-        obHud.setBounds(screenPort.x + 80, mY + 10, 75, 20);
     }
 
     @Override
     public OleSensor layoutSensor(Graphics2D g) {
-        obMap.setEnabled(!isMap);
-        obHud.setEnabled(isMap);
         if (showFrame) {
             g.setColor(OleDashBoard.cDeck);
             g.fillRect(mX, mY, mW, mH);
@@ -104,185 +90,56 @@ public class OleMap extends OleSensor implements ActionListener {
         }
         g.setColor(Color.BLACK);
         g.fill(screenPort);
-        if (isMap) {
-            if (map != null) {
-                if (externalDecoder.getWorldMap() != null) {
-                    scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
-                    if (scale < limitScale) {
-                        hasGrid = false;
-                    } else {
-                        hasGrid = true;
-                    }
-                }
-                setMinValue(0);
-                setMaxValue(map.getWidth());
-                setMinVisual(viewPort.x);
-                setMaxVisual(viewPort.x + viewPort.width);
-                lengthVisual = getMaxVisual() - getMinVisual();
-                stepVisual = lengthVisual / nMarks;
-                lengthValue = (maxValue - minValue);
-                stepValue = lengthValue / nMarks;
-                stepValue2 = 1;
-                setnDivisions(10);
-
-            }
-        } else {
+        if (map != null) {
             if (externalDecoder.getWorldMap() != null) {
                 scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
-            }
-            g.draw(screenPort);
-            g.setClip(screenPort);
-            Point3D p0, p1, p2, p3, p4;
-            double radius1, radius2, alpha1, alpha2;
-
-            cell = screenPort.width / 8;
-            center = new Point3D(screenPort.x + screenPort.width / 2, screenPort.y + screenPort.height - 2 * cell);
-            pCenterTopFixed = at.alphaPoint(90, 5.7 * cell, center);
-            pHead = at.alphaPoint(90, 10, center);
-            pCenterFixed = at.alphaPoint(90, 5 * cell, center);
-            if (externalDecoder.getPolarVisual() != null) {
-                pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, externalDecoder.getDistance()) * lengthVisual / nLevels, center);
-            } else {
-                pDistance = at.alphaPoint(shiftAngularHud(), lengthVisual, center);
-            }
-            this.lengthVisual = center.getY() - pCenterFixed.getY();
-            pVariableTop = at.alphaPoint(shiftAngularHud(), 5.4 * cell, center);
-            pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1 * cell, center);
-            g.setColor(OleDashBoard.cCompass);
-            this.oDrawLine(g, pCenterTopFixed, center);
-            minVisual = 45;
-            maxVisual = 135;
-            minValue = 0;
-            maxValue = 360;
-
-//            p = new Polygon();
-//            p.addPoint(center.getXInt(), center.getYInt());
-//            p.addPoint(center.getXInt() + cell / 5, center.getYInt() + cell / 5);
-//            p.addPoint(center.getXInt() - cell / 5, center.getYInt() + cell / 5);
-//            p.addPoint(center.getXInt(), center.getYInt());
-//            g.draw(p);
-            for (double alpha = 135; alpha >= 45; alpha -= 5) {
-                p1 = at.alphaPoint(alpha, 5 * cell, center);
-                p2 = at.alphaPoint(alpha, 4.9 * cell, center);
-                this.oDrawLine(g, p1, p2);
-                if ((int) alpha % 15 == 0) {
-                    tf = new TextFactory(g);
-                    tf.setPoint(p2).setValue((360 + (int) (externalDecoder.getCompass() + alpha) - 90) % 360).setAngle(90 - (int) alpha).
-                            setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-                    tf.draw();
+                if (scale < limitScale) {
+                    hasGrid = false;
+                } else {
+                    hasGrid = true;
                 }
             }
-            if (externalDecoder.getPolarVisual() != null) {
-                nLevels = externalDecoder.getPolarVisual()[0].length;
-                stepRadius = lengthVisual / (nLevels + 1);
-                hudView = new Polygon[nLevels][];
-                radius1 = stepRadius;
-                g.setColor(OleDashBoard.cDeck);
-                nTiles = 1;
-                for (int level = 0; level < nLevels; level++) {
-                    radius2 = (level + 1) * stepRadius;
-
-                    nTiles = 4 * (level) + 1;
-                    alpha1 = 0; //90 - nTiles * stepAngle / 2;
-                    alpha2 = 180; //90 + nTiles * stepAngle / 2;
-                    stepAngle = 180.0 / nTiles;
-
-//                nTiles=4*(nLevels-1)+1;
-//                stepAngle = 180.0 / nTiles;
-//                alpha1 = 90 - nTiles/2 * stepAngle / 2;
-//                alpha2 = 90 + nTiles/2 * stepAngle / 2;
-                    hudView[level] = new Polygon[nTiles];
-//                    System.out.println("Level " + level + " " + nTiles + " tiles, radius: " + radius2 + " every  :" + stepAngle + "º");
-                    for (int tile = 0; tile < nTiles; tile++) {
-                        Polygon p = new Polygon();
-                        if (level != 0) {
-                            p0 = at.alphaPoint(alpha2 - tile * stepAngle, radius2, center);
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius2, center);
-                            p2 = at.alphaPoint(alpha2 - (tile + 1) * stepAngle, radius1, center);
-                            p3 = at.alphaPoint(alpha2 - tile * stepAngle, radius1, center);
-                            p.addPoint(p0.getXInt(), p0.getYInt());
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p.addPoint(p2.getXInt(), p2.getYInt());
-                            p.addPoint(p3.getXInt(), p3.getYInt());
-                            p.addPoint(p0.getXInt(), p0.getYInt());
-                        } else {
-                            p0 = at.alphaPoint(alpha2 - (tile + 1) * 5 * stepAngle / 5, radius2, center);
-                            p.addPoint(p0.getXInt(), p0.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 4 * stepAngle / 5, radius2, center);
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 3 * stepAngle / 5, radius2, center);
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 2 * stepAngle / 5, radius2, center);
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 1 * stepAngle / 5, radius2, center);
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p1 = at.alphaPoint(alpha2 - (tile + 1) * 0 * stepAngle / 5, radius2, center);
-                            p.addPoint(p1.getXInt(), p1.getYInt());
-                            p.addPoint(p0.getXInt(), p0.getYInt());
-                        }
-//                        g.draw(p);
-//                    System.out.println(p0 + "/" + p1 + "/" + p2 + "/" + p3 + "/");
-                        hudView[level][tile] = p;
-                        g.setColor(OleDashBoard.cFrame);
-                        g.draw(hudView[level][tile]);
-                    }
-                    radius1 = radius2;
-                }
-            }
-            g.setClip(null);
-//            setMinValue(0);
-//            setMaxValue(map.getWidth());
-//            setMinVisual(viewPort.x);
-//            setMaxVisual(viewPort.x + viewPort.width);
-//            lengthVisual = getMaxVisual() - getMinVisual();
-//            stepVisual = lengthVisual / nMarks;
-//            lengthValue = (maxValue - minValue);
-//            stepValue = lengthValue / nMarks;
+            setMinValue(0);
+            setMaxValue(map.getWidth());
+            setMinVisual(viewPort.x);
+            setMaxVisual(viewPort.x + viewPort.width);
+            lengthVisual = getMaxVisual() - getMinVisual();
+            stepVisual = lengthVisual / nMarks;
+            lengthValue = (maxValue - minValue);
+            stepValue = lengthValue / nMarks;
+            stepValue2 = 1;
+            setnDivisions(10);
 
         }
-//        g.setColor(this.getBackground());
-//        g.fillRect(mX + 3, mY + 3, mW - 6, mH - 6);
-//        g.setStroke(new BasicStroke(1));
         return this;
-    }
-
-    protected int shiftAngularHud() {
-        return (int) (valueAngularHud() - externalDecoder.getCompass() + 360 + 90) % 360;
-//        return (int) (valueAngularHud() - this.getAllReadings()[0][0] + 90 + 360) % 360;
-    }
-
-    protected int valueAngularHud() {
-        return (int) (externalDecoder.getAbsoluteAngular()) % 360;
-//        return ((int) (270 + this.getAllReadings()[0][1]) % 360);
     }
 
     @Override
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
         String label;
-        if (isMap) {
-            if (map != null) {
-                RescaleOp darken = new RescaleOp(0.5f, 0, null);
-                g.drawImage(darken.filter(map.getMap(), null), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
-                SimpleVector3D ptrail, prevTrail, ptext, ppoint;
-                double xVP, yVP;
-                Color c;
-                for (String name : Trails.keySet()) {
-                    if (this.isShowTrail()) {
+        if (map!=null) {
+            RescaleOp darken = new RescaleOp(0.5f, 0, null);
+            g.drawImage(darken.filter(map.getMap(), null), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
+            SimpleVector3D ptrail, prevTrail, ptext, ppoint;
+            double xVP, yVP;
+            Color c;
+            for (String name : Trails.keySet()) {
+                if (this.isShowTrail()) {
 
-                        for (int i = 1; i < Trails.get(name).size(); i++) {
-                            ptrail = Trails.get(name).get(i);
-                            if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
+                    for (int i = 1; i < Trails.get(name).size(); i++) {
+                        ptrail = Trails.get(name).get(i);
+                        if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
 //                            tf = new TextFactory(g).setsText(String.format("%03d", this.externalDecoder.getNSteps()))
 //                                    .setPoint(viewP(ptrail.getSource())).setFontSize(10)
 //                                    .setValign(SwingConstants.CENTER).setHalign(SwingConstants.CENTER).validate();
 //                            tf.draw();
 //                            this.oDrawCounter(g, String.format("%03d", this.externalDecoder.getNSteps()-i),
 //                                    viewP(ptrail.getSource()),30, SwingConstants.CENTER, SwingConstants.CENTER);
-                            }
-                            c = map.getColor(ptrail);
-                            g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
-                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+                        }
+                        c = map.getColor(ptrail);
+                        g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                        g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        if (scale < 7) {
 //                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        } else {
@@ -290,197 +147,40 @@ public class OleMap extends OleSensor implements ActionListener {
 //                            p = this.TraceBot(ptrail, 8, 10);
 //                            g.drawPolygon(p);
 //                        }
-                        }
                     }
+                }
 
-                    g.setColor(OleDashBoard.cTrack);
-                    ptrail = externalDecoder.getGPSVector();
-                    prevTrail = externalDecoder.getPreviousGPSVector();
+                g.setColor(OleDashBoard.cTrack);
+                ptrail = externalDecoder.getGPSVector();
+                prevTrail = externalDecoder.getPreviousGPSVector();
 //                    ptrail = Trails.get(name).get(0);
 //                    if (Trails.get(name).size() > 1) {
 //                        prevTrail = Trails.get(name).get(1);
 //                    } else {
 //                        prevTrail = Trails.get(name).get(0);
 //                    }
-                    g.setStroke(new BasicStroke(2));
-                    if (scale < limitScale) {
-                        p = this.TraceRegularPolygon(ptrail, 4, 5);
-                        g.drawPolygon(p);
-                        p = this.TraceCourse(ptrail, 20);
-                        g.drawPolygon(p);
-                    } else {
-                        g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(), viewX(ptrail.getSource().getXInt()) - 12, viewY(ptrail.getSource().getYInt()) - 12,(int)scale ,(int)scale,null); //(int)scale*10,(int)scale*10, Image.SCALE_SMOOTH),  0,0,null);
+                g.setStroke(new BasicStroke(2));
+                if (scale < limitScale) {
+                    p = this.TraceRegularPolygon(ptrail, 4, 5);
+                    g.drawPolygon(p);
+                    p = this.TraceCourse(ptrail, 20);
+                    g.drawPolygon(p);
+                } else {
+                    g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(), viewX(ptrail.getSource().getXInt()) - 12, viewY(ptrail.getSource().getYInt()) - 12, (int) scale, (int) scale, null); //(int)scale*10,(int)scale*10, Image.SCALE_SMOOTH),  0,0,null);
 //                                viewX(ptrail.getSource().getXInt())-(int)scale/2, viewY(ptrail.getSource().getYInt())-(int)scale/2, null);
 //                        p = this.TraceBot(ptrail, 8, 10);
 //                        g.drawPolygon(p);
-                    }
+                }
 
 //                    p = this.TraceRegularStar(ptrail, 6, 30, 15);
 //                    p = this.TraceRomboid(ptrail, 5);
-                    g.setStroke(new BasicStroke(1));
-                    this.traceLabel(g, ptrail, prevTrail, 25, name, viewPort);
-                }
-                for (int i = 0; i < jsaGoals.size(); i++) {
-                    paintGoalMap(g, jsaGoals.get(i).asObject());
-                }
-                drawLineRuler(g, screenPort, 10);
-            }
-        } else {
-            String sCompass, sGoal, sDistance;
-            double radius1 = 0, radius2 = 0, alpha1, alpha2;
-            Point3D p0, p1, p2, p3;
-
-            g.setClip(screenPort);
-            Color cTile, cBackground, cStroke;
-            int iGround, lTile, tTile;
-            if (hudView != null && externalDecoder.getPolarVisual() != null) {
-                for (int level = 0; level < nLevels; level++) {
-                    nTiles = (level) * 4 + 1;
-                    for (int tile = 0; tile < nTiles; tile++) {
-                        lTile = externalDecoder.getPolarVisual()[tile][level];
-                        tTile = externalDecoder.getPolarThermal()[tile][level];
-                        if (lTile >= 0) {
-                            cTile = new Color(lTile, lTile, lTile);
-                        } else {
-                            cTile = OleDashBoard.cBad;
-                        }
-                        iGround = lTile;
-
-                        if (tTile == 0) {
-                            cStroke = OleDashBoard.cGoal;
-                            cBackground = cStroke;
-                        } else if (iGround < 0) {
-                            cStroke = OleDashBoard.cBad;
-                            cBackground = OleDashBoard.cBad;
-                        } else if (iGround > externalDecoder.getMaxlevel()) {
-                            cStroke = OleDashBoard.cBad;
-                            cBackground = OleDashBoard.cBad;
-                        } else if (iGround > externalDecoder.getAltitude()) {
-                            cStroke = OleDashBoard.cBad;
-                            cBackground = cTile;
-                        } else {
-                            cStroke = cTile;
-                            cBackground = cTile;
-                        }
-                        if (this.isHasGrid()) {
-                            cStroke = Color.DARK_GRAY;
-                        }
-                        g.setColor(cBackground);
-                        g.fill(hudView[level][tile]);
-                        g.setColor(cStroke);
-                        g.setStroke(new BasicStroke(1));
-                        g.draw(hudView[level][tile]);
-                        g.setStroke(new BasicStroke(1));
-                    }
-                }
-            }
-            g.setColor(OleDashBoard.cDial);
-            pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, externalDecoder.getDistance()) * lengthVisual / nLevels, center);
-            this.oDrawArc(g, center, 15.0 * lengthVisual / nLevels, 0, 180);
-            this.oDrawArc(g, center, 10.0 * lengthVisual / nLevels, 0, 180);
-            this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
-            this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
-            this.oDrawArc(g, center, 1.0 * lengthVisual / nLevels, 0, 180);
-            if (scale < limitScale) {
-                p = new Polygon();
-                p.addPoint(pHead.getXInt(), pHead.getYInt());
-                p.addPoint(center.getXInt() - 10, center.getYInt());
-                p.addPoint(center.getXInt() + 10, center.getYInt());
-                p.addPoint(pHead.getXInt(), pHead.getYInt());
-                g.draw(p);
-            } else {
-                g.drawImage(sprites.get(0).getMap(), center.getXInt() - 18, center.getYInt() - 12, 36,36,null);
-
-            }
-            tf = new TextFactory(g).setX((int) (center.getX() + 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-            tf = new TextFactory(g).setX((int) (center.getX() - 2.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+1").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-
-            tf = new TextFactory(g).setX((int) (center.getX() + 5.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-            tf = new TextFactory(g).setX((int) (center.getX() - 5.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+5").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-
-            tf = new TextFactory(g).setX((int) (center.getX() + 10.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-            tf = new TextFactory(g).setX((int) (center.getX() - 10.0 * lengthVisual / nLevels)).setY(center.getYInt()).setFontSize(10)
-                    .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
-            tf.draw();
-
-            g.setColor(OleDashBoard.cDistance);
-            if (externalDecoder.getDistance() != Perceptor.NULLREAD) {
-                g.setStroke(new BasicStroke(3));
-                this.oDrawLine(g, pDistance, pHead);
                 g.setStroke(new BasicStroke(1));
+                this.traceLabel(g, ptrail, prevTrail, 25, name, viewPort);
             }
-            g.setColor(OleDashBoard.cAngle);
-            g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
-            this.oDrawLine(g, pVariableDown, pHead);
-            g.setStroke(new BasicStroke(1));
-
-            g.setColor(OleDashBoard.cDial);
-            if (externalDecoder.getCompass() == Perceptor.NULLREAD) {
-                sRead = "---";
-            } else {
-                sRead = String.format("[ %03dº ]", (int) externalDecoder.getCompass());
+            for (int i = 0; i < jsaGoals.size(); i++) {
+                paintGoalMap(g, jsaGoals.get(i).asObject());
             }
-            tf = new TextFactory(g);
-            tf.setPoint(pCenterTopFixed).setsText(sRead).
-                    setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(20).setTextStyle(Font.BOLD).validate();
-            g.setColor(OleDashBoard.cDial);
-            tf.draw();
-
-            tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y).setsText("Compass: " + sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
-            tf.draw();
-
-            g.setColor(OleDashBoard.cDistance);
-            if (externalDecoder.getDistance() == Perceptor.NULLREAD) {
-                sRead = "---";
-            } else {
-                sRead = String.format(" %03dm ", (int) (externalDecoder.getDistance()));
-            }
-            tf = new TextFactory(g).setPoint(pDistance).setFontSize(14).setsText(sRead).
-                    setHalign(SwingConstants.RIGHT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle(90 - shiftAngularHud()).validate();
-            tf.draw();
-            tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y + 40).setsText("Distance: " + sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
-            tf.draw();
-
-            g.setColor(OleDashBoard.cAngle);
-            if (externalDecoder.getCompass() == Perceptor.NULLREAD) {
-                sRead = "---";
-            } else {
-                sRead = String.format(" %03dº ", valueAngularHud());
-            }
-            tf = new TextFactory(g).setPoint(pVariableTop).setFontSize(14).setsText(sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
-                    setAngle(90 - shiftAngularHud()).validate();
-            tf.draw();
-            tf = new TextFactory(g);
-            tf.setX(screenPort.x).setY(screenPort.y + 20).setsText("Angle: " + sRead).
-                    setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
-            tf.draw();
-
-            if (externalDecoder.getMaxlevel() >= 0) {
-                g.setColor(OleDashBoard.cBad);
-                sRead = String.format(" %03dm ", externalDecoder.getMaxlevel());
-                tf = new TextFactory(g);
-                tf.setX(screenPort.x + screenPort.width - 150).setY(screenPort.y).setsText("MaxFlight: " + sRead).
-                        setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).setFontSize(15).setTextStyle(Font.BOLD).validate();
-                tf.draw();
-            }
-            g.setClip(null);
-//            this.oDrawCounter(g, sRead, pCenterTopFixed, cell, SwingConstants.CENTER, SwingConstants.BOTTOM);
+            drawLineRuler(g, screenPort, 10);
         }
 
         return this;
@@ -514,23 +214,11 @@ public class OleMap extends OleSensor implements ActionListener {
         return (int) (viewPort.y + (y + 0.4) * scale);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        isMap = !isMap;
-    }
-
     protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
         SimpleVector3D p = new SimpleVector3D(new Point3D(jsgoal.getString("position", "")), Compass.NORTH);
         int diam1 = 6, diam2 = diam1 / 2;
         g.setColor(OleDashBoard.cGoal);
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
-//        g.drawOval((int) viewX(p.getSource().getX()) - diam2,
-//                (int) (viewY(p.getSource().getY())) - diam2,
-//                diam1, diam1);
-//        g.drawOval((int)(viewPort.x+viewPort.width*p.getX()/map.getWidth()), 
-//                (int)(viewPort.y+viewPort.height*p.getY()/map.getHeight()), 
-//                diam1, diam1);
-
     }
 
     public Polygon TraceRomboid(SimpleVector3D sv, int length) {
@@ -609,16 +297,6 @@ public class OleMap extends OleSensor implements ActionListener {
         return p;
     }
 
-//    public Polygon TraceTriangle(SimpleVector3D sv, int length) {
-//        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-//        Point3D p;
-//        Polygon t=new Polygon();
-//        p = at.alphaPoint(sv.getsOrient()*45, length, sv.getSource());
-//        t.addPoint(viewX(p.getX()), viewY(p.getY()));
-//        p = at.alphaPoint(sv.getsOrient()*45, length, sv.getSource());
-//        t.addPoint(viewX(p.getX()), viewY(p.getY()));
-//        return p;
-//    }
     public Polygon TraceCourse(SimpleVector3D sv, int length) {
         int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY()), xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
         p = new Polygon();
@@ -628,30 +306,6 @@ public class OleMap extends OleSensor implements ActionListener {
         return p;
     }
 
-//    public void traceLabel(Graphics2D g, SimpleVector3D sv, int length, String name) {
-//        int xl = viewX(sv.getSource().getXInt()) + length, yl = viewY(sv.getSource().getYInt()), halign, valign;
-//        int n = 0;
-//        String s, climb;
-//        JLabel jl;
-//        halign = SwingConstants.LEFT;
-//        valign = SwingConstants.CENTER;
-//        yl = viewY(sv.getSource().getYInt());
-//        s = name;
-//        if (sv.canonical().getTarget().getZ() > 0) {
-//            climb = emojis.UPRIGHTARROW; //"+";
-//        } else if (sv.canonical().getTarget().getZ() < 0) {
-//            climb = emojis.DOWNRIGHTARROW;
-//        } else {
-//            climb = " ";
-//        }
-//        s = s+"\n"+String.format("%03d %2s %s", (int) sv.getSource().getZInt(), SimpleVector3D.Dir[sv.getsOrient()], climb);
-//        jl=new JLabel(s);
-//        jl.setFont(g.getFont().deriveFont(Font.BOLD));
-//        
-//        g.setStroke(new BasicStroke(2));
-//        g.drawLine(viewX(sv.getSource().getX()), viewY(sv.getSource().getY()), xl, yl);
-//        g.setStroke(new BasicStroke(1));
-//    }
     public void traceLabel(Graphics2D g, SimpleVector3D sv, SimpleVector3D prevsv, int length, String name, Rectangle viewPort) {
         System.out.println("tracelabel");
         int halign, valign, incrx, incry;

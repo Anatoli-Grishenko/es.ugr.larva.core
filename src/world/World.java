@@ -457,7 +457,7 @@ public class World {
                         }
                         if (operation == OPERATION.DISTANCE) {
                             if (property == PROPERTY.POSITION) {
-                                partialres = new JsonObject().add("value", observable.realDistanceTo(t.getPosition().to2D()));
+                                partialres = new JsonObject().add("value", observable.fastDistanceXYTo(t.getPosition().to2D()));
                             }
                             if (property == PROPERTY.SURFACE) {
                                 int value = t.getSurface().getStepLevel(observable.getX(), observable.getY());

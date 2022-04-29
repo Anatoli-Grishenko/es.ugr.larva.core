@@ -208,7 +208,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void postExecute() {
         myReport.tick();
-        if (this.frameDelay > 0) {
+        if (this.frameDelay > 0 && !remote) {
             try {
                 Thread.sleep(this.frameDelay);
             } catch (InterruptedException ex) {
@@ -515,13 +515,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getPerceptions().feedPerception(res.getContent());
+                E.getDeepPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -548,13 +548,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getPerceptions().feedPerception(res.getContent());
+                E.getDeepPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -578,13 +578,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getPerceptions().feedPerception(res.getContent());
+                E.getDeepPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -609,13 +609,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getPerceptions().feedPerception(res.getContent());
+                E.getDeepPerceptions().feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);

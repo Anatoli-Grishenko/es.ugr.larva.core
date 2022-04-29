@@ -223,7 +223,7 @@ public class SensorDecoder {
 
     public double getDistance() {
         if (isReady() && hasSensor("DISTANCE")) {
-            return (int) getSensor("distance").get(0).asDouble();
+            return getSensor("distance").get(0).asDouble();
         }
         return -1;
     }
@@ -302,7 +302,7 @@ public class SensorDecoder {
             double v = getSensor("angular").get(0).asDouble();
             v = 360 - v + 360;
 //            v = v+getCompass();   
-            return (int) v % 360;
+            return v % 360;
         }
         return -1;
     }

@@ -10,6 +10,7 @@ import geometry.Point3D;
 import map2D.Map2DColor;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import geometry.Compass;
 import java.util.ArrayList;
 
 /**
@@ -101,27 +102,8 @@ public class Thing extends Entity3D {
         return _sensors.size();
     }
 
-//    public JsonObject oldgiveVisible(PROPERTY property, Point3D target) {
-//        JsonObject res = new JsonObject();
-//        JsonArray valuelist = new JsonArray();
-//        if (property == PROPERTY.POSITION) {
-//            res.add("position", this._position.toJson());
-//        }
-//        if (property == PROPERTY.ORIENTATION) {
-//            res.add("orientation", this.getVector().toJson());
-//        }
-//        if (property == PROPERTY.PRESENCE) {
-//            res.add("presence", this.contains(target));
-//
-//        }
-//        if (property == PROPERTY.SURFACE) {
-//            res.add("surface", _surface.getStepLevel((int) target.getX(), (int) target.getY()));
-//        }
-//        return res;
-//    }
     public JsonObject toJson() {
         JsonObject res = new JsonObject();
-//        res.add("id", this.getId());
         res.add("objectid", this.getId());
         res.add("name", this.getName());
         res.add("type", this.getType());
@@ -131,6 +113,13 @@ public class Thing extends Entity3D {
             res.merge(this.readPerceptions());
         }
         return res;
+    }
+
+    public void fromJson(JsonObject o) {
+        this.setName(o.getString("name", ""));
+        this.setType(o.getString("type", ""));
+        this.setPosition(new Point3D(o.getString("position", "")));
+        this.setOrientation(o.getInt("orientation", Compass.NORTH));
     }
 
     @Override
