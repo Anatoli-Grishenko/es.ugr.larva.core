@@ -415,7 +415,7 @@ public class Ole3DPane extends JScrollPane {
             Circle3D c3d = (Circle3D) o3d;
             odPane.canvas().setColor(c3d.getColor());
             Point3D pt = calculate3D(c3d.getCenter()); //, pr=calculate3D(c3d.getCenter().setX(pt.getX()+c3d.getRadius()));
-            int radius3d=5; //(int) pt.fastDistanceXYTo(pr);
+            int radius3d=5; //(int) pt.planeDistanceTo(pr);
             odPane.canvas().fillArc((int) pt.getX(), (int) pt.getY(),radius3d, radius3d, 0, 360);
         }
 //        Point3D pt = calculate3D(o3d.getCenter());

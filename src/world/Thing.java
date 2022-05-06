@@ -26,6 +26,7 @@ public class Thing extends Entity3D {
 
     protected World _refWorld;
     protected Map2DColor _surface;
+    protected ArrayList<Point3D>trail;
     protected String _type;
     protected ArrayList<Perceptor> _sensors;
 
@@ -125,6 +126,14 @@ public class Thing extends Entity3D {
     @Override
     public String toString() {
         return toJson().toString();
+    }
+
+    public ArrayList<Point3D> getTrail() {
+        return trail;
+    }
+
+    public void setTrail(ArrayList<Point3D> trail) {
+        this.trail = trail;
     }
 
 }

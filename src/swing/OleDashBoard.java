@@ -52,7 +52,7 @@ public class OleDashBoard extends OleDrawPane {
     protected Component myParent;
     public SensorDecoder decoder;
     OleSemiDial osAltitude, osBattery;
-    OleRoundPB osGround;
+    OleSensor osGround;
     OleRotatory orCompass1;
     OleDiode odLed[] = new OleDiode[10];
     OleLinear olTime, olSteps, olGPS, olBurnt;
@@ -117,6 +117,8 @@ public class OleDashBoard extends OleDrawPane {
 
     public void initLayout() {
         Layout2();
+        this.validate();
+        this.repaint();
     }
 
     protected void Layout1() {
@@ -349,7 +351,7 @@ public class OleDashBoard extends OleDrawPane {
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
-        osHud.setSPStretch(22);
+        osHud.setSPStretch(0);
         osHud.setVPStretch(ldials/2);
         osHud.showFrame(true);
         osHud.validate();
@@ -362,7 +364,7 @@ public class OleDashBoard extends OleDrawPane {
         orCompass1.setnDivisions(8);
         orCompass1.setLabels(new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE"});
         orCompass1.showScaleNumbers(true);
-        orCompass1.setBounds(4 * ww+20, 20+hLabels, ldials, ldials);
+        orCompass1.setBounds(4 * ww, 20+hLabels, ldials, ldials);
         orCompass1.setForeground(this.cLabels);
         orCompass1.setBackground(this.cGauge);
 //        orCompass1.showFrame(true);
@@ -373,38 +375,40 @@ public class OleDashBoard extends OleDrawPane {
         osAltitude.setMinValue(0);
         osAltitude.setMaxValue(255);
         osAltitude.setStartAngle(225);
-        osAltitude.setEndAngle(-45);
+        osAltitude.setEndAngle(0);
         osAltitude.setnDivisions(10);
-        osAltitude.setBounds(4 * ww+20, 20+hLabels+ldials, ldials, ldials);
+        osAltitude.setBounds(4 * ww, 20+hLabels+ldials, ldials, ldials);
         osAltitude.setForeground(this.cLabels);
-        osAltitude.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
-        pal = new Palette();
-        pal.addWayPoint(0, Color.BLACK);
-        pal.addWayPoint(100, this.cGauge);
-        pal.fillWayPoints(255);
-        osAltitude.setPalette(pal);
-        osAltitude.showScale(true);
-        osAltitude.showScaleNumbers(true);
+        osAltitude.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
+        osAltitude.setSimplifiedDial(true);
+//        pal = new Palette();
+//        pal.addWayPoint(0, Color.WHITE);
+//        pal.addWayPoint(100, Color.RED);
+//        pal.fillWayPoints(255);
+//        osAltitude.setPalette(pal);
+//        osAltitude.showScale(true);
+//        osAltitude.showScaleNumbers(true);
 //        osAltitude.showFrame(true);
         osAltitude.validate();
 
-        osGround = new OleRoundPB(this, "Ground");
+        osGround = new OleSemiDial(this, "Ground");
         osGround.setMinValue(0);
-        osGround.setMaxValue(275);
+        osGround.setMaxValue(255);
         osGround.setStartAngle(225);
-        osGround.setEndAngle(-45);
-        osGround.setnDivisions(11);
-        osGround.setBounds(4 * ww+20, 20+hLabels+ldials*2, ldials, ldials);
+        osGround.setEndAngle(0);
+        osGround.setnDivisions(10);
+       osGround.setBounds(4 * ww, 20+hLabels+ldials*2, ldials, ldials);
         osGround.setForeground(this.cLabels);
         osGround.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
+        osGround.setSimplifiedDial(true);
 //        pal = new Palette();
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(20, Color.WHITE);
 //        pal.addWayPoint(100, Color.WHITE);
 //        pal.fillWayPoints(275);
 //        osGround.setPalette(pal);
-        osGround.showScale(true);
-        osGround.showScaleNumbers(false);
+//        osGround.showScale(true);
+//        osGround.showScaleNumbers(false);
         osGround.setAlertLimitBelow(10);
         osGround.validate();
 
@@ -414,18 +418,22 @@ public class OleDashBoard extends OleDrawPane {
         osBattery.setStartAngle(180);
         osBattery.setEndAngle(0);
         osBattery.setnDivisions(4);
-        osBattery.setBounds(4 * ww+20, 20+hLabels+ldials*3, ldials, ldials);
+        osBattery.setBounds(4 * ww, 20+hLabels+ldials*3, ldials, ldials);
         osBattery.setForeground(this.cLabels);
-        osBattery.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
-//        pal = new Palette();
-//        pal.addWayPoint(0, Color.RED);
-//        pal.addWayPoint(50, Color.YELLOW);
-//        pal.addWayPoint(100, Color.GREEN);
-//        pal.fillWayPoints(3500);
-//        osBattery.setPalette(pal);
-        osBattery.showScale(true);
-        osBattery.showScaleNumbers(true);
-        osBattery.setAlertLimitBelow(300);
+        osBattery.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
+        osBattery.setSimplifiedDial(true);
+        osBattery.setAlertLimitBelow((int)(osBattery.getMaxValue()/5));
+        pal = new Palette();
+        pal.addWayPoint(0, Color.RED);
+        pal.addWayPoint(20, Color.RED);
+        pal.addWayPoint(21, Color.YELLOW);
+        pal.addWayPoint(75, Color.YELLOW);
+        pal.addWayPoint(76, Color.YELLOW);
+        pal.addWayPoint(100, Color.GREEN);
+        pal.fillWayPoints(3500);
+        osBattery.setPalette(pal);
+//        osBattery.showScale(true);
+//        osBattery.showScaleNumbers(true);
         osBattery.validate();
 
         olGPS = new OleLinear(this, "GPS");
@@ -567,7 +575,7 @@ public class OleDashBoard extends OleDrawPane {
 //        System.out.println("DashBoard Preprocess");
 
         if (content.contains("filedata")) {
-//            System.out.println("filedata");
+            System.out.println("filedata");
             Ole ocontent = new Ole().set(content);
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
@@ -575,15 +583,15 @@ public class OleDashBoard extends OleDrawPane {
             decoder.setWorldMap(ofile.toString(), maxlevel);
             osMap.setMap(decoder.getWorldMap());
             osMap.validate();
-            this.osAltitude.setAlertLimitAbove(maxlevel - 10);
+            this.osAltitude.setAlertLimitAbove(maxlevel);
             osHud.resetTerrain();
             res = true;
         } else if (content.contains("perceptions")) {
-//            System.out.println("DashBoard perceptions");
+            System.out.println("DashBoard perceptions");
             this.feedPerception(content);
             res = false;
         } else if (content.contains("goals")) {
-//            System.out.println("DashBoard goals");
+            System.out.println("DashBoard goals");
             this.feedGoals(content);
             res = false;
         }

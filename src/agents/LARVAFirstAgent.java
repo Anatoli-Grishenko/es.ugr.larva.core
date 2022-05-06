@@ -116,7 +116,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             return null;
         } else {
             A = Prioritize(E, A);
-            return A.Best();
+            return A.BestChoice();
         }
     }
 

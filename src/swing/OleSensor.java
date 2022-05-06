@@ -8,6 +8,7 @@ package swing;
 import com.eclipsesource.json.JsonArray;
 import geometry.AngleTransporter;
 import geometry.Point3D;
+import geometry.SimpleVector3D;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -64,7 +65,7 @@ public abstract class OleSensor extends JComponent {
     protected Palette myPalette;
     protected boolean showScale = true, showScaleNumbers = true, showFrame = false,
             rotateText = false, autoRotate = false, counterClock = false, circular = false,
-            alertValue = false, alertBelow;
+            alertValue = false, alertBelow, simplifiedDial = false, scaledCoordinates = true;
     protected double mainRadius, markRadius, textRadius, labelRadius, dialRadius, barRadius;
     protected int stroke = 27, alertLimit = Perceptor.NULLREAD;
     protected Font f, fRead;
@@ -204,14 +205,14 @@ public abstract class OleSensor extends JComponent {
     public void setCurrentValue(double currentValue) {
         allReadings[0][0] = validateValue(currentValue);
         if (this.alertBelow) {
-            if (getCurrentValue() < alertLimit) {
+            if (getCurrentValue() <= alertLimit) {
                 this.setAlertValue((true));
             } else {
                 this.setAlertValue((false));
             }
         }
         if (!this.alertBelow) {
-            if (getCurrentValue() > alertLimit) {
+            if (getCurrentValue() >= alertLimit) {
                 this.setAlertValue((true));
             } else {
                 this.setAlertValue((false));
@@ -377,7 +378,7 @@ public abstract class OleSensor extends JComponent {
                 p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
                 p3 = new Point3D(vPort.x + vPort.width, shifty + vPort.y + alpha * scale);
                 p4 = new Point3D(vPort.x + vPort.width - mark, shifty + vPort.y + alpha * scale);
-                oDrawLine(g, p2,p4);
+                oDrawLine(g, p2, p4);
             }
         }
 
@@ -457,6 +458,61 @@ public abstract class OleSensor extends JComponent {
 //                } else {
 //                    iValue += stepValue;
 //                }
+            }
+        }
+    }
+
+    public void drawSimplifiedCircularRuler(Graphics2D g, Point3D center, double axisRadius, double markRadius1, double markRadius2, double textRadius, int fontSize) {
+        Point3D p1, p2, ps;
+        String sValue;
+        int textSize;
+        double endScale, initScale = 0, initValue = 0, endValue = 0, stepScale = 0, iScale = 0, iVisual = 0, maxMarks = 0;
+
+        g.setColor(this.getForeground());
+        oDrawArc(g, center, axisRadius, minVisual, maxVisual, myPalette);
+        if (fontSize >= 0) {
+            textSize = fontSize;
+        } else {
+            textSize = (int) (Math.round(Math.abs(markRadius2 - markRadius1))) * 30 / 20;
+        }
+
+        maxMarks = nMarks + 1;
+        if (counterClock) {
+            initScale = getMinVisual();
+            initValue = getMaxValue();
+            stepScale = stepVisual;
+            stepValue = -stepValue;
+        } else {
+            initScale = getMaxVisual();
+            initValue = getMinValue();
+            stepScale = -stepVisual;
+            stepValue = stepValue;
+        }
+
+        g.setColor(this.getForeground());
+
+        for (int mark = 0; mark < maxMarks; mark++) {
+            p1 = at.alphaPoint(initScale + mark * stepScale, markRadius2, center);
+            p2 = at.alphaPoint(initScale + mark * stepScale, markRadius1, center);
+            oDrawLine(g, p1, p2);
+            iScale = (initValue + mark * stepValue);
+            iVisual = (initScale + mark * stepScale + baseValue - baseVisual);
+            if (mark % (nMarks / 2) == 0) {
+                ps = at.alphaPoint(iVisual, textRadius, center);
+                sValue = String.format("%4d", (int) iScale);
+                TextFactory tf = new TextFactory(g);
+                if (labels == null) {
+                    tf.setsText(sValue);
+                } else {
+                    tf.setsText(labels[mark]);
+                }
+                tf.setPoint(ps).setFontSize(textSize)
+                        .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER);
+                if (rotateText) {
+                    tf.setAngle((int) validateValue(-iVisual + baseValue));
+                }
+                g.setColor(this.getForeground());
+                tf.validate().draw();
             }
         }
     }
@@ -806,16 +862,27 @@ public abstract class OleSensor extends JComponent {
     public void setAlertLimitBelow(int value) {
         this.alertBelow = true;
         alertLimit = value;
+        this.myPalette = new Palette();
+        this.myPalette.addWayPoint(0, Color.RED);
+        int perc = (int) ((value - this.getMinValue()) * 100 / (this.getMaxValue() - this.getMinValue()));
+        this.myPalette.addWayPoint(perc, Color.RED);
+        this.myPalette.addWayPoint(perc + 1, Color.WHITE);
+        this.myPalette.addWayPoint(100, Color.WHITE);
+        this.myPalette.fillWayPoints((int) (this.getMaxValue() - this.getMinValue()));
+        this.validate();
     }
 
     public void setAlertLimitAbove(int value) {
         this.alertBelow = false;
         alertLimit = value;
-        this.myPalette.addWayPoint(0, Color.BLACK);
-        this.myPalette.addWayPoint((int)((value-this.getMinValue())*100/(this.getMaxValue()-this.getMinValue())),Color.BLACK);
+        this.myPalette = new Palette();
+        this.myPalette.addWayPoint(0, Color.WHITE);
+        int perc = (int) ((value - this.getMinValue()) * 100 / (this.getMaxValue() - this.getMinValue()));
+        this.myPalette.addWayPoint(perc, Color.WHITE);
+        this.myPalette.addWayPoint(perc + 1, Color.RED);
         this.myPalette.addWayPoint(100, Color.RED);
-        this.myPalette.fillWayPoints(255);
-        this.revalidate();
+        this.myPalette.fillWayPoints((int) (this.getMaxValue() - this.getMinValue()));
+        this.validate();
     }
 
     public JsonArray getJsaGoals() {
@@ -832,6 +899,127 @@ public abstract class OleSensor extends JComponent {
 
     public void setHasGrid(boolean hasGrid) {
         this.hasGrid = hasGrid;
+    }
+
+    public boolean isSimplifiedDial() {
+        return simplifiedDial;
+    }
+
+    public void setSimplifiedDial(boolean simplifiedDial) {
+        this.simplifiedDial = simplifiedDial;
+    }
+
+    public Polygon TraceRomboid(SimpleVector3D sv, int length) {
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+        Polygon p = new Polygon();
+        p.addPoint(xsv - length, ysv);
+        p.addPoint(xsv, ysv - length);
+        p.addPoint(xsv + length, ysv);
+        p.addPoint(xsv, ysv + length);
+        p.addPoint(xsv - length, ysv);
+        return p;
+    }
+
+    public Polygon TraceBot(SimpleVector3D sv, int npoints, int radius1) {
+        int rotate = 90;
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha;
+        Polygon p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(360 / npoints * np + sv.getsOrient() * 45 + rotate, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+        }
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, 0, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1) {
+//        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+//        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+//        double alpha;
+//        p = new Polygon();
+//        for (int np = 0; np < npoints; np++) {
+//            p1 = at.alphaPoint(360 / npoints * np, radius1, pxsv);
+//            p.addPoint(p1.getXInt(), p1.getYInt());
+//        }
+//        p1 = at.alphaPoint(0, radius1, pxsv);
+//        p.addPoint(p1.getXInt(), p1.getYInt());
+//        return p;
+        return this.TraceRegularPolygon(sv, npoints, radius1, 0);
+    }
+
+    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1, int rotate) {
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha;
+        Polygon p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(360 / npoints * np - rotate, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+        }
+        p1 = at.alphaPoint(0, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public Polygon TraceRegularStar(SimpleVector3D sv, int npoints, int radius1, int radius2) {
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha = 0, increment = 360 / npoints;
+        Polygon p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(alpha, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+            p1 = at.alphaPoint(alpha + increment / 2, radius2, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+            alpha += increment;
+        }
+        p1 = at.alphaPoint(0, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public Polygon TraceCourse(SimpleVector3D sv, int length) {
+        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY()), xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
+        Polygon p = new Polygon();
+        p.addPoint(xsv, ysv);
+        p.addPoint(xsv2, ysv2);
+        p.addPoint(xsv, ysv);
+        return p;
+    }
+
+    public Point3D viewP(Point3D p) {
+        return new Point3D(viewX(p.getX()), viewY(p.getY()));
+    }
+
+    public int viewX(double x) {
+        if (this.isScaledCoordinates()) {
+            return (int) (viewPort.x + (x + 0.4) * scale);
+        } else {
+            return (int) ( x);
+        }
+    }
+
+    public int viewY(double y) {
+        if (this.isScaledCoordinates()) {
+            return (int) (viewPort.y + (y + 0.4) * scale);
+        } else {
+            return (int) (y);
+        }
+    }
+
+    public boolean isScaledCoordinates() {
+        return scaledCoordinates;
+    }
+
+    public void setScaledCoordinates(boolean scaledCoordinates) {
+        this.scaledCoordinates = scaledCoordinates;
     }
 
 }

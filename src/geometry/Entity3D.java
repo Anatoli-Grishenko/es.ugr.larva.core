@@ -19,7 +19,7 @@ import java.util.Comparator;
  */
 public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 
-    protected String _name, _key;
+    protected String _name, _key, _type;
     protected SimpleVector3D _vector;
     protected Point3D _size,_center;
     protected Color _color;
@@ -200,10 +200,12 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public int compareTo(Entity3D other) {
-        return (int) (1000 * getCenter().fastDistanceXYTo(other.getCenter()));
+        return (int) (1000 * getCenter().planeDistanceTo(other.getCenter()));
     }
     
     public int compare(Entity3D one, Entity3D other) {
         return one.compareTo(other);
     }
+
+  
     }

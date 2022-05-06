@@ -9,10 +9,13 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import geometry.Point3D;
+import geometry.SimpleVector3D;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -150,5 +153,57 @@ public class SwingTools {
         return res;
     }
     
-    
+    public static Polygon TraceRegularPolygon(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1) {
+        return TraceRegularPolygon(at, sv, npoints, radius1, 0);
+    }
+
+    public static Polygon TraceRegularPolygon(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1, int rotate) {
+        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY();
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha;
+        Polygon p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(360 / npoints * np - rotate, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+        }
+        p1 = at.alphaPoint(0-rotate, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public static Polygon TraceRegularStar(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1, int radius2) {
+        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY();
+        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
+        double alpha = 0, increment = 360 / npoints;
+        Polygon p = new Polygon();
+        for (int np = 0; np < npoints; np++) {
+            p1 = at.alphaPoint(alpha, radius1, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+            p1 = at.alphaPoint(alpha + increment / 2, radius2, pxsv);
+            p.addPoint(p1.getXInt(), p1.getYInt());
+            alpha += increment;
+        }
+        p1 = at.alphaPoint(0, radius1, pxsv);
+        p.addPoint(p1.getXInt(), p1.getYInt());
+        return p;
+    }
+
+    public static Polygon TraceCourse(SimpleVector3D sv, int length) {
+        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY(), 
+                xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
+        Polygon p = new Polygon();
+        p.addPoint(xsv, ysv);
+        p.addPoint(xsv2, ysv2);
+        p.addPoint(xsv, ysv);
+        return p;
+    }
+
+    public static Polygon transformPolygon(Polygon p, double scale, double shiftx, double shifty) {
+        Polygon newpoly= new Polygon();
+        for (int i=0; i<p.npoints; i++) {
+            newpoly.addPoint((int)(shiftx+(p.xpoints[i])*scale),
+            (int)(shifty+(p.ypoints[i])*scale));
+        }
+        return newpoly;
+    }
 }

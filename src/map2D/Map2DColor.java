@@ -123,7 +123,7 @@ public class Map2DColor {
         this._map = ImageIO.read(f);
         _lmax = _lmin = -1;
         normalize();
-        this.getExtremeHeights();
+//        this.getExtremeHeights();
 
         return this;
     }
@@ -298,11 +298,12 @@ public class Map2DColor {
     public int getRawLevel(int x, int y) {
         if (this.hasMap() && 0 <= x && x < this.getWidth() && 0 <= y && y < this.getHeight()) {
             Color cAux = new Color(_map.getRGB(x, y));
-            if (cAux.getRed() > 0 && cAux.getGreen() == 0 && cAux.getBlue() == 0) {
-                return -1;
-            } else {
-                return cAux.getGreen();
-            }
+//            if (cAux.getRed() > 0 && cAux.getGreen() == 0 && cAux.getBlue() == 0) {
+//                return -1;
+//            } else {
+//                return cAux.getGreen();
+//            }
+            return cAux.getGreen();
         } else {
             return -1;
         }
@@ -331,6 +332,10 @@ public class Map2DColor {
         } else {
             return -1;
         }
+    }
+
+    public int getStepLevel(SimpleVector3D p) {
+        return getStepLevel(p.getSource().getXInt(), p.getSource().getYInt());
     }
 
     public Color getColor(int x, int y) {
@@ -443,4 +448,19 @@ public class Map2DColor {
         }
     }
 
+    public int getStepLevel(Point3D p) {
+        return getStepLevel(p.getXInt(), p.getYInt());
+    }
+
+    public Map2DColor setLevel(Point3D p, int level) {
+        return setLevel((int) p.getX(), (int) p.getY(), level);
+    }
+
+    public int getRawLevel(Point3D p) {
+        return getRawLevel(p.getXInt(), p.getYInt());
+    }
+
+    public Map2DColor setColor(Point3D p, Color c) {
+        return setColor(p.getXInt(), p.getYInt(), c);
+    }
 }

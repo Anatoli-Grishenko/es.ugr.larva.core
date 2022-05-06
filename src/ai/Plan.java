@@ -17,4 +17,28 @@ public class Plan extends ArrayList<Choice>{
     public Plan() {
         super();
     }
+    public double Sum() {
+        double res=0;
+        for (Choice c:this) {
+            res += c.getUtility();
+        }
+        return res;
+    }
+    
+    public double Max() {
+        double res=Choice.MIN_UTILITY;
+        for (Choice c:this) {
+            if (c.getUtility()>res)
+                res=c.getUtility();
+        }
+        return res;
+    }
+    public double Min() {
+        double res=Choice.MAX_UTILITY;
+        for (Choice c:this) {
+            if (c.getUtility()<res)
+                res=c.getUtility();
+        }
+        return res;
+    }
 }

@@ -38,6 +38,7 @@ public class SensorDecoder {
     protected boolean ready, filterreading;
     protected String name, sessionID, commitment, sLastPerception = "";
     protected SimpleVector3D lastPosition;
+    protected Point3D target;
     protected TracePositions myTrace;
     protected double lastDistance;
 
@@ -649,11 +650,17 @@ public class SensorDecoder {
             lastPosition = null;
         }
         JsonObject jsoperception = Json.parse(content).asObject();
-        name = jsoperception.getString("name", "unknown");
+       name = jsoperception.getString("name", "unknown");
         sessionID = jsoperception.getString("sessionID", "unknown");
         commitment = jsoperception.getString("commitment", "");
         fromJson(jsoperception.get("perceptions").asArray());
         sLastPerception = content;
+         if (this.target == null) {
+            double gy = Math.round(getGPSPosition().getY() - getDistance() * Math.sin(Math.toRadians(getAbsoluteAngular() + 90)));
+            double gx = Math.round(getGPSPosition().getX() + getDistance() * Math.cos(Math.toRadians(getAbsoluteAngular() + 90)));
+            this.target = new Point3D(gx, gy, 0);
+            
+        }
         ready = true;
         myTrace.addUniquePosition(this.getGPSPosition());
         lastDistance = getDistance();
@@ -940,5 +947,26 @@ public class SensorDecoder {
 //        res += "|\n\n";
         return res;
     }
+    public void setTarget(Point3D t) {
+        target = t.clone();
+    }
+
+    public Point3D getTarget() {
+        return target.clone();
+    }
+
+
+   public double getTargetDistance() {
+        return getPosition().planeDistanceTo(target);
+    }
+
+    public int getGridDistance() {
+        return getPosition().gridDistanceTo(target);
+    }
+    
+    public Point3D getPosition() {
+        return this.getGPSPosition();
+    }
+
 
 }

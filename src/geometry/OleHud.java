@@ -42,7 +42,7 @@ public class OleHud extends OleSensor {
     protected int vpStrecht = 37, spStrecht = 22, twidth, theight, tx;
     protected double tscale;
     protected Polygon p;
-    protected int cell, nLevels, nTiles, trailSize = 200, limitScale = 7, lastZ = -1;
+    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 7, lastZ = -1;
     protected boolean showTrail;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
@@ -86,6 +86,7 @@ public class OleHud extends OleSensor {
 //        screenPort.y += 16;
         shiftx = viewPort.x - screenPort.x;
         shifty = viewPort.y - screenPort.y;
+        this.setScaledCoordinates(false);
     }
 
     @Override
@@ -120,7 +121,6 @@ public class OleHud extends OleSensor {
         }
         this.lengthVisual = center.getY() - pCenterFixed.getY();
         pVariableTop = at.alphaPoint(shiftAngularHud(), 5.4 * cell, center);
-        pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1 * cell, center);
         g.setColor(OleDashBoard.cCompass);
         this.oDrawLine(g, pCenterTopFixed, center);
         minVisual = 45;
@@ -134,7 +134,10 @@ public class OleHud extends OleSensor {
 //            p.addPoint(center.getXInt() - cell / 5, center.getYInt() + cell / 5);
 //            p.addPoint(center.getXInt(), center.getYInt());
 //            g.draw(p);
+        g.setStroke(new BasicStroke(2));
+
         this.oDrawArc(g, center, 5 * cell, 0, 180);
+        g.setStroke(new BasicStroke(1));
         for (double alpha = 135; alpha >= 45; alpha -= 5) {
             p1 = at.alphaPoint(alpha, 5 * cell, center);
             p2 = at.alphaPoint(alpha, 4.9 * cell, center);
@@ -270,12 +273,13 @@ public class OleHud extends OleSensor {
             }
         }
         g.setColor(OleDashBoard.cDial);
-        pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, externalDecoder.getDistance()) * lengthVisual / nLevels, center);
+        g.setStroke(new BasicStroke(2));
         this.oDrawArc(g, center, 15.0 * lengthVisual / nLevels, 0, 180);
         this.oDrawArc(g, center, 10.0 * lengthVisual / nLevels, 0, 180);
         this.oDrawArc(g, center, 5.0 * lengthVisual / nLevels, 0, 180);
         this.oDrawArc(g, center, 2.0 * lengthVisual / nLevels, 0, 180);
         this.oDrawArc(g, center, 1.0 * lengthVisual / nLevels, 0, 180);
+        g.setStroke(new BasicStroke(1));
         if (scale < limitScale) {
             p = new Polygon();
             p.addPoint(pHead.getXInt(), pHead.getYInt());
@@ -309,13 +313,14 @@ public class OleHud extends OleSensor {
                 .setsText("+10").setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
         tf.draw();
 
-        g.setColor(OleDashBoard.cDistance);
         if (externalDecoder.getDistance() != Perceptor.NULLREAD && externalDecoder.getDistance() > 1) {
-            g.setStroke(new BasicStroke(3));
-            this.oDrawLine(g, pDistance, pHead);
-            g.setStroke(new BasicStroke(1));
+//            g.setColor(OleDashBoard.cDistance);
             g.setColor(OleDashBoard.cAngle);
-            g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
+            pVariableDown = at.alphaPoint(shiftAngularHud(), 5.1 * cell, center);
+            g.setStroke(new BasicStroke(3));
+//            this.oDrawLine(g, pDistance, pHead);
+//            g.setStroke(new BasicStroke(1));
+//            g.setStroke(new BasicStroke(3, 0, 0, 10, new float[]{10}, 0));
             this.oDrawLine(g, pVariableDown, pHead);
             g.setStroke(new BasicStroke(1));
         }
@@ -340,15 +345,21 @@ public class OleHud extends OleSensor {
         tf.draw();
 
         g.setColor(OleDashBoard.cDistance);
+        pDistance = at.alphaPoint(shiftAngularHud(), Math.min(nLevels, externalDecoder.getDistance()) * lengthVisual / nLevels, center);
         if (externalDecoder.getDistance() == Perceptor.NULLREAD) {
             sRead = "---";
         } else {
-            sRead = String.format(" %03dm ", (int) (externalDecoder.getDistance()));
+            if (externalDecoder.getDistance() > 0) {
+                sRead = String.format(" %03dm ", (int) (Math.round(externalDecoder.getDistance())));
+            } else {
+                sRead = "";
+            }
         }
         tf = new TextFactory(g).setPoint(pDistance).setFontSize(14).setsText(sRead).
-                setHalign(SwingConstants.RIGHT).setValign(SwingConstants.BOTTOM).setTextStyle(Font.BOLD).
+                setHalign(SwingConstants.RIGHT).setValign(SwingConstants.TOP).setTextStyle(Font.BOLD).
                 setAngle(90 - shiftAngularHud()).validate();
         tf.draw();
+        this.TraceRegularPolygon(new SimpleVector3D(pDistance, 0), 4, 3);
         tf = new TextFactory(g);
         tf.setX(viewPort.x + 10).setY(center.getYInt() + 25).setFontSize(15).setTextStyle(Font.BOLD).
                 setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).
@@ -391,14 +402,14 @@ public class OleHud extends OleSensor {
 //                }
 //                this.addTerrain(tx + x, d[p][x], -1, externalDecoder.getMaxlevel());
 //            }
-            if (tx == 0 || externalDecoder.getGPSPosition(1).fastDistanceXYTo(externalDecoder.getGPSPosition(0)) > 0) {
+            if (tx == 0 || externalDecoder.getGPSPosition(1).planeDistanceTo(externalDecoder.getGPSPosition(0)) > 0) {
                 this.addTerrain(1, (int) (externalDecoder.getAltitude() - externalDecoder.getGround()), (int) externalDecoder.getAltitude(), externalDecoder.getMaxlevel());
             } else {
                 this.addTerrain(0, (int) (externalDecoder.getAltitude() - externalDecoder.getGround()), (int) externalDecoder.getAltitude(), externalDecoder.getMaxlevel());
             }
-            g.drawImage(terrain.getMap(), viewPort.x, viewPort.height + 50, null);
+            g.drawImage(terrain.getMap(), viewPort.x + 25, viewPort.height + 50, null);
             g.setColor(Color.WHITE);
-            g.drawRect(viewPort.x-1, viewPort.height + 49, terrain.getWidth()+2, terrain.getHeight()+2);
+            g.drawRect(viewPort.x - 1 + 25, viewPort.height + 49, terrain.getWidth() + 2, terrain.getHeight() + 2);
         }
         return this;
     }
@@ -449,7 +460,7 @@ public class OleHud extends OleSensor {
                 c = Color.RED;
             }
             if (z >= 0) {
-                if (lastZ < 0 || t>0) {
+                if (lastZ < 0 || t > 0) {
                     lastZ = z;
                 }
                 if (y >= y1 && y <= y2) {

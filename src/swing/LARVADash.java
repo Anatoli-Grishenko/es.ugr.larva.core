@@ -1639,7 +1639,7 @@
 //    public double getDistance(Point3D p) {
 //        if (lastPerception.isReady()) {
 //            Point3D me = new Point3D(getGPS()[0], getGPS()[1]);
-//            return me.fastDistanceXYTo(p.to2D());
+//            return me.planeDistanceTo(p.to2D());
 //        }
 //        return -1;
 //

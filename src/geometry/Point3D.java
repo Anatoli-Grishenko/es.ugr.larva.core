@@ -190,11 +190,16 @@ public class Point3D {
         return this.setX(x);
     }
 
-    public double fastDistanceXYTo(Point3D p) {
-        return this.realDistanceTo(p.to2D());
+    public double planeDistanceTo(Point3D p) {
+//        return this.gridDistanceTo(p);
+        return this.to2D().realDistanceTo(p.to2D());
 //        return this.approx_distance2(p.to2D());
     }
 
+    public int gridDistanceTo(Point3D p) {
+        return (int) Math.max(Math.abs(p.getX()-this.getX()),Math.abs(p.getY()-this.getY()));
+    }
+    
     public double realDistanceTo(Point3D p) {
         double res = 0;
         int mdim = (int) Math.min(_dim, p.getDimension());

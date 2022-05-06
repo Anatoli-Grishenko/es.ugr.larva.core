@@ -75,7 +75,9 @@ public class OleRotatory extends OleSensor {
         this.oFillArc(g, center, mainRadius, 0, 360);
         //Ruler
         g.setColor(this.getForeground());
+        g.setStroke(new BasicStroke(2));
         this.drawCircularRuler(g, center, mainRadius, mainRadius, markRadius, textRadius, -1);
+        g.setStroke(new BasicStroke(1));
         g.setColor(this.getForeground());
         // Counter
         f = parentPane.getFont();

@@ -5,19 +5,38 @@
  */
 package ai;
 
+import geometry.Point3D;
+import java.util.ArrayList;
+
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Choice implements Comparable {
-    public static final double MIN_UTILITY=Integer.MIN_VALUE, MAX_UTILITY=Integer.MAX_VALUE;
+
+    public static final double MIN_UTILITY = Integer.MIN_VALUE, MAX_UTILITY = Integer.MAX_VALUE;
     String name;
-    double utility;
+    double utility, g, h;
     boolean valid;
+    Point3D position;
+    Choice parent;
+    DecisionSet children;
 
     public Choice(String label) {
         this.name = label;
-        utility = Choice.MIN_UTILITY;
+        utility = Choice.MAX_UTILITY;
+        g = 0;
+        h = Choice.MAX_UTILITY;
+        children = new DecisionSet();
+    }
+
+    public Choice(Point3D p) {
+        this.name = p.toString();
+        position = p;
+        utility = Choice.MAX_UTILITY;
+        g = 0;
+        h = Choice.MAX_UTILITY;
+        children = new DecisionSet();
     }
 
     public String getName() {
@@ -37,11 +56,12 @@ public class Choice implements Comparable {
         this.utility = Math.max(utility, this.getUtility());
         return this;
     }
+
     public Choice setMinUtility(double utility) {
-        this.utility = Math.max(utility, this.getUtility());
+        this.utility = Math.min(utility, this.getUtility());
         return this;
     }
-    
+
     public Choice setUtility(double utility) {
         this.utility = utility;
         return this;
@@ -74,7 +94,7 @@ public class Choice implements Comparable {
 
         res = this.getName();
         if (getUtility() != Choice.MIN_UTILITY) {
-            res += "," + String.format("%03d", (int)this.getUtility());
+            res += "," + String.format("%5.2f", this.getUtility());
         }
         if (valid) {
             res = "[+" + res + "+]";
@@ -84,4 +104,60 @@ public class Choice implements Comparable {
         return res;
     }
 
+    public Choice getParent() {
+        return parent;
+    }
+
+    public void setParent(Choice parent) {
+        this.parent = parent;
+        if (parent != null) {
+            this.g = parent.g + 1;
+        } else {
+            this.g = 0;
+        }
+    }
+
+    public DecisionSet getChildren() {
+        return children;
+    }
+
+    public void setChildren(DecisionSet children) {
+        this.children = children;
+    }
+
+    public Point3D getPosition() {
+        return position;
+    }
+
+    public void setPosition(Point3D position) {
+        this.position = position;
+    }
+
+    public double getG() {
+        return g;
+    }
+
+    public void setG(double g) {
+        this.g = g;
+        this.setUtility(this.getG() + this.getH());
+    }
+
+    public double getH() {
+        return h;
+    }
+
+    public void setH(double h) {
+        this.h = h;
+        this.setUtility(this.getG() + this.getH());
+    }
+
+    public int getDepth() {
+        int d = 0;
+        Choice c = this;
+        while (c.getParent() != null) {
+            d++;
+            c = c.getParent();
+        }
+        return d;
+    }
 }

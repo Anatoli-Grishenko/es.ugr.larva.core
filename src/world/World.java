@@ -24,6 +24,7 @@ import geometry.PolarSurface;
 import geometry.SimpleVector3D;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ public class World {
     protected boolean _godmode = false, debug = false;
     protected String _surfaceName;
     protected OleConfig cfg;
+    JsonArray oThings;
     protected String[][] filter, filterHQ, filterDLX;
     static int range = 41, cx = range / 2, cy = cx;
     int maxflight;
@@ -132,7 +134,7 @@ public class World {
                 break;
             case "S":
                 res.setX(width / 2);
-                res.setY(height-2);
+                res.setY(height - 2);
                 break;
             case "E":
                 res.setX(width - 2);
@@ -173,8 +175,30 @@ public class World {
 
     }
 
+    public void saveConfig(String worldconfigfilename) {
+        JsonArray jsa = new JsonArray();
+        JsonObject jso=null;
+        for (String name : this.getAllThingsName("object")) {
+            Thing t = this.getThingByName(name);
+            jso = new JsonObject();
+            jso.add("name", t.getName());
+            jso.add("type", t.getType());
+            jso.add("origin", "choice");
+            jso.add("surface-location", new JsonArray().
+                    add(t.getPosition().getXInt()).add(t.getPosition().getYInt()));
+            if (t.getType().equals("group")) {
+                jso.add("properties", new JsonArray().add("position").add("presence"));
+            } else {
+                jso.add("properties", new JsonArray());
+            }
+            jsa.add(jso);
+        }
+        cfg.get("world").asObject().set("things", jsa);
+        cfg.saveAsFile(".", worldconfigfilename, true);
+    }
+
     public String loadConfig(String worldconfigfilename) {
-        Ole ocfg = new Ole().loadFile("./LARVA/worlds/" + worldconfigfilename + ".worldconf.json");
+        Ole ocfg = new Ole().loadFile(worldconfigfilename);
         cfg = new OleConfig(ocfg);
         Ole oaux;
         if (!cfg.isEmpty()) {
@@ -191,13 +215,13 @@ public class World {
                 e.setPosition(new Point3D(0, 0, 0));
                 e.setOrientation(Compass.NORTH);
                 Map2DColor terrain = new Map2DColor(10, 10, 0);
-                setSurfaceName("./LARVA/worlds/" + oaux.getField("surface"));
+                setSurfaceName(oaux.getField("surface"));
                 spalette = oaux.getField("palette");
                 terrain.loadMapNormalize(getSurfaceName());
                 e.setSurface(terrain);
                 e.setSize(new Point3D(this._environment._surface.getWidth(),
                         this._environment._surface.getHeight(), 0));
-
+                oThings = oaux.get("things").asArray();
                 for (Ole othing : new ArrayList<Ole>(oaux.getArray("things"))) {
                     ArrayList<String> properties = othing.getArray("properties");
                     PROPERTY[] props = new PROPERTY[properties.size()];
@@ -218,7 +242,7 @@ public class World {
 //                            rx = (int) (Math.random() * terrain.getWidth());
 //                            ry = (int) (Math.random() * terrain.getHeight());
 //                            for (Thing myt : this._population.values()) {
-//                                if (!myt.getName().equals(this.getName()) && myt.getType().equals("PEOPLE") && myt.getPosition().to2D().fastDistanceXYTo(new Point3D(rx, ry)) < 5) {
+//                                if (!myt.getName().equals(this.getName()) && myt.getType().equals("PEOPLE") && myt.getPosition().to2D().planeDistanceTo(new Point3D(rx, ry)) < 5) {
 //                                    valid = false;
 //                                }
 //                            }
@@ -321,7 +345,7 @@ public class World {
         return _population.keySet();
     }
 
-    public ArrayList<String> getAllThings(String type) {
+    public ArrayList<String> getAllThingsId(String type) {
         ArrayList<String> list = new ArrayList<>();
         for (String s : _population.keySet()) {
             Thing t = this.getThing(s);
@@ -329,6 +353,19 @@ public class World {
                 list.add(s);
             }
         }
+        Collections.sort(list);
+        return list;
+    }
+
+    public ArrayList<String> getAllThingsName(String type) {
+        ArrayList<String> list = new ArrayList<>();
+        for (String s : _population.keySet()) {
+            Thing t = this.getThing(s);
+            if (this.getOntology().isSubTypeOf(t.getType(), type)) {
+                list.add(t.getName());
+            }
+        }
+        Collections.sort(list);
         return list;
     }
 
@@ -367,7 +404,7 @@ public class World {
             for (int i = 0; i < detectable.size(); i++) {
                 ti = detectable.get(i);
                 yourpos = ti.getPosition();
-                distance = mypos.fastDistanceXYTo(yourpos);
+                distance = mypos.planeDistanceTo(yourpos);
                 if (distance < shortest) {
                     shortest = distance;
                     best = ti;
@@ -397,7 +434,7 @@ public class World {
         Point3D prange;
         Point3D observable;
         PolarSurface ps = new PolarSurface(vectororientation);
-        ps.setRadius(range/2+1);
+        ps.setRadius(range / 2 + 1);
         double x1, y1, x2, y2, incrx;
         if (range == 1) { // single rangle
             x1 = point.getX();
@@ -422,7 +459,7 @@ public class World {
 //                    } else {
 //                        observable = new Point3D(sx, sy);
 //                    }
-                    if (observable.fastDistanceXYTo(t.getPosition()) <= p.getSensitivity()) {
+                    if (observable.planeDistanceTo(t.getPosition()) <= p.getSensitivity()) {
                         if (operation == OPERATION.QUERY) {
                             if (property == PROPERTY.ENERGY) {
                                 partialres = new JsonObject().add("value", t.getEnergy());
@@ -457,7 +494,7 @@ public class World {
                         }
                         if (operation == OPERATION.DISTANCE) {
                             if (property == PROPERTY.POSITION) {
-                                partialres = new JsonObject().add("value", observable.fastDistanceXYTo(t.getPosition().to2D()));
+                                partialres = new JsonObject().add("value", observable.planeDistanceTo(t.getPosition()));
                             }
                             if (property == PROPERTY.SURFACE) {
                                 int value = t.getSurface().getStepLevel(observable.getX(), observable.getY());
@@ -478,7 +515,7 @@ public class World {
                                     partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(new Vector3D(observable, t.getPosition())));
                                 }
                             }
-                            if (property == PROPERTY.ORIENTATION) {                                
+                            if (property == PROPERTY.ORIENTATION) {
                                 partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(who.getVector()));
                             }
 

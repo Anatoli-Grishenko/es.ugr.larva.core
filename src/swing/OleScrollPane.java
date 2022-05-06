@@ -15,6 +15,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.function.Consumer;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
@@ -30,6 +31,9 @@ public class OleScrollPane extends JScrollPane {
     int x1, x2, y1, y2;
     Rectangle view;
     Dimension reference;
+    Consumer <MouseEvent> handlerClick, handlerMove, handlerDrag, 
+            handlerPress, handlerRelease, handlerEnter, handlerExit;
+    Consumer <MouseWheelEvent> handlerWheel;
 
     public OleScrollPane(OleDrawPane o) {
         super(o);
@@ -40,45 +44,53 @@ public class OleScrollPane extends JScrollPane {
         this.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                Drag(e);
+                handlerDrag.accept(e);
             }
 
             @Override
             public void mouseMoved(MouseEvent e) {
+                handlerMove.accept(e);
             }
         });
         addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                Wheel(e);
+                handlerWheel.accept(e);
             }
         });
         addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Clicked(e);
+                handlerClick.accept(e);
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                Pressed(e);
+                handlerPress.accept(e);
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                Released(e);
+                handlerRelease.accept(e);
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                Entered(e);
+                handlerEnter.accept(e);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                Exited(e);
+                handlerExit.accept(e);
             }
         });
+        this.setHandlerWheel((e) -> Wheel(e));
+        setHandlerClick((e)->Clicked(e));
+        setHandlerDrag((e)->Drag(e));
+        setHandlerPress((e)->Pressed(e));
+        setHandlerRelease((e)->Released(e));
+        setHandlerEnter((e)->Entered(e));
+        setHandlerExit((e)->Exited(e));                
     }
 
     public void clear() {
@@ -155,5 +167,65 @@ public class OleScrollPane extends JScrollPane {
     protected void Exited(MouseEvent e) {
         x1 = e.getX();
         y1 = e.getY();
+    }
+
+    public void setHandlerClick(Consumer<MouseEvent> handlerClick) {
+        this.handlerClick = handlerClick;
+    }
+
+    public void setHandlerMove(Consumer<MouseEvent> handlerMove) {
+        this.handlerMove = handlerMove;
+    }
+
+    public void setHandlerDrag(Consumer<MouseEvent> handlreDrag) {
+        this.handlerDrag = handlreDrag;
+    }
+
+    public void setHandlerWheel(Consumer<MouseWheelEvent> handlerWheel) {
+        this.handlerWheel = handlerWheel;
+    }
+
+    public void setHandlerPress(Consumer<MouseEvent> handlerPress) {
+        this.handlerPress = handlerPress;
+    }
+
+    public void setHandlerRelease(Consumer<MouseEvent> handlerRelease) {
+        this.handlerRelease = handlerRelease;
+    }
+
+    public void setHandlerEnter(Consumer<MouseEvent> handlerEnter) {
+        this.handlerEnter = handlerEnter;
+    }
+
+    public void setHandlerExit(Consumer<MouseEvent> handlerExit) {
+        this.handlerExit = handlerExit;
+    }
+    
+    public int getRealX(int xpane) {
+        return (int) ((xpane+this.getHShift())/getZoom());
+    }
+    public int getRealY(int ypane) {
+        return (int) ((ypane+this.getVShift())/getZoom());
+    }
+    
+    public int getPaneX(int xreal) {
+        return (int) ((xreal)*getZoom());
+    }
+    public int getPaneY(int yreal) {
+        return (int) ((yreal)*getZoom());
+    }
+//    public int getPaneX(int xreal) {
+//        return (int) (xreal*getZoom()-getHShift());
+//    }
+//    public int getPaneY(int yreal) {
+//        return (int) (yreal*getZoom()-getVShift());
+//    }
+    
+    public int getHShift(){
+        return this.getHorizontalScrollBar().getValue();
+    }
+    
+    public int getVShift(){
+        return this.getVerticalScrollBar().getValue();
     }
 }

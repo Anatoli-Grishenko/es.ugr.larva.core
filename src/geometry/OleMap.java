@@ -34,13 +34,13 @@ import world.SensorDecoder;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleMap extends OleSensor  {
+public class OleMap extends OleSensor {
 
     protected HashMap<String, ArrayList<SimpleVector3D>> Trails;
     protected Polygon hudView[][];
     protected int narrow = 37, margin = 22;
     protected Polygon p;
-    protected int cell, nLevels, nTiles, trailSize = 200, limitScale = 7;
+    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 7;
     protected boolean showTrail;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
@@ -72,8 +72,8 @@ public class OleMap extends OleSensor  {
     public void validate() {
         super.validate();
 
-        viewPort = SwingTools.doNarrow(this.getBounds(), narrow);
-        screenPort = SwingTools.doNarrow(this.getBounds(), margin);
+        screenPort = this.getBounds(); //SwingTools.doNarrow(this.getBounds(), margin);
+        viewPort = screenPort; //SwingTools.doNarrow(this.getBounds(), narrow);
 //        viewPort.y += 16;
 //        screenPort.y += 16;
         shiftx = viewPort.x - screenPort.x;
@@ -91,6 +91,7 @@ public class OleMap extends OleSensor  {
         g.setColor(Color.BLACK);
         g.fill(screenPort);
         if (map != null) {
+            g.setClip(viewPort);
             if (externalDecoder.getWorldMap() != null) {
                 scale = viewPort.getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
                 if (scale < limitScale) {
@@ -109,7 +110,8 @@ public class OleMap extends OleSensor  {
             stepValue = lengthValue / nMarks;
             stepValue2 = 1;
             setnDivisions(10);
-
+            drawLineRuler(g, screenPort, 10);
+            g.setClip(null);
         }
         return this;
     }
@@ -118,12 +120,14 @@ public class OleMap extends OleSensor  {
     public OleSensor viewSensor(Graphics2D g) {
         layoutSensor(g);
         String label;
-        if (map!=null) {
+        if (map != null) {
             RescaleOp darken = new RescaleOp(0.5f, 0, null);
             g.drawImage(darken.filter(map.getMap(), null), viewPort.x, viewPort.y, viewPort.width, viewPort.height, null);
             SimpleVector3D ptrail, prevTrail, ptext, ppoint;
             double xVP, yVP;
             Color c;
+            g.setClip(viewPort);
+            drawLineRuler(g, screenPort, 10);
             for (String name : Trails.keySet()) {
                 if (this.isShowTrail()) {
 
@@ -180,7 +184,7 @@ public class OleMap extends OleSensor  {
             for (int i = 0; i < jsaGoals.size(); i++) {
                 paintGoalMap(g, jsaGoals.get(i).asObject());
             }
-            drawLineRuler(g, screenPort, 10);
+            g.setClip(null);
         }
 
         return this;
@@ -202,108 +206,11 @@ public class OleMap extends OleSensor  {
 
     }
 
-    public Point3D viewP(Point3D p) {
-        return new Point3D(viewX(p.getX()), viewY(p.getY()));
-    }
-
-    public int viewX(double x) {
-        return (int) (viewPort.x + (x + 0.4) * scale);
-    }
-
-    public int viewY(double y) {
-        return (int) (viewPort.y + (y + 0.4) * scale);
-    }
-
     protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
         SimpleVector3D p = new SimpleVector3D(new Point3D(jsgoal.getString("position", "")), Compass.NORTH);
         int diam1 = 6, diam2 = diam1 / 2;
         g.setColor(OleDashBoard.cGoal);
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
-    }
-
-    public Polygon TraceRomboid(SimpleVector3D sv, int length) {
-        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-        p = new Polygon();
-        p.addPoint(xsv - length, ysv);
-        p.addPoint(xsv, ysv - length);
-        p.addPoint(xsv + length, ysv);
-        p.addPoint(xsv, ysv + length);
-        p.addPoint(xsv - length, ysv);
-        return p;
-    }
-
-    public Polygon TraceBot(SimpleVector3D sv, int npoints, int radius1) {
-        int rotate = 90;
-        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
-        double alpha;
-        p = new Polygon();
-        for (int np = 0; np < npoints; np++) {
-            p1 = at.alphaPoint(360 / npoints * np + sv.getsOrient() * 45 + rotate, radius1, pxsv);
-            p.addPoint(p1.getXInt(), p1.getYInt());
-        }
-        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
-        p.addPoint(p1.getXInt(), p1.getYInt());
-        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, radius1, pxsv);
-        p.addPoint(p1.getXInt(), p1.getYInt());
-        p1 = at.alphaPoint(sv.getsOrient() * 45 + rotate, 0, pxsv);
-        p.addPoint(p1.getXInt(), p1.getYInt());
-        return p;
-    }
-
-    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1) {
-//        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-//        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
-//        double alpha;
-//        p = new Polygon();
-//        for (int np = 0; np < npoints; np++) {
-//            p1 = at.alphaPoint(360 / npoints * np, radius1, pxsv);
-//            p.addPoint(p1.getXInt(), p1.getYInt());
-//        }
-//        p1 = at.alphaPoint(0, radius1, pxsv);
-//        p.addPoint(p1.getXInt(), p1.getYInt());
-//        return p;
-        return this.TraceRegularPolygon(sv, npoints, radius1, 0);
-    }
-
-    public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1, int rotate) {
-        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
-        double alpha;
-        p = new Polygon();
-        for (int np = 0; np < npoints; np++) {
-            p1 = at.alphaPoint(360 / npoints * np - rotate, radius1, pxsv);
-            p.addPoint(p1.getXInt(), p1.getYInt());
-        }
-        p1 = at.alphaPoint(0, radius1, pxsv);
-        p.addPoint(p1.getXInt(), p1.getYInt());
-        return p;
-    }
-
-    public Polygon TraceRegularStar(SimpleVector3D sv, int npoints, int radius1, int radius2) {
-        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
-        double alpha = 0, increment = 360 / npoints;
-        p = new Polygon();
-        for (int np = 0; np < npoints; np++) {
-            p1 = at.alphaPoint(alpha, radius1, pxsv);
-            p.addPoint(p1.getXInt(), p1.getYInt());
-            p1 = at.alphaPoint(alpha + increment / 2, radius2, pxsv);
-            p.addPoint(p1.getXInt(), p1.getYInt());
-            alpha += increment;
-        }
-        p1 = at.alphaPoint(0, radius1, pxsv);
-        p.addPoint(p1.getXInt(), p1.getYInt());
-        return p;
-    }
-
-    public Polygon TraceCourse(SimpleVector3D sv, int length) {
-        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY()), xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
-        p = new Polygon();
-        p.addPoint(xsv, ysv);
-        p.addPoint(xsv2, ysv2);
-        p.addPoint(xsv, ysv);
-        return p;
     }
 
     public void traceLabel(Graphics2D g, SimpleVector3D sv, SimpleVector3D prevsv, int length, String name, Rectangle viewPort) {
@@ -355,7 +262,7 @@ public class OleMap extends OleSensor  {
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
         g.setStroke(new BasicStroke(2));
-        this.oDrawLine(g, viewP(sv.getSource()), pLabel);
+        this.oDrawLine(g, viewP(sv.getSource().clone().plus(new Point3D(4,0))), pLabel);
         g.setStroke(new BasicStroke(1));
     }
 

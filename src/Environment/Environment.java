@@ -27,11 +27,10 @@ public class Environment {
 
     protected SensorDecoder Perceptions;
     protected World World;
-    protected ArrayList<Environment> Memory;
     protected int //x = Perceptor.NULLREAD, y = Perceptor.NULLREAD, z = Perceptor.NULLREAD,
             ground = Perceptor.NULLREAD, compass = Perceptor.NULLREAD, altitude = Perceptor.NULLREAD,
             nsteps = Perceptor.NULLREAD, maxlevel = Perceptor.NULLREAD, incrx, incry, incrz,
-            worldWidth = Perceptor.NULLREAD, worldHeight = Perceptor.NULLREAD;
+            worldWidth = Perceptor.NULLREAD, worldHeight = Perceptor.NULLREAD, gridDistance=Perceptor.NULLREAD;
     public double energy = Perceptor.NULLREAD, distance = Perceptor.NULLREAD, angular = Perceptor.NULLREAD,
             relativeangular = Perceptor.NULLREAD, gx = Perceptor.NULLREAD, gy = Perceptor.NULLREAD;
     protected boolean alive, ontarget;
@@ -43,7 +42,6 @@ public class Environment {
 
     public Environment() {
         Perceptions = new SensorDecoder();
-        Memory = new ArrayList();
         shortPolar = new int[5];
     }
 
@@ -53,7 +51,6 @@ public class Environment {
         JsonObject jsaux = Json.parse(saux).asObject();
         this.Perceptions.fromJson(jsaux.get("perceptions").asArray());
         cache();
-        Memory = new ArrayList();
 
     }
 
@@ -62,11 +59,15 @@ public class Environment {
     }
 
     public Environment setExternalPerceptions(String perceptions) {
-        Perceptions.feedPerception(perceptions);
+        Perceptions.feedPerception(perceptions);        
         cache();
         return this;
     }
 
+    public boolean isEquivalentTo(Environment other) {
+        return (other.getX()==this.getX() && other.getY()== this.getY()&&other.getZ()== this.getZ());
+    }
+    
     public Environment simmulate(Choice a) {
         double y, x;
         String action = a.getName();
@@ -498,6 +499,9 @@ public class Environment {
         return (ang + 360) % 360;
     }
 
+    public boolean isCrahsed() {
+        return this.getGround()<0;
+    }
     public double getTargetRelativeAngular() {
         double ang = getTargetAbsoluteAngular();
         double c = getCompass(), ar;
@@ -551,7 +555,12 @@ public class Environment {
     }
 
     public double getTargetDistance() {
-        return getPosition().fastDistanceXYTo(target);
+        return getPosition().planeDistanceTo(target);
     }
-    
+
+    public int getGridDistance() {
+        return getPosition().gridDistanceTo(target);
+    }
+
+   
 }

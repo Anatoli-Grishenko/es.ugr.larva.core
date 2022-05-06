@@ -11,8 +11,11 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import javax.swing.SwingConstants;
 import world.Perceptor;
@@ -30,6 +33,7 @@ public class TextFactory {
     FontMetrics fm;
     Font newFont, oldFont;
     Rectangle bounds;
+    boolean outline;
 
     public TextFactory(Graphics2D g) {
         this.g = g;
@@ -99,6 +103,16 @@ public class TextFactory {
     public void draw() {
         if (bounds == null) {
             validate();
+        }
+        if (this.isOutline()) {
+            Color p = g.getColor();
+            int s=this.getFontSize();
+            g.setColor(Color.BLACK);
+            this.setTextStyle(Font.BOLD).setFontSize(s+2);
+            g.setFont(newFont);
+            g.drawString(sText, x - 1, y - 1);
+            g.setColor(p);
+            this.setTextStyle(Font.PLAIN).setFontSize(s);
         }
         g.setFont(newFont);
         g.drawString(sText, x, y);
@@ -171,7 +185,7 @@ public class TextFactory {
     }
 
     public TextFactory setAngle(int angle) {
-        this.angle = (angle+360)%360;
+        this.angle = (angle + 360) % 360;
         return this;
     }
 
@@ -237,8 +251,7 @@ public class TextFactory {
                 format = "%d";
             }
             this.setsText(String.format(format, value));
-        }
-        else  {
+        } else {
             setsText("---");
         }
         return this;
@@ -249,4 +262,14 @@ public class TextFactory {
         setY(p.getYInt());
         return this;
     }
+
+    public boolean isOutline() {
+        return outline;
+    }
+
+    public TextFactory setOutline(boolean outline) {
+        this.outline = outline;
+        return this;
+    }
+
 }

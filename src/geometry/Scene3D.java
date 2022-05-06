@@ -8,6 +8,7 @@ package geometry;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import ontology.Ontology;
 
 /**
  *
@@ -15,7 +16,7 @@ import java.util.HashMap;
  */
 public class Scene3D {
     protected HashMap<String, Entity3D> scene;
-
+   
     public Scene3D() {
         scene = new HashMap();
     }
