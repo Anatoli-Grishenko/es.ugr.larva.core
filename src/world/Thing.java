@@ -29,8 +29,11 @@ public class Thing extends Entity3D {
     protected ArrayList<Point3D>trail;
     protected String _type;
     protected ArrayList<Perceptor> _sensors;
+    protected boolean hasHeliport, hasPort, hasAirport, isCity, isMountain, isArea;
+    protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
+    
 
-    public Thing(String name) {
+    public Thing(String name) { 
         super(name);
         _sensors = new ArrayList<>();
     }
@@ -134,6 +137,30 @@ public class Thing extends Entity3D {
 
     public void setTrail(ArrayList<Point3D> trail) {
         this.trail = trail;
+    }
+
+    public boolean isHasHeliport() {
+        return hasHeliport;
+    }
+
+    public void setHasHeliport(boolean hasHeliport) {
+        this.hasHeliport = hasHeliport;
+    }
+
+    public boolean isHasPort() {
+        return hasPort;
+    }
+
+    public void setHasPort(boolean hasPort) {
+        this.hasPort = hasPort;
+    }
+
+    public boolean isHasAirport() {
+        return hasAirport;
+    }
+
+    public void setHasAirport(boolean hastAirport) {
+        this.hasAirport = hastAirport;
     }
 
 }

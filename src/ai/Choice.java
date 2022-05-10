@@ -21,12 +21,14 @@ public class Choice implements Comparable {
     Point3D position;
     Choice parent;
     DecisionSet children;
+    int depth;
 
     public Choice(String label) {
         this.name = label;
         utility = Choice.MAX_UTILITY;
         g = 0;
         h = Choice.MAX_UTILITY;
+        depth = 0;
         children = new DecisionSet();
     }
 
@@ -36,6 +38,7 @@ public class Choice implements Comparable {
         utility = Choice.MAX_UTILITY;
         g = 0;
         h = Choice.MAX_UTILITY;
+        depth = 0;
         children = new DecisionSet();
     }
 
@@ -111,9 +114,7 @@ public class Choice implements Comparable {
     public void setParent(Choice parent) {
         this.parent = parent;
         if (parent != null) {
-            this.g = parent.g + 1;
-        } else {
-            this.g = 0;
+            setDepth(parent.getDepth() + 1);
         }
     }
 
@@ -151,7 +152,7 @@ public class Choice implements Comparable {
         this.setUtility(this.getG() + this.getH());
     }
 
-    public int getDepth() {
+    public int calculateDepth() {
         int d = 0;
         Choice c = this;
         while (c.getParent() != null) {
@@ -159,5 +160,17 @@ public class Choice implements Comparable {
             c = c.getParent();
         }
         return d;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public boolean equals(Choice c) {
+        return this.getName().equals(c.getName());
     }
 }

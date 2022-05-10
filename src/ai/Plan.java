@@ -41,4 +41,12 @@ public class Plan extends ArrayList<Choice>{
         }
         return res;
     }
+    
+    public ArrayList<String> toStringArrayList() {
+        ArrayList <String> res = new ArrayList();
+        this.forEach(c -> {
+            res.add(c.getName());
+        });
+        return res;
+    }
 }

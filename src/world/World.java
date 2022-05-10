@@ -177,7 +177,7 @@ public class World {
 
     public void saveConfig(String worldconfigfilename) {
         JsonArray jsa = new JsonArray();
-        JsonObject jso=null;
+        JsonObject jso = null;
         for (String name : this.getAllThingsName("object")) {
             Thing t = this.getThingByName(name);
             jso = new JsonObject();
@@ -186,10 +186,13 @@ public class World {
             jso.add("origin", "choice");
             jso.add("surface-location", new JsonArray().
                     add(t.getPosition().getXInt()).add(t.getPosition().getYInt()));
-            if (t.getType().equals("group")) {
+            if (t.getType().equals("people")) {
                 jso.add("properties", new JsonArray().add("position").add("presence"));
             } else {
                 jso.add("properties", new JsonArray());
+                jso.add("hasport", t.isHasPort());
+                jso.add("hasheliport", t.isHasHeliport());
+                jso.add("hasairport", t.isHasAirport());
             }
             jsa.add(jso);
         }
@@ -230,6 +233,9 @@ public class World {
                     }
                     e = new Thing(othing.getField("name"), this);
                     e.setType(othing.getField("type"));
+                    e.setHasAirport(othing.getBoolean("hasairport", false));
+                    e.setHasPort(othing.getBoolean("hasport", false));
+                    e.setHasHeliport(othing.getBoolean("hasheliport", false));
                     this.addThing(e, props);
                     ArrayList<Double> auxp = othing.getArray("surface-location");
                     String where = (othing.getField("origin").equals("")) ? "choice" : othing.getField("origin");
@@ -644,6 +650,20 @@ public class World {
 
     boolean halfInfInv(int x, int y) {
         return invD(x, y) || !halfSupInv(x, y);
+    }
+
+    public ArrayList<String> getAllThingsNear(String from, String type, int radius) {
+        ArrayList<String> res = new ArrayList();
+        Thing tfrom, tto;
+        tfrom = this.getThingByName(from);
+        for (String sto : this.getAllThingsName(type)) {
+            tto = this.getThingByName(sto);
+            if (tfrom.getPosition().realDistanceTo(tto.getPosition()) <= radius) {
+                res.add(sto);
+            }
+        }
+        Collections.sort(res);
+        return res;
     }
 
 }

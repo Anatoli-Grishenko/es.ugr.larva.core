@@ -62,7 +62,7 @@ public abstract class OleApplication extends OleFrame {
     protected OleFrame ofProgress;
     protected OleToolBar otbToolBar;
     protected JTextArea jtaProgress;
-    protected boolean debug;
+    protected boolean debug=true;
     protected HashMap<String, Component> dicComponents;
     protected ArrayList<String> listComponents;
     protected Map2DColor watermarkHeader;
@@ -370,7 +370,7 @@ public abstract class OleApplication extends OleFrame {
     public void showProgress(String what, int value, int max) {
         closeProgress("");
         cleanStatus();
-        SwingTools.doSwingWait(() -> {
+        SwingTools.doSwingLater(() -> {
             pbMain = new JProgressBar(0, max);
             pbMain.setSize(new Dimension((int) (pStatus.getPreferredSize().getWidth() / 2), (int) (pStatus.getPreferredSize().getHeight() * 3 / 4)));
             pbMain.setValue(value);
@@ -388,7 +388,7 @@ public abstract class OleApplication extends OleFrame {
     }
 
     public void showProgress(String what, int value) {
-        SwingTools.doSwingWait(() -> {
+        SwingTools.doSwingLater(() -> {
             String toadd = what; //"(" + pbMain.getValue() + "/" + pbMain.getMaximum() + ") " + what;
             if (ofProgress == null) {
                 lProgress.setText(toadd);
@@ -408,17 +408,17 @@ public abstract class OleApplication extends OleFrame {
     }
 
     public void showProgress(String what) {
-        SwingTools.doSwingWait(() -> {
+        SwingTools.doSwingLater(() -> {
             showProgress(what, pbMain.getValue() + 1);
 
         });
     }
 
     public void closeProgress(String what) {
-//        if (ofProgress != null) {
-//            ofProgress.dispose();
-//            ofProgress = null;
-//        }
+        if (ofProgress != null) {
+            ofProgress.dispose();
+            ofProgress = null;
+        }
     }
 
     public void Info(String message) {

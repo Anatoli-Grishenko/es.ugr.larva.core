@@ -27,6 +27,20 @@ public class DecisionSet extends ArrayList<Choice>{
         index.put(c.getName(),c);
         return this;
     }
+    public DecisionSet addChoiceMinor(Choice c) {
+        index.put(c.getName(),c);
+        int i=0;
+        for (; i<size() && c.getUtility()>=getChoice(i).getUtility(); i++);
+        this.add(i,c);
+        return this;
+    }
+    public DecisionSet addChoiceMajor(Choice c) {
+        index.put(c.getName(),c);
+        int i=0;
+        for (; i<size() && c.getUtility()<=getChoice(i).getUtility(); i++);
+        this.add(i,c);
+        return this;
+    }
     public Choice getChoice(String label) {
         return index.get(label);
     }
@@ -79,26 +93,36 @@ public class DecisionSet extends ArrayList<Choice>{
     }
 
     public Choice getChoice(Choice c) {
-        return getChoice(findChoice(c));
+        return getChoice(c.getName());
+//        return getChoice(findChoice(c));
     }
-    public void removeChoice(int i){
+    public DecisionSet removeChoice(int i){
         Choice c = getChoice(i);
         if (c != null) {
             index.remove(c.getName());
             this.remove(i);
         }
+        return this;
     }
-    public void removeChoice(Choice c){
+    public DecisionSet removeChoice(Choice c){
         int i=findChoice(c);
         if (i >=0 ) {
             removeChoice(i);
         }
+        return this;
     }
     
     public Choice popBestChoice() {
         Choice res = this.BestChoice();
         this.removeChoice(0);
         return res;
+    }
+    
+    public DecisionSet reOrder(Choice c) {
+        int pos = this.findChoice(c);
+        this.removeChoice(pos);
+        this.addChoiceMinor(c);
+        return this;
     }
     
 }
