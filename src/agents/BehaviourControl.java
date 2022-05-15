@@ -120,7 +120,7 @@ public class BehaviourControl implements ReportableObject{
 
     @Override
     public String[] defReportableObjectList() {
-        return Transform.toArray(this.getAllBehaviourNames());
+        return Transform.toArrayString(this.getAllBehaviourNames());
     }
 
     @Override

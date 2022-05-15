@@ -92,6 +92,7 @@ public class Perceptor {
         _refOwner = w;
         _range = 1;
         _sensitivity = Double.MAX_VALUE;
+        _type=null;
     }
 
     public String getName() {

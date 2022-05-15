@@ -46,29 +46,46 @@ public class Point3D {
         setX(x);
     }
 
+    public Point3D(JsonArray values) {
+        clear();
+        
+        _dim = values.size();
+        setX(values.get(0).asDouble()).
+                setY(values.get(1).asDouble()).
+                setZ(values.get(2).asDouble());
+    }
+
+    public Point3D(double values[]) {
+        clear();
+        _dim = values.length;
+        setX(values[0]).
+                setY(values[1]).
+                setZ(values[2]);
+    }
+
     public Point3D(String spoint) {
         clear();
-        String parts[]=spoint.split(",");
+        String parts[] = spoint.split(",");
         _dim = parts.length;
-        switch(_dim) {
+        switch (_dim) {
             case 3:
-                try{
-                    this.setZ(Double.parseDouble(parts[2]));
-                }catch(Exception ex) {
-                    this.setZ(0);
-                }
+                try {
+                this.setZ(Double.parseDouble(parts[2]));
+            } catch (Exception ex) {
+                this.setZ(0);
+            }
             case 2:
-                try{
-                    this.setY(Double.parseDouble(parts[1]));
-                }catch(Exception ex) {
-                    this.setY(0);
-                }
+                try {
+                this.setY(Double.parseDouble(parts[1]));
+            } catch (Exception ex) {
+                this.setY(0);
+            }
             case 1:
-                try{
-                    this.setX(Double.parseDouble(parts[0]));
-                }catch(Exception ex) {
-                    this.setX(0);
-                }
+                try {
+                this.setX(Double.parseDouble(parts[0]));
+            } catch (Exception ex) {
+                this.setX(0);
+            }
         }
     }
 
@@ -80,7 +97,7 @@ public class Point3D {
             setY(o.getDouble("Y"));
             setZ(o.getDouble("Z"));
         }
-        
+
     }
 //    public Point3D fromOle(Ole o) {
 //        if (o.getType().equals(ole.POINT.name())) {
@@ -100,19 +117,19 @@ public class Point3D {
 //        _dim=dimension;
 //        clear();
 //    }
-    
+
     public int getXInt() {
-        return (int)(Math.round(_coord[0]));
+        return (int) (Math.round(_coord[0]));
     }
-    
+
     public int getYInt() {
-        return (int)(Math.round(_coord[1]));
+        return (int) (Math.round(_coord[1]));
     }
-    
+
     public int getZInt() {
-        return (int)(Math.round(_coord[2]));
+        return (int) (Math.round(_coord[2]));
     }
-    
+
     public double getX() {
         return _coord[0];
     }
@@ -197,9 +214,9 @@ public class Point3D {
     }
 
     public int gridDistanceTo(Point3D p) {
-        return (int) Math.max(Math.abs(p.getX()-this.getX()),Math.abs(p.getY()-this.getY()));
+        return (int) Math.max(Math.abs(p.getX() - this.getX()), Math.abs(p.getY() - this.getY()));
     }
-    
+
     public double realDistanceTo(Point3D p) {
         double res = 0;
         int mdim = (int) Math.min(_dim, p.getDimension());
@@ -345,7 +362,6 @@ public class Point3D {
         s = "" + s;
         return s;
     }
-    
 
     public JsonArray toJson() {
         JsonArray res = new JsonArray();
@@ -355,33 +371,39 @@ public class Point3D {
         return res;
     }
 
+    public double[] toArray() {
+        double[] res = new double[3];
+        res[0] = getX();
+        res[1] = getY();
+        res[2] = getZ();
+        return res;
+    }
+
     public Ole toOle() {
         Ole res = new Ole();
         res.setType(oletype.OLEPOINT.name());
         res.setField("dim", _dim);
         switch (_dim) {
             case 3:
-        res.setField("Z",getZ());
+                res.setField("Z", getZ());
             case 2:
-        res.setField("Y",getY());
+                res.setField("Y", getY());
             case 1:
-        res.setField("X",getX());
+                res.setField("X", getX());
                 break;
         }
         return res;
     }
 
-    
     public Point3D fromJson(JsonArray jspa) {
         if (jspa.size() == 3) {
-            return new Point3D(jspa.get(0).asDouble(),jspa.get(1).asDouble(),jspa.get(1).asDouble());
+            return new Point3D(jspa.get(0).asDouble(), jspa.get(1).asDouble(), jspa.get(1).asDouble());
         } else if (jspa.size() == 2) {
-            return new Point3D(jspa.get(0).asDouble(),jspa.get(1).asDouble());
+            return new Point3D(jspa.get(0).asDouble(), jspa.get(1).asDouble());
         } else {
-            return new Point3D(jspa.get(0).asDouble());            
+            return new Point3D(jspa.get(0).asDouble());
         }
     }
-
 
     public Point3D to3D() {
         return new Point3D(getX(), getY(), getZ());
@@ -396,9 +418,10 @@ public class Point3D {
     }
 
     public Point3D invertY() {
-        setY(getY()-1);
+        setY(getY() - 1);
         return this;
     }
+
     @Override
     public Point3D clone() {
         Point3D res = new Point3D(getX(), getY(), getZ());
@@ -449,9 +472,9 @@ public class Point3D {
 
         return res;
     }
-    
-    public java.awt.Point getAWTPoint(){
-        return new java.awt.Point((int) this.getX(), (int) this.getY());        
+
+    public java.awt.Point getAWTPoint() {
+        return new java.awt.Point((int) this.getX(), (int) this.getY());
     }
-    
+
 }

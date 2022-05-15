@@ -66,7 +66,11 @@ public class Choice implements Comparable {
     }
 
     public Choice setUtility(double utility) {
-        this.utility = utility;
+        if (getName().equals("IDLE")) {
+            this.utility = Choice.MAX_UTILITY / 2;
+        } else {
+            this.utility = utility;
+        }
         return this;
     }
 

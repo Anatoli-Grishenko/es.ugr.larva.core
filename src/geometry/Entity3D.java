@@ -135,51 +135,6 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 //        return new Vector3D(getPosition(),getPosition().clone().plus(Compass.SHIFT[_sorientation]));
 //    }
     
-    public Entity3D move(Vector3D shift) {
-        getVector().plus(shift.canonical().getTarget());
-        return this;
-    }
-
-    public Entity3D moveForward(int units) {
-        return move(this.getVector().canonical().clone().scalar(units));
-    }
-    
-    public Entity3D moveUp(int units) {
-        return move(Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
-    }
-    
-    public Entity3D moveDown(int units) {
-        return move(Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
-    }
-    
-    private Entity3D RotateXY(double degrees) {
-//        Vector3D orientation=getOrientation().canonical();
-//        double radio=orientation.modulo();
-//        orientation=new Vector3D()
-//        setOrientation(getOrienta)
-//        base.define(L.getPosition().getX()+radio*Math.cos(i*Math.PI/180),L.getPosition().getY()-radio*Math.sin(i*Math.PI/180));
-        return this;
-    }
-
-    public static int rotateLeft(int sdirection) {
-        return (sdirection + 1) % 8;
-    }
-
-    public static int rotateRight(int sdirection) {
-        return (sdirection + 7) % 8;
-    }
-
-    public static int Opposite(int sdirection) {
-        return (sdirection + 4) % 8;
-    }
-
-    public Entity3D rotateLeft() {
-        return setOrientation(Entity3D.this.rotateLeft(getOrientation()));
-    }
-
-    public Entity3D rotateRight() {
-        return setOrientation(Entity3D.this.rotateRight(getOrientation()));
-    }
 
  
     public boolean contains(Point3D p) {

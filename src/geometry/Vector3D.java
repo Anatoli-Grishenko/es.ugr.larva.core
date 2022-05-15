@@ -87,13 +87,17 @@ public class Vector3D {
 
         Vector3D v1 = this.to2D();
         Vector3D v2 = other.to2D();
-//        if (v1.getSource().isEqualTo(v2.getTarget()))
-//            return 0;
         angle = Math.acos(v1.scalarProductTo(v2) / (v1.modulo() * v2.modulo()));
         if (v1.canonical().moduloX() * v2.canonical().moduloY() - v1.canonical().moduloY() * v2.canonical().moduloX() < 0) {
             angle = -angle;
         }
-        return Math.toDegrees(angle);
+        angle = Math.toDegrees(angle);
+        angle = 360-angle;
+        if (angle >= 360)
+            angle -=360;
+        if (angle<0)
+            angle+=360;
+        return angle;
     }
 
 // [-180, 180]

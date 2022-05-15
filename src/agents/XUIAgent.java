@@ -48,6 +48,7 @@ public class XUIAgent extends LARVAFirstAgent {
         myDashBoard = new OleDashBoard(_XUI, "XUI");
         myDashBoard.setPreferredSize(new Dimension(1600, 800));
         _XUI.add(myDashBoard, BorderLayout.WEST);
+        _XUI.validate();
         if (oleConfig != null) {
             showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
             trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
@@ -56,9 +57,9 @@ public class XUIAgent extends LARVAFirstAgent {
         }
         Info("Setting Death Star up");
         this.doNotExit();
-        this.showConsole=false;
-        this.frameDelay=0;
-        this.cont=true;
+        this.showConsole = false;
+        this.frameDelay = 0;
+        this.cont = true;
     }
 
     @Override
@@ -119,6 +120,9 @@ public class XUIAgent extends LARVAFirstAgent {
             myDashBoard.preProcessACLM(inbox.getContent());
 //            TheMap.feedGoals(inbox.getContent());            
         }
+        _XUI.repaint();
+//        this.myApp.getDrawingPane().validate();
+//        this.myApp.getDrawingPane().repaint();
         return Status.IDLE;
     }
 

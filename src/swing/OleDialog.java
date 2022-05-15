@@ -331,7 +331,7 @@ public class OleDialog extends JDialog implements ActionListener {
                 if (fieldproperties.getArray("select") != null) { // Combobox
                     select = fieldproperties.getArray("select");
                     arraySelect = new String[]{};
-//                    Transform.toArray(select);
+//                    Transform.toArrayString(select);
                     combobox = new JComboBox(arraySelect);
                     combobox.setPreferredSize(new Dimension(fieldwidth, fieldheight));
 //                    combobox.setSelectedItem(ocomponents.getField(sfield));
@@ -480,7 +480,7 @@ public class OleDialog extends JDialog implements ActionListener {
                 if (fieldproperties.getArray("select") != null) { // Combobox
                     combobox = (JComboBox) components.get(sfield);
                     select = fieldproperties.getArray("select");
-                    arraySelect = Transform.toArray(select);
+                    arraySelect = Transform.toArrayString(select);
                     combobox.removeAllItems();
                     for (String sitem : arraySelect) {
                         combobox.addItem(sitem);
@@ -650,7 +650,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //                gc.gridx++;
 //                if (fieldproperties.getArray("select") != null) { // Combobox
 //                    select = fieldproperties.getArray("select");
-//                    arraySelect = Transform.toArray(select);
+//                    arraySelect = Transform.toArrayString(select);
 //                    combobox = new JComboBox(arraySelect);
 //                    combobox.setPreferredSize(new Dimension(fieldwidth, fieldheight));
 //                    combobox.setSelectedItem(ocomponents.getField(sfield));

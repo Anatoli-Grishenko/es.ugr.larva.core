@@ -11,6 +11,7 @@ import map2D.Map2DColor;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import geometry.Compass;
+import glossary.Sensors;
 import java.util.ArrayList;
 
 /**
@@ -26,27 +27,28 @@ public class Thing extends Entity3D {
 
     protected World _refWorld;
     protected Map2DColor _surface;
-    protected ArrayList<Point3D>trail;
+    protected ArrayList<Point3D> trail;
     protected String _type;
-    protected ArrayList<Perceptor> _sensors;
+    protected ArrayList<Perceptor> _rawSensors;
     protected boolean hasHeliport, hasPort, hasAirport, isCity, isMountain, isArea;
     protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
-    
+    protected SensorDecoder myPerceptions;
 
-    public Thing(String name) { 
+    public Thing(String name) {
         super(name);
-        _sensors = new ArrayList<>();
+        _rawSensors = new ArrayList<>();
+        myPerceptions = new SensorDecoder();
     }
 
     public Thing(String name, World w) {
         super(name);
         _refWorld = w;
-        _sensors = new ArrayList<>();
+        _rawSensors = new ArrayList<>();
+        myPerceptions = new SensorDecoder();
     }
 
-    public Thing setType(String c) {
+    public void setType(String c) {
         _type = c;
-        return this;
     }
 
     public String getType() {
@@ -66,44 +68,42 @@ public class Thing extends Entity3D {
         return _surface;
     }
 
-    public int getEnergy() {
-        return Perceptor.NULLREAD;
-    }
-
-    public  int getOnTarget(){
-        return Perceptor.NULLREAD;
-    }
-                     
-
-    public int getAlive(){
-        return Perceptor.NULLREAD;
-    }
-              
-    public int getPayload(){
-        return Perceptor.NULLREAD;
-    }
-              
-    
     public Thing placeAtSurface(Point3D p) {
         this.setPosition(new Point3D(p.getX(), p.getY(), this.getWorld().getEnvironment().getSurface().getStepLevel(p.getX(), p.getY())));
         return this;
     }
 
     public Thing addSensor(Perceptor p) {
-        _sensors.add(p);
+        _rawSensors.add(p);
         return this;
     }
 
-    public JsonObject readPerceptions() {
-        JsonArray res = new JsonArray();
-        for (Perceptor s : _sensors) {
-            res.add(s.getReading());
-        }
-        return new JsonObject().add("name", getName()).add("perceptions", res);
+    public JsonObject getPerceptions() {     
+//        System.out.println("Agent "+this.getName()+" querying "+Raw().indexperception.size()+" perceptions");
+        return this.Raw().toJson();
     }
-    
+
+    public void readPerceptions() {     
+        JsonArray res = new JsonArray();
+        JsonObject reading;
+//        System.out.println("Agent "+this.getName()+" reading "+_rawSensors.size()+" perceptions ");
+        for (Perceptor s : _rawSensors) {
+            if (s.getType() != null) {
+                reading = s.getReading();
+                res.add(reading);
+//                System.out.println("     Agent "+this.getName()+" reading sensor " + s.getName()+" = "+reading.toString());
+            } 
+//            else
+//                System.out.println("*****Agent "+this.getName()+" reading sensor " + s.getName()+" error");
+        }
+//        System.out.println("Agent "+this.getName()+" found "+res.size()+" perceptions ");
+        JsonObject jsoreading = new JsonObject().add("name", getName()).add("perceptions", res);
+        myPerceptions.feedPerception(jsoreading);
+        myPerceptions.encodeSensor(Sensors.NAME, SensorDecoder.encodeValues(getName()));
+    }
+
     public int sizePerceptions() {
-        return _sensors.size();
+        return _rawSensors.size();
     }
 
     public JsonObject toJson() {
@@ -114,7 +114,7 @@ public class Thing extends Entity3D {
         res.add("position", this.getPosition().toString());
         if (this.getType().toUpperCase().equals("AGENT")) {
             res.add("orientation", this.getOrientation());
-            res.merge(this.readPerceptions());
+            res.merge(this.getPerceptions());
         }
         return res;
     }
@@ -129,14 +129,6 @@ public class Thing extends Entity3D {
     @Override
     public String toString() {
         return toJson().toString();
-    }
-
-    public ArrayList<Point3D> getTrail() {
-        return trail;
-    }
-
-    public void setTrail(ArrayList<Point3D> trail) {
-        this.trail = trail;
     }
 
     public boolean isHasHeliport() {
@@ -163,4 +155,7 @@ public class Thing extends Entity3D {
         this.hasAirport = hastAirport;
     }
 
+    public SensorDecoder Raw() {
+        return this.myPerceptions;
+    }
 }

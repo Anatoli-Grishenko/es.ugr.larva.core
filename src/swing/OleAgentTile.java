@@ -31,7 +31,7 @@ public class OleAgentTile extends OleFoldablePane {
     public static enum Status {
         OFF, ON
     };
-    final int width = 150, height = 10, icon = 25;
+    final int width = 150, height = 10, icon = 24;
     OleApplication myParent;
     Status myStatus;
     OleButton mybOn, mybOff, mybSwitch, mybConfig;
@@ -58,13 +58,19 @@ public class OleAgentTile extends OleFoldablePane {
         }
         mybOn = new OleButton(parent, "Activate " + myReport.getAgentName(), "play_arrow");
         mybOn.setExtraFlat();
+        mybOn.setBorderPainted(true);
+        mybOn.setContentAreaFilled(true);
         mybOn.setIcon(new Dimension(icon, icon));
 
         mybOff = new OleButton(parent, "Deactivate " + myReport.getAgentName(), "eject");
         mybOff.setExtraFlat();
+        mybOff.setBorderPainted(true);
+        mybOff.setContentAreaFilled(true);
         mybOff.setIcon(new Dimension(icon, icon));
         mybConfig = new OleButton(parent, "Configure " + myReport.getAgentName(), "settings");
         mybConfig.setExtraFlat();
+        mybConfig.setBorderPainted(true);
+        mybConfig.setContentAreaFilled(true);
         mybConfig.setIcon(new Dimension(icon, icon));
         if (showPerformance) {
             olpTime = new OlePerformeter(this, 100, icon, 2000);
@@ -76,9 +82,9 @@ public class OleAgentTile extends OleFoldablePane {
         this.getFoldablePane().add(mylLabel2);
 
         oltbMain = new OleToolBar(parent, 5);
-        oltbMain.setPreferredSize(new Dimension(100, 25));
+        oltbMain.setPreferredSize(new Dimension(100, 24));
         oltbExternal = new OleToolBar(parent, 5);
-        oltbExternal.setPreferredSize(new Dimension(100, 25));
+        oltbExternal.setPreferredSize(new Dimension(100, 24));
         oltbMain.addButton(mybOn);
         oltbMain.addButton(mybOff);
         oltbMain.addButton(mybConfig);
@@ -176,7 +182,7 @@ class JLabelRobot extends JLabel {
 
     JLabelRobot(OleApplication parent, String text) {
         super(text);
-        setIcon(parent.getIconSet().getRegularIcon("adb", new Dimension(25, 25)));
+        setIcon(parent.getIconSet().getRegularIcon("adb", new Dimension(24, 24)));
     }
 }
 

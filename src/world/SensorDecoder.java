@@ -9,6 +9,7 @@ import ai.TracePositions;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleFile;
 import data.Transform;
@@ -17,6 +18,8 @@ import geometry.Point3D;
 import geometry.PolarSurface;
 import geometry.SimpleVector3D;
 import geometry.Vector3D;
+import glossary.Sensors;
+import glossary.capability;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -31,116 +34,139 @@ import map2D.Map2DColor;
  */
 public class SensorDecoder {
 
-    protected HashMap<String, JsonArray> indexperception;
-    protected JsonArray lastPerception;
-    protected Map2DColor hMap, hMapMargin;
-    protected int maxlevel, mapMargin = 20;
-    protected boolean ready, filterreading;
-    protected String name, sessionID, commitment, sLastPerception = "";
-    protected SimpleVector3D lastPosition;
-    protected Point3D target;
-    protected TracePositions myTrace;
-    protected double lastDistance;
+    protected HashMap<Sensors, JsonArray> indexperception;
+    protected Map2DColor hMap;
+    protected ArrayList<SimpleVector3D> TraceGPS;
+    // SensorsDISTANCE,
 
+    // Memory
+    // ParametersBURNRATEMOVE, BURNRATEREAD,
+    // Behaviour
     public SensorDecoder() {
-        clear();
+        indexperception = new HashMap();
+        this.TraceGPS = new ArrayList();
+        encodeSensor(Sensors.TRACE, new JsonArray());
+        encodeSensor(Sensors.CARGO, new JsonArray());
+        encodeSensor(Sensors.PEOPLE, new JsonArray());
+        encodeSensor(Sensors.CAPABILITIES, new JsonArray());
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
-        setMaxlevel(maxlevel);
+        return setWorldMap(content);
+    }
+
+    public boolean setWorldMap(String content) {
         OleFile mapa = new OleFile();
+        mapa.set(content);
+        mapa.saveFile("./maps/");
+        this.TraceGPS.clear();
+        String name = mapa.getFileName();
+        return loadWorldMap("./maps/" + name);
+
+    }
+
+    public boolean loadWorldMap(String name) {
         try {
-            mapa.set(content);
-            mapa.saveFile("./maps/");
-            String name = mapa.getFileName();
             hMap = new Map2DColor();
-            hMap.loadMapRaw("./maps/" + name);
-            hMapMargin = new Map2DColor(hMap.getWidth() + 2 * mapMargin, hMap.getHeight() + 2 * mapMargin);
-            for (int x = 0; x < hMapMargin.getWidth(); x++) {
-                for (int y = 0; y < hMapMargin.getHeight(); y++) {
-                    if (hMap.getStepLevel(x - mapMargin, y - mapMargin) > getMaxlevel()) {
-                        hMapMargin.setColor(x, y, Map2DColor.BADVALUE);
-                        hMap.setColor(x - mapMargin, y - mapMargin, Map2DColor.BADVALUE);
-                    } else {
-                        hMapMargin.setColor(x, y, hMap.getColor(x - mapMargin, y - mapMargin));
-
-                    }
-                }
-            }
-
-//            File toremove= new File("./maps/" + name);
-//            if (toremove.exists())
-//                toremove.delete();
-            lastPosition = null;
-
+            hMap.loadMapNormalize(name);
             return true;
         } catch (IOException ex) {
         }
         return false;
     }
 
-    public int getMaxlevel() {
-        return maxlevel;
+    public boolean loadWorldMap(Map2DColor map) {
+        hMap = map;
+        return true;
     }
 
-    public void setMaxlevel(int maxlevel) {
-        this.maxlevel = maxlevel;
+    protected JsonArray getSensor(Sensors s) {
+        if (this.indexperception.keySet().contains(s)) {
+            return indexperception.get(s);
+        }
+        return null;
     }
 
-    public String getStatus() {
-        return this.getSensor(glossary.sensors.STATUS.name().toLowerCase()).get(0).asString();
+    protected JsonArray getSensor(String sensorname) {
+        try {
+            Sensors s = Sensors.valueOf(sensorname);
+            return getSensor(s);
+        } catch (Exception ex) {
+        }
+        return null;
     }
 
-    public String getSessionID() {
-        return sessionID;
+    public void encodeSensor(String sensorname, JsonArray reading) {
+        try {
+            Sensors s = Sensors.valueOf(sensorname.toUpperCase());
+            encodeSensor(s, reading);
+        } catch (Exception ex) {
+        }
     }
 
-    public void setSessionID(String sessionID) {
-        this.sessionID = sessionID;
+    public void encodeSensor(Sensors s, JsonArray reading) {
+        indexperception.put(s, reading);
+    }
+
+    public void encodeSensor(Sensors s, double value) {
+        encodeSensor(s, encodeValues(value));
+    }
+
+    public void encodeSensor(Sensors s, boolean value) {
+        encodeSensor(s, encodeValues(value));
+    }
+
+    public void encodeSensor(Sensors s, double[] value) {
+        encodeSensor(s, encodeValues(value));
+    }
+
+    public void encodeSensor(Sensors s, String[] value) {
+        encodeSensor(s, encodeValues(value));
+    }
+
+    public void encodeSensor(Sensors s, String value) {
+        encodeSensor(s, encodeValues(value));
+    }
+
+    public static JsonArray encodeValues(double d) {
+        return new JsonArray().add(d);
+    }
+
+    public static JsonArray encodeValues(boolean b) {
+        return new JsonArray().add(b);
+    }
+
+    public static JsonArray encodeValues(String s) {
+        return new JsonArray().add(s);
+    }
+
+    public static JsonArray encodeValues(double[] d) {
+        return Transform.toJsonArray(new ArrayList(Arrays.asList(d)));
+    }
+
+    public static JsonArray encodeValues(String[] d) {
+        return Transform.toJsonArray(new ArrayList(Arrays.asList(d)));
+    }
+
+    public void clear() {
+//        indexperception = new HashMap();
+//        this.TraceGPS = new ArrayList();
+//        encodeSensor(Sensors.TRACE, new JsonArray());
+//        encodeSensor(Sensors.CARGO, new JsonArray());
+//        encodeSensor(Sensors.PEOPLE, new JsonArray());
+//        encodeSensor(Sensors.CAPABILITIES, new JsonArray());
     }
 
     public Map2DColor getWorldMap() {
         return hMap;
     }
 
-    public boolean hasSensor(String sensorname) {
-        return isReady() && this.indexperception.keySet().contains(sensorname.toLowerCase());
+    public int getWorldWidth() {
+        return getWorldMap().getWidth();
     }
 
-    protected JsonArray getSensor(String sensorname) {
-        if (isReady()) {
-            if (this.indexperception.keySet().contains(sensorname)) {
-                return indexperception.get(sensorname);
-            }
-        }
-        return null;
-    }
-
-    public void setSensor(String sensorname, JsonArray reading) {
-        indexperception.put(sensorname, reading);
-        lastPerception.add(new JsonObject().add("sensor", sensorname).add("data", reading));
-    }
-
-    public void clear() {
-        indexperception = new HashMap();
-        lastPerception = new JsonArray();
-        myTrace = new TracePositions();
-        lastDistance = Integer.MAX_VALUE;
-        ready = false;
-    }
-
-    public boolean getAlive() {
-        if (isReady() && hasSensor("ALIVE")) {
-            return getSensor("alive").get(0).asInt() > 0;
-        }
-        return false;
-    }
-
-    public boolean getOnTarget() {
-        if (isReady() && hasSensor("ONTARGET")) {
-            return getSensor("ontarget").get(0).asInt() > 0;
-        }
-        return false;
+    public int getWorldHeight() {
+        return getWorldMap().getHeight();
     }
 
     protected double[] fromJsonArray(JsonArray jsa) {
@@ -148,97 +174,351 @@ public class SensorDecoder {
         for (int i = 0; i < jsa.size(); i++) {
             res[i] = jsa.get(i).asDouble();
         }
-        ready = true;
         return res;
     }
 
-    public boolean isReady() {
-        return ready;
+    public String getName() {
+        return this.getSensor(Sensors.NAME).get(0).asString();
     }
 
-    public double[] getGPS() {
-        double[] res = new double[3];
-        if (isReady() && hasSensor("GPS")) {
-            res = fromJsonArray(getSensor("gps").get(0).asArray());
-        }
-        return res;
+    public void setName(String Name) {
+        encodeSensor(Sensors.NAME, encodeValues(Name));
     }
 
-    public double getAltitude() {
-        double[] res = new double[3];
-        if (isReady() && hasSensor("GPS")) {
-            return getGPS()[2];
-        }
-        return -1;
+    public String getTeam() {
+        return this.getSensor(Sensors.TEAM).get(0).asString();
+    }
+
+    public void setTeam(String Team) {
+        encodeSensor(Sensors.TEAM, encodeValues(Team));
+    }
+
+    public String getStatus() {
+        return this.getSensor(Sensors.STATUS).get(0).asString();
+    }
+
+    public void setStatus(String Status) {
+        encodeSensor(Sensors.STATUS, encodeValues(Status));
+    }
+
+    public void addStatus(String Status) {
+        encodeSensor(Sensors.STATUS, encodeValues(getStatus() + "\n" + Status));
+    }
+
+    public String getSessionid() {
+        return this.getSensor(Sensors.SESSIONID).get(0).asString();
+    }
+
+    public void setSessionid(String Sessionid) {
+        encodeSensor(Sensors.SESSIONID, encodeValues(Sessionid));
+    }
+
+    public String getCommitment() {
+        return this.getSensor(Sensors.COMMITMENT).get(0).asString();
+    }
+
+    public void setCommitment(String Commitment) {
+        encodeSensor(Sensors.COMMITMENT, encodeValues(Commitment));
+    }
+
+    public int getCompass() {
+//        return (int) this.getSensor(Sensors.COMPASS).get(0).asDouble();
+        int v = (int) getSensor(Sensors.COMPASS).get(0).asDouble();
+//        v = 360 - v;
+//        return v % 360;
+        return v;
+    }
+
+    public void setCompass(int Compass) {
+        encodeSensor(Sensors.COMPASS, encodeValues(Compass));
+    }
+
+    public int getGround() {
+        return this.getSensor(Sensors.GROUND).get(0).asInt();
+    }
+
+    public void setGround(int Ground) {
+        encodeSensor(Sensors.GROUND, encodeValues(Ground));
+    }
+
+    public int getEnergy() {
+        return this.getSensor(Sensors.ENERGY).get(0).asInt();
+    }
+
+    public void setEnergy(int Energy) {
+        encodeSensor(Sensors.ENERGY, encodeValues(Energy));
     }
 
     public int getPayload() {
-        if (isReady() && hasSensor("PAYLOAD")) {
-            return getSensor("payload").get(0).asInt();
+        //return this.getSensor(Sensors.PAYLOAD).get(0).asInt();
+        return this.getCargo().length;
+    }
+
+    public void setPayload(int Payload) {
+        encodeSensor(Sensors.PAYLOAD, encodeValues(Payload));
+    }
+
+    public int getNumsteps() {
+        return this.getSensor(Sensors.NUMSTEPS).get(0).asInt();
+    }
+
+    public void setNumsteps(int Numsteps) {
+        encodeSensor(Sensors.NUMSTEPS, encodeValues(Numsteps));
+    }
+
+    public int getRange() {
+        return this.getSensor(Sensors.RANGE).get(0).asInt();
+    }
+
+    public void setRange(int Range) {
+        encodeSensor(Sensors.RANGE, encodeValues(Range));
+    }
+
+    public int getEnergyburnt() {
+        return this.getSensor(Sensors.ENERGYBURNT).get(0).asInt();
+    }
+
+    public void setEnergyburnt(int Energyburnt) {
+        encodeSensor(Sensors.ENERGYBURNT, encodeValues(Energyburnt));
+    }
+
+    public int getTime() {
+        return this.getSensor(Sensors.TIME).get(0).asInt();
+    }
+
+    public void setTime(int Time) {
+        encodeSensor(Sensors.TIME, encodeValues(Time));
+    }
+
+    public int getMaxlevel() {
+        return this.getSensor(Sensors.MAXLEVEL).get(0).asInt();
+    }
+
+    public void setMaxlevel(int Maxlevel) {
+        encodeSensor(Sensors.MAXLEVEL, encodeValues(Maxlevel));
+    }
+
+    public int getMinlevel() {
+        return this.getSensor(Sensors.MINLEVEL).get(0).asInt();
+    }
+
+    public void setMinlevel(int Minlevel) {
+        encodeSensor(Sensors.MINLEVEL, encodeValues(Minlevel));
+    }
+
+    public int getMaxslope() {
+        return this.getSensor(Sensors.MAXSLOPE).get(0).asInt();
+    }
+
+    public void setMaxslope(int Maxslope) {
+        encodeSensor(Sensors.MAXSLOPE, encodeValues(Maxslope));
+    }
+
+    public int getMaxcargo() {
+        return this.getSensor(Sensors.MAXCARGO).get(0).asInt();
+    }
+
+    public void setMaxcargo(int Maxcargo) {
+        encodeSensor(Sensors.MAXCARGO, encodeValues(Maxcargo));
+    }
+
+    public int getAutonomy() {
+        return this.getSensor(Sensors.AUTONOMY).get(0).asInt();
+    }
+
+    public void setAutonomy(int Autonomy) {
+        encodeSensor(Sensors.AUTONOMY, encodeValues(Autonomy));
+    }
+
+    public int getBurnratemove() {
+        return this.getSensor(Sensors.BURNRATEMOVE).get(0).asInt();
+    }
+
+    public void setBurnratemove(int Burnratemove) {
+        encodeSensor(Sensors.BURNRATEMOVE, encodeValues(Burnratemove));
+    }
+
+    public int getBurnrateread() {
+        return this.getSensor(Sensors.BURNRATEREAD).get(0).asInt();
+    }
+
+    public void setBurnrateread(int Burnrateread) {
+        encodeSensor(Sensors.BURNRATEREAD, encodeValues(Burnrateread));
+    }
+
+    public boolean getOntarget() {
+        return this.getSensor(Sensors.ONTARGET).get(0).asBoolean();
+    }
+
+    public void setOntarget(boolean Ontarget) {
+        encodeSensor(Sensors.ONTARGET, encodeValues(Ontarget));
+    }
+
+    public boolean getAlive() {
+        return this.getSensor(Sensors.ALIVE).get(0).asBoolean();
+    }
+
+    public void setAlive(boolean Alive) {
+        encodeSensor(Sensors.ALIVE, encodeValues(Alive));
+    }
+
+    public String[] getCargo() {
+        return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CARGO))));
+    }
+
+    public void setCargo(String[] Cargo) {
+        encodeSensor(Sensors.CARGO, encodeValues(Cargo));
+    }
+
+    public void addCargo(String Value) {
+        getSensor(Sensors.CARGO).add(Value);
+    }
+
+    public void removeCargo(String Value) {
+        JsonArray res = getSensor(Sensors.CARGO);
+        for (int i = 0; i < res.size(); i++) {
+            if (res.get(i).asString().equals(Value)) {
+                res.remove(i);
+                break;
+            }
+        }
+    }
+
+    public String[] getTrace() {
+        return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.TRACE))));
+    }
+
+    public void setTrace(String[] Trace) {
+        encodeSensor(Sensors.TRACE, encodeValues(Trace));
+    }
+
+    public void addTrace(String Value) {
+        getSensor(Sensors.TRACE).add(Value);
+    }
+
+    public void removeTrace(String Value) {
+        JsonArray res = getSensor(Sensors.TRACE);
+        for (int i = 0; i < res.size(); i++) {
+            if (res.get(i).asString().equals(Value)) {
+                res.remove(i);
+                break;
+            }
+        }
+    }
+
+    public String[] getPeople() {
+        return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.PEOPLE))));
+    }
+
+    public void setPeople(String[] People) {
+        encodeSensor(Sensors.PEOPLE, encodeValues(People));
+    }
+
+    public String[] getCapabilities() {
+        return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CAPABILITIES))));
+    }
+
+    public void setCapabilities(String[] Capabilities) {
+        encodeSensor(Sensors.CAPABILITIES, encodeValues(Capabilities));
+    }
+
+    public void addCapabilities(String Value) {
+        getSensor(Sensors.CAPABILITIES).add(Value.toUpperCase());
+    }
+
+    public void removeCapabilities(String Value) {
+        JsonArray res = getSensor(Sensors.CAPABILITIES);
+        for (int i = 0; i < res.size(); i++) {
+            if (res.get(i).asString().equals(Value)) {
+                res.remove(i);
+                break;
+            }
+        }
+    }
+
+    public Point3D getTarget() {
+        if (getSensor(Sensors.TARGET) != null) {
+            return new Point3D(getSensor(Sensors.TARGET));
+        } else {
+            return getGPS();
+        }
+    }
+
+    public void setTarget(Point3D Target) {
+        encodeSensor(Sensors.TARGET, Target.toJson());
+    }
+
+    public Point3D getGPS() {
+        return new Point3D(this.getSensor(Sensors.GPS).get(0).asArray());
+    }
+
+    public Point3D getGPSMemory(int i) {
+        return getGPSVectorMemory(i).getSource();
+    }
+
+    public int getGPSMemory(Point3D s) {
+        for (int i=1; i< TraceGPS.size(); i++) {
+            if (this.TraceGPS.get(i).getSource().isEqualTo(s)) {
+                return i;
+            }
         }
         return -1;
     }
 
+    
+    public void setGPS(Point3D GPS) {
+        encodeSensor(Sensors.GPS, new JsonArray().add(GPS.toJson()));
+    }
+
+    public Point3D getDestination() {
+        return new Point3D(getSensor(Sensors.DESTINATION));
+
+    }
+
+    public void setDestination(Point3D destination) {
+        encodeSensor(Sensors.DESTINATION, destination.toJson());
+    }
+
+    // Derived sensors
+    public double getAltitude() {
+        return getGPS().getZInt();
+    }
+
     public SimpleVector3D getGPSVector() {
-//        return new SimpleVector3D((int)getGPS()[0], (int)getGPS()[1],getOrientation());
-        return new SimpleVector3D(getGPSPosition(), getCompass() / 45);
+        return new SimpleVector3D(getGPS(), getCompass() / 45);
+    }
+
+    public SimpleVector3D getGPSVectorMemory(int old) {
+        if (0 <= old && old < this.TraceGPS.size()) {
+            return this.TraceGPS.get(old);
+        } else {
+            return this.TraceGPS.get(0);
+        }
+    }
+
+    public int getGPSVectorMemory(SimpleVector3D s) {
+        for (int i=2; i< TraceGPS.size(); i++) {
+            if (this.TraceGPS.get(i).isEqualTo(s)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public int getOrientation() {
         return getCompass() / 45;
     }
 
-    public Point3D getGPSPosition() {
-        return new Point3D(getGPS()[0], getGPS()[1], getGPS()[2]);
-    }
-
-    public Point3D getGPSPosition(int n) {
-        return myTrace.getLastPosition(n);
-    }
-
     public Point3D getGPSComingPosition() {
         return getGPSVector().getTarget();
     }
 
-    public TracePositions getAllGPSPositions() {
-        return myTrace;
-    }
-
-    public int getCompass() {
-        if (isReady() && hasSensor("COMPASS")) {
-            int v = (int) getSensor("compass").get(0).asDouble();
-            v = 360 - v;
-            return v % 360;
-//            v = 360 + 90 - v;
-//            return v % 360;
-        }
-        return -1;
-    }
-
-    public int getGround() {
-        if (isReady() && hasSensor("ALTITUDE")) {
-            return (int) getSensor("altitude").get(0).asDouble();
-        }
-        return -1;
-    }
-
     public double getDistance() {
-        if (isReady() && hasSensor("DISTANCE")) {
-            return getSensor("distance").get(0).asDouble();
-        }
-        return -1;
+        return this.getTargetDistance();
     }
 
-    public double getDifferentialDistance() {
-        return getDistance() - lastDistance;
-    }
-
-    public boolean isCloser() {
-        return getDifferentialDistance() < 0;
-    }
-
-    public boolean isFarther() {
-        return getDifferentialDistance() > 0;
+    public double getAngular() {
+        return this.getTargetAbsoluteAngular();
     }
 
     public int getCompassLeft() {
@@ -250,151 +530,90 @@ public class SensorDecoder {
     }
 
     public double getRelativeAngular() {
-        if (isReady() && hasSensor("ANGULAR")) {
-            double a = getAbsoluteAngular(), c = getCompass();
-            if (a > c) {
-                if (a - c <= 180) {
-                    return a - c;
-                } else {
-                    return -(c + 360 - a);
-                }
+        double a = getAbsoluteAngular(), c = getCompass();
+        if (a > c) {
+            if (a - c <= 180) {
+                return a - c;
             } else {
-                if (c - a < 180) {
-                    return a - c;
-                } else {
-                    return (a + 360 - c);
-                }
-
+                return -(c + 360 - a);
             }
-//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
-//                return getAbsoluteAngular() - getCompass();
-//            } else {
-//                return -(getCompass() - (getAbsoluteAngular()));
-//            }
+        } else {
+            if (c - a < 180) {
+                return a - c;
+            } else {
+                return (a + 360 - c);
+            }
+
         }
-        return -1;
     }
 
     public double getRelativeAngularto(Point3D p) {
-            double a = getAbsoluteAngularTo(p), c = getCompass();
-            if (a > c) {
-                if (a - c <= 180) {
-                    return a - c;
-                } else {
-                    return -(c + 360 - a);
-                }
+        double a = getAbsoluteAngularTo(p), c = getCompass();
+        if (a > c) {
+            if (a - c <= 180) {
+                return a - c;
             } else {
-                if (c - a < 180) {
-                    return a - c;
-                } else {
-                    return (a + 360 - c);
-                }
-
+                return -(c + 360 - a);
             }
-//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
-//                return getAbsoluteAngular() - getCompass();
-//            } else {
-//                return -(getCompass() - (getAbsoluteAngular()));
-//            }
+        } else {
+            if (c - a < 180) {
+                return a - c;
+            } else {
+                return (a + 360 - c);
+            }
+
+        }
     }
 
     public double getAbsoluteAngular() {
-        if (isReady() && hasSensor("ANGULAR")) {
-            double v = getSensor("angular").get(0).asDouble();
-            v = 360 - v + 360;
-//            v = v+getCompass();   
-            return v % 360;
-        }
-        return -1;
+        return this.getAbsoluteAngularTo(getTarget());
     }
 
     public double getAbsoluteAngularTo(Point3D p) {
-            Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
-            Point3D me = getGPSPosition();
-            Vector3D Busca = new Vector3D(me, p);
+        Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
+        Point3D me = getGPS();
+        Vector3D Busca = new Vector3D(me, p);
 
-            int v = (int) Norte.angleXYTo(Busca);
-            v = 360 - v + 360;
-//            v = v+getCompass();   
-            return (int) v % 360;        
+        int v = (int) Norte.angleXYTo(Busca);
+//        v = 360 - v + 360;
+//        return (int) v % 360;
+        return v;
     }
 
     public double getAbsoluteAngularTo(Point3D orig, Point3D dest) {
-            Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
-            Point3D me = orig;
-            Vector3D Busca = new Vector3D(me, dest);
+        Vector3D Norte = new Vector3D(new Point3D(0, 0), new Point3D(0, -10));
+        Point3D me = orig;
+        Vector3D Busca = new Vector3D(me, dest);
 
-            int v = (int) Norte.angleXYTo(Busca);;
-            v = 270-v;
-//            v = v+getCompass();   
-            return (int) v % 360;        
+        int v = (int) Norte.angleXYTo(Busca);;
+//        v = 270 - v;
+//        return (int) v % 360;
+        return v;
     }
 
     public double getRelativeAngularto(Point3D orig, int compass, Point3D dest) {
-            double a = getAbsoluteAngularTo(orig, dest), c = compass;
-            if (a > c) {
-                if (a - c <= 180) {
-                    return a - c;
-                } else {
-                    return -(c + 360 - a);
-                }
+        double a = getAbsoluteAngularTo(orig, dest), c = compass;
+        if (a > c) {
+            if (a - c <= 180) {
+                return a - c;
             } else {
-                if (c - a < 180) {
-                    return a - c;
-                } else {
-                    return (a + 360 - c);
-                }
-
+                return -(c + 360 - a);
             }
-//            if (getCompass()+360 <= getAbsoluteAngular()+360 && getAbsoluteAngular()+360 <= getCompass()+360 + 180) {
-//                return getAbsoluteAngular() - getCompass();
-//            } else {
-//                return -(getCompass() - (getAbsoluteAngular()));
-//            }
-    }
+        } else {
+            if (c - a < 180) {
+                return a - c;
+            } else {
+                return (a + 360 - c);
+            }
 
-    public double getEnergy() {
-        if (isReady() && hasSensor("ENERGY")) {
-            return (int) getSensor("energy").get(0).asDouble();
         }
-        return -1;
-    }
-
-    public double getEnergyBurnt() {
-        if (isReady() && hasSensor("ENERGYBURNT")) {
-            return (int) getSensor("energyburnt").get(0).asDouble();
-        }
-        return -1;
-    }
-
-    public String[] getTrace() {
-        if (isReady() && hasSensor("TRACE")) {
-            return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("trace"))));
-        }
-        return new String[0];
-    }
-
-    public String getLastTrace() {
-        if (isReady() && hasSensor("TRACE") && getSensor("trace").size() > 0) {
-            return getSensor("trace").get(getSensor("trace").size() - 1).asString();
-        }
-        return "";
-    }
-
-    public String[] getCargo() {
-        if (isReady() && hasSensor("CARGO")) {
-            return Transform.toArray(new ArrayList(Transform.toArrayList(getSensor("cargo"))));
-        }
-        return new String[0];
     }
 
     public int getNSteps() {
-        if (isReady() && hasSensor("NUMSTEPS")) {
+        if (this.getTrace() != null) {
             return this.getTrace().length;
-//            return (int) getSensor("numsteps").get(0).asDouble();
         }
-        return -1;
-
+        return 0;
     }
 
     public Map2DColor getFullZenitalVisual() {
@@ -403,7 +622,7 @@ public class SensorDecoder {
         }
         Map2DColor initial, res;
         int[][] levels = getVisualData();
-//        SimpleVector3D myv = this.getGPSVector();
+//        SimpleVector3D myv = this.getGPSVectorMemory();
 //        PolarSurface ps = new PolarSurface(myv.clone().minus(myv.getSource()));
 //        ps.setRadius(levels[0].length);
         initial = new Map2DColor(levels[0].length, levels.length);
@@ -537,236 +756,141 @@ public class SensorDecoder {
 
     public int[][] getVisualData() {
         JsonArray jsaReading = null;
-        jsaReading = getSensor("visual");
+        jsaReading = getSensor(Sensors.VISUAL);
         if (jsaReading == null) {
-            jsaReading = getSensor("visualhq");
+            return null;
         }
-        if (isReady() && jsaReading != null) {
-            int range = jsaReading.size();
+        int range = jsaReading.size();
 
-            int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
-            for (int i = 0; i < res.length; i++) {
-                for (int j = 0; j < res[0].length; j++) {
-                    res[j][i] = jsaReading.get(i).asArray().get(j).asInt();
-                }
+        int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[j][i] = jsaReading.get(i).asArray().get(j).asInt();
             }
-
-            return res;
         }
-        return null;
+        return res;
     }
 
     public int[][] getLidarData() {
         JsonArray jsaReading = null;
-        jsaReading = getSensor("lidar");
+        jsaReading = getSensor(Sensors.LIDAR);
         if (jsaReading == null) {
-            jsaReading = getSensor("lidarhq");
+            return null;
         }
-        if (isReady() && jsaReading != null) {
-            int range = jsaReading.size();
-            int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
-            for (int i = 0; i < res.length; i++) {
-                for (int j = 0; j < res[0].length; j++) {
-                    res[j][i] = jsaReading.get(i).asArray().get(j).asInt();
-                }
-            }
 
-            return res;
+        int range = jsaReading.size();
+        int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[j][i] = jsaReading.get(i).asArray().get(j).asInt();
+            }
         }
-        return null;
+        return res;
     }
 
     public int[][] getThermalData() {
         JsonArray jsaReading = null;
-        jsaReading = getSensor("thermal");
+        jsaReading = getSensor(Sensors.THERMAL);
         if (jsaReading == null) {
-            jsaReading = getSensor("thermalhq");
+            return null;
         }
-        if (isReady() && jsaReading != null) {
-            int range = jsaReading.size();
-            int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
-            for (int i = 0; i < res.length; i++) {
-                for (int j = 0; j < res[0].length; j++) {
-                    res[j][i] = (int)(jsaReading.get(i).asArray().get(j).asDouble()*100);
-                }
-            }
 
-            return res;
+        int range = jsaReading.size();
+        int[][] res = new int[range][range]; //jsaVisual.size(), jsaVisual.size());
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[j][i] = (int) (jsaReading.get(i).asArray().get(j).asDouble());
+            }
         }
-        return null;
+        return res;
+    }
+
+    public double[][] getCourse() {
+        JsonArray jsaReading = null, jsarow;
+        jsaReading = getSensor(Sensors.COURSE);
+        double[][] res = new double[jsaReading.size()][3];
+        for (int i = 0; i < jsaReading.size(); i++) {
+            jsarow = jsaReading.get(i).asArray();
+            for (int j = 0; j < 3; j++) {
+                res[i][j] = jsarow.get(j).asDouble();
+            }
+        }
+        return res;
     }
 
     public JsonObject toJson() {
-        return new JsonObject().add("perceptions", lastPerception);
+        return toJson(Sensors.values());
+    }
+
+    public JsonObject toJson(Sensors[] whichones) {
+        JsonObject jsores = new JsonObject();
+        JsonArray jsareadings = new JsonArray();
+        for (Sensors sSensor : whichones) {
+            if (indexperception.get(sSensor) != null) {
+                jsareadings.add(new JsonObject().add("sensor", sSensor.name().toUpperCase()).add("data", indexperception.get(sSensor)));
+            }
+        }
+        return new JsonObject().add("perceptions", jsareadings);
     }
 
     public Ole toOle() {
         return new Ole(toJson());
     }
 
+    public void fromJson(JsonObject jsoreading) {
+        fromJson(jsoreading.get("perceptions").asArray());
+    }
+
     public void fromJson(JsonArray jsareading) {
-//        clear();
+        if (jsareading == null) {
+            return;
+        }
         for (int i = 0; i < jsareading.size(); i++) {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
-            setSensor(name, jsosensor.get("data").asArray());
-//            System.out.println("Sensor: " + name);
+            encodeSensor(name, jsosensor.get("data").asArray());
         }
-        ready = true;
     }
 
     public void fromOle(ArrayList<Ole> oreading) {
 //        clear();
         for (Ole osensor : oreading) {
             String sensorname = osensor.getField("sensor");
-            setSensor(sensorname, Transform.toJsonArray(new ArrayList(osensor.getArray("data"))));
-        }
-        ready = true;
-    }
-
-    public String getName() {
-        if (this.isReady()) {
-            return name;
-        } else {
-            return "";
+            encodeSensor(sensorname, Transform.toJsonArray(new ArrayList(osensor.getArray("data"))));
         }
     }
 
-    public String getSession() {
-        if (this.isReady()) {
-            return sessionID;
-        } else {
-            return "";
-        }
+    public void feedPerception(JsonObject jsoperception) {
+        fromJson(jsoperception.get("perceptions").asArray());
+        this.TraceGPS.add(0, this.getGPSVector());
     }
 
     public void feedPerception(String content) {
-//        if (sLastPerception.equals(content)) {
-//            return;
-//        }
-        try {
-            lastPosition = this.getGPSVector();
-        } catch (Exception ex) {
-            lastPosition = null;
-        }
         JsonObject jsoperception = Json.parse(content).asObject();
-       name = jsoperception.getString("name", "unknown");
-        sessionID = jsoperception.getString("sessionID", "unknown");
-        commitment = jsoperception.getString("commitment", "");
-        fromJson(jsoperception.get("perceptions").asArray());
-        sLastPerception = content;
-         if (this.target == null) {
-            double gy = Math.round(getGPSPosition().getY() - getDistance() * Math.sin(Math.toRadians(getAbsoluteAngular() + 90)));
-            double gx = Math.round(getGPSPosition().getX() + getDistance() * Math.cos(Math.toRadians(getAbsoluteAngular() + 90)));
-            this.target = new Point3D(gx, gy, 0);
-            
-        }
-        ready = true;
-        myTrace.addUniquePosition(this.getGPSPosition());
-        lastDistance = getDistance();
-    }
-
-    public String getCommitment() {
-        return commitment;
-    }
-
-    public void setCommitment(String commitment) {
-        this.commitment = commitment;
+//        System.out.println(jsoperception.toString(WriterConfig.PRETTY_PRINT));
+        feedPerception(jsoperception);
     }
 
     public String[] getSensorList() {
         return this.indexperception.keySet().toArray(new String[this.indexperception.keySet().size()]);
     }
 
-    public int getMapMargin() {
-        return mapMargin;
-    }
-
-    public void setMapMargin(int mapMargin) {
-        this.mapMargin = mapMargin;
-    }
-
-    public void setReady(boolean ready) {
-        this.ready = ready;
-    }
-
-    public SimpleVector3D getPreviousGPSVector() {
-        if (lastPosition == null) {
-            return this.getGPSVector();
-        } else {
-            return lastPosition;
-        }
-    }
-
-
-//    public int[][] getShortRadar() {
-//        int reading[][] = new int[3][3], original[][] = getLidarData();
-//        int cx = original[0].length / 2, cy = original.length / 2;
-//        for (int y = -1; y < 2; y++) {
-//            for (int x = -1; x < 2; x++) {
-//                if (original[cx+x][cy+y]<0)
-//                    reading[x + 1][y + 1] = 1;
-//                else
-//                    reading[x + 1][y + 1] = 0;
-//            }
-//        }
-//        return reading;
-//    }
-//
-//    public int[][] getShortLidar() {
-//        int reading[][] = new int[3][3], original[][] = getLidarData();
-//        int cx = original[0].length / 2, cy = original.length / 2;
-//        for (int y = -1; y < 2; y++) {
-//            for (int x = -1; x < 2; x++) {
-//                reading[x + 1][y + 1] = original[cx + x][cy + y];
-//            }
-//        }
-//        return reading;
-//    }
-//
-//    public int[][] getShortVisual() {
-//        int reading[][] = new int[3][3], original[][] = getVisualData();
-//        int cx = original[0].length / 2, cy = original.length / 2;
-//        for (int y = -1; y < 2; y++) {
-//            for (int x = -1; x < 2; x++) {
-//                reading[x + 1][y + 1] = original[cx + x][cy + y];
-//            }
-//        }
-//        return reading;
-//    }
-//
-//    public int[][] getShortDistances() {
-//        int reading[][] = new int[3][3];
-//        int original[][] = getThermalData();
-//        int cx = original[0].length / 2, cy = original.length / 2;
-//        for (int y = -1; y < 2; y++) {
-//            for (int x = -1; x < 2; x++) {
-//                reading[x + 1][y + 1] = original[cx + x][cy + y];
-//            }
-//        }
-//        return reading;
-////    return getThermalData();
-//    }
-//
-//    public int[] getShortPolar() {
-//        int [] reading = new int[5];
-//        for (int i=0; i<5; i++){
-//            reading[i]= getPolarLidar()[i][1];
-//        }
-//        return reading;
-//    }
-    
     public String printStatus(String requester) {
         String res = "", line;
-
         res = "Under request from " + requester + "\n";
+        if (getSensor(Sensors.NAME) == null) {
+            return "N/A";
+        }
         res += "|  " + getNSteps() + "\n";
         res += "|  Status of: " + getName() + "\n";
+        res += "| |Capablities:\n";
+        res += "| |(" + this.getCapabilities().length + ") " + new ArrayList(Transform.toArrayList(this.getCapabilities())) + "\n";
+        res += "| |\n";
         res += "| |Memory:\n";
-        res += "| |(" + myTrace.size() + ") " + this.getGPSPosition(1) + "\n";
+        res += "| |(" + this.TraceGPS.size() + ") " + this.getGPSMemory(1) + "\n";
         res += "| |\n";
         res += "|  EN:" + getEnergy() + "W \n";
-        res += "|  X:" + getGPSPosition().getXInt() + " Y:" + getGPSPosition().getYInt() + " Z:" + (int) getAltitude() + "\n";
+        res += "|  X:" + getGPS().getXInt() + " Y:" + getGPS().getYInt() + " Z:" + (int) getAltitude() + "\n";
         res += "|  GR:" + (int) getGround() + "m" + "\n";
         res += "|  CO:" + Compass.NAME[getCompass() / 45] + " " + getCompass() + "º\n";
         res += "|  --> :" + getGPSVector().toString() + "\n";
@@ -788,185 +912,404 @@ public class SensorDecoder {
                     line += String.format("%03d|", polar[x][y]);
                 }
             }
-            res += line + "\n";
+            res += line + "\n|\n";
         }
-
-//        int visual[][] = getVisualData(), lidar[][] = getLidarData(), thermal[][] = getThermalData();
-//        line = "";
-//        for (int y = 0; y < visual.length; y++) {
-//            if (y == 0) {
-//                line = "| V|";
-//            } else {
-//                line = "|  |";
-//            }
-//            for (int x = 0; x < visual[0].length; x++) {
-//                if (visual[x][y] == Perceptor.NULLREAD) {
-//                    line += "XXX|";
-//                } else {
-//                    line += String.format("%03d|", visual[x][y]);
-//                }
-//            }
-//            if (y == 0) {
-//                line += "  L|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < lidar[0].length; x++) {
-//                if (lidar[x][y] == Perceptor.NULLREAD) {
-//                    line += "XXX|";
-//                } else {
-//                    line += String.format("%03d|", lidar[x][y]);
-//                }
-//            }
-//            if (y == 0) {
-//                line += "  T|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < thermal[0].length; x++) {
-//                if (thermal[x][y] == Perceptor.NULLREAD) {
-//                    line += "XXX|";
-//                } else {
-//                    line += String.format("%03d|", thermal[x][y]);
-//                }
-//            }
-//            res += line + "\n";
-//        }
-//        res += "\n";
-//        visual = this.getAbsoluteVisual();
-//        lidar = getAbsoluteLidar();
-//        thermal = getAbsoluteThermal();
-//        line = "";
-//        for (int y = 0; y < visual.length; y++) {
-//            if (y == 0) {
-//                line = "|AV|";
-//            } else {
-//                line = "|  |";
-//            }
-//            for (int x = 0; x < visual.length; x++) {
-//                if (y < visual[0].length) {
-//                    if (visual[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", visual[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            if (y == 0) {
-//                line += " AL|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < lidar.length; x++) {
-//                if (y < lidar[0].length) {
-//                    if (lidar[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", lidar[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            if (y == 0) {
-//                line += " AT|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < thermal.length; x++) {
-//                if (y < thermal[0].length) {
-//                    if (thermal[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", thermal[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            res += line + "\n";
-//        }
-//        res += "\n";
-//        visual = this.getRelativeVisual();
-//        lidar = getRelativeLidar();
-//        thermal = getRelativeThermal();
-//        line = "";
-//        for (int y = 0; y < visual.length; y++) {
-//            if (y == 0) {
-//                line = "|RV|";
-//            } else {
-//                line = "|  |";
-//            }
-//            for (int x = 0; x < visual.length; x++) {
-//                if (y < visual[0].length) {
-//                    if (visual[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", visual[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            if (y == 0) {
-//                line += " RL|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < lidar.length; x++) {
-//                if (y < lidar[0].length) {
-//                    if (lidar[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", lidar[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            if (y == 0) {
-//                line += " RT|";
-//            } else {
-//                line += "   |";
-//            }
-//            for (int x = 0; x < thermal.length; x++) {
-//                if (y < thermal[0].length) {
-//                    if (thermal[x][y] == Perceptor.NULLREAD) {
-//                        line += "XXX|";
-//                    } else {
-//                        line += String.format("%03d|", thermal[x][y]);
-//                    }
-//                } else {
-//                    line += "   |";
-//                }
-//            }
-//            res += line + "\n";
-//        }
-//        res += "|\n\n";
+        res += printStatusExtended();
         return res;
     }
-    public void setTarget(Point3D t) {
-        target = t.clone();
+
+    public String printStatusExtended() {
+        String line, res = "";
+        int visual[][] = getVisualData(), lidar[][] = getLidarData(), thermal[][] = getThermalData();
+        line = "";
+        for (int y = 0; y < visual.length; y++) {
+            if (y == 0) {
+                line = "| V|";
+            } else {
+                line = "|  |";
+            }
+            for (int x = 0; x < visual[0].length; x++) {
+                if (visual[x][y] == Perceptor.NULLREAD) {
+                    line += "XXX|";
+                } else {
+                    line += String.format("%03d|", visual[x][y]);
+                }
+            }
+            if (y == 0) {
+                line += "  L|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < lidar[0].length; x++) {
+                if (lidar[x][y] == Perceptor.NULLREAD) {
+                    line += "XXX|";
+                } else {
+                    line += String.format("%03d|", lidar[x][y]);
+                }
+            }
+            if (y == 0) {
+                line += "  T|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < thermal[0].length; x++) {
+                if (thermal[x][y] == Perceptor.NULLREAD) {
+                    line += "XXX|";
+                } else {
+                    line += String.format("%03d|", thermal[x][y]);
+                }
+            }
+            res += line + "\n";
+        }
+        res += "\n";
+        visual = this.getAbsoluteVisual();
+        lidar = getAbsoluteLidar();
+        thermal = getAbsoluteThermal();
+        line = "";
+        for (int y = 0; y < visual.length; y++) {
+            if (y == 0) {
+                line = "|AV|";
+            } else {
+                line = "|  |";
+            }
+            for (int x = 0; x < visual.length; x++) {
+                if (y < visual[0].length) {
+                    if (visual[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", visual[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            if (y == 0) {
+                line += " AL|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < lidar.length; x++) {
+                if (y < lidar[0].length) {
+                    if (lidar[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", lidar[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            if (y == 0) {
+                line += " AT|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < thermal.length; x++) {
+                if (y < thermal[0].length) {
+                    if (thermal[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", thermal[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            res += line + "\n";
+        }
+        res += "\n";
+        visual = this.getRelativeVisual();
+        lidar = getRelativeLidar();
+        thermal = getRelativeThermal();
+        line = "";
+        for (int y = 0; y < visual.length; y++) {
+            if (y == 0) {
+                line = "|RV|";
+            } else {
+                line = "|  |";
+            }
+            for (int x = 0; x < visual.length; x++) {
+                if (y < visual[0].length) {
+                    if (visual[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", visual[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            if (y == 0) {
+                line += " RL|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < lidar.length; x++) {
+                if (y < lidar[0].length) {
+                    if (lidar[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", lidar[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            if (y == 0) {
+                line += " RT|";
+            } else {
+                line += "   |";
+            }
+            for (int x = 0; x < thermal.length; x++) {
+                if (y < thermal[0].length) {
+                    if (thermal[x][y] == Perceptor.NULLREAD) {
+                        line += "XXX|";
+                    } else {
+                        line += String.format("%03d|", thermal[x][y]);
+                    }
+                } else {
+                    line += "   |";
+                }
+            }
+            res += line + "\n";
+        }
+        res += "|\n\n";
+        return res;
     }
 
-    public Point3D getTarget() {
-        return target.clone();
+    public double getTargetDistance() {
+        Point3D target = getTarget();
+        if (target != null) {
+            return getGPS().planeDistanceTo(target);
+        } else {
+            return Perceptor.NULLREAD;
+        }
     }
 
+    public double getTargetAbsoluteAngular() {
+        double ang = Math.toDegrees(Math.atan2((this.getGPS().getY() - getTarget().getY()), (getTarget().getX() - this.getGPS().getX()))) - 90;
+        return (ang + 360) % 360;
+    }
 
-   public double getTargetDistance() {
-        return getPosition().planeDistanceTo(target);
+    public double getTargetRelativeAngular() {
+        double ang = getTargetAbsoluteAngular();
+        double c = getCompass(), ar;
+        if (ang > c) {
+            if (ang - c <= 180) {
+                ar = ang - c;
+            } else {
+                ar = -(c + 360 - ang);
+            }
+        } else {
+            if (c - ang < 180) {
+                ar = ang - c;
+            } else {
+                ar = (ang + 360 - c);
+            }
+
+        }
+        return ar;
+    }
+
+    public double get3DDistance() {
+        Point3D target = getTarget();
+        if (target != null) {
+            return getGPS().realDistanceTo(target);
+        } else {
+            return Perceptor.NULLREAD;
+        }
     }
 
     public int getGridDistance() {
-        return getPosition().gridDistanceTo(target);
-    }
-    
-    public Point3D getPosition() {
-        return this.getGPSPosition();
+        Point3D target = getTarget();
+        if (target != null) {
+            return getGPS().gridDistanceTo(getTarget());
+        } else {
+            return Perceptor.NULLREAD;
+        }
     }
 
+    public double getPlaneDistance() {
+        Point3D target = getTarget();
+        if (target != null) {
+            return getGPS().planeDistanceTo(getTarget());
+        } else {
+            return Perceptor.NULLREAD;
+        }
+    }
 
+    void configureType(String type) {
+
+        switch (type.toUpperCase()) {
+            case "LIGHTT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 10);
+                encodeSensor(Sensors.MAXCARGO, 6);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "HEAVYT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 5);
+                encodeSensor(Sensors.MAXCARGO, 40);
+                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 2);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "LIGHTH":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 30);
+                encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
+                encodeSensor(Sensors.MAXCARGO, 6);
+                encodeSensor(Sensors.AUTONOMY, 800);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            default:
+            case "HEAVYH":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
+                encodeSensor(Sensors.MAXCARGO, 20);
+                encodeSensor(Sensors.AUTONOMY, 1000);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 2);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "LIGHTA":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
+                encodeSensor(Sensors.MAXCARGO, 20);
+                encodeSensor(Sensors.AUTONOMY, 700);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "HEAVYA":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
+                encodeSensor(Sensors.MAXCARGO, 140);
+                encodeSensor(Sensors.AUTONOMY, 2000);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "LIGHTM":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 0);
+                encodeSensor(Sensors.MAXCARGO, 15);
+                encodeSensor(Sensors.AUTONOMY, 1000);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "HEAVYM":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 0);
+                encodeSensor(Sensors.MAXCARGO, 250);
+                encodeSensor(Sensors.AUTONOMY, 3000);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+        }
+    }
 }

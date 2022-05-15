@@ -9,7 +9,7 @@
 //import com.eclipsesource.json.JsonArray;
 //import data.Ole;
 //import data.OleFile;
-//import glossary.sensors;
+//import glossary.Sensors;
 //import jade.core.Agent;
 //import jade.lang.acl.ACLMessage;
 //import java.awt.Color;
@@ -118,7 +118,7 @@
 //            name = lastPerception.getName();
 //
 //            if (lastPerception.hasSensor("GPS")) {
-//                gps = lastPerception.getGPS();
+//                gps = lastPerception.getGPSMemory();
 //                lastx = (int) gps[0];
 //                lasty = (int) gps[1];
 //
@@ -257,7 +257,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ALIVE.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ALIVE.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -278,7 +278,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ONTARGET.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ONTARGET.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -299,7 +299,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ENERGY.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ENERGY.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -324,7 +324,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ENERGY.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ENERGY.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -361,7 +361,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ANGULAR.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ANGULAR.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -384,7 +384,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.COMPASS.name())) {
+//        if (!lastPerception.hasSensor(Sensors.COMPASS.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -407,7 +407,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.COMPASS.name())) {
+//        if (!lastPerception.hasSensor(Sensors.COMPASS.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -422,7 +422,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ALTITUDE.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ALTITUDE.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -436,7 +436,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ALTITUDE.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ALTITUDE.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -481,7 +481,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.ANGULAR.name())) {
+//        if (!lastPerception.hasSensor(Sensors.ANGULAR.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -495,7 +495,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.DISTANCE.name())) {
+//        if (!lastPerception.hasSensor(Sensors.DISTANCE.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -509,7 +509,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.DISTANCE.name())) {
+//        if (!lastPerception.hasSensor(Sensors.DISTANCE.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -533,7 +533,7 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.PAYLOAD.name())) {
+//        if (!lastPerception.hasSensor(Sensors.PAYLOAD.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
@@ -547,12 +547,12 @@
 //        if (!lastPerception.isReady()) {
 //            return;
 //        }
-//        if (!lastPerception.hasSensor(sensors.GPS.name())) {
+//        if (!lastPerception.hasSensor(Sensors.GPS.name())) {
 //            g.drawImage(SwingTools.toIcon("./images/gold/gold-warning.png", factor, factor).getImage(), x, y, null);
 //            return;
 //        }
 //        g.drawImage(SwingTools.toIcon("./images/" + family + "/" + family + "-gps.png", factor, factor).getImage(), x, y, null);
-//        double gps[] = lastPerception.getGPS();
+//        double gps[] = lastPerception.getGPSMemory();
 //        g.drawString(String.format(" %03d-%03d-%03d", (int) gps[0], (int) gps[1], (int) gps[2]), x + factor, y + stringskip);
 //
 //    }
@@ -626,9 +626,9 @@
 //        return false;
 //    }
 //
-//    public double[] getGPS() {
+//    public double[] getGPSMemory() {
 //        if (lastPerception.isReady()) {
-//            return lastPerception.getGPS();
+//            return lastPerception.getGPSMemory();
 //        }
 //        return new double[0];
 //    }
@@ -704,7 +704,7 @@
 //
 //    protected String doReadPerceptions() {
 //        ACLMessage outbox = dashInbox.createReply();
-//        outbox.setContent("Query sensors session " + dashInbox.getConversationId());
+//        outbox.setContent("Query Sensors session " + dashInbox.getConversationId());
 //        myAgent.send(outbox);
 //        dashInbox = myAgent.blockingReceive();
 //        this.feedPerceptionLocal(dashInbox.getContent());
@@ -745,7 +745,7 @@
 //                    }
 //                    break;
 //                case "GPS":
-//                    row = getGPS();
+//                    row = getGPSMemory();
 //                    message += "   X=" + (int) row[0] + " Y=" + (int) row[1] + " Z=" + (int) row[2];
 //                    break;
 //                case "ALTITUDE":

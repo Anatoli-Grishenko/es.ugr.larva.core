@@ -9,6 +9,6 @@ package glossary;
  * List of all the capabilities an agent might have.<p>
  */
 
-public enum capability{MOVE, RIGHT, LEFT, UP, DOWN, CAPTURE, RECHARGE, QUERY}
+public enum capability{MOVE, RIGHT, LEFT, UP, DOWN, CAPTURE, RECHARGE, QUERY, RESCUE, BOARD, DEBARK}
 
 

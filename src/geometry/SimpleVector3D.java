@@ -23,7 +23,7 @@ public class SimpleVector3D extends Vector3D {
     protected int sOrient;
 
     public SimpleVector3D(Point3D t, int orientation) {
-        super(t, new Point3D(t.getX() + nextX[orientation % 8], t.getY() + nextY[orientation % 8], t.getZ()));
+        super(t, new Point3D(t.getX() + nextX[(8+orientation) % 8], t.getY() + nextY[(8+orientation) % 8], t.getZ()));
         sOrient = orientation % 8;
     }
 
@@ -130,4 +130,8 @@ public class SimpleVector3D extends Vector3D {
         return getSource().toString() + "--(" + this.getsOrient() + "|" +Compass.NAME[this.getsOrient()]+"|"+ this.canonical().getTarget().toString() + ")-->" + getTarget().toString();
     }
 
+   public boolean isEqualTo(SimpleVector3D other)  {
+       return other.getSource().isEqualTo(getSource())
+               && other.getTarget().isEqualTo(getTarget());
+   }
 }

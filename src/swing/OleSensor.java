@@ -311,22 +311,38 @@ public abstract class OleSensor extends JComponent {
         TextFactory tf;
         int mark = 5;
 
+        if (this.isHasGrid()) {
+            g.setColor(Color.DARK_GRAY);
+            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
+                p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
+                p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
+                p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
+                p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
+                oDrawLine(g, p2, p4);
+            }
+            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
+                p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
+                p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
+                p3 = new Point3D(vPort.x + vPort.width, shifty + vPort.y + alpha * scale);
+                p4 = new Point3D(vPort.x + vPort.width - mark, shifty + vPort.y + alpha * scale);
+                oDrawLine(g, p2, p4);
+            }
+        }
         g.setColor(Color.WHITE);
-        p1 = new Point3D(vPort.x, vPort.y);
-        p2 = new Point3D(vPort.x + vPort.width, vPort.y);
-        p3 = new Point3D(vPort.x, vPort.y + vPort.height);
-        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
-        this.oDrawLine(g, p1, p2);
-        this.oDrawLine(g, p3, p4);
+//        p1 = new Point3D(vPort.x, vPort.y);
+//        p2 = new Point3D(vPort.x + vPort.width, vPort.y);
+//        p3 = new Point3D(vPort.x, vPort.y + vPort.height);
+//        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
+//        this.oDrawLine(g, p1, p2);
+//        this.oDrawLine(g, p3, p4);
         for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
             p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
             p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
             p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
             p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
             if (this.isHasGrid()) {
-                oDrawLine(g, p1, p3);
-            } else {
                 oDrawLine(g, p1, p2);
+            } else {
                 oDrawLine(g, p3, p4);
             }
             if (alpha > getMinValue() && alpha < getMaxValue()) {
@@ -340,12 +356,12 @@ public abstract class OleSensor extends JComponent {
                 tf.draw();
             }
         }
-        p1 = new Point3D(vPort.x, vPort.y);
-        p2 = new Point3D(vPort.x, vPort.y + vPort.height);
-        p3 = new Point3D(vPort.x + vPort.width, vPort.y);
-        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
-        this.oDrawLine(g, p1, p2);
-        this.oDrawLine(g, p3, p4);
+//        p1 = new Point3D(vPort.x, vPort.y);
+//        p2 = new Point3D(vPort.x, vPort.y + vPort.height);
+//        p3 = new Point3D(vPort.x + vPort.width, vPort.y);
+//        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
+//        this.oDrawLine(g, p1, p2);
+//        this.oDrawLine(g, p3, p4);
         for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
             p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
             p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
@@ -364,23 +380,7 @@ public abstract class OleSensor extends JComponent {
                 tf.draw();
             }
         }
-        if (this.isHasGrid()) {
-            g.setColor(Color.DARK_GRAY);
-            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
-                p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
-                p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
-                p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
-                p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
-                oDrawLine(g, p2, p4);
-            }
-            for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
-                p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
-                p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
-                p3 = new Point3D(vPort.x + vPort.width, shifty + vPort.y + alpha * scale);
-                p4 = new Point3D(vPort.x + vPort.width - mark, shifty + vPort.y + alpha * scale);
-                oDrawLine(g, p2, p4);
-            }
-        }
+
 
     }
 

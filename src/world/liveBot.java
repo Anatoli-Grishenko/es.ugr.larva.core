@@ -11,266 +11,85 @@ import world.World;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import data.Transform;
+import geometry.Compass;
+import geometry.Entity3D;
 import geometry.SimpleVector3D;
+import geometry.Vector3D;
 import glossary.Roles;
+import static glossary.Roles.LightT;
+import glossary.Sensors;
+import glossary.capability;
+import glossary.direction;
 import java.awt.Color;
 import java.util.ArrayList;
+import map2D.Map2DColor;
 
 /**
  *
- * @author lcv
+ * @author lcv. TO remove
  */
 public class liveBot extends Thing {
 
-    public static final int MAXFLIGHT = 256, MAXENERGY = 3500;
-    
-     String groupname;
-     glossary.Roles role;
-     int energylevel, burnmovement, burnsensor, compass, altitude, order;
-     double distance, angle;
-     Point3D origin;
-     public int minAllowedLevel, maxAllowedLevel, range, alive, ontarget;
-     ArrayList<String> capabilities, attachments;
-     JsonObject lastPerceptions;
-     public String statusinfo;
-     ArrayList<Thing> thePayload;
-     Color colorcode;
-     public String lastEvent, relpywith;
-     int initialDistance = -1, currentDistance;
-    int energyBurnt = -1, numSteps = -1, timeSecs = 0;
-    String myCommitment="";
+    String groupname;
+    Point3D origin;
+    ArrayList<String> capabilities, attachments;
+//    JsonObject lastPerceptions;
+    Color colorcode;
+    public String relpywith;
+    int initialDistance = -1, currentDistance, order;
+    int energyBurnt = -1, timeSecs = 0;
+    String myCommitment = "";
 
     public liveBot(String name) {
         super(name);
         capabilities = new ArrayList<>();
         attachments = new ArrayList<>();
-        thePayload = new ArrayList<>();
-        statusinfo = "Fresh new";
-        lastEvent = statusinfo;
+        myPerceptions = new SensorDecoder();
+        myPerceptions.setName(name);
     }
 
     public liveBot(String name, World w) {
         super(name, w);
         capabilities = new ArrayList<>();
-        thePayload = new ArrayList<>();
         attachments = new ArrayList<>();
-        statusinfo = "Fresh new";
-        lastEvent = statusinfo;
+        myPerceptions = new SensorDecoder();
+        myPerceptions.setName(name);
     }
 
-    public boolean isAtBase() {
-        return getPosition().isEqualTo(origin);
+    @Override
+    public void setType(String type) {
+        super.setType(type);
+        this.Raw().configureType(type);
     }
 
     @Override
     public JsonObject toJson() {
-        JsonObject jsdrone = new JsonObject();
-        jsdrone.set("name", getName());
-        jsdrone.set("team", groupname);
-        jsdrone.set("last", lastEvent);
-        jsdrone.set("ontarget", ontarget);
-        jsdrone.set("alive", alive);
-        jsdrone.set("x", getPosition().getX());
-        jsdrone.set("y", getPosition().getY());
-        jsdrone.set("z", getPosition().getZ());
-        jsdrone.set("energy", energylevel);
-        jsdrone.set("altitude", altitude);
-        jsdrone.set("distance", distance);
-        jsdrone.set("angle", angle);
-        jsdrone.set("compass", this.compass);
-        jsdrone.set("payload", getFullPayload());
-        return jsdrone;
-    }
+        JsonObject jsdrone = this.myPerceptions.toJson(new Sensors[]{Sensors.NAME, Sensors.TEAM, Sensors.ONTARGET,
+            Sensors.ALIVE, Sensors.GPS, Sensors.ENERGY, Sensors.GROUND, Sensors.DISTANCE,
+            Sensors.ANGULAR, Sensors.TARGET, Sensors.COURSE, Sensors.CARGO, Sensors.TRACE});
 
-    @Override
-    public void fromJson(JsonObject update) {
-        _vector = new SimpleVector3D(new Point3D(update.getInt("x", -1),
-                update.getInt("y", -1), update.getInt("z", -1)), SimpleVector3D.N);
-        energylevel = update.getInt("energy", -1);
-        altitude = update.getInt("altitude", -1);
-        angle = update.getDouble("angle", 0);
-        distance = update.getDouble("distance", 0);
-        _name = update.getString("name", "unknown");
-        groupname = update.getString("team", "unknown");
-        this.lastEvent = update.getString("last", "---");
-        ontarget = update.getInt("ontarget", -1);
-        alive = update.getInt("alive", -1);
-        thePayload = new ArrayList();
-        for (JsonValue jsv : update.get("payload").asArray()) {
-            thePayload.add(new Thing(jsv.asString()));
-        }
+        return jsdrone;
     }
 
     @Override
     public String toString() {
         return toJson().toString();
     }
-
     @Override
-
-    public int getEnergy() {
-        return energylevel;
+    public void readPerceptions() {     
+        super.readPerceptions();
+        checkStatus();
     }
-
-    @Override
-    public int getOnTarget() {
-        return ontarget;
-    }
-
-    @Override
-    public int getAlive() {
-        return alive;
-    }
-
-    @Override
-    public int getPayload() {
-        return thePayload.size();
-    }
-    
-    public ArrayList<Thing> getAllPayload() {
-        return thePayload;
-    }
-    
-    public void addPayload(Thing what) {
-        thePayload.add(what);
-    }
-
-    public String getStatus() {
-        return this.statusinfo;
-    }
-
-    public void setStatus(String s) {
-        statusinfo = s;
-    }
-
-    public JsonArray getFullPayload() {
-        JsonArray jspl = new JsonArray();
-        for (Thing t : thePayload) {
-            jspl.add(t.getName());
-        }
-        return jspl;
-
-    }
-
-    @Override
-    public Point3D getPosition() {
-        return this._vector.getSource();
-    }
-
-    public int getEnergyBurnt() {
-        return energyBurnt;
-    }
-
-    public void addEnergyBurnt(int increment) {
-        if (energyBurnt < 0) {
-            energyBurnt = increment;
-        } else {
-            energyBurnt += increment;
-        }
-    }
-
-    public int getNumSteps() {
-        return numSteps;
-    }
-
-    public void addNumSteps(int increment) {
-        if (numSteps < 0) {
-            numSteps = increment;
-        } else {
-            numSteps += increment;
-        }
-    }
-
-    public Roles getRole() {
-        return role;
-    }
-
-    public void setRole(Roles role) {
-        this.role = role;
+    public liveBot addToSensor(Sensors s, String what) {
+        ArrayList<String> sensorreading = new ArrayList(Transform.toArrayList(this.Raw().getSensor(s)));
+        sensorreading.add(what);
+        this.Raw().encodeSensor(s, Transform.toJsonArray(new ArrayList(sensorreading)));
+        return this;
     }
 
     public ArrayList<String> getCapabilities() {
-        return capabilities;
-    }
-
-    public void addCapabilities(String capability) {
-        this.capabilities.add(capability);
-    }
-
-    public ArrayList<String> getAttachments() {
-        return attachments;
-    }
-
-    public void addAttachments(String attachment) {
-        this.attachments.add(attachment);
-    }
-
-    public ArrayList<Thing> getThePayload() {
-        return thePayload;
-    }
-
-    public void addThePayload(Thing capture) {
-        this.thePayload.add(capture);
-    }
-
-    public int getEnergylevel() {
-        return energylevel;
-    }
-
-    public void setEnergylevel(int energylevel) {
-        this.energylevel = energylevel;
-    }
-
-    public void burnEnergylevel(int increment) {
-        this.energylevel -= increment;
-    }
-
-    public int getBurnmovement() {
-        return burnmovement;
-    }
-
-    public void setBurnmovement(int burnmovement) {
-        this.burnmovement = burnmovement;
-    }
-
-    public int getBurnsensor() {
-        return burnsensor;
-    }
-
-    public void setBurnsensor(int burnsensor) {
-        this.burnsensor = burnsensor;
-    }
-
-    public int getMinAllowedLevel() {
-        return minAllowedLevel;
-    }
-
-    public void setMinAllowedLevel(int minAllowedLevel) {
-        this.minAllowedLevel = minAllowedLevel;
-    }
-
-    public int getMaxAllowedLevel() {
-        return maxAllowedLevel;
-    }
-
-    public void setMaxAllowedLevel(int maxAllowedLevel) {
-        this.maxAllowedLevel = maxAllowedLevel;
-    }
-
-    public int getRange() {
-        return range;
-    }
-
-    public void setRange(int range) {
-        this.range = range;
-    }
-
-    public int getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(int altitude) {
-        this.altitude = altitude;
+        return new ArrayList(Transform.toArrayListString(this.Raw().getSensor(Sensors.CAPABILITIES)));
     }
 
     public int getInitialDistance() {
@@ -289,14 +108,147 @@ public class liveBot extends Thing {
         this.currentDistance = currentDistance;
     }
 
-    public String getMyCommitment() {
-        return myCommitment;
+    public int getOrder() {
+        return order;
     }
 
-    public void setMyCommitment(String myCommitment) {
-        this.myCommitment = myCommitment;
+    public void setOrder(int order) {
+        this.order = order;
     }
 
+    public Point3D getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(Point3D origin) {
+        this.origin = origin;
+    }
+
+    public JsonObject getLastPerceptions() {
+        return Raw().toJson();
+    }
+
+    public String getRelpywith() {
+        return relpywith;
+    }
+
+    public void setRelpywith(String relpywith) {
+        this.relpywith = relpywith;
+    }
+
+    public ArrayList<String> getAttachments() {
+        return attachments;
+    }
+
+    public void addAttachments(String attachment) {
+        this.attachments.add(attachment);
+    }
+
+    public liveBot move(Vector3D shift) {
+        getVector().plus(shift.canonical().getTarget());
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+        return this;
+    }
+
+    public liveBot moveForward(int units) {
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+        return move(this.getVector().canonical().clone().scalar(units));
+    }
+
+    public liveBot moveUp(int units) {
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+        return move(Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
+    }
+
+    public liveBot moveDown(int units) {
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+        return move(Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
+    }
+
+    private liveBot RotateXY(double degrees) {
+//        Vector3D orientation=getOrientation().canonical();
+//        double radio=orientation.modulo();
+//        orientation=new Vector3D()
+//        setOrientation(getOrienta)
+//        base.define(L.getPosition().getX()+radio*Math.cos(i*Math.PI/180),L.getPosition().getY()-radio*Math.sin(i*Math.PI/180));
+        return this;
+    }
     
+    public static int rotateLeft(int sdirection) {
+        return (sdirection + 1) % 8;
+    }
+
+    public static int rotateRight(int sdirection) {
+        return (sdirection + 7) % 8;
+    }
+
+    public static int Opposite(int sdirection) {
+        return (sdirection + 4) % 8;
+    }
+
+    public liveBot rotateLeft() {
+        setOrientation(liveBot.this.rotateLeft(getOrientation()));
+        return this;
+    }
+
+    public liveBot rotateRight() {
+        setOrientation(liveBot.this.rotateRight(getOrientation()));
+        return this;
+    }
+
+    public liveBot recharge() {
+        Raw().setEnergy(Raw().getAutonomy());
+        return this;
+    }
+    
+    
+    public boolean isGoal() {
+        return Raw().getGPS().isEqualTo(Raw().getTarget());
+    }
+    
+    protected void checkStatus() {
+        boolean single = false, multiple = true, crashtotoher,
+                crashtoground, crashtolevel, crashtoenergy, crashtoborder;
+ 
+        Raw().setEnergy((int) Math.max(Raw().getEnergy(), 0));
+        crashtoenergy = Raw().getEnergy() < 1;
+        if (crashtoenergy) {
+            Raw().addStatus("Energy exhausted. ");
+        }
+        crashtoground = getPosition().getZ() < this.getWorld().getEnvironment().getSurface().getStepLevel(getPosition().getX(), getPosition().getY());
+        if (crashtoground) {
+            Raw().addStatus("Crash onto the ground. ");
+        }
+        crashtoborder = getPosition().getX() < 0 || getPosition().getX() >= this.getWorld().getEnvironment().getSurface().getWidth()
+                || getPosition().getY() < 0 || getPosition().getY() >= this.getWorld().getEnvironment().getSurface().getHeight();
+        if (crashtoborder) {
+            Raw().addStatus("Crash onto world's boundaries. ");
+        }
+        crashtolevel = getPosition().getZ() > Raw().getMaxlevel()
+                || getPosition().getZ() < Raw().getMinlevel();
+        if (crashtolevel) {
+            Raw().addStatus("Out ot operational altitude limits. ");
+        }
+        single = (!(crashtoenergy
+                || crashtolevel
+                || crashtoborder
+                //             || getEnvironment().getSurface().getStepLevel(getPosition().getx, getPosition().gety) == Sensor.
+                || crashtoground));
+        Raw().setAlive(single);
+        Raw().setOntarget(isGoal());
+        setCurrentDistance((int) Raw().getDistance());
+        if (getInitialDistance() < 0) {
+            setInitialDistance(getCurrentDistance());
+        }
+        
+    }
+    
+    public void printSensorIndex(){
+        System.out.println("["+this.getName()+"] -->"+this.Raw().indexperception.keySet().toString());
+    }
 
 }

@@ -69,7 +69,7 @@ public class Functional extends Decisor {
             case "UP":
                 return e.getAltitude() < e.getMaxlevel();
             case "CAPTURE":
-                return e.isOntarget();
+                return e.getOntarget();
             case "HALT":
                 return e.getCargo() != null && e.getCargo().length > 0;
             case "RECHARGE":

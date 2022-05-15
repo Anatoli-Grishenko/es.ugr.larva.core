@@ -10,10 +10,10 @@ import geometry.Vector3D;
 import geometry.Compass;
 import map2D.Map2DGrayscale;
 import ontology.Ontology;
-import world.Perceptor.ATTACH;
-import world.Perceptor.OPERATION;
-import world.Perceptor.SELECTION;
-import world.Thing.PROPERTY;
+//import Perceptor.ATTACH;
+//import Perceptor.OPERATION;
+//import Perceptor.SELECTION;
+//import Thing.PROPERTY;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonObject.Member;
@@ -22,6 +22,7 @@ import data.Ole;
 import data.OleConfig;
 import geometry.PolarSurface;
 import geometry.SimpleVector3D;
+import glossary.Sensors;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import map2D.Map2DColor;
+import world.Perceptor.ATTACH;
+import world.Perceptor.OPERATION;
+import world.Perceptor.SELECTION;
+import world.Thing.PROPERTY;
 
 /**
  *
@@ -161,10 +166,8 @@ public class World {
                 res.setY(1);
                 break;
             default:
-                do {
-                    res.setX((int) (Math.random() * width));
-                    res.setY((int) (Math.random() * height));
-                } while (this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()) > this.maxflight);
+                res.setX((int) (Math.random() * width));
+                res.setY((int) (Math.random() * height));
         }
         if (0 <= res.getX() && res.getX() < width && 0 <= res.getY() && res.getY() < height) {
             res.setZ(this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()));
@@ -220,10 +223,11 @@ public class World {
                 Map2DColor terrain = new Map2DColor(10, 10, 0);
                 setSurfaceName(oaux.getField("surface"));
                 spalette = oaux.getField("palette");
-                terrain.loadMapNormalize(getSurfaceName());
+                terrain.loadMapRaw(getSurfaceName());
                 e.setSurface(terrain);
                 e.setSize(new Point3D(this._environment._surface.getWidth(),
                         this._environment._surface.getHeight(), 0));
+                this.removeAllThings();
                 oThings = oaux.get("things").asArray();
                 for (Ole othing : new ArrayList<Ole>(oaux.getArray("things"))) {
                     ArrayList<String> properties = othing.getArray("properties");
@@ -307,6 +311,13 @@ public class World {
             addVisible(visible[ch], i);
         }
         return i;
+    }
+
+    public void removeAllThings() {
+        _population.clear();
+//        for (PROPERTY p : _visibility.keySet()) {
+//            _visibility.put(p, new ArrayList());
+//        }
     }
 
     public void removeThing(Thing i) {
@@ -452,14 +463,15 @@ public class World {
             incrx = 0;
         }
         // Scans the world within the selected range (1x1 | nxn) and detects readings
+        int presence;
         for (double sy = y1; sy < y1 + range; sy++) {
             rowreading = new JsonArray();
             for (double sx = x1; sx < x1 + range; sx++) {
                 xyreading = new JsonArray();
                 // For every position xy check all the potentially detected objects
+                observable = new Point3D(sx, sy, this.getEnvironment().getSurface().getStepLevel(sx, sy));
                 for (Thing t : detectable) {
                     // Start reading properties
-                    observable = new Point3D(sx, sy, this.getEnvironment().getSurface().getStepLevel(sx, sy));
 //                    if (property == PROPERTY.SURFACE || property==PROPERTY.PRESENCE) {
 //                        observable = new Point3D(sx, sy, t.getSurface().getStepLevel(sx, sy));
 //                    } else {
@@ -467,18 +479,18 @@ public class World {
 //                    }
                     if (observable.planeDistanceTo(t.getPosition()) <= p.getSensitivity()) {
                         if (operation == OPERATION.QUERY) {
-                            if (property == PROPERTY.ENERGY) {
-                                partialres = new JsonObject().add("value", t.getEnergy());
-                            }
-                            if (property == PROPERTY.STATUS) {
-                                partialres = new JsonObject().add("value", t.getAlive());
-                            }
-                            if (property == PROPERTY.ONTARGET) {
-                                partialres = new JsonObject().add("value", t.getOnTarget());
-                            }
-                            if (property == PROPERTY.PAYLOAD) {
-                                partialres = new JsonObject().add("value", t.getPayload());
-                            }
+//                            if (property == PROPERTY.ENERGY) {
+//                                partialres = new JsonObject().add("value", t.Raw().getEnergy());
+//                            }
+//                            if (property == PROPERTY.STATUS) {
+//                                partialres = new JsonObject().add("value", t.Raw().getAlive());
+//                            }
+//                            if (property == PROPERTY.ONTARGET) {
+//                                partialres = new JsonObject().add("value", t.Raw().getOnTarget());
+//                            }
+//                            if (property == PROPERTY.PAYLOAD) {
+//                                partialres = new JsonObject().add("value", t.Raw().getPayload());
+//                            }
                             if (property == PROPERTY.POSITION) {
                                 partialres = new JsonObject().add("value", t.getPosition().toJson());
                             }
@@ -486,7 +498,11 @@ public class World {
                                 partialres = new JsonObject().add("value", t.getVector().toJson());
                             }
                             if (property == PROPERTY.PRESENCE) {
-                                partialres = new JsonObject().add("value", (t.contains(observable) ? 100 : 0));
+                                if (t.getPosition().to2D().isEqualTo(observable.to2D())) {
+                                    partialres = new JsonObject().add("value", 255);
+                                } else {
+                                    partialres = new JsonObject().add("value", 0);
+                                }
 
                             }
                             if (property == PROPERTY.SURFACE) {
@@ -532,11 +548,12 @@ public class World {
                             xyreading.add(partialres.get("value"));
                         }
                     } else {
-                        if (p.getName().toUpperCase().startsWith("THERMAL")) {
-                            xyreading.add(p.getSensitivity());
-                        } else {
-                            xyreading.add(Perceptor.NULLREAD);
-                        }
+//                        if (p.getName().toUpperCase().startsWith("THERMAL")) {
+//                            xyreading.add(p.getSensitivity());
+//                        } else {
+//                            xyreading.add(Perceptor.NULLREAD);
+//                        }
+                        xyreading.add(Perceptor.NULLREAD);
                     }
                 }
                 if (xyreading.size() == 0) {
@@ -554,28 +571,30 @@ public class World {
                     }
                 } else {
                     if (xyreading.get(0).isNumber()) { /// 
-//                        int max = xyreading.get(0).asInt();
+                        int max = xyreading.get(0).asInt();
+                        for (JsonValue v : xyreading) {
+                            if (v.asInt() > max) {
+                                max = v.asInt();
+                            }
+                        }
+                        rowreading.add(max);
+
+//                        double min = xyreading.get(0).asDouble();
 //                        for (JsonValue v : xyreading) {
-//                            if (v.asInt() > max) {
-//                                max = v.asInt();
+//                            if (v.asDouble() < min) {
+//                                min = v.asDouble();
 //                            }
 //                        }
-//                        rowreading.add(max);
-                        double min = xyreading.get(0).asDouble();
-                        for (JsonValue v : xyreading) {
-                            if (v.asDouble() < min) {
-                                min = v.asDouble();
-                            }
-                        }
-                        if (p.getAttachment() == ATTACH.ZENITAL) {
-                            rowreading.add(min);
-                        } else {
-                            if (filterReading((int) (sx - x1), (int) (sy - y1), range, orientation)) {
-                                rowreading.add(min);
-                            } else {
-                                rowreading.add(Perceptor.NULLREAD);
-                            }
-                        }
+//                            rowreading.add(min);
+//                        if (p.getAttachment() == ATTACH.ZENITAL) {
+//                            rowreading.add(min);
+//                        } else {
+//                            if (filterReading((int) (sx - x1), (int) (sy - y1), range, orientation)) {
+//                                rowreading.add(min);
+//                            } else {
+//                                rowreading.add(Perceptor.NULLREAD);
+//                            }
+//                        }
                     } else {
                         rowreading.add(xyreading);
                     }
@@ -666,6 +685,228 @@ public class World {
         return res;
     }
 
+    public liveBot registerAgent(String name, String type, Sensors[] attach) {
+        liveBot liveagent = null;
+        try {
+            // Already registered?
+            liveagent = new liveBot(name, this);
+            liveagent.setType(type);
+
+            // PERCEIVE
+            Perceptor p;
+
+            // The agent really perceives everything except HQ's
+            // Later on, this list filters out any sensor not included in capabilities
+            for (Sensors allsensor : attach) {
+                switch (allsensor) {
+                    case COMPASS:
+                        p = new Perceptor(glossary.Sensors.COMPASS.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.ORIENTATION, "ENVIRONMENT", Perceptor.SELECTION.CLOSEST);
+                        p.setHowPerceives(Perceptor.OPERATION.ANGLE, 1).setSensitivity(10000);
+                        liveagent.addSensor(p);
+                        break;
+                    case GPS:
+                        p = new Perceptor(glossary.Sensors.GPS.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.POSITION, "", Perceptor.SELECTION.INTERN);
+                        p.setHowPerceives(Perceptor.OPERATION.QUERY, 1).setSensitivity(10000);
+                        liveagent.addSensor(p);
+                        break;
+                    case LIDAR:
+                        p = new Perceptor(glossary.Sensors.LIDAR.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.SURFACE, "ENVIRONMENT", Perceptor.SELECTION.CLOSEST);
+                        p.setHowPerceives(Perceptor.OPERATION.DISTANCE, liveagent.Raw().getRange());
+                        p.setAttacment(Perceptor.ATTACH.ZENITAL).setSensitivity(10000);
+                        liveagent.addSensor(p);
+                        break;
+                    case VISUAL:
+                        p = new Perceptor(glossary.Sensors.VISUAL.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.SURFACE, "ENVIRONMENT", Perceptor.SELECTION.CLOSEST);
+                        p.setHowPerceives(Perceptor.OPERATION.QUERY, liveagent.Raw().getRange());
+                        p.setAttacment(Perceptor.ATTACH.ZENITAL).setSensitivity(10000);
+                        liveagent.addSensor(p);
+                        break;
+                    case THERMAL:
+                        p = new Perceptor(glossary.Sensors.THERMAL.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.PRESENCE, "PEOPLE", Perceptor.SELECTION.ALL);
+                        p.setHowPerceives(Perceptor.OPERATION.QUERY, liveagent.Raw().getRange());
+                        p.setAttacment(Perceptor.ATTACH.ZENITAL).setSensitivity(10000);
+                        liveagent.addSensor(p);
+                        break;
+                    case GROUND:
+                        p = new Perceptor(glossary.Sensors.GROUND.name().toLowerCase(), liveagent);
+                        p.setWhatPerceives(Thing.PROPERTY.SURFACE, "ENVIRONMENT", Perceptor.SELECTION.CLOSEST);
+                        p.setHowPerceives(Perceptor.OPERATION.DISTANCE, 1).setSensitivity(10000);
+                        p.setRange(1);
+                        liveagent.addSensor(p);
+                        break;
+                }
+            }
+            Ole odrones = getConfig().getOle("drones");
+            addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
+            liveagent.setPosition(this.placeAtMap(odrones.getString("origin"), odrones.getArray("surface-location")));
+            liveagent.setOrientation(Compass.NORTH);
+            liveagent.Raw().encodeSensor(Sensors.NAME, liveagent.getName());
+            liveagent.Raw().encodeSensor(Sensors.ENERGY, liveagent.Raw().getAutonomy());
+            liveagent.Raw().setTarget(getThingByName("Guybrush Threepwood").getPosition());
+            liveagent.readPerceptions();
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+        }
+        return liveagent;
+    }
+
+//    public void checkStatus(liveBot agent) {
+//        boolean single = false, multiple = true, crashtotoher,
+//                crashtoground, crashtolevel, crashtoenergy, crashtoborder;
+//        if (agent == null) {
+//            return;
+//        }
+//        agent.Raw().setEnergy((int) Math.max(agent.Raw().getEnergy(), 0));
+//        crashtoenergy = agent.Raw().getEnergy() < 1;
+//        if (crashtoenergy) {
+//            agent.Raw().setStatus("Energy exhausted. ");
+//        }
+//        crashtoground = agent.getPosition().getZ() < getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(), agent.getPosition().getY());
+//        if (crashtoground) {
+//            agent.Raw().setStatus("Crash onto the ground. ");
+//        }
+//        crashtoborder = agent.getPosition().getX() < 0 || agent.getPosition().getX() >= getEnvironment().getSurface().getWidth()
+//                || agent.getPosition().getY() < 0 || agent.getPosition().getY() >= getEnvironment().getSurface().getHeight();
+//        if (crashtoborder) {
+//            agent.Raw().setStatus("Crash onto world's boundaries. ");
+//        }
+//        crashtolevel = agent.getPosition().getZ() > agent.Raw().getMaxlevel()
+//                || agent.getPosition().getZ() < agent.Raw().getMinlevel();
+//        if (crashtolevel) {
+//            agent.Raw().setStatus("Out ot operational altitude margins ");
+//        }
+//        single = (!(crashtoenergy
+//                || crashtolevel
+//                || crashtoborder
+//                //             || getEnvironment().getSurface().getStepLevel(agent.getPosition().getx, agent.getPosition().gety) == Sensor.
+//                || crashtoground));
+//        agent.Raw().setAlive(single);
+//        agent.Raw().setOntarget(isGoal(agent));
+//        agent.setCurrentDistance((int) agent.Raw().getDistance());
+//        if (agent.getInitialDistance() < 0) {
+//            agent.setInitialDistance(agent.getCurrentDistance());
+//        }
+//        
+//    }
+//
+//    public boolean isGoal(liveBot agent) {
+//        return agent.Raw().getGPSMemory().isEqualTo(agent.Raw().getTarget());
+//    }
+//    
+    public boolean execAgent(liveBot agent, String action) {
+        boolean res;
+        if (agent == null) {
+            return false;
+        }
+        if (agent.getCapabilities().indexOf(action) >= 0 && agent.Raw().getAlive()) {
+            agent.Raw().setStatus("");
+            glossary.capability enumaction = glossary.capability.valueOf(action);
+            switch (enumaction) {
+                case MOVE:
+                    agent.moveForward(1);
+//                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
+//                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
+
+                    res = true;
+                    break;
+                case LEFT:
+                    agent.rotateLeft();
+//                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
+//                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
+                    res = true;
+                    break;
+                case RIGHT:
+                    agent.rotateRight();
+//                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
+//                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
+                    res = true;
+                    break;
+                case DOWN:
+                    agent.moveDown(5);
+//                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
+//                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
+                    res = true;
+                    break;
+//                case CAPTURE:
+//                    double x = agent.getPosition().getX(),
+//                     y = agent.getPosition().getY(),
+//                     z = agent.getPosition().getZ(),
+//                     terrainz = getEnvironment().getSurface().getStepLevel(x, y);
+//                    if (z - terrainz <= 5) {
+//                        agent.moveDown((int) (z - terrainz));
+//                                            agent.burnEnergylevel((int) getBurnRate(agent.getRole())); //* (int) (z - terrainz);
+//                        agent.addEnergyBurnt ((int) getBurnRate(agent.getRole()));
+//                        agent.addNumSteps(1);
+//                        res = true;
+//                        break;
+//                    } else {
+//                        agent.Raw().setStatus("Too high to perform touchdown";
+//                        res = true;
+//                        break;
+//                    }
+                case UP:
+                    int nups;
+                    nups = 5;
+                    agent.moveUp(nups);
+//                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
+//                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
+                    res = true;
+                    break;
+                case RECHARGE:
+                    if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
+                            agent.getPosition().getY())) {
+
+                        agent.Raw().setEnergy(agent.Raw().getAutonomy());
+                        res = true;
+
+                        break;
+                    } else {
+                        agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed for it is only possible at ground level");
+                        res = true;
+                        break;
+                    }
+                case RESCUE:
+                case CAPTURE:
+//                    String whatname = isGoal(agent);
+//                    if (!whatname.equals((""))) {
+//                        Thing what = getThing(whatname);
+//                        agent.addToSensor(Sensors.CARGO, whatname);
+//                        removeThing(what);
+//                        agent.Raw().setStatus(agent.Raw().getStatus() +"Captured " + what.getName());
+//                        res = true;
+//                        break;
+//                    } else {
+//                        agent.Raw().setStatus(agent.Raw().getStatus() +"Nothing to capture here");
+//                        res = true;
+//                        break;
+//                    }
+                default:
+                    break;
+            }
+            agent.Raw().addTrace(action);
+            agent.readPerceptions();
+            if (agent.Raw().getStatus().length()>0)
+                agent.Raw().addTrace(agent.Raw().getStatus());
+            agent.Raw().setGround((int) (agent.getPosition().getZ()) - getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(), agent.getPosition().getY()));
+            if (agent.Raw().getTarget() == null) {
+                agent.Raw().setTarget(new Point3D(0, 0, 0));
+            }
+            return true;
+        } else {
+            if (agent.getCapabilities().indexOf(action) < 0) {
+                agent.Raw().addStatus("Action " + action + " not within its capabilities");
+            }
+            if (!agent.Raw().getAlive()) {
+                agent.Raw().addStatus("Agent is dead");
+            }
+            return false;
+        }
+    }
 }
 //    public JsonObject oldgetPerception(Perceptor p) {
 //        JsonObject res = new JsonObject(), owned, detected, partialres = null;

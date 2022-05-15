@@ -156,7 +156,7 @@ public class OleMap extends OleSensor {
 
                 g.setColor(OleDashBoard.cTrack);
                 ptrail = externalDecoder.getGPSVector();
-                prevTrail = externalDecoder.getPreviousGPSVector();
+                prevTrail = externalDecoder.getGPSVectorMemory(1);
 //                    ptrail = Trails.get(name).get(0);
 //                    if (Trails.get(name).size() > 1) {
 //                        prevTrail = Trails.get(name).get(1);
@@ -259,10 +259,11 @@ public class OleMap extends OleSensor {
         s = String.format("%03d%s%s", (int) sv.getSource().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + 14);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14) 
+                .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
-        g.setStroke(new BasicStroke(2));
-        this.oDrawLine(g, viewP(sv.getSource().clone().plus(new Point3D(4,0))), pLabel);
+        g.setStroke(new BasicStroke());
+        this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
     }
 

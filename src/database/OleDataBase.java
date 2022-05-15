@@ -473,7 +473,7 @@ public class OleDataBase implements ReportableObject {
     // Reporting
     //
     public String[] errorLog() {
-        return Transform.toArray(_errorLog);
+        return Transform.toArrayString(_errorLog);
     }
 
     public void reportException(Exception Ex) {

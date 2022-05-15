@@ -18,7 +18,9 @@ import disk.Logger;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -29,11 +31,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
 import messaging.ACLMessageTools;
 import messaging.SequenceDiagram;
 import swing.OleAgentTile;
@@ -106,8 +110,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     OleAgentTile externalTile;
     OleToolBar externalTB;
     OleButton olbContinue, olbPause, olbNext, olbUntil;
-    protected int nUntil, iUntil = 0, frameDelay=0;
+    protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
+
+    public double Reward(Environment E) {
+        return E.getDistance();
+    }
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -122,9 +130,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected DecisionSet Prioritize(Environment E, DecisionSet A) {
         for (Choice a : A) {
-            if (a.getName().equals("IDLE") && Va(E, a)) {
-                a.setUtility(Choice.MAX_UTILITY / 1000);
-            } else if (Va(E, a)) {
+            if (Va(E, a)) {
                 a.setUtility(U(T(E, a)));
             } else {
                 a.setUtility(Choice.MAX_UTILITY);
@@ -136,15 +142,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected Environment T(Environment E, Choice a) {
-        if (Va(E, a)) {
-            return E.simmulate(a);
-        } else {
+        if (!Ve(E)) {
             return null;
+        } else {
+            return E.simmulate(a);
         }
     }
 
     protected double U(Environment E) {
-        return Choice.MAX_UTILITY;
+        if (!Ve(E)) {
+            return Choice.MAX_UTILITY;
+        } else if (E.getOntarget()) {
+            return -1000;
+        } else {
+            return Reward(E);
+        }
     }
 
     protected boolean Va(Environment E, Choice a) {
@@ -152,11 +164,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean Ve(Environment E) {
+        if (E == null || E.isCrahsed()) {
+            return false;
+        }
         return true;
+
     }
 
     protected boolean G(Environment E) {
-        return false;
+        if (!Ve(E)) {
+            return false;
+        }
+        return E.getOntarget();
     }
 
     /**
@@ -201,8 +220,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         SWaitButtons = new Semaphore(0);
         E = new Environment();
-        if (showRemote)
+        if (showRemote) {
             openRemote();
+        }
     }
 
     @Override
@@ -270,7 +290,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     sensorList.add(sensor.toUpperCase());
                 }
             }
-            res = Transform.toArray(sensorList);
+            res = Transform.toArrayString(sensorList);
         }
         return res;
     }
@@ -286,11 +306,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (remote) {
             closeRemote();
         }
-        if (problemName != null) {
-            this.saveSequenceDiagram(problemName + ".seqd");
-        } else {
-            this.saveSequenceDiagram(getName() + ".seqd");
-        }
+//        if (problemName != null) {
+//            this.saveSequenceDiagram(problemName + ".seqd");
+//        } else {
+//            this.saveSequenceDiagram(getName() + ".seqd");
+//        }
         super.takeDown();
     }
 
@@ -515,13 +535,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getDeepPerceptions().feedPerception(res.getContent());
+                E.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -548,13 +568,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getDeepPerceptions().feedPerception(res.getContent());
+                E.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -578,13 +598,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getDeepPerceptions().feedPerception(res.getContent());
+                E.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -609,13 +629,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
                 int maxlevel = ocontent.getInt("maxflight");
-                E.getDeepPerceptions().setWorldMap(ofile.toString(), maxlevel);
+                E.setWorldMap(ofile.toString(), maxlevel);
                 if (!getLocalName().startsWith("XUI")) {
                     repeat = true;
                 }
             }
             if (res != null && res.getContent().contains("perceptions")) {
-                E.getDeepPerceptions().feedPerception(res.getContent());
+                E.feedPerception(res.getContent());
                 repeat = false;
             }
         } while (repeat);
@@ -924,29 +944,42 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
         externalTB = externalTile.getExternalToolBar();
         externalTB.removeAllButtons();
-        int sizeButtons = 25;
+        int sizeButtons = 24;
         olbContinue = new OleButton(parentApp, "CONTINUE", "play_circle");
         olbContinue.setExtraFlat();
+        olbContinue.setBorderPainted(true);
+        olbContinue.setContentAreaFilled(true);
         olbContinue.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbContinue.addActionListener(this);
         externalTB.addButton(olbContinue);
 
         olbPause = new OleButton(parentApp, "PAUSE", "pause_circle");
+//        olbPause.setExtraFlat();
         olbPause.setExtraFlat();
+        olbPause.setBorderPainted(true);
+        olbPause.setContentAreaFilled(true);
         olbPause.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbPause.addActionListener(this);
         externalTB.addButton(olbPause);
 
         olbNext = new OleButton(parentApp, "NEXT", "not_started");
         olbNext.setExtraFlat();
+        olbNext.setBorderPainted(true);
+        olbNext.setContentAreaFilled(true);
         olbNext.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbNext.addActionListener(this);
         externalTB.addButton(olbNext);
         olbUntil = new OleButton(parentApp, "UNTIL", "history");
         olbUntil.setExtraFlat();
+        olbUntil.setBorderPainted(true);
+        olbUntil.setContentAreaFilled(true);
         olbUntil.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbUntil.addActionListener(this);
         externalTB.addButton(olbUntil);
+        this.olbContinue.setEnabled(true);
+        this.olbNext.setEnabled(true);
+        this.olbPause.setEnabled(false);
+        this.olbUntil.setEnabled(true);
 
         remote = true;
     }
@@ -957,12 +990,24 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             case "CONTINUE":
                 this.SWaitButtons.release();
                 this.cont = true;
+                this.olbContinue.setEnabled(false);
+                this.olbNext.setEnabled(false);
+                this.olbPause.setEnabled(true);
+                this.olbUntil.setEnabled(false);
                 break;
             case "PAUSE":
                 this.SWaitButtons.release();
                 this.cont = false;
+        this.olbContinue.setEnabled(true);
+        this.olbNext.setEnabled(true);
+        this.olbPause.setEnabled(false);
+        this.olbUntil.setEnabled(true);
                 break;
             case "NEXT":
+        this.olbContinue.setEnabled(true);
+        this.olbNext.setEnabled(true);
+        this.olbPause.setEnabled(false);
+        this.olbUntil.setEnabled(true);
                 this.SWaitButtons.release();
                 break;
             case "UNTIL":

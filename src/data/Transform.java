@@ -117,12 +117,41 @@ public class Transform {
         return Arrays.asList(o);
     }
 
-    public static String[] toArray(ArrayList<String> al) {
-        return al.toArray(new String[al.size()]);
+    public static String[] toArrayString(ArrayList<String> al) {
+        String res[] = new String[al.size()];
+        for (int i=0; i< al.size(); i++) {
+            res[i] = al.get(i);
+        }
+        return res;
+    }
+    public static double[] toArrayDouble(ArrayList<Double> al) {
+        double res[] = new double[al.size()];
+        for (int i=0; i< al.size(); i++) {
+            res[i] = al.get(i);
+        }
+        return res;
     }
 
-//    public static Object[] toArray (ArrayList<Object> al) {
-//       return al.toArray(new Object[al.size()]);
+    public static String[] toArrayString(JsonArray al) {
+        String res[] = new String[al.size()];
+        for (int i=0; i< al.size(); i++) {
+            res[i] = al.get(i).asString();
+        }
+        return res;
+    }
+ 
+    public static double[] toArrayDouble(JsonArray al) {
+        double res[] = new double[al.size()];
+        for (int i=0; i< al.size(); i++) {
+            res[i] = al.get(i).asDouble();
+        }
+        return res;
+    }
+ 
+
+
+//    public static Object[] toArrayString (ArrayList<Object> al) {
+//       return al.toArrayString(new Object[al.size()]);
 //    }
     public static ArrayList<String> getAllNames(Class<? extends Enum<?>> e) {
         String aux[] = Arrays.stream(e.getEnumConstants()).map(Enum::name).toArray(String[]::new);

@@ -9,6 +9,5 @@ package glossary;
  * List of all the capabilities an agent might have.<p>
  */
 
-public enum Roles{FIGHTER, CORELLIAN, DESTROYER, RAZOR, NONE}
-
+public enum Roles{FIGHTER, CORELLIAN, DESTROYER, RAZOR, NONE, LightT, HeavyT, LightM, HeavyM, LightH, HeavyH, LightA, HeavyA}
 

@@ -750,7 +750,8 @@ public class LARVABoot {
                 _tiles.get(name).doActivate();
             }
         }
-        if (_tiles.get(_xuiName) == null) {
+        if (this.oleConfig.getTab("Display").getBoolean("Open XUI",false) &&
+                _tiles.get(_xuiName) == null) {
             if (oPassport != null) {
                 launchAgent(_xuiName, XUIAgent.class);
             }

@@ -230,32 +230,36 @@ public class OleHud extends OleSensor {
 
         g.setClip(viewPort);
         Color cTile, cBackground, cStroke;
-        int iGround, lTile, tTile;
+        int iGround, lTile, tTile, stroke;
         if (hudView != null && externalDecoder.getPolarVisual() != null) {
             for (int level = 0; level < nLevels; level++) {
                 nTiles = (level) * 4 + 1;
                 for (int tile = 0; tile < nTiles; tile++) {
                     lTile = externalDecoder.getPolarVisual()[tile][level];
                     tTile = externalDecoder.getPolarThermal()[tile][level];
+                    stroke=1;
                     if (lTile >= 0) {
                         cTile = new Color(lTile, lTile, lTile);
                     } else {
                         cTile = OleDashBoard.cBad;
                     }
                     iGround = lTile;
-
-                    if (tTile == 0) {
+//
+                    if (tTile > 0) {
                         cStroke = OleDashBoard.cGoal;
-                        cBackground = cStroke;
-                    } else if (iGround < 0) {
+                        cBackground = cTile;
+                        stroke=2;
+                    }else 
+                        if (iGround < 0) {
                         cStroke = OleDashBoard.cBad;
                         cBackground = OleDashBoard.cBad;
-                    } else if (iGround > externalDecoder.getMaxlevel()) {
+                    } else if (iGround > externalDecoder.getMaxlevel() || iGround < externalDecoder.getMinlevel()) {
                         cStroke = OleDashBoard.cBad;
                         cBackground = OleDashBoard.cBad;
                     } else if (iGround > externalDecoder.getAltitude()) {
                         cStroke = OleDashBoard.cBad;
                         cBackground = cTile;
+                        stroke=2;
                     } else {
                         cStroke = cTile;
                         cBackground = cTile;
@@ -266,7 +270,7 @@ public class OleHud extends OleSensor {
                     g.setColor(cBackground);
                     g.fill(hudView[level][tile]);
                     g.setColor(cStroke);
-                    g.setStroke(new BasicStroke(1));
+                    g.setStroke(new BasicStroke(stroke));
                     g.draw(hudView[level][tile]);
                     g.setStroke(new BasicStroke(1));
                 }
@@ -402,7 +406,7 @@ public class OleHud extends OleSensor {
 //                }
 //                this.addTerrain(tx + x, d[p][x], -1, externalDecoder.getMaxlevel());
 //            }
-            if (tx == 0 || externalDecoder.getGPSPosition(1).planeDistanceTo(externalDecoder.getGPSPosition(0)) > 0) {
+            if (tx == 0 || externalDecoder.getGPSMemory(1).planeDistanceTo(externalDecoder.getGPS()) > 0) {
                 this.addTerrain(1, (int) (externalDecoder.getAltitude() - externalDecoder.getGround()), (int) externalDecoder.getAltitude(), externalDecoder.getMaxlevel());
             } else {
                 this.addTerrain(0, (int) (externalDecoder.getAltitude() - externalDecoder.getGround()), (int) externalDecoder.getAltitude(), externalDecoder.getMaxlevel());
