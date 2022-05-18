@@ -20,6 +20,7 @@ import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 import data.Ole;
 import data.OleConfig;
+import data.Transform;
 import geometry.PolarSurface;
 import geometry.SimpleVector3D;
 import glossary.Sensors;
@@ -40,9 +41,9 @@ import world.Thing.PROPERTY;
  * @author lcv
  */
 public class World {
-
+    
     protected Thing _environment;
-    protected HashMap<String, Thing> _population;
+    protected ThingSet _population;
     protected HashMap<PROPERTY, ArrayList<Thing>> _visibility;
     protected Ontology _ontology;
     protected String name, spalette;
@@ -53,10 +54,10 @@ public class World {
     protected String[][] filter, filterHQ, filterDLX;
     static int range = 41, cx = range / 2, cy = cx;
     int maxflight;
-
+    
     public World(String name) {
         this.name = name;
-        _population = new HashMap();
+        _population = new ThingSet();
         _visibility = new HashMap<>();
         _ontology = new Ontology().add("THING", Ontology.ROOT).add("ENVIRONMENT", "THING").add("OBJECT", "THING");
         filter = new String[range][range];
@@ -103,31 +104,31 @@ public class World {
             }
         }
     }
-
+    
     protected boolean filterReading(int x, int y, int range, int orientation) {
         return filter[cx + x - range / 2][cy + y - range / 2].contains("." + orientation + ".");
     }
-
+    
     public String getSurfaceName() {
         return _surfaceName;
     }
-
+    
     public void setSurfaceName(String surface) {
         this._surfaceName = surface;
     }
-
+    
     public String getName() {
         return this.name;
     }
-
-    public Point3D placeAtMap(String where, ArrayList<Double> pos) {
+    
+    public Point3D placeAtMap(String where, Point3D initial) {
         Point3D res = new Point3D(0, 0, 0);
         int width = this.getEnvironment().getSurface().getWidth(),
                 height = this.getEnvironment().getSurface().getHeight();
         switch (where) {
             case "choice":
-                res.setX(pos.get(0));
-                res.setY(pos.get(1));
+                res.setX(initial.getX());
+                res.setY(initial.getY());
                 break;
             case "middle":
                 res.setX(width / 2);
@@ -175,14 +176,13 @@ public class World {
         } else {
             return new Point3D(0, 0, this.getEnvironment().getSurface().getStepLevel(0, 0));
         }
-
+        
     }
-
+    
     public void saveConfig(String worldconfigfilename) {
         JsonArray jsa = new JsonArray();
         JsonObject jso = null;
-        for (String name : this.getAllThingsName("object")) {
-            Thing t = this.getThingByName(name);
+        for (Thing t : _population.getAllThings()) {
             jso = new JsonObject();
             jso.add("name", t.getName());
             jso.add("type", t.getType());
@@ -202,7 +202,7 @@ public class World {
         cfg.get("world").asObject().set("things", jsa);
         cfg.saveAsFile(".", worldconfigfilename, true);
     }
-
+    
     public String loadConfig(String worldconfigfilename) {
         Ole ocfg = new Ole().loadFile(worldconfigfilename);
         cfg = new OleConfig(ocfg);
@@ -216,6 +216,7 @@ public class World {
                 for (String oclass : oaux.getFieldList()) {
                     this.getOntology().add(oclass, oaux.getField(oclass));
                 }
+                this.setOntology(this.getOntology());
                 oaux = cfg.getOle("world");
                 Thing e = setEnvironment(oaux.getField(name)).getEnvironment();
                 e.setPosition(new Point3D(0, 0, 0));
@@ -229,21 +230,18 @@ public class World {
                         this._environment._surface.getHeight(), 0));
                 this.removeAllThings();
                 oThings = oaux.get("things").asArray();
-                for (Ole othing : new ArrayList<Ole>(oaux.getArray("things"))) {
-                    ArrayList<String> properties = othing.getArray("properties");
+                for (JsonValue jsvthing : oaux.get("things").asArray()) {
+                    JsonObject jsothing=jsvthing.asObject();
+                    ArrayList<String> properties = new ArrayList(Transform.toArrayListString(jsothing.get("properties").asArray()));
                     PROPERTY[] props = new PROPERTY[properties.size()];
                     for (int i = 0; i < properties.size(); i++) {
                         props[i] = PROPERTY.valueOf(properties.get(i).toUpperCase());
                     }
-                    e = new Thing(othing.getField("name"), this);
-                    e.setType(othing.getField("type"));
-                    e.setHasAirport(othing.getBoolean("hasairport", false));
-                    e.setHasPort(othing.getBoolean("hasport", false));
-                    e.setHasHeliport(othing.getBoolean("hasheliport", false));
+                    e = new Thing("");
+                    e.fromJson(jsothing);
                     this.addThing(e, props);
-                    ArrayList<Double> auxp = othing.getArray("surface-location");
-                    String where = (othing.getField("origin").equals("")) ? "choice" : othing.getField("origin");
-                    Point3D eposition = this.placeAtMap(where, auxp);
+                    String where = (jsothing.getString("origin","").equals("")) ? "choice" : jsothing.getString("origin","");
+                    Point3D eposition = this.placeAtMap(where, e.getPosition());
                     e.setPosition(eposition);
 //                    if (auxp.get(0) < 0 || auxp.get(1) < 0) {
 //                        int rx, ry;
@@ -270,20 +268,21 @@ public class World {
         }
         return "Empty configuration";
     }
-
+    
     public OleConfig getConfig() {
         return this.cfg;
     }
-
+    
     public World setOntology(Ontology o) {
         _ontology = o;
+        this._population.setOntology(_ontology);
         return this;
     }
-
+    
     public Ontology getOntology() {
         return _ontology;
     }
-
+    
     public World setEnvironment(String name) {
         _environment = addThing(name, "ENVIRONMENT",
                 new PROPERTY[]{PROPERTY.SURFACE, PROPERTY.POSITION, PROPERTY.ORIENTATION});
@@ -291,37 +290,37 @@ public class World {
         _environment.setOrientation(Compass.NORTH);
         return this;
     }
-
+    
     public Thing getEnvironment() {
         return _environment;
     }
-
+    
     public Thing addThing(Thing i, PROPERTY[] visible) {
-        if (i.getPosition() == null) {
-            if (!i.getType().equals("ENVIRONMENT")) {
-                i.setPosition(getEnvironment().getPosition());
-                i.setOrientation(getEnvironment().getOrientation());
-            }
-        }
-        if (i.getSize() == null) {
-            i.setSize(new Point3D(1, 1, 0));
-        }
-        _population.put(i.getId(), i);
+//        if (i.getPosition() == null) {
+//            if (!i.getType().equals("ENVIRONMENT")) {
+//                i.setPosition(getEnvironment().getPosition());
+//                i.setOrientation(getEnvironment().getOrientation());
+//            }
+//        }
+//        if (i.getSize() == null) {
+//            i.setSize(new Point3D(1, 1, 0));
+//        }
+        _population.addThing(i);
         for (int ch = 0; ch < visible.length; ch++) {
-            addVisible(visible[ch], i);
+            addVisibility(visible[ch], i);
         }
         return i;
     }
-
+    
     public void removeAllThings() {
         _population.clear();
 //        for (PROPERTY p : _visibility.keySet()) {
 //            _visibility.put(p, new ArrayList());
 //        }
     }
-
+    
     public void removeThing(Thing i) {
-        _population.remove(i.getId());
+        _population.removeThing(i);
         for (PROPERTY p : PROPERTY.values()) {
             if (this._visibility.get(p) != null
                     && this._visibility.get(p).contains(i)) {
@@ -329,87 +328,54 @@ public class World {
             }
         }
     }
-
-    public Thing addThing(String name, PROPERTY[] visible) {
-        return addThing(name, _ontology.getRootType(), visible);
-    }
-
+    
     public Thing addThing(String name, String type, PROPERTY[] visible) {
         Thing i = new Thing(name, this);
         i.setType(type);
         return addThing(i, visible);
     }
-
+    
     public Thing getThing(String id) {
-        return _population.get(id);
+        return _population.getThing(name);
     }
-
-    public Thing getThingByName(String name) {
-        Thing res = null;
-        for (Thing t : _population.values()) {
-            if (t.getName().equals(name)) {
-                res = t;
-            }
-        }
-        return res;
-    }
-
+   
+    
     public boolean findThing(String id) {
-        return _population.containsKey(id);
+        return _population.getAllNames().contains(id);
     }
 
-    public Set<String> listThings() {
-        return _population.keySet();
+    public ArrayList<Thing> splitListAllThings(String type){
+        return _population.splitListByType(type);
     }
-
-    public ArrayList<String> getAllThingsId(String type) {
-        ArrayList<String> list = new ArrayList<>();
-        for (String s : _population.keySet()) {
-            Thing t = this.getThing(s);
-            if (this.getOntology().isSubTypeOf(t.getType(), type)) {
-                list.add(s);
-            }
-        }
-        Collections.sort(list);
-        return list;
+   
+    public ThingSet splitSetAllThings(String type){
+        return _population.splitSetByType(type);
     }
-
-    public ArrayList<String> getAllThingsName(String type) {
-        ArrayList<String> list = new ArrayList<>();
-        for (String s : _population.keySet()) {
-            Thing t = this.getThing(s);
-            if (this.getOntology().isSubTypeOf(t.getType(), type)) {
-                list.add(t.getName());
-            }
-        }
-        Collections.sort(list);
-        return list;
-    }
-
-    public World addVisible(PROPERTY c, Thing t) {
+   
+    public World addVisibility(PROPERTY c, Thing t) {
         if (_visibility.get(c) == null) {
             _visibility.put(c, new ArrayList<>());
         }
         _visibility.get(c).add(t);
         return this;
     }
-
-    public ArrayList<Thing> getDetectableList(Perceptor p) {
+    
+    public ThingSet getDetectableList(Perceptor p) {
         PROPERTY property = p.getProperty();
         String type = p.getType();
         Thing who = p.getOwner();
-        ArrayList<Thing> detectable = new ArrayList<>();
+        ThingSet detectable = new ThingSet();
 
         // Intern sensors only perceive oneself
         if (p.getSelection() == SELECTION.INTERN) {
-            detectable.add(who);
+            detectable.addThing(who);
             return detectable;
         }
         // An Thing is detectable if the propoerty of the sensor is
         // visible on it and is the detected type
         for (Thing t : _visibility.get(property)) {
             if (!t.equals(who) && _ontology.matchTypes(t.getType(), type)) {
-                detectable.add(t);
+                detectable.addThing(t);
             }
         }
         // Sometimes only the closest Thing is detected
@@ -417,9 +383,9 @@ public class World {
             Point3D mypos = p.getOwner().getPosition();
             Point3D yourpos;
             double shortest = Double.MAX_VALUE, distance;
-            Thing best = null, ti;
-            for (int i = 0; i < detectable.size(); i++) {
-                ti = detectable.get(i);
+            Thing best = null;
+//            for (int i = 0; i < detectable.size(); i++) {
+            for (Thing ti :detectable.getAllThings()) {
                 yourpos = ti.getPosition();
                 distance = mypos.planeDistanceTo(yourpos);
                 if (distance < shortest) {
@@ -428,11 +394,11 @@ public class World {
                 }
             }
             detectable.clear();
-            detectable.add(best);
+            detectable.addThing(best);
         }
         return detectable;
     }
-
+    
     public JsonObject getPerception(Perceptor p) {
         JsonObject res = new JsonObject(), owned, detected, partialres = null;
         JsonArray allreadings = new JsonArray(), xyreading, rowreading, coordinates = new JsonArray();
@@ -441,7 +407,7 @@ public class World {
         PROPERTY property = p.getProperty();
         OPERATION operation = p.getOperation();
         ATTACH attachment = p.getAttachment();
-        ArrayList<Thing> detectable = getDetectableList(p);
+        ArrayList<Thing> detectable = getDetectableList(p).getAllThings();
         Point3D point;
         Point3D pini, pend;
         SimpleVector3D vectororientation;
@@ -503,7 +469,7 @@ public class World {
                                 } else {
                                     partialres = new JsonObject().add("value", 0);
                                 }
-
+                                
                             }
                             if (property == PROPERTY.SURFACE) {
                                 int value = t.getSurface().getStepLevel(observable.getX(), observable.getY());
@@ -540,7 +506,7 @@ public class World {
                             if (property == PROPERTY.ORIENTATION) {
                                 partialres = new JsonObject().add("value", Compass.VECTOR[Compass.NORTH].angleXYTo(who.getVector()));
                             }
-
+                            
                         }
                         if (_godmode || p.getName().contains("_GOD_")) {
                             xyreading.add(partialres.merge(new JsonObject().add("name", t.getName())));
@@ -615,15 +581,15 @@ public class World {
             return res.add("sensor", p.getName()).add("data", allreadings);
         }
     }
-
+    
     public String getSpalette() {
         return spalette;
     }
-
+    
     boolean isInside(int x, int y) {
         return (Math.pow(x - cx, 2) + Math.pow(y - cy, 2)) <= Math.pow(cx, 2);
     }
-
+    
     boolean mainD(int x, int y) {
         return x == y;
     }
@@ -638,53 +604,54 @@ public class World {
     boolean right(int x, int y) {
         return x >= cx;
     }
-
+    
     boolean left(int x, int y) {
         return x <= cx;
     }
-
+    
     boolean top(int x, int y) {
         return y <= cy;
     }
-
+    
     boolean bottom(int x, int y) {
         return y >= cy;
     }
-
+    
     boolean invD(int x, int y) {
         return x == range - y;
     }
-
+    
     boolean halfSup(int x, int y) {
         return x > y || mainD(x, y);
     }
-
+    
     boolean halfInf(int x, int y) {
         return mainD(x, y) || !halfSup(x, y);
     }
-
+    
     boolean halfSupInv(int x, int y) {
         return x < range - y || invD(x, y);
     }
-
+    
     boolean halfInfInv(int x, int y) {
         return invD(x, y) || !halfSupInv(x, y);
     }
-
+    public Thing getThingByName(String name) {
+        return _population.getThing(name);
+    }
     public ArrayList<String> getAllThingsNear(String from, String type, int radius) {
         ArrayList<String> res = new ArrayList();
-        Thing tfrom, tto;
+        Thing tfrom;
         tfrom = this.getThingByName(from);
-        for (String sto : this.getAllThingsName(type)) {
-            tto = this.getThingByName(sto);
+        for (Thing tto : _population.splitListByType(type)) {
             if (tfrom.getPosition().realDistanceTo(tto.getPosition()) <= radius) {
-                res.add(sto);
+                res.add(tto.getName());
             }
         }
         Collections.sort(res);
         return res;
     }
-
+    
     public liveBot registerAgent(String name, String type, Sensors[] attach) {
         liveBot liveagent = null;
         try {
@@ -743,7 +710,7 @@ public class World {
             }
             Ole odrones = getConfig().getOle("drones");
             addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
-            liveagent.setPosition(this.placeAtMap(odrones.getString("origin"), odrones.getArray("surface-location")));
+            liveagent.setPosition(this.placeAtMap(odrones.getString("origin",""), new Point3D(odrones.get("surface-location").asArray())));
             liveagent.setOrientation(Compass.NORTH);
             liveagent.Raw().encodeSensor(Sensors.NAME, liveagent.getName());
             liveagent.Raw().encodeSensor(Sensors.ENERGY, liveagent.Raw().getAutonomy());
@@ -755,6 +722,9 @@ public class World {
         return liveagent;
     }
 
+ 
+    
+    
 //    public void checkStatus(liveBot agent) {
 //        boolean single = false, multiple = true, crashtotoher,
 //                crashtoground, crashtolevel, crashtoenergy, crashtoborder;
@@ -860,10 +830,10 @@ public class World {
                 case RECHARGE:
                     if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
                             agent.getPosition().getY())) {
-
+                        
                         agent.Raw().setEnergy(agent.Raw().getAutonomy());
                         res = true;
-
+                        
                         break;
                     } else {
                         agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed for it is only possible at ground level");
@@ -890,8 +860,9 @@ public class World {
             }
             agent.Raw().addTrace(action);
             agent.readPerceptions();
-            if (agent.Raw().getStatus().length()>0)
+            if (agent.Raw().getStatus().length() > 0) {
                 agent.Raw().addTrace(agent.Raw().getStatus());
+            }
             agent.Raw().setGround((int) (agent.getPosition().getZ()) - getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(), agent.getPosition().getY()));
             if (agent.Raw().getTarget() == null) {
                 agent.Raw().setTarget(new Point3D(0, 0, 0));

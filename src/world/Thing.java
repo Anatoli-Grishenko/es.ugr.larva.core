@@ -10,6 +10,7 @@ import geometry.Point3D;
 import map2D.Map2DColor;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import data.Transform;
 import geometry.Compass;
 import glossary.Sensors;
 import java.util.ArrayList;
@@ -28,9 +29,9 @@ public class Thing extends Entity3D {
     protected World _refWorld;
     protected Map2DColor _surface;
     protected ArrayList<Point3D> trail;
-    protected String _type;
+    protected String _type = "", _belongsTo = "";
     protected ArrayList<Perceptor> _rawSensors;
-    protected boolean hasHeliport, hasPort, hasAirport, isCity, isMountain, isArea;
+    protected boolean hasHeliport = false, hasPort = false, hasAirport = false, isCity, isMountain, isArea;
     protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
     protected SensorDecoder myPerceptions;
 
@@ -78,12 +79,12 @@ public class Thing extends Entity3D {
         return this;
     }
 
-    public JsonObject getPerceptions() {     
+    public JsonObject getPerceptions() {
 //        System.out.println("Agent "+this.getName()+" querying "+Raw().indexperception.size()+" perceptions");
         return this.Raw().toJson();
     }
 
-    public void readPerceptions() {     
+    public void readPerceptions() {
         JsonArray res = new JsonArray();
         JsonObject reading;
 //        System.out.println("Agent "+this.getName()+" reading "+_rawSensors.size()+" perceptions ");
@@ -92,7 +93,7 @@ public class Thing extends Entity3D {
                 reading = s.getReading();
                 res.add(reading);
 //                System.out.println("     Agent "+this.getName()+" reading sensor " + s.getName()+" = "+reading.toString());
-            } 
+            }
 //            else
 //                System.out.println("*****Agent "+this.getName()+" reading sensor " + s.getName()+" error");
         }
@@ -112,18 +113,32 @@ public class Thing extends Entity3D {
         res.add("name", this.getName());
         res.add("type", this.getType());
         res.add("position", this.getPosition().toString());
+        res.add("surface-location", Transform.Matrix2JsonArray(this.getPosition().to2D().toArray()));
         if (this.getType().toUpperCase().equals("AGENT")) {
             res.add("orientation", this.getOrientation());
             res.merge(this.getPerceptions());
         }
+        res.add("properties", new JsonArray());
+        res.add("hasport", this.isHasPort());
+        res.add("hasairport", this.isHasAirport());
+        res.add("belongs", this.getBelongsTo());
         return res;
     }
 
     public void fromJson(JsonObject o) {
         this.setName(o.getString("name", ""));
         this.setType(o.getString("type", ""));
-        this.setPosition(new Point3D(o.getString("position", "")));
+        this.setBelongsTo(o.getString("belongs", ""));
+        if (o.get("position")!=null) {
+            this.setPosition(new Point3D(o.getString("position", "")));
+        } else {
+            if (o.get("surface-location")!=null) {
+                this.setPosition(new Point3D(o.get("surface-location").asArray()));
+            }
+        }
         this.setOrientation(o.getInt("orientation", Compass.NORTH));
+        this.setHasPort(o.getBoolean("hasport", false));
+        this.setHasAirport(o.getBoolean("hasairport", false));
     }
 
     @Override
@@ -158,4 +173,13 @@ public class Thing extends Entity3D {
     public SensorDecoder Raw() {
         return this.myPerceptions;
     }
+
+    public String getBelongsTo() {
+        return _belongsTo;
+    }
+
+    public void setBelongsTo(String _belongsTo) {
+        this._belongsTo = _belongsTo;
+    }
+
 }

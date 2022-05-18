@@ -5,6 +5,7 @@
  */
 package geometry;
 
+import Environment.Environment;
 import com.eclipsesource.json.JsonObject;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -27,8 +28,10 @@ import swing.OleSensor;
 import swing.SwingTools;
 import swing.TextFactory;
 import tools.emojis;
+import world.ThingSet;
 import world.Perceptor;
 import world.SensorDecoder;
+import world.Thing;
 
 /**
  *
@@ -40,13 +43,13 @@ public class OleMap extends OleSensor {
     protected Polygon hudView[][];
     protected int narrow = 37, margin = 22;
     protected Polygon p;
-    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 7;
+    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 10;
     protected boolean showTrail;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
     protected double stepRadius, stepAngle;
     protected AngleTransporter at;
-    protected SensorDecoder externalDecoder;
+    protected Environment externalDecoder;
     protected ArrayList<Map2DColor> sprites;
 
     public OleMap(OleDrawPane parent, String name) {
@@ -130,7 +133,6 @@ public class OleMap extends OleSensor {
             drawLineRuler(g, screenPort, 10);
             for (String name : Trails.keySet()) {
                 if (this.isShowTrail()) {
-
                     for (int i = 1; i < Trails.get(name).size(); i++) {
                         ptrail = Trails.get(name).get(i);
                         if ((this.externalDecoder.getNSteps() - i) % 5 == 0) {
@@ -141,8 +143,12 @@ public class OleMap extends OleSensor {
 //                            this.oDrawCounter(g, String.format("%03d", this.externalDecoder.getNSteps()-i),
 //                                    viewP(ptrail.getSource()),30, SwingConstants.CENTER, SwingConstants.CENTER);
                         }
-                        c = map.getColor(ptrail);
-                        g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                        if (this.getTrailSize() > 25) {
+                            c = map.getColor(ptrail);
+                            g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                        } else {
+                            g.setColor(Color.GREEN);
+                        }
                         g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
 //                        if (scale < 7) {
 //                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
@@ -181,9 +187,32 @@ public class OleMap extends OleSensor {
                 g.setStroke(new BasicStroke(1));
                 this.traceLabel(g, ptrail, prevTrail, 25, name, viewPort);
             }
-            for (int i = 0; i < jsaGoals.size(); i++) {
-                paintGoalMap(g, jsaGoals.get(i).asObject());
+            if (externalDecoder.getCourse() != null) {
+                Point3D pWaypoint = null;
+                g.setColor(OleDashBoard.cAngle);
+                g.setStroke(new BasicStroke(1));
+                for (int i = 0; i < externalDecoder.sizeCourse(); i++) {
+                    pWaypoint = externalDecoder.getCourse(i);
+                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, externalDecoder.getCompass() / 45), nRows, WIDTH));
+
+                }
+
             }
+//            if (externalDecoder.getCadastre() != null) {
+//                Point3D pCity = null;
+//                ThingSet cad = externalDecoder.getCadastre();
+//                for (String scity : cad.listCities()) {
+//                    this.paintCity(g, cad.getCity(scity));
+//                }
+//
+//            }
+//            if (externalDecoder.getCensus() != null) {
+//                Point3D pCity = null;
+//                Census reg = externalDecoder.getCensus();
+//                for (String sperson : reg.listPeople()) {
+//                    this.paintPeople(g, reg.getPerson(sperson));
+//                }
+//            }
             g.setClip(null);
         }
 
@@ -211,6 +240,32 @@ public class OleMap extends OleSensor {
         int diam1 = 6, diam2 = diam1 / 2;
         g.setColor(OleDashBoard.cGoal);
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
+    }
+
+    protected void paintCity(Graphics2D g, Thing t) {
+        Point3D p3d = t.getPosition();
+        g.setColor(OleDashBoard.cAngle);
+        g.setStroke(new BasicStroke(1));
+        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, externalDecoder.getCompass() / 45), 6, 3));
+        tf = new TextFactory(g);
+        tf.setsText(t.getName());
+        tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
+                .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
+                .setFontSize(12).validate();
+        tf.draw();
+    }
+
+    protected void paintPeople(Graphics2D g, Thing t) {
+        Point3D p3d = t.getPosition();
+        g.setColor(OleDashBoard.cDistance);
+        g.setStroke(new BasicStroke(1));
+        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, externalDecoder.getCompass() / 45), 3, 3));
+        tf = new TextFactory(g);
+        tf.setsText(t.getName());
+        tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
+                .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
+                .setFontSize(12).validate();
+        tf.draw();
     }
 
     public void traceLabel(Graphics2D g, SimpleVector3D sv, SimpleVector3D prevsv, int length, String name, Rectangle viewPort) {
@@ -259,7 +314,7 @@ public class OleMap extends OleSensor {
         s = String.format("%03d%s%s", (int) sv.getSource().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + 14);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14) 
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
         g.setStroke(new BasicStroke());

@@ -5,6 +5,7 @@
  */
 package swing;
 
+import Environment.Environment;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -50,7 +51,7 @@ public class OleDashBoard extends OleDrawPane {
     public ArrayList<String> layoutSensors;
 
     protected Component myParent;
-    public SensorDecoder decoder;
+    public Environment decoder;
     OleSemiDial osAltitude, osBattery;
     OleSensor osGround;
     OleRotatory orCompass1;
@@ -75,7 +76,7 @@ public class OleDashBoard extends OleDrawPane {
         mySensorsVisual = new HashMap();
         myExternalSensor = new HashMap();
         layoutSensors = new ArrayList();
-        decoder = new SensorDecoder();
+        decoder = new Environment();
         this.setLayout((LayoutManager) null);
         agentName = nameagent;
         availableDashBoard = false;
@@ -595,10 +596,10 @@ public class OleDashBoard extends OleDrawPane {
             availableDashBoard = true;
             this.feedPerception(content);
             res = false;
-        } else if (content.contains("goals")) {
-//            System.out.println("DashBoard goals");
-            this.feedGoals(content);
-            res = false;
+        } else if (content.contains("cities")) {
+           decoder.setExternalThings(content);
+        }else if (content.contains("people")) {
+           decoder.setExternalThings(content);
         }
         this.repaint();
 
@@ -703,13 +704,14 @@ public class OleDashBoard extends OleDrawPane {
     }
 
     public void feedGoals(String goals) {
-        try {
-            JsonObject jso = Json.parse(goals).asObject();
-            mySensorsVisual.get("MAP").setJsaGoals(jso.get("goals").asArray());
-            mySensorsVisual.get("AUX").setJsaGoals(jso.get("goals").asArray());
-        } catch (Exception ex) {
-
-        }
+//        try {
+//            JsonObject jso = Json.parse(goals).asObject();
+//            mySensorsVisual.get("MAP").setJsaGoals(jso.get("goals").asArray());
+//            mySensorsVisual.get("AUX").setJsaGoals(jso.get("goals").asArray());
+//            decoder.findCourseTo(new Point3D(10,0,decoder.getAltitude()));
+//        } catch (Exception ex) {
+//
+//        }
     }
 
     public boolean isShowTrail() {

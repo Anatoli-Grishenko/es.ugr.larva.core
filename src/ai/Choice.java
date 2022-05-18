@@ -15,6 +15,7 @@ import java.util.ArrayList;
 public class Choice implements Comparable {
 
     public static final double MIN_UTILITY = Integer.MIN_VALUE, MAX_UTILITY = Integer.MAX_VALUE;
+    public static boolean increasing = true;
     String name;
     double utility, g, h;
     boolean valid;
@@ -25,9 +26,14 @@ public class Choice implements Comparable {
 
     public Choice(String label) {
         this.name = label;
-        utility = Choice.MAX_UTILITY;
+        if (isIncreasing()) {
+            utility = Choice.MAX_UTILITY;
+            h = Choice.MAX_UTILITY;
+        } else {
+            h = Choice.MIN_UTILITY;
+            utility = Choice.MIN_UTILITY;
+        }
         g = 0;
-        h = Choice.MAX_UTILITY;
         depth = 0;
         children = new DecisionSet();
     }
@@ -35,9 +41,14 @@ public class Choice implements Comparable {
     public Choice(Point3D p) {
         this.name = p.toString();
         position = p;
-        utility = Choice.MAX_UTILITY;
+        if (isIncreasing()) {
+            utility = Choice.MAX_UTILITY;
+            h = Choice.MAX_UTILITY;
+        } else {
+            h = Choice.MIN_UTILITY;
+            utility = Choice.MIN_UTILITY;
+        }
         g = 0;
-        h = Choice.MAX_UTILITY;
         depth = 0;
         children = new DecisionSet();
     }
@@ -67,7 +78,11 @@ public class Choice implements Comparable {
 
     public Choice setUtility(double utility) {
         if (getName().equals("IDLE")) {
-            this.utility = Choice.MAX_UTILITY / 2;
+            if (isIncreasing()) {
+                utility = Choice.MAX_UTILITY;
+            } else {
+                utility = Choice.MIN_UTILITY;
+            }
         } else {
             this.utility = utility;
         }
@@ -176,5 +191,17 @@ public class Choice implements Comparable {
 
     public boolean equals(Choice c) {
         return this.getName().equals(c.getName());
+    }
+
+    public static boolean isIncreasing() {
+        return increasing;
+    }
+
+    public static void setIncreasing() {
+        increasing = true;
+    }
+
+    public static void setDecreasing() {
+        increasing = false;
     }
 }

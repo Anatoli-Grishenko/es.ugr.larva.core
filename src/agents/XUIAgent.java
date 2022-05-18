@@ -112,13 +112,19 @@ public class XUIAgent extends LARVAFirstAgent {
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
+            trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
+            myDashBoard.setTrailSize(trailSize);
             this.sessionKey = inbox.getConversationId();
             myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("perceptions")) {
+            System.out.println("Received perceptions");
             myDashBoard.preProcessACLM(inbox.getContent());
-        } else if (inbox.getContent().contains("goals")) {
+        } else if (inbox.getContent().contains("cities")) {
+            System.out.println("Received cadastre");
             myDashBoard.preProcessACLM(inbox.getContent());
-//            TheMap.feedGoals(inbox.getContent());            
+        } else if (inbox.getContent().contains("people")) {
+            System.out.println("Received census");
+            myDashBoard.preProcessACLM(inbox.getContent());
         }
         _XUI.repaint();
 //        this.myApp.getDrawingPane().validate();

@@ -119,14 +119,15 @@ public class Transform {
 
     public static String[] toArrayString(ArrayList<String> al) {
         String res[] = new String[al.size()];
-        for (int i=0; i< al.size(); i++) {
+        for (int i = 0; i < al.size(); i++) {
             res[i] = al.get(i);
         }
         return res;
     }
+
     public static double[] toArrayDouble(ArrayList<Double> al) {
         double res[] = new double[al.size()];
-        for (int i=0; i< al.size(); i++) {
+        for (int i = 0; i < al.size(); i++) {
             res[i] = al.get(i);
         }
         return res;
@@ -134,21 +135,19 @@ public class Transform {
 
     public static String[] toArrayString(JsonArray al) {
         String res[] = new String[al.size()];
-        for (int i=0; i< al.size(); i++) {
+        for (int i = 0; i < al.size(); i++) {
             res[i] = al.get(i).asString();
         }
         return res;
     }
- 
+
     public static double[] toArrayDouble(JsonArray al) {
         double res[] = new double[al.size()];
-        for (int i=0; i< al.size(); i++) {
+        for (int i = 0; i < al.size(); i++) {
             res[i] = al.get(i).asDouble();
         }
         return res;
     }
- 
-
 
 //    public static Object[] toArrayString (ArrayList<Object> al) {
 //       return al.toArrayString(new Object[al.size()]);
@@ -191,5 +190,48 @@ public class Transform {
             return badvalue;
         }
 
+    }
+
+    public static JsonArray Matrix2JsonArray(int[][] raw) {
+        int w = raw.length, h = raw[0].length;
+        JsonArray jsamatrix = new JsonArray(), jsarow;
+        for (int y = 0; y < h; y++) {
+            jsarow = new JsonArray();
+            for (int x = 0; x < w; x++) {
+                jsarow.add(raw[x][y]);
+            }
+            jsamatrix.add(jsarow);
+        }
+        return jsamatrix;
+    }
+
+    public static JsonArray Matrix2JsonArray(int[] raw) {
+        int w = raw.length;
+        JsonArray jsamatrix = new JsonArray(), jsarow;
+        for (int x = 0; x < w; x++) {
+            jsamatrix.add(raw[x]);
+        }
+        return jsamatrix;
+    }
+    public static JsonArray Matrix2JsonArray(double[][] raw) {
+        int w = raw.length, h = raw[0].length;
+        JsonArray jsamatrix = new JsonArray(), jsarow;
+        for (int y = 0; y < h; y++) {
+            jsarow = new JsonArray();
+            for (int x = 0; x < w; x++) {
+                jsarow.add(raw[x][y]);
+            }
+            jsamatrix.add(jsarow);
+        }
+        return jsamatrix;
+    }
+
+    public static JsonArray Matrix2JsonArray(double[] raw) {
+        int w = raw.length;
+        JsonArray jsamatrix = new JsonArray(), jsarow;
+        for (int x = 0; x < w; x++) {
+            jsamatrix.add(raw[x]);
+        }
+        return jsamatrix;
     }
 }

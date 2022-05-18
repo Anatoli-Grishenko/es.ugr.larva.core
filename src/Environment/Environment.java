@@ -5,8 +5,12 @@
  */
 package Environment;
 
+import ai.AStar;
 import ai.Choice;
+import ai.Plan;
+import ai.Search;
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import data.Transform;
 import geometry.Compass;
@@ -16,8 +20,10 @@ import geometry.SimpleVector3D;
 import glossary.Roles;
 import glossary.Sensors;
 import java.util.ArrayList;
+import world.ThingSet;
 import world.Perceptor;
 import world.SensorDecoder;
+import world.Thing;
 import world.World;
 import world.liveBot;
 
@@ -33,11 +39,15 @@ public class Environment extends SensorDecoder {
     // Remote execution
     protected int[][] visualData, lidarData, thermalData;
     protected int[] shortPolar;
+    protected ThingSet cadastre;
+    protected ThingSet census;
 
     public Environment() {
         super();
         shortPolar = new int[5];
         World = new World("innerworld");
+        cadastre=new ThingSet();
+        census = new ThingSet();
     }
 
     public Environment(Environment other) {
@@ -45,6 +55,8 @@ public class Environment extends SensorDecoder {
         String saux = other.toJson().toString();
         JsonObject jsaux = Json.parse(saux).asObject();
         this.fromJson(jsaux.get("perceptions").asArray());
+        cadastre = other.getCadastre();
+        census = other.getCensus();
         cache();
 
     }
@@ -66,6 +78,41 @@ public class Environment extends SensorDecoder {
     public Environment setExternalPerceptions(String perceptions) {
         feedPerception(perceptions);
         cache();
+        return this;
+    }
+
+    public Environment setExternalThings(String things) {
+        try {
+            JsonObject jsoThings = Json.parse(things).asObject();
+            JsonArray jsathings;
+            if (jsoThings.get("cities") != null) {
+                if (cadastre == null) {
+                    cadastre = new ThingSet();
+                }
+                cadastre.fromJson(jsoThings.get("cities").asArray());
+            }
+            if (jsoThings.get("people") != null) {
+                if (census == null) {
+                    census = new ThingSet();
+                }
+                census.fromJson(jsoThings.get("cities").asArray());
+            }
+            cache();
+        } catch (Exception ex) {
+
+        }
+        return this;
+    }
+
+    public Environment addThings(ArrayList<Thing> listT) {
+        for (Thing t : listT) {
+            if (t.getType().equals("city")) {
+                this.cadastre.addThing(t);
+            }
+            if (t.getType().equals("people")) {
+                this.census.addThing(t);
+            }
+        }
         return this;
     }
 
@@ -98,33 +145,45 @@ public class Environment extends SensorDecoder {
         double y, x, dincrx, dincry;
         String action = a.getName();
         Environment result = this.clone();
+        boolean movement = false;
+//                dincrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
+//                dincry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
+
+        int incrx = 0, incry = 0, incrz = 0;
 
         switch (action.toUpperCase()) {
             case "MOVE":
-//                dincrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
-//                dincry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
-//                result.setGPS(new Point3D(this.getGPSMemory().getX()+dincrx,getGPSMemory().getY()+dincry,getGPSMemory().getZ()));
-                result.setGPS(this.getGPSComingPosition());
-                result.setGround((int) (this.getAltitude() - this.getVisualFront()));
-                result.setEnergy(this.getEnergy() - 1);
+                incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
+                incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
+                incrz = 0;
+                movement = true;
                 break;
             case "LEFT":
-//                result.setCompass((45 + getCompass()) % 360);
+                incrx = 0;
+                incry = 0;
+                incrz = 0;
                 result.setCompass(this.getCompassLeft());
-                result.setEnergy(this.getEnergy() - 1);
+                movement = true;
                 break;
             case "RIGHT":
 //                result.setCompass((270 + getCompass()) % 360);
+                incrx = 0;
+                incry = 0;
+                incrz = 0;
                 result.setCompass(this.getCompassRight());
-                result.setEnergy(this.getEnergy() - 1);
+                movement = true;
                 break;
             case "UP":
-                result.setGPS(this.getGPSComingPosition());
-                result.setEnergy(this.getEnergy() - 1);
+                incrx = 0;
+                incry = 0;
+                incrz = 5;
+                movement = true;
                 break;
             case "DOWN":
-                result.setGPS(this.getGPSComingPosition());
-                result.setEnergy(this.getEnergy() - 1);
+                incrx = 0;
+                incry = 0;
+                incrz = -5;
+                movement = true;
                 break;
             case "IDLE":
                 break;
@@ -138,11 +197,17 @@ public class Environment extends SensorDecoder {
                 break;
             default:
         }
-        int incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
-        int incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
-        result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
-        result.visualData = Transform.shift(this.visualData, incrx, incry, Perceptor.NULLREAD);
-        result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
+        if (movement) {
+            result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
+            result.setEnergy(this.getEnergy() - 1);
+            result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
+            result.encodeSensor(Sensors.THERMAL, Transform.Matrix2JsonArray(result.thermalData));
+            result.visualData = Transform.shift(this.visualData, incrx, incry, Perceptor.NULLREAD);
+            result.encodeSensor(Sensors.VISUAL, Transform.Matrix2JsonArray(result.visualData));
+            result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
+            result.encodeSensor(Sensors.LIDAR, Transform.Matrix2JsonArray(result.lidarData));
+            result.setOntarget(result.getGPS().isEqualTo(result.getTarget()));
+        }
         return result;
     }
 
@@ -375,10 +440,41 @@ public class Environment extends SensorDecoder {
     public int isMemoryVector() {
         return this.getGPSVectorMemory(this.getGPSVector());
     }
+
     public int isMemoryGPS(Point3D current) {
         return this.getGPSMemory(current);
     }
+
     public int isMemoryGPSVector(SimpleVector3D current) {
         return this.getGPSVectorMemory(current);
     }
+
+    public void findCourseTo(Point3D dest) {
+        Choice root, destination;
+        root = new Choice("");
+        root.setPosition(this.getGPS());
+        destination = new Choice("");
+        destination.setPosition(dest);
+        AStar pathfinder = new AStar(this.getWorldMap());
+        pathfinder.setMaxSeconds(30);
+        pathfinder.setMaxDepth(300);
+        pathfinder.setMinlevel(this.getMinlevel());
+        pathfinder.setMaxlevel(this.getMaxlevel());
+        pathfinder.setType(Search.PathType.ROAD);
+        Plan p = pathfinder.SearchLowest(root, destination);
+        this.cleanCourse();
+        for (Choice c : p) {
+            this.addCourse(c.getPosition());
+        }
+        this.activateCourse();
+    }
+
+    public ThingSet getCadastre() {
+        return cadastre;
+    }
+
+    public ThingSet getCensus() {
+        return census;
+    }
+
 }

@@ -123,10 +123,12 @@ public class OleAgentTile extends OleFoldablePane {
         if (myStatus == Status.OFF) {
             mybOn.setEnabled(true);
             mybOff.setEnabled(false);
+            this.mybConfig.setEnabled(true);
             mylLabel.setForeground(Color.BLACK);
         } else {
             mybOn.setEnabled(false);
             mybOff.setEnabled(true);
+            this.mybConfig.setEnabled(false);
             mylLabel.setForeground(OleApplication.DodgerBlue);
         }
         mylLabel.setText(myReport.getAgentName());

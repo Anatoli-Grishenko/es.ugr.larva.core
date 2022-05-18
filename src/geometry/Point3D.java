@@ -49,10 +49,16 @@ public class Point3D {
     public Point3D(JsonArray values) {
         clear();
         
-        _dim = values.size();
-        setX(values.get(0).asDouble()).
-                setY(values.get(1).asDouble()).
+        _dim = 3;
+        setX(0).setY(0).setZ(0);
+        switch(values.size()) {
+            case 3:
                 setZ(values.get(2).asDouble());
+            case 2:
+                setY(values.get(1).asDouble());
+            case 1:
+                setX(values.get(0).asDouble());
+        }               
     }
 
     public Point3D(double values[]) {

@@ -63,7 +63,7 @@ public class Ontology {
                 return isSubTypeOf(getType(subtype), type);
             }
         } catch (Exception ex) {
-            System.err.println("Exception between types "+subtype+" and "+type);
+            System.err.println("Exception between types " + subtype + " and " + type);
             return false;
         }
     }

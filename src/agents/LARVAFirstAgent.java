@@ -136,8 +136,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 a.setUtility(Choice.MAX_UTILITY);
             }
         }
-        Collections.sort(A);
-        Collections.reverse(A);
+        A.sort();
         return A;
     }
 
@@ -998,16 +997,16 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             case "PAUSE":
                 this.SWaitButtons.release();
                 this.cont = false;
-        this.olbContinue.setEnabled(true);
-        this.olbNext.setEnabled(true);
-        this.olbPause.setEnabled(false);
-        this.olbUntil.setEnabled(true);
+                this.olbContinue.setEnabled(true);
+                this.olbNext.setEnabled(true);
+                this.olbPause.setEnabled(false);
+                this.olbUntil.setEnabled(true);
                 break;
             case "NEXT":
-        this.olbContinue.setEnabled(true);
-        this.olbNext.setEnabled(true);
-        this.olbPause.setEnabled(false);
-        this.olbUntil.setEnabled(true);
+                this.olbContinue.setEnabled(true);
+                this.olbNext.setEnabled(true);
+                this.olbPause.setEnabled(false);
+                this.olbUntil.setEnabled(true);
                 this.SWaitButtons.release();
                 break;
             case "UNTIL":

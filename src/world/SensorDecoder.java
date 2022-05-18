@@ -457,7 +457,7 @@ public class SensorDecoder {
     }
 
     public int getGPSMemory(Point3D s) {
-        for (int i=1; i< TraceGPS.size(); i++) {
+        for (int i = 1; i < TraceGPS.size(); i++) {
             if (this.TraceGPS.get(i).getSource().isEqualTo(s)) {
                 return i;
             }
@@ -465,7 +465,6 @@ public class SensorDecoder {
         return -1;
     }
 
-    
     public void setGPS(Point3D GPS) {
         encodeSensor(Sensors.GPS, new JsonArray().add(GPS.toJson()));
     }
@@ -497,7 +496,7 @@ public class SensorDecoder {
     }
 
     public int getGPSVectorMemory(SimpleVector3D s) {
-        for (int i=2; i< TraceGPS.size(); i++) {
+        for (int i = 2; i < TraceGPS.size(); i++) {
             if (this.TraceGPS.get(i).isEqualTo(s)) {
                 return i;
             }
@@ -808,6 +807,8 @@ public class SensorDecoder {
     public double[][] getCourse() {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
+       if (jsaReading == null)
+           return null;
         double[][] res = new double[jsaReading.size()][3];
         for (int i = 0; i < jsaReading.size(); i++) {
             jsarow = jsaReading.get(i).asArray();
@@ -816,6 +817,53 @@ public class SensorDecoder {
             }
         }
         return res;
+    }
+
+    public int sizeCourse() {
+        return getCourse().length;
+    }
+
+    public void cleanCourse() {
+        this.encodeSensor(Sensors.COURSE, new JsonArray());
+    }
+
+    public Point3D getCourse(int i) {
+        if (0 <= i && i < sizeCourse()) {
+            return new Point3D(getCourse()[i]);
+        } else {
+            return null;
+        }
+    }
+
+    public void addCourse(Point3D p) {
+        this.encodeSensor(Sensors.COURSE, this.getSensor(Sensors.COURSE).add(p.toJson()));
+    }
+
+    public void activateCourse() {
+        if (sizeCourse() > 0) {
+            setDestination(getCourse(sizeCourse() - 1));
+            setTarget(getCourse(0));
+        }
+    }
+
+    public void nextCourse() {
+        if (getTarget() == null) {
+            activateCourse();
+        }
+        setTarget(getCourse(this.findNextCourseIndex()));
+    }
+
+    public int findNextCourseIndex() {
+        if (getTarget() == null) {
+            activateCourse();
+        }
+        for (int i = 0; i < sizeCourse(); i++) {
+            if (getTarget().isEqualTo(getCourse(i)) && i < sizeCourse() - 1) {
+                setTarget(getCourse(i + 1));
+                return i;
+            }
+        }
+        return -1;
     }
 
     public JsonObject toJson() {

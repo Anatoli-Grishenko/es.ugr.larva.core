@@ -57,6 +57,14 @@ public class DecisionSet extends ArrayList<Choice>{
         }
         return -1;
     }
+    public DecisionSet sort(){        
+        if (Choice.isIncreasing())
+            sortAscending();
+        else
+            sortDescending();
+        return this;
+    }
+    
     public DecisionSet sortAscending(){
         Collections.sort(this);     
         Collections.reverse(this);
