@@ -11,8 +11,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
+import swing.SwingTools;
 
 /**
  *
@@ -33,7 +35,7 @@ import javax.imageio.ImageIO;
 public class Map2DColor {
 
     public static final Color BADVALUE = new Color(100, 0, 0);
-    public static final int MAXLEVEL=255, MINLEVEL=0;
+    public static final int MAXLEVEL = 255, MINLEVEL = 0;
     protected BufferedImage _map;
     protected int _lmax, _lmin;
     protected double k = 2.261566516;
@@ -463,5 +465,40 @@ public class Map2DColor {
 
     public Map2DColor setColor(Point3D p, Color c) {
         return setColor(p.getXInt(), p.getYInt(), c);
+    }
+
+    public Map2DColor toLevelCurve(int step) {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+        ArrayList<Integer> neighbors;
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                neighbors = new ArrayList();
+                for (int xx = 0; xx < 3; xx++) {
+                    for (int yy = 0; yy < 3; yy++) {
+                        neighbors.add(this.getCurveLevel(x - xx + 1, y - yy + 1, step));
+                    }
+                }
+                Collections.sort(neighbors);
+                if (getCurveLevel(x, y, step) == neighbors.get(6)) {
+                    if (getStepLevel(x, y) < 1) {
+                        res.setColor(x, y, new Color(0,0,50));
+                    } else {
+                        res.setColor(x, y, Color.BLACK);
+                    }
+                } else {
+                    res.setColor(x, y, new Color(0, 128, 0));
+                }
+            }
+        }
+        return res;
+    }
+
+    public int getCurveLevel(int x, int y, int step) {
+        int l = this.getStepLevel(x, y);
+        if (l < 1) {
+            return l;
+        } else {
+            return (l + 4) / step;
+        }
     }
 }

@@ -636,6 +636,16 @@ public class SensorDecoder {
         return res;
     }
 
+    public int[][] getPolarCourse() {
+        int initial[][] = this.getCourseData(), res[][];
+        SimpleVector3D myv = this.getGPSVector();
+        int mww = initial[0].length, mhh = initial.length;
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        ps.setRadius(mhh / 2 + 1);
+        res = ps.applyPolarTo(initial);
+        return res;
+    }
+
     public int[][] getPolarVisual() {
         if (getVisualData() == null) {
             return null;
@@ -753,6 +763,35 @@ public class SensorDecoder {
         return res;
     }
 
+    public int[][] getCourseData() {
+        JsonArray jsaReading = getSensor(Sensors.COURSE);        
+        Point3D mypos=this.getGPS();
+        int range = getSensor(Sensors.VISUAL).size(),x,y;
+
+        int[][] res = new int[range][range];        
+        
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[j][i] = Perceptor.NULLREAD;
+            }
+        }
+        if (jsaReading == null)
+            return res;
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[j][i] = 0;
+                x=mypos.getXInt()+j-range/2;
+                y=mypos.getYInt()+i-range/2;
+                for (int wp=0; wp<jsaReading.size(); wp++) {
+                    if (x==jsaReading.get(wp).asArray().get(0).asInt()
+                            && y==jsaReading.get(wp).asArray().get(1).asInt())
+                        res[j][i] = 1;
+                }
+            }
+        }
+        return res;
+    }
+    
     public int[][] getVisualData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor(Sensors.VISUAL);
@@ -836,6 +875,8 @@ public class SensorDecoder {
     }
 
     public void addCourse(Point3D p) {
+        if (this.getSensor(Sensors.COURSE)==null)
+            this.cleanCourse();
         this.encodeSensor(Sensors.COURSE, this.getSensor(Sensors.COURSE).add(p.toJson()));
     }
 

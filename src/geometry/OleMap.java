@@ -13,24 +13,18 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.RescaleOp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.SwingConstants;
 import map2D.Map2DColor;
-import swing.OleButton;
 import swing.OleDashBoard;
 import swing.OleDrawPane;
 import swing.OleSensor;
 import swing.SwingTools;
 import swing.TextFactory;
 import tools.emojis;
-import world.ThingSet;
-import world.Perceptor;
-import world.SensorDecoder;
 import world.Thing;
 
 /**
@@ -43,7 +37,7 @@ public class OleMap extends OleSensor {
     protected Polygon hudView[][];
     protected int narrow = 37, margin = 22;
     protected Polygon p;
-    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 10;
+    protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 15;
     protected boolean showTrail;
     protected Point3D pCenterTopFixed, pVariableDown, pCenterFixed, pVariableTop, pDistance, pHead;
     protected TextFactory tf;
@@ -187,16 +181,11 @@ public class OleMap extends OleSensor {
                 g.setStroke(new BasicStroke(1));
                 this.traceLabel(g, ptrail, prevTrail, 25, name, viewPort);
             }
-            if (externalDecoder.getCourse() != null) {
-                Point3D pWaypoint = null;
+            if (externalDecoder.getTarget() != null) {
+                Point3D pWaypoint = externalDecoder.getTarget();
                 g.setColor(OleDashBoard.cAngle);
-                g.setStroke(new BasicStroke(1));
-                for (int i = 0; i < externalDecoder.sizeCourse(); i++) {
-                    pWaypoint = externalDecoder.getCourse(i);
-                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, externalDecoder.getCompass() / 45), nRows, WIDTH));
-
-                }
-
+                g.setStroke(new BasicStroke(2));
+                g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
             }
 //            if (externalDecoder.getCadastre() != null) {
 //                Point3D pCity = null;

@@ -53,6 +53,14 @@ public class Choice implements Comparable {
         children = new DecisionSet();
     }
 
+    public boolean isEqualTo(Choice other) {
+        if (other == null) {
+            return false;
+        } else {
+            return this.getName().equals(other.getName());
+        }
+    }
+
     public String getName() {
         return name;
     }

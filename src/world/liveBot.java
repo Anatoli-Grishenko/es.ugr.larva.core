@@ -17,13 +17,13 @@ import geometry.Entity3D;
 import geometry.SimpleVector3D;
 import geometry.Vector3D;
 import glossary.Roles;
-import static glossary.Roles.LightT;
 import glossary.Sensors;
 import glossary.capability;
 import glossary.direction;
 import java.awt.Color;
 import java.util.ArrayList;
 import map2D.Map2DColor;
+import static glossary.Roles.HUMMER;
 
 /**
  *
@@ -32,7 +32,7 @@ import map2D.Map2DColor;
 public class liveBot extends Thing {
 
     String groupname;
-    Point3D origin;
+    Point3D origin, destination;
     ArrayList<String> capabilities, attachments;
 //    JsonObject lastPerceptions;
     Color colorcode;
@@ -40,6 +40,7 @@ public class liveBot extends Thing {
     int initialDistance = -1, currentDistance, order;
     int energyBurnt = -1, timeSecs = 0;
     String myCommitment = "";
+    
 
     public liveBot(String name) {
         super(name);
@@ -63,8 +64,7 @@ public class liveBot extends Thing {
         this.Raw().configureType(type);
     }
 
-    @Override
-    public JsonObject toJson() {
+    public JsonObject toXUIJson() {
         JsonObject jsdrone = this.myPerceptions.toJson(new Sensors[]{Sensors.NAME, Sensors.TEAM, Sensors.ONTARGET,
             Sensors.ALIVE, Sensors.GPS, Sensors.ENERGY, Sensors.GROUND, Sensors.DISTANCE,
             Sensors.ANGULAR, Sensors.TARGET, Sensors.COURSE, Sensors.CARGO, Sensors.TRACE});
@@ -74,7 +74,7 @@ public class liveBot extends Thing {
 
     @Override
     public String toString() {
-        return toJson().toString();
+        return toXUIJson().toString();
     }
     @Override
     public void readPerceptions() {     
@@ -134,6 +134,15 @@ public class liveBot extends Thing {
 
     public void setRelpywith(String relpywith) {
         this.relpywith = relpywith;
+    }
+
+    public Point3D getDestination() {
+        return destination;
+    }
+
+    public void setDestination(Point3D destination) {
+        this.destination = destination;
+        this.myPerceptions.setDestination(destination);
     }
 
     public ArrayList<String> getAttachments() {
@@ -251,4 +260,5 @@ public class liveBot extends Thing {
         System.out.println("["+this.getName()+"] -->"+this.Raw().indexperception.keySet().toString());
     }
 
+   
 }

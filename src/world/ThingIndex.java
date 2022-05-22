@@ -38,8 +38,10 @@ public class ThingIndex {
 
     public ArrayList<Thing> getValues(String key) {
         ArrayList<Thing> res = new ArrayList();
-        for (Thing t : index.get(key)) {
-            res.add(t);
+        if (index.get(key) != null) {
+            for (Thing t : index.get(key)) {
+                res.add(t);
+            }
         }
         return res;
     }
@@ -79,7 +81,9 @@ public class ThingIndex {
         JsonObject jsot = t.toJson();
         if (jsot.get(getField()) != null) {
             String toindex = jsot.get(getField()).asString();
-            index.get(toindex).remove(t);
+            if (index.get(toindex) != null && index.get(toindex).contains(t)) {
+                index.get(toindex).remove(t);
+            }
         }
         return this;
     }

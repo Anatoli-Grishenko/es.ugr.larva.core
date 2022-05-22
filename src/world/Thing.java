@@ -109,19 +109,35 @@ public class Thing extends Entity3D {
 
     public JsonObject toJson() {
         JsonObject res = new JsonObject();
-        res.add("objectid", this.getId());
-        res.add("name", this.getName());
-        res.add("type", this.getType());
-        res.add("position", this.getPosition().toString());
-        res.add("surface-location", Transform.Matrix2JsonArray(this.getPosition().to2D().toArray()));
-        if (this.getType().toUpperCase().equals("AGENT")) {
-            res.add("orientation", this.getOrientation());
-            res.merge(this.getPerceptions());
+
+        res.add("name", getName());
+        res.add("type", getType());
+        res.add("origin", "choice");
+        res.add("surface-location", new JsonArray().
+                add(getPosition().getXInt()).add(getPosition().getYInt()));
+        if (getType().equals("people")) {
+            res.add("properties", new JsonArray().add("position").add("presence"));
+            res.add("belongs", this.getBelongsTo());
+        } else {
+            res.add("properties", new JsonArray());
+            res.add("hasport", isHasPort());
+            res.add("hasheliport", isHasHeliport());
+            res.add("hasairport", isHasAirport());
         }
-        res.add("properties", new JsonArray());
-        res.add("hasport", this.isHasPort());
-        res.add("hasairport", this.isHasAirport());
-        res.add("belongs", this.getBelongsTo());
+
+//        res.add("objectid", this.getId());
+//        res.add("name", this.getName());
+//        res.add("type", this.getType());
+//        res.add("position", this.getPosition().toString());
+//        res.add("surface-location", Transform.Matrix2JsonArray(this.getPosition().to2D().toArray()));
+//        if (this.getType().toUpperCase().equals("AGENT")) {
+//            res.add("orientation", this.getOrientation());
+//            res.merge(this.getPerceptions());
+//        }
+//        res.add("properties", new JsonArray());
+//        res.add("hasport", this.isHasPort());
+//        res.add("hasairport", this.isHasAirport());
+//        res.add("belongs", this.getBelongsTo());
         return res;
     }
 
@@ -129,10 +145,10 @@ public class Thing extends Entity3D {
         this.setName(o.getString("name", ""));
         this.setType(o.getString("type", ""));
         this.setBelongsTo(o.getString("belongs", ""));
-        if (o.get("position")!=null) {
+        if (o.get("position") != null) {
             this.setPosition(new Point3D(o.getString("position", "")));
         } else {
-            if (o.get("surface-location")!=null) {
+            if (o.get("surface-location") != null) {
                 this.setPosition(new Point3D(o.get("surface-location").asArray()));
             }
         }

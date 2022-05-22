@@ -60,7 +60,7 @@ public class PolarSurface {
     public int getNLevels() {
         return pSurface.keySet().size();
     }
-
+    
     public ArrayList<SimpleVector3D> getLevel(int level) {
         if (1 <= level && level <= getNLevels()) {
             return pSurface.get(level);
@@ -68,6 +68,8 @@ public class PolarSurface {
             return null;
         }
     }
+    
+    
 
     public Map2DColor applyRelativeTo(Map2DColor m) {
         SimpleVector3D sv;

@@ -236,7 +236,7 @@ public class OleHud extends OleSensor {
                 nTiles = (level) * 4 + 1;
                 for (int tile = 0; tile < nTiles; tile++) {
                     lTile = externalDecoder.getPolarVisual()[tile][level];
-                    tTile = externalDecoder.getPolarThermal()[tile][level];
+                    tTile = externalDecoder.getPolarCourse()[tile][level];
                     stroke=1;
                     if (lTile >= 0) {
                         cTile = new Color(lTile, lTile, lTile);
@@ -246,7 +246,7 @@ public class OleHud extends OleSensor {
                     iGround = lTile;
 //
                     if (tTile > 0) {
-                        cStroke = OleDashBoard.cGoal;
+                        cStroke = OleDashBoard.cAngle;
                         cBackground = cTile;
                         stroke=2;
                     }else 

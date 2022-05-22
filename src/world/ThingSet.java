@@ -132,7 +132,7 @@ public class ThingSet {
     }
 
     public ArrayList<Thing> getAllThings() {
-        return indexName.getValues(typeFilter);
+        return indexName.getAllValues();
     }
 
     public ArrayList <Thing> splitListByType(String type)  {

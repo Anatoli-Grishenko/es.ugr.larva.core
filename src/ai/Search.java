@@ -18,7 +18,7 @@ import tools.TimeHandler;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public  class Search {
+public class Search {
 
     public static enum PathType {
         FLATROAD, ROAD, FULLTERRAIN, AIRBORNE, MARINE
@@ -51,7 +51,7 @@ public  class Search {
 
     public Plan SearchLowest(Choice from, Choice to) {
         Plan plan, subplan, bestSubplan = null;
-        Choice currentNode=null;
+        Choice currentNode = null;
         DecisionSet children;
 
         this.initSearch();
@@ -257,7 +257,7 @@ public  class Search {
         }
     }
 
-    public void setView(Map2DColor m) {
+     public void setView(Map2DColor m) {
         view = m;
     }
 
@@ -326,11 +326,13 @@ public  class Search {
             Point3D res = c.getPosition().clone().plus(Compass.VECTOR[dir].canonical().scalar(1));
             res.setZ(map.getStepLevel(res));
             Choice offspring = new Choice(res);
-            offspring.setParent(c);
-            offspring.setG(0);
-            offspring.setH(Heuristic(offspring));
-            if (isValidChoice(offspring)) {
-                succesors.addChoiceMinor(offspring);
+            if (!offspring.isEqualTo(c) && !offspring.isEqualTo(c.getParent())) {
+                offspring.setParent(c);
+                offspring.setG(0);
+                offspring.setH(Heuristic(offspring));
+                if (isValidChoice(offspring)) {
+                    succesors.addChoiceMinor(offspring);
+                }
             }
         }
         return succesors;

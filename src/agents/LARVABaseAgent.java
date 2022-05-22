@@ -256,6 +256,13 @@ public class LARVABaseAgent extends Agent {
         return false;
     }
 
+    public boolean DFAddMyServices(String[] services) {
+        ArrayList <String> prevServices;
+        prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
+        prevServices.addAll(new ArrayList(Transform.toArrayList(services)));
+        return DFSetMyServices(Transform.toArrayString(prevServices));
+    }
+
     /**
      * It allows the de-registration of all services.
      */
