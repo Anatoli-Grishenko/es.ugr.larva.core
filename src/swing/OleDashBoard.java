@@ -16,7 +16,7 @@ import geometry.OleDiode;
 import geometry.OleHud;
 import geometry.OleLabels;
 import geometry.OleLinear;
-import geometry.OleMap;
+import geometry.OleSuperMap;
 import geometry.OleRotatory;
 import geometry.OleRoundPB;
 import geometry.OleSemiDial;
@@ -58,7 +58,7 @@ public class OleDashBoard extends OleDrawPane {
     OleDiode odLed[] = new OleDiode[10];
     OleLinear olTime, olSteps, olGPS, olBurnt;
     OleBag olPayload, olCommand;
-    OleMap osMap;
+    OleSuperMap osMap;
     OleHud osHud;
     OleLabels topLabels;
     Palette pal;
@@ -120,7 +120,7 @@ public class OleDashBoard extends OleDrawPane {
     }
 
     public void initLayout() {
-        Layout2();
+        Layout3();
         this.validate();
         this.repaint();
     }
@@ -128,7 +128,7 @@ public class OleDashBoard extends OleDrawPane {
     protected void Layout1() {
         int hLabels = 50, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25;
 
-        osMap = new OleMap(this, "MAP");
+        osMap = new OleSuperMap(this, "MAP");
         osMap.setBounds(0 * ww, hLabels, 4 * ww, 4 * ww);
         osMap.setForeground(Color.WHITE);
         osMap.setBackground(Color.BLACK);
@@ -344,7 +344,229 @@ public class OleDashBoard extends OleDrawPane {
     protected void Layout2() {
         int hLabels = 50, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110;
 
-        osMap = new OleMap(this, "MAP");
+        osMap = new OleSuperMap(this, "MAP");
+        osMap.setBounds(0 * ww, hLabels, 4 * ww, 4 * ww);
+        osMap.setForeground(Color.WHITE);
+        osMap.setBackground(Color.BLACK);
+        osMap.showFrame(true);
+        osMap.validate();
+
+        osHud = new OleHud(this, "AUX");
+        osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
+        osHud.setForeground(Color.WHITE);
+        osHud.setBackground(Color.BLACK);
+        osHud.setSPStretch(0);
+        osHud.setVPStretch(ldials / 2);
+        osHud.showFrame(true);
+        osHud.validate();
+
+        orCompass1 = new OleRotatory(this, "Compass");
+        orCompass1.setMinValue(0);
+        orCompass1.setMaxValue(360);
+        orCompass1.setMinVisual(0);
+        orCompass1.setMaxVisual(360);
+        orCompass1.setnDivisions(8);
+        orCompass1.setLabels(new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE"});
+        orCompass1.showScaleNumbers(true);
+        orCompass1.setBounds(4 * ww, 20 + hLabels, ldials, ldials);
+        orCompass1.setForeground(this.cLabels);
+        orCompass1.setBackground(this.cGauge);
+//        orCompass1.showFrame(true);
+        orCompass1.setAutoRotate(true);
+        orCompass1.validate();
+
+        osAltitude = new OleSemiDial(this, "Altitude");
+        osAltitude.setMinValue(0);
+        osAltitude.setMaxValue(255);
+        osAltitude.setStartAngle(225);
+        osAltitude.setEndAngle(0);
+        osAltitude.setnDivisions(10);
+        osAltitude.setBounds(4 * ww, 20 + hLabels + ldials, ldials, ldials);
+        osAltitude.setForeground(this.cLabels);
+        osAltitude.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
+        osAltitude.setSimplifiedDial(true);
+//        pal = new Palette();
+//        pal.addWayPoint(0, Color.WHITE);
+//        pal.addWayPoint(100, Color.RED);
+//        pal.fillWayPoints(255);
+//        osAltitude.setPalette(pal);
+//        osAltitude.showScale(true);
+//        osAltitude.showScaleNumbers(true);
+//        osAltitude.showFrame(true);
+        osAltitude.validate();
+
+        osGround = new OleSemiDial(this, "Ground");
+        osGround.setMinValue(0);
+        osGround.setMaxValue(255);
+        osGround.setStartAngle(225);
+        osGround.setEndAngle(0);
+        osGround.setnDivisions(10);
+        osGround.setBounds(4 * ww, 20 + hLabels + ldials * 2, ldials, ldials);
+        osGround.setForeground(this.cLabels);
+        osGround.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
+        osGround.setSimplifiedDial(true);
+//        pal = new Palette();
+//        pal.addWayPoint(0, Color.RED);
+//        pal.addWayPoint(20, Color.WHITE);
+//        pal.addWayPoint(100, Color.WHITE);
+//        pal.fillWayPoints(275);
+//        osGround.setPalette(pal);
+//        osGround.showScale(true);
+//        osGround.showScaleNumbers(false);
+        osGround.setAlertLimitBelow(10);
+        osGround.validate();
+
+        osBattery = new OleSemiDial(this, "Energy");
+        osBattery.setMinValue(0);
+        osBattery.setMaxValue(3500);
+        osBattery.setStartAngle(180);
+        osBattery.setEndAngle(0);
+        osBattery.setnDivisions(4);
+        osBattery.setBounds(4 * ww, 20 + hLabels + ldials * 3, ldials, ldials);
+        osBattery.setForeground(this.cLabels);
+        osBattery.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
+        osBattery.setSimplifiedDial(true);
+        osBattery.setAlertLimitBelow((int) (osBattery.getMaxValue() / 5));
+        pal = new Palette();
+        pal.addWayPoint(0, Color.RED);
+        pal.addWayPoint(20, Color.RED);
+        pal.addWayPoint(21, Color.YELLOW);
+        pal.addWayPoint(75, Color.YELLOW);
+        pal.addWayPoint(76, Color.YELLOW);
+        pal.addWayPoint(100, Color.GREEN);
+        pal.fillWayPoints(3500);
+        osBattery.setPalette(pal);
+//        osBattery.showScale(true);
+//        osBattery.showScaleNumbers(true);
+        osBattery.validate();
+
+        olGPS = new OleLinear(this, "GPS");
+        olGPS.setBackground(Color.DARK_GRAY);
+        olGPS.setnColumns(2);
+        olGPS.getAllReadings()[0][0] = 100;
+        olGPS.getAllReadings()[0][1] = 121;
+        olGPS.setBounds(8 * ww, hLabels, 2 * ww2, 4 * hh);
+        olGPS.showFrame(true);
+        olGPS.setForeground(this.cLabels);
+        olGPS.validate();
+
+        olTime = new OleLinear(this, "TIME");
+        olTime.setForeground(this.cLabels);
+        olTime.setBackground(Color.DARK_GRAY);
+        olTime.setnColumns(1);
+        olTime.getAllReadings()[0][0] = 123;
+        olTime.setBounds(8 * ww, 4 * hh + hLabels, 2 * ww2, 2 * hh);
+        olTime.showFrame(true);
+        olTime.validate();
+
+        olSteps = new OleLinear(this, "STEPS");
+        olSteps.setForeground(this.cLabels);
+        olSteps.setBackground(Color.DARK_GRAY);
+        olSteps.setnColumns(1);
+        olSteps.getAllReadings()[0][0] = 123;
+        olSteps.setBounds(8 * ww, 6 * hh + hLabels, 2 * ww2, 2 * hh);
+        olSteps.showFrame(true);
+        olSteps.validate();
+
+        olBurnt = new OleLinear(this, "BURNT");
+        olBurnt.setForeground(this.cLabels);
+        olBurnt.setBackground(Color.DARK_GRAY);
+        olBurnt.setnColumns(1);
+        olBurnt.getAllReadings()[0][0] = 123;
+        olBurnt.setBounds(8 * ww, 8 * hh + hLabels, 2 * ww2, 2 * hh);
+        olBurnt.showFrame(true);
+        olBurnt.validate();
+
+        xx = 8 * ww;
+        yy = 10 * hh + hLabels;
+        odLed[0] = new OleDiode(this, "ALV");
+        odLed[0].attachToExternalSensor("alive");
+        odLed[0].setBounds(xx, yy, 2 * ww2, hh);
+        odLed[0].setForeground(Color.GREEN);
+        odLed[0].setBackground(Color.BLACK);
+        odLed[0].showFrame(true);
+        odLed[0].validate();
+        yy += hh;
+        odLed[1] = new OleDiode(this, "TAR");
+        odLed[1].attachToExternalSensor("ontarget");
+        odLed[1].setBounds(xx, yy, 2 * ww2, hh);
+        odLed[1].setForeground(Color.GREEN);
+        odLed[1].setBackground(Color.BLACK);
+        odLed[1].showFrame(true);
+        odLed[1].validate();
+        yy += hh;
+
+        odLed[2] = new OleDiode(this, "PAY");
+        odLed[2].setBounds(xx, yy, 2 * ww2, hh);
+        odLed[2].setForeground(Color.GREEN);
+        odLed[2].setBackground(Color.BLACK);
+        odLed[2].showFrame(true);
+        odLed[2].validate();
+        yy += hh;
+
+//        odLed[3] = new OleDiode(this, "SND");
+//        odLed[3].setBounds(xx, yy, 2 * ww2, hh);
+//        odLed[3].setForeground(OleApplication.DodgerBlue);
+//        odLed[3].setBackground(Color.DARK_GRAY);
+//        odLed[3].showFrame(true);
+//        odLed[3].validate();
+//        yy += hh;
+//
+//        odLed[4] = new OleDiode(this, "RCV");
+//        odLed[4].setBounds(xx, yy, 2 * ww2, hh);
+//        odLed[4].setForeground(OleApplication.Maroon);
+//        odLed[4].setBackground(Color.BLACK);
+//        odLed[4].showFrame(true);
+//        odLed[4].validate();
+//        yy += hh;
+        olPayload = new OleBag(this, "PAYLOAD");
+        olPayload.setForeground(Color.YELLOW);
+        olPayload.setBackground(Color.DARK_GRAY);
+        olPayload.setBounds(xx, yy, 2 * ww2, 11 * hh);
+        olPayload.showFrame(true);
+        olPayload.validate();
+        xx += 2 * ww2;
+        yy = hLabels;
+        olCommand = new OleBag(this, "COMMAND");
+        olCommand.setForeground(Color.GREEN);
+        olCommand.setBackground(Color.DARK_GRAY);
+        olCommand.setBounds(xx, yy, 3 * ww2, 24 * hh);
+        olCommand.showFrame(true);
+        olCommand.validate();
+
+        topLabels = new OleLabels(this, "LABELS");
+        topLabels.setForeground(Color.WHITE);
+        topLabels.setBackground(Color.DARK_GRAY);
+        topLabels.setBounds(0, 0, 1450, hLabels);
+        topLabels.showFrame(true);
+        topLabels.validate();
+
+        this.addSensor(osHud);
+        this.addSensor(odLed[0]);
+        this.addSensor(odLed[1]);
+        this.addSensor(odLed[2]);
+//        this.addSensor(odLed[3]);
+//        this.addSensor(odLed[4]);
+        this.addSensor(osMap);
+        this.addSensor(olGPS);
+        this.addSensor(olTime);
+        this.addSensor(olSteps);
+        this.addSensor(olBurnt);
+        this.addSensor(olPayload);
+        this.addSensor(olCommand);
+        this.addSensor(topLabels);
+        this.addSensor(orCompass1);
+        this.addSensor(osAltitude);
+        this.addSensor(osGround);
+        this.addSensor(osBattery);
+        myParent.validate();
+
+    }
+
+    protected void Layout3() {
+        int hLabels = 50, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110;
+
+        osMap = new OleSuperMap(this, "MAP");
         osMap.setBounds(0 * ww, hLabels, 4 * ww, 4 * ww);
         osMap.setForeground(Color.WHITE);
         osMap.setBackground(Color.BLACK);
@@ -586,7 +808,7 @@ public class OleDashBoard extends OleDrawPane {
             this.clear();
             decoder.setWorldMap(ofile.toString(), maxlevel);
             osMap.setMap(decoder.getWorldMap());
-            osMap.validate();
+//            osMap.validate();
             this.osAltitude.setAlertLimitAbove(maxlevel);
             osHud.resetTerrain();
             availableDashBoard = false;
@@ -596,7 +818,7 @@ public class OleDashBoard extends OleDrawPane {
             availableDashBoard = true;
             this.feedPerception(content);
             res = false;
-        } else if (content.contains("cities")) {
+        } else if (content.contains("city")) {
            decoder.setExternalThings(content);
         }else if (content.contains("people")) {
            decoder.setExternalThings(content);

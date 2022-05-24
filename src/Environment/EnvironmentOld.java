@@ -65,7 +65,7 @@ public class EnvironmentOld {
         if (!this.Perceptions.loadWorldMap(World.getEnvironment().getSurface()))
             return false;
         this.Perceptions.setTarget(World.getThingByName("Guybrush Threepwood").getPosition());
-        this.live = World.registerAgent(name, r.name(), attach);
+        this.live = World.registerAgent(name, r.name(), -1,-1, attach);
 //        System.out.println(live.getPerceptions().toString());
 //        Perceptions.feedPerception(this.live.getPerceptions());
         return true;

@@ -46,7 +46,7 @@ public class Environment extends SensorDecoder {
         super();
         shortPolar = new int[5];
         World = new World("innerworld");
-        cadastre=new ThingSet();
+        cadastre = new ThingSet();
         census = new ThingSet();
     }
 
@@ -69,7 +69,7 @@ public class Environment extends SensorDecoder {
             return false;
         }
         this.setTarget(World.getThingByName("Guybrush Threepwood").getPosition());
-        this.live = World.registerAgent(name, r.name(), attach);
+        this.live = World.registerAgent(name, r.name(), -1,-1, attach);
 //        System.out.println(live.getPerceptions().toString());
 //        feedPerception(this.live.getPerceptions());
         return true;
@@ -85,11 +85,11 @@ public class Environment extends SensorDecoder {
         try {
             JsonObject jsoThings = Json.parse(things).asObject();
             JsonArray jsathings;
-            if (jsoThings.get("cities") != null) {
+            if (jsoThings.get("city") != null) {
                 if (cadastre == null) {
                     cadastre = new ThingSet();
                 }
-                cadastre.fromJson(jsoThings.get("cities").asArray());
+                cadastre.fromJson(jsoThings.get("city").asArray());
             }
             if (jsoThings.get("people") != null) {
                 if (census == null) {
@@ -206,7 +206,11 @@ public class Environment extends SensorDecoder {
             result.encodeSensor(Sensors.VISUAL, Transform.Matrix2JsonArray(result.visualData));
             result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
             result.encodeSensor(Sensors.LIDAR, Transform.Matrix2JsonArray(result.lidarData));
-            result.setOntarget(result.getGPS().isEqualTo(result.getTarget()));
+            if (result.getTarget() != null) {
+                result.setOntarget(result.getGPS().isEqualTo(result.getTarget()));
+            } else {
+                result.setOntarget(false);
+            }
         }
         return result;
     }

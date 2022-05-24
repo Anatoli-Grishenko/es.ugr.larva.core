@@ -216,6 +216,8 @@ public class liveBot extends Thing {
     
     
     public boolean isGoal() {
+        if (Raw().getTarget()==null)
+            return false;
         return Raw().getGPS().isEqualTo(Raw().getTarget());
     }
     

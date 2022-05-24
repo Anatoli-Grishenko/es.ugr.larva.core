@@ -5,6 +5,7 @@
  */
 package swing;
 
+import geometry.Point3D;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -31,9 +32,9 @@ public class OleScrollPane extends JScrollPane {
     int x1, x2, y1, y2;
     Rectangle view;
     Dimension reference;
-    Consumer <MouseEvent> handlerClick, handlerMove, handlerDrag, 
+    Consumer<MouseEvent> handlerClick, handlerMove, handlerDrag,
             handlerPress, handlerRelease, handlerEnter, handlerExit;
-    Consumer <MouseWheelEvent> handlerWheel;
+    Consumer<MouseWheelEvent> handlerWheel;
 
     public OleScrollPane(OleDrawPane o) {
         super(o);
@@ -44,53 +45,69 @@ public class OleScrollPane extends JScrollPane {
         this.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                handlerDrag.accept(e);
+                if (handlerDrag != null) {
+                    handlerDrag.accept(e);
+                }
             }
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                handlerMove.accept(e);
+                if (handlerMove != null) {
+                    handlerMove.accept(e);
+                }
             }
         });
         addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                handlerWheel.accept(e);
+                if (handlerWheel != null) {
+                    handlerWheel.accept(e);
+                }
             }
         });
         addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                handlerClick.accept(e);
+                if (handlerClick != null) {
+                    handlerClick.accept(e);
+                }
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                handlerPress.accept(e);
+                if (handlerPress != null) {
+                    handlerPress.accept(e);
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                handlerRelease.accept(e);
+                if (handlerRelease != null) {
+                    handlerRelease.accept(e);
+                }
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                handlerEnter.accept(e);
+                if (handlerEnter != null) {
+                    handlerEnter.accept(e);
+                }
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                handlerExit.accept(e);
+                if (handlerExit != null) {
+                    handlerExit.accept(e);
+                }
             }
         });
         this.setHandlerWheel((e) -> Wheel(e));
-        setHandlerClick((e)->Clicked(e));
-        setHandlerDrag((e)->Drag(e));
-        setHandlerPress((e)->Pressed(e));
-        setHandlerRelease((e)->Released(e));
-        setHandlerEnter((e)->Entered(e));
-        setHandlerExit((e)->Exited(e));                
+        setHandlerClick((e) -> Clicked(e));
+        setHandlerDrag((e) -> Drag(e));
+        setHandlerPress((e) -> Pressed(e));
+        setHandlerRelease((e) -> Released(e));
+        setHandlerEnter((e) -> Entered(e));
+        setHandlerExit((e) -> Exited(e));
     }
 
     public void clear() {
@@ -126,13 +143,16 @@ public class OleScrollPane extends JScrollPane {
     }
 
     protected void Drag(MouseEvent e) {
-        x2 = e.getX();
-        y2 = e.getY();
-        view = getViewport().getViewRect();
-        view.setLocation((int) (view.getX() + (x1 - x2) * DragSpeed), (int) (view.getY() + (y1 - y2) * DragSpeed));
-        odPane.scrollRectToVisible(view);
+        dragRelative(x1-e.getX(), y1-e.getY());
     }
 
+    protected void dragRelative(int deltax, int deltay) {
+            view = getViewport().getViewRect();
+        view.setLocation((int) (view.getX() + (deltax) * DragSpeed), 
+                (int) (view.getY() + (deltay) * DragSpeed));
+        odPane.scrollRectToVisible(view);
+        
+    }
     protected void Wheel(MouseWheelEvent e) {
 
         int steps = e.getWheelRotation();
@@ -200,19 +220,21 @@ public class OleScrollPane extends JScrollPane {
     public void setHandlerExit(Consumer<MouseEvent> handlerExit) {
         this.handlerExit = handlerExit;
     }
-    
+
     public int getRealX(int xpane) {
-        return (int) ((xpane+this.getHShift())/getZoom());
+        return (int) ((xpane + this.getHShift()) / getZoom());
     }
+
     public int getRealY(int ypane) {
-        return (int) ((ypane+this.getVShift())/getZoom());
+        return (int) ((ypane + this.getVShift()) / getZoom());
     }
-    
+
     public int getPaneX(int xreal) {
-        return (int) ((xreal)*getZoom());
+        return (int) ((xreal) * getZoom());
     }
+
     public int getPaneY(int yreal) {
-        return (int) ((yreal)*getZoom());
+        return (int) ((yreal) * getZoom());
     }
 //    public int getPaneX(int xreal) {
 //        return (int) (xreal*getZoom()-getHShift());
@@ -220,12 +242,20 @@ public class OleScrollPane extends JScrollPane {
 //    public int getPaneY(int yreal) {
 //        return (int) (yreal*getZoom()-getVShift());
 //    }
-    
-    public int getHShift(){
+
+    public int getHShift() {
         return this.getHorizontalScrollBar().getValue();
     }
-    
-    public int getVShift(){
+
+    public int getVShift() {
         return this.getVerticalScrollBar().getValue();
+    }
+    
+    public void setFocusOn(Point3D focus) {
+        if (focus==null)
+            return;
+       int deltax=(int)(this.getRealX(this.getWidth()/2)-focus.getX()),
+               deltay=(int)(this.getRealY(this.getHeight()/2)-focus.getY());
+       this.dragRelative(deltax, deltay);
     }
 }

@@ -119,7 +119,7 @@ public class XUIAgent extends LARVAFirstAgent {
         } else if (inbox.getContent().contains("perceptions")) {
             System.out.println("Received perceptions");
             myDashBoard.preProcessACLM(inbox.getContent());
-        } else if (inbox.getContent().contains("cities")) {
+        } else if (inbox.getContent().contains("city")) {
             System.out.println("Received cadastre");
             myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("people")) {

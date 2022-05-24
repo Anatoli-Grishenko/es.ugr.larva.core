@@ -73,12 +73,14 @@ public abstract class OleSensor extends JComponent {
     protected JTextPane jtBag;
     protected JScrollPane jsPane;
     protected Map2DColor map, image1, image2, image3;
-    protected double scale, shiftx, shifty;
+    protected double scale, shiftx, shifty, limitScale = 10;
     protected Rectangle screenPort, viewPort;
     protected boolean isMap, hasGrid;
     protected AngleTransporter at;
     protected ArrayList<String> labelSet, textSet;
     public JsonArray jsaGoals = new JsonArray();
+    public OleScrollPane osPane;
+    public OleDrawPane odPane;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -312,12 +314,16 @@ public abstract class OleSensor extends JComponent {
         int mark = 5;
 
         if (this.isHasGrid()) {
-            g.setColor(Color.DARK_GRAY);
+            g.setColor(Color.BLACK);
             for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
                 p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
                 p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
                 p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
                 p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
+//                p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
+//                p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
+//                p3 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height);
+//                p4 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + vPort.height - mark);
                 oDrawLine(g, p2, p4);
             }
             for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
@@ -380,7 +386,6 @@ public abstract class OleSensor extends JComponent {
                 tf.draw();
             }
         }
-
 
     }
 
@@ -774,6 +779,7 @@ public abstract class OleSensor extends JComponent {
 
     public void setMap(Map2DColor map) {
         this.map = map;
+        
     }
 
     public boolean isMap() {
@@ -940,17 +946,6 @@ public abstract class OleSensor extends JComponent {
     }
 
     public Polygon TraceRegularPolygon(SimpleVector3D sv, int npoints, int radius1) {
-//        int xsv = viewX(sv.getSource().getX()), ysv = viewY(sv.getSource().getY());
-//        Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
-//        double alpha;
-//        p = new Polygon();
-//        for (int np = 0; np < npoints; np++) {
-//            p1 = at.alphaPoint(360 / npoints * np, radius1, pxsv);
-//            p.addPoint(p1.getXInt(), p1.getYInt());
-//        }
-//        p1 = at.alphaPoint(0, radius1, pxsv);
-//        p.addPoint(p1.getXInt(), p1.getYInt());
-//        return p;
         return this.TraceRegularPolygon(sv, npoints, radius1, 0);
     }
 
@@ -994,15 +989,28 @@ public abstract class OleSensor extends JComponent {
         return p;
     }
 
+    public SimpleVector3D viewV(SimpleVector3D v) {
+        return new SimpleVector3D(viewP(v.getSource()), v.getsOrient());
+    }
+
     public Point3D viewP(Point3D p) {
-        return new Point3D(viewX(p.getX()), viewY(p.getY()));
+        return new Point3D(viewX(p.getX()), viewY(p.getY()), 0);
+//        if (scale < limitScale) {
+//            return new Point3D(viewX(p.getX()), viewY(p.getY()), 0);
+//        } else {
+//            return new Point3D(viewX(p.getX()), viewY(p.getY()), 0).plus(new Point3D(0.5, 0.5, 0));
+//        }
     }
 
     public int viewX(double x) {
         if (this.isScaledCoordinates()) {
             return (int) (viewPort.x + (x + 0.4) * scale);
         } else {
-            return (int) ( x);
+            if (osPane == null) {
+                return (int) (x);
+            } else {
+                return (int) ((x + 0.5) * scale);
+            }
         }
     }
 
@@ -1010,7 +1018,11 @@ public abstract class OleSensor extends JComponent {
         if (this.isScaledCoordinates()) {
             return (int) (viewPort.y + (y + 0.4) * scale);
         } else {
-            return (int) (y);
+            if (osPane == null) {
+                return (int) (y);
+            } else {
+                return (int) ((y+0.5) * scale);
+            }
         }
     }
 

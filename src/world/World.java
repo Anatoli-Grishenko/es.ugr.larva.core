@@ -662,7 +662,7 @@ public class World {
         return res;
     }
 
-    public liveBot registerAgent(String name, String type, Sensors[] attach) {
+    public liveBot registerAgent(String name, String type, int bx, int by, Sensors[] attach) {
         liveBot liveagent = null;
         try {
             // Already registered?
@@ -720,12 +720,18 @@ public class World {
             }
             Ole odrones = getConfig().getOle("drones");
             addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
-            liveagent.setPosition(this.placeAtMap(odrones.getString("origin", ""), new Point3D(odrones.get("surface-location").asArray())));
+            if (bx < 0 || by < 0) {
+                liveagent.setPosition(this.placeAtMap(odrones.getString("origin", ""), new Point3D(odrones.get("surface-location").asArray())));
+            } else {
+                liveagent.setPosition(this.placeAtMap(odrones.getString("origin", ""), new Point3D(bx,by,0)));                
+            }
             liveagent.setOrientation(Compass.NORTH);
             liveagent.Raw().encodeSensor(Sensors.NAME, liveagent.getName());
             liveagent.Raw().encodeSensor(Sensors.ENERGY, liveagent.Raw().getAutonomy());
-            liveagent.Raw().setTarget(getThingByName("Guybrush Threepwood").getPosition());
-            liveagent.Raw().addCourse(getThingByName("Guybrush Threepwood").getPosition());
+            if (getThingByName("Guybrush Threepwood") != null) {
+                liveagent.Raw().setTarget(getThingByName("Guybrush Threepwood").getPosition());
+                liveagent.Raw().addCourse(getThingByName("Guybrush Threepwood").getPosition());
+            }
             liveagent.readPerceptions();
         } catch (Exception ex) {
             System.err.println(ex.toString());
@@ -918,7 +924,7 @@ public class World {
 
     public ArrayList<Point3D> findCourse(liveBot agent, Point3D pdestination) {
         Thing tdest;
-        ArrayList <Point3D> res;
+        ArrayList<Point3D> res;
 //        if (!this.isAppropriate(agent, locationName)) {
 //            return null;
 //        }
@@ -943,7 +949,7 @@ public class World {
         res = new ArrayList();
         Plan p;
         p = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdestination));
-        if (p!= null) {            
+        if (p != null) {
             for (Choice c : p) {
                 res.add(c.getPosition());
             }

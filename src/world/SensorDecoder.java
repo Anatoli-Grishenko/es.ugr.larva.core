@@ -440,7 +440,7 @@ public class SensorDecoder {
         if (getSensor(Sensors.TARGET) != null) {
             return new Point3D(getSensor(Sensors.TARGET));
         } else {
-            return getGPS();
+            return null;
         }
     }
 
@@ -565,6 +565,8 @@ public class SensorDecoder {
     }
 
     public double getAbsoluteAngular() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         return this.getAbsoluteAngularTo(getTarget());
     }
 
@@ -1167,6 +1169,8 @@ public class SensorDecoder {
     }
 
     public double getTargetDistance() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().planeDistanceTo(target);
@@ -1176,6 +1180,8 @@ public class SensorDecoder {
     }
 
     public double getTargetAbsoluteAngular() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         double ang = Math.toDegrees(Math.atan2((this.getGPS().getY() - getTarget().getY()), (getTarget().getX() - this.getGPS().getX()))) - 90;
         return (ang + 360) % 360;
     }
@@ -1201,6 +1207,8 @@ public class SensorDecoder {
     }
 
     public double get3DDistance() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().realDistanceTo(target);
@@ -1210,6 +1218,8 @@ public class SensorDecoder {
     }
 
     public int getGridDistance() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().gridDistanceTo(getTarget());
@@ -1219,6 +1229,8 @@ public class SensorDecoder {
     }
 
     public double getPlaneDistance() {
+        if (getTarget()==null)
+            return Perceptor.NULLREAD;
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().planeDistanceTo(getTarget());

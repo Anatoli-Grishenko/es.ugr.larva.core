@@ -13,6 +13,7 @@ import geometry.Point3D;
 import geometry.SimpleVector3D;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Polygon;
@@ -153,6 +154,13 @@ public class SwingTools {
         return res;
     }
     
+    public static Rectangle DimensionToRectangle(Dimension d) {
+        return new Rectangle(0,0,d.width,d.height);
+    }
+    
+    public static Dimension RectangleToDimension(Rectangle r) {
+        return new Dimension((int) r.getWidth(), (int) r.getHeight());
+    }
     public static Polygon TraceRegularPolygon(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1) {
         return TraceRegularPolygon(at, sv, npoints, radius1, 0);
     }
