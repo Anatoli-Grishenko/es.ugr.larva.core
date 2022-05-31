@@ -112,9 +112,9 @@ public class Thing extends Entity3D {
 
         res.add("name", getName());
         res.add("type", getType());
-        res.add("origin", "choice");
-        res.add("surface-location", new JsonArray().
-                add(getPosition().getXInt()).add(getPosition().getYInt()));
+        res.add("orientation", this.getOrientation());
+        res.add("position", new JsonArray().
+                add(getPosition().getXInt()).add(getPosition().getYInt()).add(getPosition().getZInt()));
         if (getType().equals("people")) {
             res.add("properties", new JsonArray().add("position").add("presence"));
             res.add("belongs", this.getBelongsTo());
@@ -145,13 +145,7 @@ public class Thing extends Entity3D {
         this.setName(o.getString("name", ""));
         this.setType(o.getString("type", ""));
         this.setBelongsTo(o.getString("belongs", ""));
-        if (o.get("position") != null) {
-            this.setPosition(new Point3D(o.getString("position", "")));
-        } else {
-            if (o.get("surface-location") != null) {
-                this.setPosition(new Point3D(o.get("surface-location").asArray()));
-            }
-        }
+        this.setPosition(new Point3D(o.get("position").asArray()));
         this.setOrientation(o.getInt("orientation", Compass.NORTH));
         this.setHasPort(o.getBoolean("hasport", false));
         this.setHasAirport(o.getBoolean("hasairport", false));
@@ -197,5 +191,6 @@ public class Thing extends Entity3D {
     public void setBelongsTo(String _belongsTo) {
         this._belongsTo = _belongsTo;
     }
+
 
 }

@@ -116,6 +116,7 @@ public class OleScrollPane extends JScrollPane {
 
     public void reset(Dimension d) {
         reference = d;
+        setZoom(getZoomBalance());
     }
 
     public OleDrawPane getOleDrawPane() {
@@ -128,6 +129,10 @@ public class OleScrollPane extends JScrollPane {
                 nh = (int) (reference.getHeight() * getZoom());
         odPane.setPreferredSize(new Dimension(nw, nh));
         this.setViewportView(odPane);
+    }
+
+    public double getZoomBalance() {
+        return this.getPreferredSize().getWidth() / reference.getWidth();
     }
 
     public double getZoom() {
@@ -143,16 +148,17 @@ public class OleScrollPane extends JScrollPane {
     }
 
     protected void Drag(MouseEvent e) {
-        dragRelative(x1-e.getX(), y1-e.getY());
+        dragRelative(x1 - e.getX(), y1 - e.getY());
     }
 
     protected void dragRelative(int deltax, int deltay) {
-            view = getViewport().getViewRect();
-        view.setLocation((int) (view.getX() + (deltax) * DragSpeed), 
+        view = getViewport().getViewRect();
+        view.setLocation((int) (view.getX() + (deltax) * DragSpeed),
                 (int) (view.getY() + (deltay) * DragSpeed));
         odPane.scrollRectToVisible(view);
-        
+
     }
+
     protected void Wheel(MouseWheelEvent e) {
 
         int steps = e.getWheelRotation();
@@ -250,12 +256,22 @@ public class OleScrollPane extends JScrollPane {
     public int getVShift() {
         return this.getVerticalScrollBar().getValue();
     }
-    
+
     public void setFocusOn(Point3D focus) {
-        if (focus==null)
+        if (focus == null) {
             return;
-       int deltax=(int)(this.getRealX(this.getWidth()/2)-focus.getX()),
-               deltay=(int)(this.getRealY(this.getHeight()/2)-focus.getY());
-       this.dragRelative(deltax, deltay);
+        }
+        if (this.getZoom() != 2 * getZoomBalance()) {
+            this.setZoom(2 * getZoomBalance());
+        }
+        int deltax = (int) (focus.getX() - this.getRealX(this.getWidth() / 2)),
+                deltay = (int) (focus.getY() - this.getRealY(this.getHeight() / 2));
+        if (Math.abs(deltax) > 10 || Math.abs(deltay) > 10) {
+            this.dragRelative(deltax, deltay);
+            view = getViewport().getViewRect();
+            view.setLocation((int) (view.getX() + this.getPaneX(deltax)),
+                    (int) (view.getY() + this.getPaneY(deltay)));
+            odPane.scrollRectToVisible(view);
+        }
     }
 }

@@ -22,6 +22,7 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.RescaleOp;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,19 +83,24 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         } catch (IOException ex) {
         }
         hasGrid = false;
-        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to Display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"Heightmap\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
+        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
                 + "}";
         displayCfg = new OleConfig();
         displayCfg.set(doptions);
+        if (new File("config/displayoptions.json").exists()) {
+            displayCfg.loadFile("config/displayoptions.json");
+        } else {
+            displayCfg.saveAsFile("config/", "displayoptions.json", true);
+        }
         this.setScaledCoordinates(false);
     }
 
     @Override
     public void validate() {
         super.validate();
-
-        screenPort = new Rectangle((int) this.getBounds().getX() + 10, (int) this.getBounds().getY() + 20,
-                (int) this.getBounds().getWidth() - 20, (int) this.getBounds().getHeight() - 20); //SwingTools.doNarrow(this.getBounds(), margin);
+        int border = 0;
+        screenPort = new Rectangle((int) this.getBounds().getX(), (int) this.getBounds().getY(),
+                (int) this.getBounds().getWidth(), (int) this.getBounds().getHeight()); //SwingTools.doNarrow(this.getBounds(), margin);
         viewPort = SwingTools.doNarrow(screenPort, 10); //SwingTools.doNarrow(this.getBounds(), narrow);
 //        viewPort.y += 16;
 //        screenPort.y += 16;
@@ -137,7 +143,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         jbAux = new JButton("DISPLAY");
 //        jbAux.setPreferredSize(new Dimension(100, 20));
         jbAux.addActionListener(this);
-        jbAux.setBounds(new Rectangle(this.getBounds().x, this.getBounds().y, 100, 20));
+        jbAux.setBounds(new Rectangle(this.getBounds().x, this.getBounds().height, 100, 20));
         jbAux.setMargin(new Insets(0, 0, 0, 0));
 //        jbAux.setContentAreaFilled(true);
 //        jbAux.setBorderPainted(true);
@@ -148,7 +154,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         jbAux = new JButton("FOCUS");
 //        jbAux.setPreferredSize(new Dimension(100, 20));
         jbAux.addActionListener(this);
-        jbAux.setBounds(new Rectangle(this.getBounds().x + 100, this.getBounds().y, 100, 20));
+        jbAux.setBounds(new Rectangle(this.getBounds().x + 100, this.getBounds().height, 100, 20));
         jbAux.setMargin(new Insets(0, 0, 0, 0));
 //        jbAux.setContentAreaFilled(true);
 //        jbAux.setBorderPainted(true);
@@ -158,7 +164,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         jbAux = new JButton("MAPS");
 //        jbAux.setPreferredSize(new Dimension(100, 20));
         jbAux.addActionListener(this);
-        jbAux.setBounds(new Rectangle(this.getBounds().x + 200, this.getBounds().y, 100, 20));
+        jbAux.setBounds(new Rectangle(this.getBounds().x + 200, this.getBounds().height, 100, 20));
         jbAux.setMargin(new Insets(0, 0, 0, 0));
 //        jbAux.setContentAreaFilled(true);
 //        jbAux.setBorderPainted(true);
@@ -229,7 +235,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             RescaleOp darken = new RescaleOp(0.5f, 0, null);
             int nw = (int) (odPane.getPreferredSize().getWidth()),
                     nh = (int) (odPane.getPreferredSize().getHeight());
-//            g.drawImage(darken.filter(map.getMap(), null), 0, 0, nw, nh, null);
+//            g.drawImage(darken.filter(mapView.getMap(), null), 0, 0, nw, nh, null);
             g.drawImage(mapView.getMap(), 0, 0, nw, nh, null);
             SimpleVector3D ptrail, prevTrail, ptext, ppoint;
             double xVP, yVP;
@@ -250,35 +256,24 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                             g.setColor(Color.GREEN);
                         }
                         g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
-//                        if (scale < limitScale) {
-//                            g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
-//                        } else {
-//                            g.fill(this.TraceRegularPolygon(ptrail.clone().plus(new Point3D(0.5,0.5,0)), 4, 3));
-//                        }
                     }
                 }
 
                 g.setColor(OleDashBoard.cTrack);
                 ptrail = externalDecoder.getGPSVector();
                 prevTrail = externalDecoder.getGPSVectorMemory(1);
-//                    ptrail = Trails.get(name).get(0);
-//                    if (Trails.get(name).size() > 1) {
-//                        prevTrail = Trails.get(name).get(1);
-//                    } else {
-//                        prevTrail = Trails.get(name).get(0);
-//                    }
                 g.setStroke(new BasicStroke(2));
-                if (scale < limitScale) {
+//                if (externalDecoder.getCourse()!=null || scale < limitScale) {
                     p = this.TraceRegularPolygon(ptrail, 4, 5);
                     g.drawPolygon(p);
-                    p = this.TraceCourse(ptrail, 20);
+                    p = this.TraceCourse(ptrail, 15);
                     g.drawPolygon(p);
-                } else {
-                    g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(),
-                            (int) viewX(ptrail.getSource().getXInt() - 0.5),
-                            (int) viewY(ptrail.getSource().getYInt() - 0.5),
-                            (int) scale, (int) scale, null);
-                }
+//                } else {
+//                    g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(),
+//                            (int) viewX(ptrail.getSource().getXInt() - 0.5),
+//                            (int) viewY(ptrail.getSource().getYInt() - 0.5),
+//                            (int) scale, (int) scale, null);
+//                }
 
 //                    p = this.TraceRegularStar(ptrail, 6, 30, 15);
 //                    p = this.TraceRomboid(ptrail, 5);
@@ -292,20 +287,31 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             }
 
             // Paint targets
-            if (externalDecoder.getTarget() != null) {
-                Point3D pWaypoint = externalDecoder.getTarget();
+            if (externalDecoder.getDestination() != null) {
+                Point3D pWaypoint;
+                pWaypoint = externalDecoder.getDestination();
                 g.setColor(OleDashBoard.cAngle);
                 g.setStroke(new BasicStroke(2));
+                g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
+                g.setStroke(new BasicStroke(1));
+                for (int i = 0; i < externalDecoder.getCourse().length; i++) {
+                    pWaypoint = new Point3D(externalDecoder.getCourse()[i]);
+                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 2));
+                }
+                pWaypoint = externalDecoder.getTarget();
+                g.setStroke(new BasicStroke(2));
+                g.setColor(Color.CYAN);
                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
             }
 
             // PaintCities
-            if (displayCfg.getTab("Objects").getOle("Objects to Display").getBoolean("Cities", false)
-                    && externalDecoder.getCadastre() != null) {
-                Color col = Color.WHITE;
-                g.setStroke(new BasicStroke(1));
+            Color col = Color.WHITE;
+            g.setColor(col);
+            g.setStroke(new BasicStroke(1));
 
-                for (Thing t : externalDecoder.getCadastre().getAllThings()) {
+            for (Thing t : externalDecoder.getFullCadastre().getAllThings()) {
+                if (displayCfg.getTab("Objects").getOle("Objects to display").getBoolean("Cities", false)
+                        && externalDecoder.getFullCadastre() != null) {
                     tf = new TextFactory(g);
                     String name = t.getName();
                     g.setColor(col);
@@ -313,28 +319,21 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                     tf.setsText(name)
                             .setX(osPane.getPaneX(t.getPosition().getXInt())).setY(osPane.getPaneY(t.getPosition().getYInt()) - 10)
                             .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
-                            .setFontSize(12).validate();
+                            .setFontSize(10).validate();
                     tf.draw();
-                    if (!t.isHasAirport() && !t.isHasPort()) {
-                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
-                    } else {
-                        if (t.isHasAirport()) {
-                            g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 3, 5));
-                        }
-                        if (t.isHasPort()) {
-                            g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 10, 5));
-                        }
+                }
+                if (!t.isHasAirport() && !t.isHasPort()) {
+                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
+                } else {
+                    if (t.isHasAirport()) {
+                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 3, 5));
+                    }
+                    if (t.isHasPort()) {
+                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 10, 5));
                     }
                 }
+
             }
-//            if (externalDecoder.getCensus() != null) {
-//                Point3D pCity = null;
-//                Census reg = externalDecoder.getCensus();
-//                for (String sperson : reg.listPeople()) {
-//                    this.paintPeople(g, reg.getPerson(sperson));
-//                }
-//            }
-//            g.setClip(null);
         }
 
         return this;
@@ -420,22 +419,35 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         s = name;
 
         g.setColor(OleDashBoard.cTrack);
+        int fsize = 12;
+        s = String.format("%s  - %s", name, externalDecoder.getType());
         tf = new TextFactory(g);
-        tf.setPoint(pLabel).setsText(s).setFontSize(14).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
+        tf.setPoint(pLabel).setsText(s).setFontSize(fsize).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
 
-        SimpleVector3D last = new SimpleVector3D(prevsv.getSource(), sv.getSource());
-        if (last.canonical().getTarget().getZ() > 0) {
-            climb = emojis.UPRIGHTARROW;//"+";
-        } else if (last.canonical().getTarget().getZ() < 0) {
-            climb = emojis.DOWNRIGHTARROW; //"-";
+        if (prevsv != null) {
+            SimpleVector3D last = new SimpleVector3D(prevsv.getSource(), sv.getSource());
+            if (last.canonical().getTarget().getZ() > 0) {
+                climb = emojis.UPRIGHTARROW;//"+";
+            } else if (last.canonical().getTarget().getZ() < 0) {
+                climb = emojis.DOWNRIGHTARROW; //"-";
+            } else {
+                climb = emojis.RIGHTARROW; //" ";
+            }
         } else {
             climb = emojis.RIGHTARROW; //" ";
         }
         s = String.format("%03d%s%s", (int) sv.getSource().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
         tf = new TextFactory(g);
-        pLabel.setY(pLabel.getY() + 14);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(14)
+        pLabel.setY(pLabel.getY() + fsize);
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
+                .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
+        tf.draw();
+        s = String.format("e.%03d%% pl.%02d", externalDecoder.getEnergy() * 100 / externalDecoder.getAutonomy(),
+                externalDecoder.getPayload());
+        tf = new TextFactory(g);
+        pLabel.setY(pLabel.getY() + fsize);
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
         g.setStroke(new BasicStroke());
@@ -493,7 +505,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         this.map = map;
         this.odPane.setPreferredSize(new Dimension(map.getWidth(), map.getHeight()));
         osPane.reset(odPane.getPreferredSize());
-        osPane.setZoom(odPane.getWidth() / map.getWidth());
+//        osPane.setZoom(odPane.getWidth() *1.0 / map.getWidth());
         prepareMap();
 
     }
@@ -529,9 +541,9 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 for (int x = 0; x < map.getWidth(); x++) {
                     for (int y = 0; y < map.getHeight(); y++) {
                         if (map.getStepLevel(x, y) < 5) {
-                            mapView.setColor(x, y, new Color(0, 0, 51));
+                            mapView.setColor(x, y, OleDashBoard.cSea);
                         } else {
-                            mapView.setColor(x, y, new Color(102, 51, 0));
+                            mapView.setColor(x, y, OleDashBoard.cGround);
                         }
                     }
                 }

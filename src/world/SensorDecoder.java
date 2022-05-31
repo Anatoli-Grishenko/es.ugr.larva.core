@@ -49,6 +49,7 @@ public class SensorDecoder {
         encodeSensor(Sensors.CARGO, new JsonArray());
         encodeSensor(Sensors.PEOPLE, new JsonArray());
         encodeSensor(Sensors.CAPABILITIES, new JsonArray());
+        encodeSensor(Sensors.STOP,false);
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
@@ -68,7 +69,7 @@ public class SensorDecoder {
     public boolean loadWorldMap(String name) {
         try {
             hMap = new Map2DColor();
-            hMap.loadMapNormalize(name);
+            hMap.loadMapRaw(name);
             return true;
         } catch (IOException ex) {
         }
@@ -183,6 +184,10 @@ public class SensorDecoder {
 
     public void setName(String Name) {
         encodeSensor(Sensors.NAME, encodeValues(Name));
+    }
+
+    public void setType(String type) {
+        encodeSensor(Sensors.NAME, encodeValues(type));
     }
 
     public String getTeam() {
@@ -350,6 +355,13 @@ public class SensorDecoder {
         return this.getSensor(Sensors.ONTARGET).get(0).asBoolean();
     }
 
+    public boolean getOnDestination() {
+        if (getDestination() == null) {
+            return false;
+        }
+        return getDestination().isEqualTo(getGPS());
+    }
+
     public void setOntarget(boolean Ontarget) {
         encodeSensor(Sensors.ONTARGET, encodeValues(Ontarget));
     }
@@ -358,12 +370,31 @@ public class SensorDecoder {
         return this.getSensor(Sensors.ALIVE).get(0).asBoolean();
     }
 
+    public boolean getStop() {
+        return this.getSensor(Sensors.STOP).get(0).asBoolean();
+    }
+
+    public void setStop(boolean stop) {
+        encodeSensor(Sensors.STOP, encodeValues(stop));
+    }
+
+
     public void setAlive(boolean Alive) {
         encodeSensor(Sensors.ALIVE, encodeValues(Alive));
     }
 
     public String[] getCargo() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CARGO))));
+    }
+
+    public int containsCargo(String what) {
+        JsonArray res = getSensor(Sensors.CARGO);
+        for (int i = 0; i < res.size(); i++) {
+            if (res.get(i).asString().equals(what)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public void setCargo(String[] Cargo) {
@@ -375,13 +406,12 @@ public class SensorDecoder {
     }
 
     public void removeCargo(String Value) {
-        JsonArray res = getSensor(Sensors.CARGO);
-        for (int i = 0; i < res.size(); i++) {
-            if (res.get(i).asString().equals(Value)) {
-                res.remove(i);
-                break;
-            }
+        int i = this.containsCargo(Value);
+        if (i >= 0) {
+            JsonArray res = getSensor(Sensors.CARGO);
+            res.remove(i);
         }
+
     }
 
     public String[] getTrace() {
@@ -445,11 +475,19 @@ public class SensorDecoder {
     }
 
     public void setTarget(Point3D Target) {
-        encodeSensor(Sensors.TARGET, Target.toJson());
+        if (Target == null) {
+            encodeSensor(Sensors.TARGET, (JsonArray) null);
+        } else {
+            encodeSensor(Sensors.TARGET, Target.toJson());
+        }
     }
 
     public Point3D getGPS() {
-        return new Point3D(this.getSensor(Sensors.GPS).get(0).asArray());
+        if (this.getSensor(Sensors.GPS) != null) {
+            return new Point3D(this.getSensor(Sensors.GPS).get(0).asArray());
+        } else {
+            return null;
+        }
     }
 
     public Point3D getGPSMemory(int i) {
@@ -465,13 +503,20 @@ public class SensorDecoder {
         return -1;
     }
 
+    public int getGPSMemorySize() {
+        return this.TraceGPS.size();
+    }
+
     public void setGPS(Point3D GPS) {
         encodeSensor(Sensors.GPS, new JsonArray().add(GPS.toJson()));
     }
 
     public Point3D getDestination() {
-        return new Point3D(getSensor(Sensors.DESTINATION));
-
+        if (getSensor(Sensors.DESTINATION) != null) {
+            return new Point3D(getSensor(Sensors.DESTINATION));
+        } else {
+            return null;
+        }
     }
 
     public void setDestination(Point3D destination) {
@@ -488,6 +533,9 @@ public class SensorDecoder {
     }
 
     public SimpleVector3D getGPSVectorMemory(int old) {
+        if (TraceGPS.size() == 0) {
+            return null;
+        }
         if (0 <= old && old < this.TraceGPS.size()) {
             return this.TraceGPS.get(old);
         } else {
@@ -565,8 +613,9 @@ public class SensorDecoder {
     }
 
     public double getAbsoluteAngular() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         return this.getAbsoluteAngularTo(getTarget());
     }
 
@@ -766,34 +815,36 @@ public class SensorDecoder {
     }
 
     public int[][] getCourseData() {
-        JsonArray jsaReading = getSensor(Sensors.COURSE);        
-        Point3D mypos=this.getGPS();
-        int range = getSensor(Sensors.VISUAL).size(),x,y;
+        JsonArray jsaReading = getSensor(Sensors.COURSE);
+        Point3D mypos = this.getGPS();
+        int range = getSensor(Sensors.VISUAL).size(), x, y;
 
-        int[][] res = new int[range][range];        
-        
+        int[][] res = new int[range][range];
+
         for (int i = 0; i < res.length; i++) {
             for (int j = 0; j < res[0].length; j++) {
                 res[j][i] = Perceptor.NULLREAD;
             }
         }
-        if (jsaReading == null)
+        if (jsaReading == null) {
             return res;
+        }
         for (int i = 0; i < res.length; i++) {
             for (int j = 0; j < res[0].length; j++) {
                 res[j][i] = 0;
-                x=mypos.getXInt()+j-range/2;
-                y=mypos.getYInt()+i-range/2;
-                for (int wp=0; wp<jsaReading.size(); wp++) {
-                    if (x==jsaReading.get(wp).asArray().get(0).asInt()
-                            && y==jsaReading.get(wp).asArray().get(1).asInt())
+                x = mypos.getXInt() + j - range / 2;
+                y = mypos.getYInt() + i - range / 2;
+                for (int wp = 0; wp < jsaReading.size(); wp++) {
+                    if (x == jsaReading.get(wp).asArray().get(0).asInt()
+                            && y == jsaReading.get(wp).asArray().get(1).asInt()) {
                         res[j][i] = 1;
+                    }
                 }
             }
         }
         return res;
     }
-    
+
     public int[][] getVisualData() {
         JsonArray jsaReading = null;
         jsaReading = getSensor(Sensors.VISUAL);
@@ -848,8 +899,9 @@ public class SensorDecoder {
     public double[][] getCourse() {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
-       if (jsaReading == null)
-           return null;
+        if (jsaReading == null) {
+            return null;
+        }
         double[][] res = new double[jsaReading.size()][3];
         for (int i = 0; i < jsaReading.size(); i++) {
             jsarow = jsaReading.get(i).asArray();
@@ -877,8 +929,9 @@ public class SensorDecoder {
     }
 
     public void addCourse(Point3D p) {
-        if (this.getSensor(Sensors.COURSE)==null)
+        if (this.getSensor(Sensors.COURSE) == null) {
             this.cleanCourse();
+        }
         this.encodeSensor(Sensors.COURSE, this.getSensor(Sensors.COURSE).add(p.toJson()));
     }
 
@@ -893,17 +946,20 @@ public class SensorDecoder {
         if (getTarget() == null) {
             activateCourse();
         }
-        setTarget(getCourse(this.findNextCourseIndex()));
+        int inext = this.findNextCourseIndex();
+        if (inext > 0) {
+            setTarget(getCourse(inext));
+        }
     }
 
     public int findNextCourseIndex() {
-        if (getTarget() == null) {
+        if (getTarget() == null && getCourse() != null) {
             activateCourse();
         }
         for (int i = 0; i < sizeCourse(); i++) {
             if (getTarget().isEqualTo(getCourse(i)) && i < sizeCourse() - 1) {
-                setTarget(getCourse(i + 1));
-                return i;
+//                setTarget(getCourse(i + 1));
+                return i + 1;
             }
         }
         return -1;
@@ -953,7 +1009,12 @@ public class SensorDecoder {
 
     public void feedPerception(JsonObject jsoperception) {
         fromJson(jsoperception.get("perceptions").asArray());
-        this.TraceGPS.add(0, this.getGPSVector());
+        if (this.getGPS() != null) {
+            if (this.TraceGPS.size() == 0 || !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
+                this.TraceGPS.add(0, this.getGPSVector());
+            }
+
+        }
     }
 
     public void feedPerception(String content) {
@@ -1169,8 +1230,9 @@ public class SensorDecoder {
     }
 
     public double getTargetDistance() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().planeDistanceTo(target);
@@ -1180,8 +1242,9 @@ public class SensorDecoder {
     }
 
     public double getTargetAbsoluteAngular() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         double ang = Math.toDegrees(Math.atan2((this.getGPS().getY() - getTarget().getY()), (getTarget().getX() - this.getGPS().getX()))) - 90;
         return (ang + 360) % 360;
     }
@@ -1207,8 +1270,9 @@ public class SensorDecoder {
     }
 
     public double get3DDistance() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().realDistanceTo(target);
@@ -1218,8 +1282,9 @@ public class SensorDecoder {
     }
 
     public int getGridDistance() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().gridDistanceTo(getTarget());
@@ -1229,8 +1294,9 @@ public class SensorDecoder {
     }
 
     public double getPlaneDistance() {
-        if (getTarget()==null)
+        if (getTarget() == null) {
             return Perceptor.NULLREAD;
+        }
         Point3D target = getTarget();
         if (target != null) {
             return getGPS().planeDistanceTo(getTarget());
@@ -1239,13 +1305,18 @@ public class SensorDecoder {
         }
     }
 
-    void configureType(String type) {
+    public String getType() {
+        return this.getSensor(Sensors.TYPE).get(0).asString();
+    }
 
+    void configureType(String type) {
+        encodeSensor(Sensors.TYPE, type);
         switch (type.toUpperCase()) {
-            case "LIGHTT":
-                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+            default:
+            case "HUMMER":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
-                encodeSensor(Sensors.MAXSLOPE, 10);
+                encodeSensor(Sensors.MAXSLOPE, 15);
                 encodeSensor(Sensors.MAXCARGO, 6);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.AUTONOMY, 600);
@@ -1262,8 +1333,8 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "HEAVYT":
-                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+            case "HEMTT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 5);
                 encodeSensor(Sensors.MAXCARGO, 40);
@@ -1282,9 +1353,9 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "LIGHTH":
-                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
-                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 30);
+            case "COLIBRI":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 6);
                 encodeSensor(Sensors.AUTONOMY, 800);
@@ -1304,10 +1375,9 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            default:
-            case "HEAVYH":
-                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
-                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+            case "BLACKHAWK":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 20);
                 encodeSensor(Sensors.AUTONOMY, 1000);
@@ -1327,9 +1397,9 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "LIGHTA":
+            case "AOSHIMA":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
-                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 20);
                 encodeSensor(Sensors.AUTONOMY, 700);
@@ -1349,8 +1419,8 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "HEAVYA":
-                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 1);
+            case "ATLASA400":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 140);
@@ -1371,9 +1441,9 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "LIGHTM":
+            case "CORSAIR":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
-                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL + 10);
                 encodeSensor(Sensors.MAXSLOPE, 0);
                 encodeSensor(Sensors.MAXCARGO, 15);
                 encodeSensor(Sensors.AUTONOMY, 1000);
@@ -1391,9 +1461,9 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
-            case "HEAVYM":
+            case "MARWAND":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
-                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL + 10);
                 encodeSensor(Sensors.MAXSLOPE, 0);
                 encodeSensor(Sensors.MAXCARGO, 250);
                 encodeSensor(Sensors.AUTONOMY, 3000);

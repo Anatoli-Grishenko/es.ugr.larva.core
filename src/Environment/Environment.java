@@ -55,7 +55,7 @@ public class Environment extends SensorDecoder {
         String saux = other.toJson().toString();
         JsonObject jsaux = Json.parse(saux).asObject();
         this.fromJson(jsaux.get("perceptions").asArray());
-        cadastre = other.getCadastre();
+        cadastre = other.getFullCadastre();
         census = other.getCensus();
         cache();
 
@@ -69,7 +69,7 @@ public class Environment extends SensorDecoder {
             return false;
         }
         this.setTarget(World.getThingByName("Guybrush Threepwood").getPosition());
-        this.live = World.registerAgent(name, r.name(), -1,-1, attach);
+        this.live = World.registerAgent(name, r.name(), -1, -1, attach);
 //        System.out.println(live.getPerceptions().toString());
 //        feedPerception(this.live.getPerceptions());
         return true;
@@ -407,38 +407,77 @@ public class Environment extends SensorDecoder {
     }
 
     public boolean isFreeFront() {
-        return this.getPolarLidar()[2][1] >= 0;
+        return this.getLidarFront() >= -getMaxslope() && getLidarFront() <= getMaxslope()
+                && getVisualFront() >= this.getMinlevel()
+                && getVisualFront() <= this.getMaxlevel();
 //        return this.getLidarFront() >= 0;
     }
 
     public boolean isFreeFrontLeft() {
-        return this.getPolarLidar()[1][1] >= 0;
-//        return this.getLidarLeft() >= 0;
+        return this.getLidarLeft() >= -getMaxslope() && getLidarLeft() <= getMaxslope()
+                && getVisualLeft() >= this.getMinlevel()
+                && getVisualLeft() <= this.getMaxlevel();
     }
 
     public boolean isFreeFrontRight() {
-        return this.getPolarLidar()[3][1] >= 0;
-//        return this.getLidarRight() >= 0;
+        return this.getLidarRight() >= -getMaxslope() && getLidarRight() <= getMaxslope()
+                && getVisualRight() >= this.getMinlevel()
+                && getVisualRight() <= this.getMaxlevel();
     }
 
     public boolean isFreeLeft() {
-        return this.getLidarLeftmost() >= 0;
+        return this.getLidarLeftmost() >= -getMaxslope() && getLidarLeftmost() <= getMaxslope()
+                && getVisualLeftmost() >= this.getMinlevel()
+                && getVisualLeftmost() <= this.getMaxlevel();
     }
 
     public boolean isFreeRight() {
-        return this.getLidarRightmost() >= 0;
+        return this.getLidarRightmost()>= -getMaxslope () && getLidarRightmost()<= getMaxslope ()
+                && getVisualRightmost() >= this.getMinlevel()
+                && getVisualRightmost() <= this.getMaxlevel();
     }
 
+    public boolean isTargetAhead() {
+        return getRelativeAngular() >= -90 && getRelativeAngular() <= 90;
+//        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
+    }
     public boolean isTargetFront() {
-        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
+        return getRelativeAngular() > -22 && getRelativeAngular() < 22;
+//        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
+    }
+    public boolean isTargetBack() {
+        return getRelativeAngular() == 180;
+//        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
 
     public boolean isTargetLeft() {
-        return getRelativeAngular() >= 45;
+        return getRelativeAngular() >= 0;
+//        return getRelativeAngular() >= 45;
     }
 
     public boolean isTargetRight() {
+        return getRelativeAngular() < 0;
+//        return getRelativeAngular() <= -45;
+    }
+
+    public boolean isTargetFrontLeft() {
+        return getRelativeAngular() >= 22;
+//        return getRelativeAngular() >= 45;
+    }
+
+    public boolean isTargetFrontRight() {
+        return getRelativeAngular() <= -22;
+//        return getRelativeAngular() <= -45;
+    }
+
+    public boolean isTargetLeftmost() {
+        return getRelativeAngular() >= 45;
+//        return getRelativeAngular() >= 45;
+    }
+
+    public boolean isTargetRightmost() {
         return getRelativeAngular() <= -45;
+//        return getRelativeAngular() <= -45;
     }
 
     public int isMemoryVector() {
@@ -473,12 +512,16 @@ public class Environment extends SensorDecoder {
         this.activateCourse();
     }
 
-    public ThingSet getCadastre() {
+    public ThingSet getFullCadastre() {
         return cadastre;
     }
 
     public ThingSet getCensus() {
         return census;
+    }
+    
+    public String[] getCityList() {
+        return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
 
 }

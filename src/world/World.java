@@ -58,10 +58,11 @@ public class World {
     protected boolean _godmode = false, debug = false;
     protected String _surfaceName;
     protected OleConfig cfg;
-    JsonArray oThings;
+    protected JsonArray oThings;
     protected String[][] filter, filterHQ, filterDLX;
     static int range = 41, cx = range / 2, cy = cx;
     int maxflight;
+    protected Point3D destination, start;
 
     public World(String name) {
         this.name = name;
@@ -127,6 +128,19 @@ public class World {
 
     public String getName() {
         return this.name;
+    }
+
+    public Point3D placeAtMap(Point3D initial) {
+        Point3D res = initial;
+        int width = this.getEnvironment().getSurface().getWidth(),
+                height = this.getEnvironment().getSurface().getHeight();
+        if (0 <= res.getX() && res.getX() < width && 0 <= res.getY() && res.getY() < height) {
+            res.setZ(this.getEnvironment().getSurface().getStepLevel(res.getX(), res.getY()));
+            return res;
+        } else {
+            return new Point3D(0, 0, this.getEnvironment().getSurface().getStepLevel(0, 0));
+        }
+
     }
 
     public Point3D placeAtMap(String where, Point3D initial) {
@@ -219,15 +233,13 @@ public class World {
         if (!cfg.isEmpty()) {
             try {
                 this.name = cfg.getField("name");
-                oaux = cfg.getOle("drones");
-                this.maxflight = oaux.getInt("maxflight");
                 oaux = cfg.getOle("types");
                 for (String oclass : oaux.getFieldList()) {
                     this.getOntology().add(oclass, oaux.getField(oclass));
                 }
                 this.setOntology(this.getOntology());
                 oaux = cfg.getOle("world");
-                Thing e = setEnvironment(oaux.getField(name)).getEnvironment();
+                Thing e = setEnvironment(name).getEnvironment();
                 e.setPosition(new Point3D(0, 0, 0));
                 e.setOrientation(Compass.NORTH);
                 Map2DColor terrain = new Map2DColor(10, 10, 0);
@@ -249,30 +261,34 @@ public class World {
                     e = new Thing("");
                     e.fromJson(jsothing);
                     this.addThing(e, props);
-                    String where = (jsothing.getString("origin", "").equals("")) ? "choice" : jsothing.getString("origin", "");
-                    Point3D eposition = this.placeAtMap(where, e.getPosition());
-                    e.setPosition(eposition);
-//                    if (auxp.get(0) < 0 || auxp.get(1) < 0) {
-//                        int rx, ry;
-//                        boolean valid = true;
-//                        do {
-//                            rx = (int) (Math.random() * terrain.getWidth());
-//                            ry = (int) (Math.random() * terrain.getHeight());
-//                            for (Thing myt : this._population.values()) {
-//                                if (!myt.getName().equals(this.getName()) && myt.getType().equals("PEOPLE") && myt.getPosition().to2D().planeDistanceTo(new Point3D(rx, ry)) < 5) {
-//                                    valid = false;
-//                                }
-//                            }
-//                        } while (!valid);
-//                        e.placeAtSurface(new Point3D(rx, ry));
-//                    } else {
-//                        e.placeAtSurface(new Point3D(auxp.get(0), auxp.get(1), 0));
-//                    }
+//                    System.out.println("Found thing " + e.getName() + "\n" + e.toString());
+                    e.setPosition(placeAtMap(e.getPosition()));
+//                    System.out.println("Found thing " + e.getName() + "\n" + e.toString());
                 }
+                Point3D p;
+                JsonArray jsap;
+                if (ocfg.getFieldList().contains("start")) {
+                    jsap = ocfg.get("start").asArray();
+                    p = new Point3D(jsap);
+                    p = this.placeAtMap(p);
+                    start = p;
+                } else {
+                    start = null;
+                }
+                if (ocfg.getFieldList().contains("destination")) {
+                    jsap = ocfg.get("destination").asArray();
+                    p = new Point3D(jsap);
+                    p = this.placeAtMap(p);
+                    destination = p;
+                } else {
+                    destination = null;
+                }
+
             } catch (Exception ex) {
                 System.err.println(ex.toString());
                 return ex.toString();
             }
+//            printSummary();
             return "ok";
         }
         return "Empty configuration";
@@ -662,6 +678,65 @@ public class World {
         return res;
     }
 
+    public Point3D getClosestDocking(Point3D ptentative) {
+        Point3D res = ptentative.clone(), res2;
+        Map2DColor map = getEnvironment().getSurface();
+        int k = 10, cx = 0, cy = 0, n = 0;
+        // COG
+        for (int x = 0; x <= k; x++) {
+            for (int y = 0; y <= k; y++) {
+                res.setX(ptentative.getX() - x + k / 2.0);
+                res.setY(ptentative.getY() - y + k / 2.0);
+                res = this.placeAtMap(res);
+                if (res.getZ() < 5) {
+                    cx += res.getXInt();
+                    cy += res.getYInt();
+                    n++;
+                }
+            }
+        }
+        if (n > 0) {
+            res.setX(cx / n);
+            res.setY(cy / n);
+            res = this.placeAtMap(res);
+        }
+
+        // Approach
+        res2 = res.clone();
+        while (res.getZ() == 0) {
+            res2 = res.clone();
+            if (res.getX() > ptentative.getX()) {
+                res.setX(res.getX() - 1);
+            } else if (res.getX() < ptentative.getX()) {
+                res.setX(res.getX() + 1);
+            }
+            if (res.getY() > ptentative.getY()) {
+                res.setY(res.getY() - 1);
+            } else if (res.getY() < ptentative.getY()) {
+                res.setY(res.getY() + 1);
+            }
+            res = this.placeAtMap(res);
+        }
+        return res2;
+    }
+//    public Point3D getClosestDocking(Point3D ptentative) {
+//        Point3D res = ptentative.clone();
+//        Map2DColor map = getEnvironment().getSurface();
+//        for (int k = 0; k < 10; k++) {
+//            for (int x = 0; x <= k; x++) {
+//                for (int y = 0; y <= k; y++) {
+//                    res.setX(ptentative.getX() - x + k / 2.0);
+//                    res.setY(ptentative.getY() - y + k / 2.0);
+//                    res=this.placeAtMap(res);
+//                    if (res.getZ()< 5) {
+//                        return res;
+//                    }
+//                }
+//            }
+//        }
+//        return null;
+//    }
+
     public liveBot registerAgent(String name, String type, int bx, int by, Sensors[] attach) {
         liveBot liveagent = null;
         try {
@@ -718,19 +793,27 @@ public class World {
                         break;
                 }
             }
-            Ole odrones = getConfig().getOle("drones");
             addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
             if (bx < 0 || by < 0) {
-                liveagent.setPosition(this.placeAtMap(odrones.getString("origin", ""), new Point3D(odrones.get("surface-location").asArray())));
+                if (getStart() != null) {
+                    liveagent.setPosition(getStart());
+                } else {
+                    liveagent.setPosition(this.placeAtMap(new Point3D(0, 0, 0)));
+                }
             } else {
-                liveagent.setPosition(this.placeAtMap(odrones.getString("origin", ""), new Point3D(bx,by,0)));                
+                if (liveagent.getType().equals("CORSAIR")) {
+                    liveagent.setPosition(this.placeAtMap(this.getClosestDocking(new Point3D(bx, by, 0))));
+                } else {
+                    liveagent.setPosition(this.placeAtMap(new Point3D(bx, by, 0)));
+                }
             }
             liveagent.setOrientation(Compass.NORTH);
             liveagent.Raw().encodeSensor(Sensors.NAME, liveagent.getName());
             liveagent.Raw().encodeSensor(Sensors.ENERGY, liveagent.Raw().getAutonomy());
-            if (getThingByName("Guybrush Threepwood") != null) {
-                liveagent.Raw().setTarget(getThingByName("Guybrush Threepwood").getPosition());
-                liveagent.Raw().addCourse(getThingByName("Guybrush Threepwood").getPosition());
+            if (getDestination() != null) {
+                liveagent.Raw().cleanCourse();
+                liveagent.Raw().addCourse(getDestination());
+                liveagent.Raw().activateCourse();
             }
             liveagent.readPerceptions();
         } catch (Exception ex) {
@@ -793,6 +876,10 @@ public class World {
             switch (enumaction) {
                 case MOVE:
                     agent.moveForward(1);
+                    if (!getOntology().matchTypes(agent.getType(), "AIRBORNE")) {
+                        agent.getPosition().setZ(getEnvironment().getSurface().getStepLevel(agent.getPosition()));
+//                        agent.setPosition(new SimpleVector3D(this.placeAtMap("choice", agent.getPosition()),agent.getOrientation()));
+                    }
 //                    agent.Raw().setEnergy(agent.Raw().getEnergy() - agent.Raw().getBurnratemove());
 //                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
 
@@ -873,14 +960,23 @@ public class World {
                     break;
             }
             agent.Raw().addTrace(action);
+            agent.Raw().setGround((int) (agent.getPosition().getZ()) - getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(), agent.getPosition().getY()));
             agent.readPerceptions();
+            agent.checkStatus();
+            if (agent.Raw().getAlive()) {
+                if (agent.Raw().getTarget() != null
+                        && agent.Raw().getTarget().to2D().isEqualTo(agent.Raw().getGPS().to2D())
+                        && !agent.Raw().getTarget().isEqualTo(agent.Raw().getDestination())) {
+                    agent.Raw().nextCourse();
+                    agent.checkStatus();
+                }
+            }
             if (agent.Raw().getStatus().length() > 0) {
                 agent.Raw().addTrace(agent.Raw().getStatus());
             }
-            agent.Raw().setGround((int) (agent.getPosition().getZ()) - getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(), agent.getPosition().getY()));
-            if (agent.Raw().getTarget() == null) {
-                agent.Raw().setTarget(new Point3D(0, 0, 0));
-            }
+//            if (agent.Raw().getTarget() == null) {
+//                agent.Raw().setTarget(new Point3D(0, 0, 0));
+//            }
             return true;
         } else {
             if (agent.getCapabilities().indexOf(action) < 0) {
@@ -929,7 +1025,7 @@ public class World {
 //            return null;
 //        }
 //        tdest = this.getThingByName(locationName);
-        Search a;
+        AStar a;
         a = new AStar(this.getEnvironment().getSurface());
         a.setView(null);
         a.setApp(null);
@@ -937,10 +1033,12 @@ public class World {
         a.setMaxDepth(1000);
         a.setMinlevel(agent.Raw().getMinlevel());
         a.setMaxlevel(agent.Raw().getMaxlevel());
+        a.setMaxslope(agent.Raw().getMaxslope());
         if (this.getOntology().matchTypes(agent.getType(), "AIRBORNE")) {
             a.setType(PathType.AIRBORNE);
         } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
             a.setType(PathType.MARINE);
+            pdestination = this.getClosestDocking(pdestination);
         } else if (this.getOntology().matchTypes(agent.getType(), "HUMMER")) {
             a.setType(PathType.FULLTERRAIN);
         } else {
@@ -956,6 +1054,33 @@ public class World {
         }
         return res;
     }
+
+    public Point3D getDestination() {
+        return destination;
+    }
+
+    public void setDestination(Point3D destination) {
+        this.destination = destination;
+    }
+
+    public Point3D getStart() {
+        return start;
+    }
+
+    public void setStart(Point3D start) {
+        this.start = start;
+    }
+
+    public void printSummary() {
+        System.out.println("World " + getName());
+        System.out.println("Types " + getOntology().toString());
+        ArrayList<String> types = this._population.indexType.getKeys();
+        System.out.println("Existing types: " + types);
+        for (String stype : types) {
+            System.out.println("Existing names of type " + stype + " : " + this._population.splitSetByType(stype).getAllNames());
+        }
+    }
+
 }
 //    public JsonObject oldgetPerception(Perceptor p) {
 //        JsonObject res = new JsonObject(), owned, detected, partialres = null;

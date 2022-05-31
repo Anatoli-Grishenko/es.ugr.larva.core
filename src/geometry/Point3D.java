@@ -9,6 +9,7 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import data.Ole;
 import data.Ole.oletype;
+import world.Perceptor;
 
 /**
  *
@@ -50,7 +51,7 @@ public class Point3D {
         clear();
         
         _dim = 3;
-        setX(0).setY(0).setZ(0);
+        setX(0).setY(0).setZ(Perceptor.NULLREAD);
         switch(values.size()) {
             case 3:
                 setZ(values.get(2).asDouble());

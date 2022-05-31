@@ -227,7 +227,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void postExecute() {
         myReport.tick();
-        if (this.frameDelay > 0 && !remote) {
+        if (this.frameDelay > 0 && (!remote || cont)) {
             try {
                 Thread.sleep(this.frameDelay);
             } catch (InterruptedException ex) {

@@ -33,6 +33,13 @@ public class Choice implements Comparable {
             h = Choice.MIN_UTILITY;
             utility = Choice.MIN_UTILITY;
         }
+        if (getName().equals("IDLE")) {
+            if (isIncreasing()) {
+                utility = Choice.MAX_UTILITY / 2;
+            } else {
+                utility = Choice.MIN_UTILITY / 2;
+            }
+        }
         g = 0;
         depth = 0;
         children = new DecisionSet();
@@ -40,13 +47,20 @@ public class Choice implements Comparable {
 
     public Choice(Point3D p) {
         this.name = p.toString();
-        position = p;
+        position = p.clone();
         if (isIncreasing()) {
             utility = Choice.MAX_UTILITY;
             h = Choice.MAX_UTILITY;
         } else {
             h = Choice.MIN_UTILITY;
             utility = Choice.MIN_UTILITY;
+        }
+        if (getName().equals("IDLE")) {
+            if (isIncreasing()) {
+                utility = Choice.MAX_UTILITY / 2;
+            } else {
+                utility = Choice.MIN_UTILITY / 2;
+            }
         }
         g = 0;
         depth = 0;
@@ -87,9 +101,9 @@ public class Choice implements Comparable {
     public Choice setUtility(double utility) {
         if (getName().equals("IDLE")) {
             if (isIncreasing()) {
-                utility = Choice.MAX_UTILITY;
+                utility = Choice.MAX_UTILITY / 2;
             } else {
-                utility = Choice.MIN_UTILITY;
+                utility = Choice.MIN_UTILITY / 2;
             }
         } else {
             this.utility = utility;
@@ -159,6 +173,7 @@ public class Choice implements Comparable {
 
     public void setPosition(Point3D position) {
         this.position = position;
+        this.name = position.toString();
     }
 
     public double getG() {

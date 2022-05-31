@@ -68,7 +68,12 @@ public class ThingIndex {
     public ThingIndex addIndexTo(Thing t) {
         JsonObject jsot = t.toJson();
         if (jsot.get(getField()) != null) {
-            String toindex = jsot.get(getField()).asString();
+            String toindex;
+            if (jsot.get(getField()).isArray()) {
+                toindex = jsot.get(getField()).toString();
+            } else {
+                toindex = jsot.get(getField()).asString();
+            }
             if (!index.containsKey(toindex)) {
                 index.put(toindex, new ArrayList());
             }

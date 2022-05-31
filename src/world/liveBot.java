@@ -37,10 +37,9 @@ public class liveBot extends Thing {
 //    JsonObject lastPerceptions;
     Color colorcode;
     public String relpywith;
-    int initialDistance = -1, currentDistance, order;
+    int initialDistance = -1, currentDistance, order, slope;
     int energyBurnt = -1, timeSecs = 0;
     String myCommitment = "";
-    
 
     public liveBot(String name) {
         super(name);
@@ -48,6 +47,7 @@ public class liveBot extends Thing {
         attachments = new ArrayList<>();
         myPerceptions = new SensorDecoder();
         myPerceptions.setName(name);
+        setSlope(0);
     }
 
     public liveBot(String name, World w) {
@@ -56,6 +56,7 @@ public class liveBot extends Thing {
         attachments = new ArrayList<>();
         myPerceptions = new SensorDecoder();
         myPerceptions.setName(name);
+        setSlope(0);
     }
 
     @Override
@@ -76,11 +77,13 @@ public class liveBot extends Thing {
     public String toString() {
         return toXUIJson().toString();
     }
+
     @Override
-    public void readPerceptions() {     
+    public void readPerceptions() {
         super.readPerceptions();
         checkStatus();
     }
+
     public liveBot addToSensor(Sensors s, String what) {
         ArrayList<String> sensorreading = new ArrayList(Transform.toArrayList(this.Raw().getSensor(s)));
         sensorreading.add(what);
@@ -161,18 +164,22 @@ public class liveBot extends Thing {
     }
 
     public liveBot moveForward(int units) {
+        setSlope(Raw().getPolarLidar()[2][1]);
         Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
         Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(this.getVector().canonical().clone().scalar(units));
     }
 
     public liveBot moveUp(int units) {
+        setSlope(5);
+
         Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
         Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
     }
 
     public liveBot moveDown(int units) {
+        setSlope(-5);
         Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
         Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
@@ -186,7 +193,7 @@ public class liveBot extends Thing {
 //        base.define(L.getPosition().getX()+radio*Math.cos(i*Math.PI/180),L.getPosition().getY()-radio*Math.sin(i*Math.PI/180));
         return this;
     }
-    
+
     public static int rotateLeft(int sdirection) {
         return (sdirection + 1) % 8;
     }
@@ -200,11 +207,13 @@ public class liveBot extends Thing {
     }
 
     public liveBot rotateLeft() {
+        setSlope(0);
         setOrientation(liveBot.this.rotateLeft(getOrientation()));
         return this;
     }
 
     public liveBot rotateRight() {
+        setSlope(0);
         setOrientation(liveBot.this.rotateRight(getOrientation()));
         return this;
     }
@@ -213,23 +222,25 @@ public class liveBot extends Thing {
         Raw().setEnergy(Raw().getAutonomy());
         return this;
     }
-    
-    
+
     public boolean isGoal() {
-        if (Raw().getTarget()==null)
+        if (Raw().getTarget() == null) {
             return false;
+        }
         return Raw().getGPS().isEqualTo(Raw().getTarget());
     }
-    
+
     protected void checkStatus() {
         boolean single = false, multiple = true, crashtotoher,
-                crashtoground, crashtolevel, crashtoenergy, crashtoborder;
- 
+                crashtoground, crashtolevel, crashtoenergy, crashtoborder, crashtoslope;
+        
+        Raw().setStatus("");
         Raw().setEnergy((int) Math.max(Raw().getEnergy(), 0));
         crashtoenergy = Raw().getEnergy() < 1;
         if (crashtoenergy) {
             Raw().addStatus("Energy exhausted. ");
         }
+
         crashtoground = getPosition().getZ() < this.getWorld().getEnvironment().getSurface().getStepLevel(getPosition().getX(), getPosition().getY());
         if (crashtoground) {
             Raw().addStatus("Crash onto the ground. ");
@@ -244,10 +255,14 @@ public class liveBot extends Thing {
         if (crashtolevel) {
             Raw().addStatus("Out ot operational altitude limits. ");
         }
+        crashtoslope = getSlope() < -Raw().getMaxslope() || getSlope() > Raw().getMaxslope();
+        if (crashtoslope) {
+            Raw().addStatus("Max allowed slope exceeded!");
+        }
         single = (!(crashtoenergy
                 || crashtolevel
                 || crashtoborder
-                //             || getEnvironment().getSurface().getStepLevel(getPosition().getx, getPosition().gety) == Sensor.
+                || crashtoslope
                 || crashtoground));
         Raw().setAlive(single);
         Raw().setOntarget(isGoal());
@@ -255,12 +270,19 @@ public class liveBot extends Thing {
         if (getInitialDistance() < 0) {
             setInitialDistance(getCurrentDistance());
         }
-        
-    }
-    
-    public void printSensorIndex(){
-        System.out.println("["+this.getName()+"] -->"+this.Raw().indexperception.keySet().toString());
+
     }
 
-   
+    public void printSensorIndex() {
+        System.out.println("[" + this.getName() + "] -->" + this.Raw().indexperception.keySet().toString());
+    }
+
+    public int getSlope() {
+        return slope;
+    }
+
+    public void setSlope(int slope) {
+        this.slope = slope;
+    }
+
 }

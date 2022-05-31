@@ -40,7 +40,7 @@ public class Functional extends Decisor {
                 } else {
                     return Choice.MAX_UTILITY;
                 }
-            case "HALT":
+            case "STOP":
                 if (getElegibility(e, c)) {
                     return Choice.MIN_UTILITY;
                 } else {
@@ -70,7 +70,7 @@ public class Functional extends Decisor {
                 return e.getAltitude() < e.getMaxlevel();
             case "CAPTURE":
                 return e.getOntarget();
-            case "HALT":
+            case "STOP":
                 return e.getCargo() != null && e.getCargo().length > 0;
             case "RECHARGE":
                 return e.getEnergy() < 400 && e.getGround() == 0;
