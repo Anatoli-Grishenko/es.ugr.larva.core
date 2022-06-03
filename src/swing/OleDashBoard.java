@@ -382,9 +382,9 @@ public class OleDashBoard extends OleDrawPane {
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
-            decoder.setExternalThings(content);
+            decoder.setExternalObjects(content);
         } else if (content.contains("people")) {
-            decoder.setExternalThings(content);
+            decoder.setExternalObjects(content);
         }
         this.repaint();
 

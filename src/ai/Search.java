@@ -244,10 +244,10 @@ public class Search {
             return 1 + getDeviation(from.getParent(), from, to) * 1;
         } else if (type == PathType.FULLTERRAIN) {
 //            return 1;
-            return 1 + getDeviation(from.getParent(), from, to) * 1+ Math.abs(from.getPosition().getZ() - to.getPosition().getZ()) / 5;
+            return 1 + getDeviation(from.getParent(), from, to) * 2+ Math.abs(from.getPosition().getZ() - to.getPosition().getZ()) / 5;
         } else {
 //            return 1 +Math.abs(from.getPosition().getZ() - to.getPosition().getZ()) / 5;
-            return 1 + getDeviation(from.getParent(), from, to) * 1 + Math.abs(from.getPosition().getZ() - to.getPosition().getZ()) / 5;
+            return 1 + getDeviation(from.getParent(), from, to) * 2 + Math.abs(from.getPosition().getZ() - to.getPosition().getZ()) / 5;
         }
     }
 
@@ -297,10 +297,10 @@ public class Search {
     }
 
     public boolean isforbidden(Choice child) {
-        if (type == PathType.MARINE && this.isCloseTo(getSource(), child, softGoal)) {
+        if (type == PathType.MARINE && getSource().inProximity(child)) {
             return false;
         }
-        if (type == PathType.MARINE && this.isCloseTo(child, getTarget(), softGoal)) {
+        if (type == PathType.MARINE && child.inProximity(getTarget())) {
             return false;
         }
         if (type == PathType.MARINE) {
@@ -308,18 +308,20 @@ public class Search {
         } else if (type == PathType.AIRBORNE) {
             return child.getPosition().getZ() > this.maxlevel;
         } else {
-            return child.getPosition().getZ() < minlevel || child.getPosition().getZ() > maxlevel;
+            return child.getPosition().getZ() < minlevel || 
+                    child.getPosition().getZ() > maxlevel;
         }
     }
 
     public boolean isBadLevel(Choice child) {
-        if (type == PathType.MARINE && this.isCloseTo(getSource(), child, softGoal)) {
+        if (type == PathType.MARINE && getSource().inProximity(child)) {
             return false;
         }
-        if (type == PathType.MARINE && this.isCloseTo(child, getTarget(), softGoal)) {
+        if (type == PathType.MARINE && child.inProximity(getTarget())) {
             return false;
         }
-        return child.getPosition().getZ() > this.getMaxlevel() || child.getPosition().getZ() < this.getMinlevel();
+        return child.getPosition().getZ() > this.getMaxlevel() 
+                || child.getPosition().getZ() < this.getMinlevel();
     }
 
     public boolean isValidChoice(Choice c) {
@@ -386,22 +388,9 @@ public class Search {
 
     public void setType(PathType type) {
         this.type = type;
-//        if (type == PathType.FLATROAD) {
-//            this.maxslope = 0;
-//        } else if (type == PathType.ROAD) {
-//            this.maxslope = 5;
-//        } else if (type == PathType.FULLTERRAIN) {
-//            maxslope = 15;
-//        } else if (type == PathType.MARINE) {
-//            maxslope = 100;
-//        } else if (type == PathType.AIRBORNE) {
-//            maxslope = 255;
-//        }
     }
 
-    public boolean isCloseTo(Choice c, Choice d, int distance) {
-        return c.getPosition().planeDistanceTo(d.getPosition()) < distance;
-    }
+
 
     public int getDeviation(Choice c1, Choice c2, Choice c3) {
         if (c1 == null || c2 == null) {

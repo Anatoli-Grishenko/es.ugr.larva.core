@@ -112,8 +112,11 @@ public class XUIAgent extends LARVAFirstAgent {
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
         if (inbox.getContent().contains("filedata")) {
+            oleConfig.loadFile("config/Configuration.conf");
+            showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
             trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
             myDashBoard.setTrailSize(trailSize);
+            myDashBoard.setShowTrail(showTrail);
             this.sessionKey = inbox.getConversationId();
             myDashBoard.preProcessACLM(inbox.getContent());
         } else if (inbox.getContent().contains("perceptions")) {

@@ -104,6 +104,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected Environment E;
     protected DecisionSet A;
+    protected String myMission[], missionName;
 
     protected Semaphore SWaitButtons;
     protected boolean cont = true, each = true, remote = false;

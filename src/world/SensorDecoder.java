@@ -178,6 +178,22 @@ public class SensorDecoder {
         return res;
     }
 
+    public String getCityBase() {
+        return this.getSensor(Sensors.CITYBASE).get(0).asString();
+    }
+
+    public void setCityBase(String Name) {
+        encodeSensor(Sensors.CITYBASE, encodeValues(Name));
+    }
+
+    public String getCityDestination() {
+        return this.getSensor(Sensors.CITYDESTINATION).get(0).asString();
+    }
+
+    public void setCityDestination(String Name) {
+        encodeSensor(Sensors.CITYDESTINATION, encodeValues(Name));
+    }
+
     public String getName() {
         return this.getSensor(Sensors.NAME).get(0).asString();
     }
@@ -896,18 +912,15 @@ public class SensorDecoder {
         return res;
     }
 
-    public double[][] getCourse() {
+    public Point3D [] getCourse() {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
         if (jsaReading == null) {
             return null;
         }
-        double[][] res = new double[jsaReading.size()][3];
+        Point3D res[] = new Point3D[jsaReading.size()];
         for (int i = 0; i < jsaReading.size(); i++) {
-            jsarow = jsaReading.get(i).asArray();
-            for (int j = 0; j < 3; j++) {
-                res[i][j] = jsarow.get(j).asDouble();
-            }
+            res[i] = new Point3D(jsaReading.get(i).asArray());
         }
         return res;
     }
@@ -922,7 +935,7 @@ public class SensorDecoder {
 
     public Point3D getCourse(int i) {
         if (0 <= i && i < sizeCourse()) {
-            return new Point3D(getCourse()[i]);
+            return getCourse()[i];
         } else {
             return null;
         }
@@ -1316,7 +1329,7 @@ public class SensorDecoder {
             case "HUMMER":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
-                encodeSensor(Sensors.MAXSLOPE, 15);
+                encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 6);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.AUTONOMY, 600);
@@ -1336,7 +1349,7 @@ public class SensorDecoder {
             case "HEMTT":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
-                encodeSensor(Sensors.MAXSLOPE, 5);
+                encodeSensor(Sensors.MAXSLOPE, 20);
                 encodeSensor(Sensors.MAXCARGO, 40);
                 encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);

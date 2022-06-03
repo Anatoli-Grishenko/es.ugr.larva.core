@@ -295,7 +295,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
                 g.setStroke(new BasicStroke(1));
                 for (int i = 0; i < externalDecoder.getCourse().length; i++) {
-                    pWaypoint = new Point3D(externalDecoder.getCourse()[i]);
+                    pWaypoint = externalDecoder.getCourse()[i];
                     g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 2));
                 }
                 pWaypoint = externalDecoder.getTarget();
@@ -347,7 +347,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         if (Trails.get(name) == null) {
             Trails.put(name, new ArrayList());
         }
-        Rectangle r = SwingTools.doNarrow(this.getBounds(), 6);
+//        Rectangle r = SwingTools.doNarrow(this.getBounds(), 6);
         Trails.get(name).add(0, p);
         if (Trails.get(name).size() > getTrailSize()) {
             Trails.get(name).remove(Trails.get(name).size() - 1);

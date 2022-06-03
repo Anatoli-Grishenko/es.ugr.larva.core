@@ -7,6 +7,7 @@ package Environment;
 
 import ai.AStar;
 import ai.Choice;
+import ai.MissionSet;
 import ai.Plan;
 import ai.Search;
 import com.eclipsesource.json.Json;
@@ -41,6 +42,7 @@ public class Environment extends SensorDecoder {
     protected int[] shortPolar;
     protected ThingSet cadastre;
     protected ThingSet census;
+    MissionSet Missions;
 
     public Environment() {
         super();
@@ -48,6 +50,7 @@ public class Environment extends SensorDecoder {
         World = new World("innerworld");
         cadastre = new ThingSet();
         census = new ThingSet();
+        Missions = new MissionSet();
     }
 
     public Environment(Environment other) {
@@ -68,8 +71,8 @@ public class Environment extends SensorDecoder {
         if (!loadWorldMap(World.getEnvironment().getSurface())) {
             return false;
         }
-        this.setTarget(World.getThingByName("Guybrush Threepwood").getPosition());
-        this.live = World.registerAgent(name, r.name(), -1, -1, attach);
+        this.live = World.registerAgent(name, r.name(), attach);
+        World.locateAgent(live, new Point3D(-1,-1,0));
 //        System.out.println(live.getPerceptions().toString());
 //        feedPerception(this.live.getPerceptions());
         return true;
@@ -81,7 +84,7 @@ public class Environment extends SensorDecoder {
         return this;
     }
 
-    public Environment setExternalThings(String things) {
+    public Environment setExternalObjects(String things) {
         try {
             JsonObject jsoThings = Json.parse(things).asObject();
             JsonArray jsathings;
@@ -96,6 +99,9 @@ public class Environment extends SensorDecoder {
                     census = new ThingSet();
                 }
                 census.fromJson(jsoThings.get("cities").asArray());
+            }
+            if (jsoThings.get("missions") != null) {
+                Missions = new MissionSet(jsoThings.get("cities").asArray());
             }
             cache();
         } catch (Exception ex) {
@@ -524,4 +530,13 @@ public class Environment extends SensorDecoder {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
 
+    public int getNMissions() {
+        return Missions.size();
+    }
+    public String getMissionName(int i) {
+        return Missions.getMission(i).getName();
+    }
+    public String [] getMission(int i) {
+        return Transform.toArrayString(Missions.getMission(i));
+    }
 }

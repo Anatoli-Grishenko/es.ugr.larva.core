@@ -8,6 +8,8 @@ package world;
 import ai.AStar;
 import ai.Choice;
 import ai.Greedy;
+import ai.Mission;
+import ai.MissionSet;
 import ai.Plan;
 import ai.Search;
 import ai.Search.PathType;
@@ -63,6 +65,7 @@ public class World {
     static int range = 41, cx = range / 2, cy = cx;
     int maxflight;
     protected Point3D destination, start;
+    MissionSet _missions;
 
     public World(String name) {
         this.name = name;
@@ -283,6 +286,9 @@ public class World {
                 } else {
                     destination = null;
                 }
+                if (ocfg.getFieldList().contains("missions")) {
+                    _missions = new MissionSet(ocfg.get("missions").asArray());
+                }
 
             } catch (Exception ex) {
                 System.err.println(ex.toString());
@@ -320,6 +326,9 @@ public class World {
         return _environment;
     }
 
+    public MissionSet getMissions() {
+        return _missions;
+    }
     public Thing addThing(Thing i, PROPERTY[] visible) {
 //        if (i.getPosition() == null) {
 //            if (!i.getType().equals("ENVIRONMENT")) {
@@ -737,7 +746,7 @@ public class World {
 //        return null;
 //    }
 
-    public liveBot registerAgent(String name, String type, int bx, int by, Sensors[] attach) {
+    public liveBot registerAgent(String name, String type, Sensors[] attach) {
         liveBot liveagent = null;
         try {
             // Already registered?
@@ -793,29 +802,9 @@ public class World {
                         break;
                 }
             }
-            addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
-            if (bx < 0 || by < 0) {
-                if (getStart() != null) {
-                    liveagent.setPosition(getStart());
-                } else {
-                    liveagent.setPosition(this.placeAtMap(new Point3D(0, 0, 0)));
-                }
-            } else {
-                if (liveagent.getType().equals("CORSAIR")) {
-                    liveagent.setPosition(this.placeAtMap(this.getClosestDocking(new Point3D(bx, by, 0))));
-                } else {
-                    liveagent.setPosition(this.placeAtMap(new Point3D(bx, by, 0)));
-                }
-            }
-            liveagent.setOrientation(Compass.NORTH);
             liveagent.Raw().encodeSensor(Sensors.NAME, liveagent.getName());
             liveagent.Raw().encodeSensor(Sensors.ENERGY, liveagent.Raw().getAutonomy());
-            if (getDestination() != null) {
-                liveagent.Raw().cleanCourse();
-                liveagent.Raw().addCourse(getDestination());
-                liveagent.Raw().activateCourse();
-            }
-            liveagent.readPerceptions();
+            addThing(liveagent, new PROPERTY[]{PROPERTY.POSITION, PROPERTY.PRESENCE});
         } catch (Exception ex) {
             System.err.println(ex.toString());
         }
@@ -865,6 +854,34 @@ public class World {
 //        return agent.Raw().getGPSMemory().isEqualTo(agent.Raw().getTarget());
 //    }
 //    
+    public String locateAgent(liveBot agent, String city) {
+        String res = this.setBaseIn(agent, city);
+        if (res.length() > 0) {
+            return res;
+        }
+        agent.readPerceptions();
+        return "";
+    }
+
+    public void locateAgent(liveBot agent, Point3D pbase) {
+        if (pbase.getX() < 0 || pbase.getY() < 0) {
+            if (getStart() != null) {
+                agent.setPosition(getStart());
+            } else {
+            }
+        } else {
+            agent.setPosition(this.placeAtMap(pbase));
+        }
+
+        agent.setOrientation(Compass.NORTH);
+        if (getDestination() != null) {
+            agent.Raw().cleanCourse();
+            agent.Raw().addCourse(getDestination());
+            agent.Raw().activateCourse();
+        }
+        agent.readPerceptions();
+    }
+
     public boolean execAgent(liveBot agent, String action) {
         boolean res;
         if (agent == null) {
@@ -1002,29 +1019,59 @@ public class World {
         tdest = this.getThingByName(location);
         pdest = tdest.getPosition();
         level = this.getEnvironment().getSurface().getStepLevel(pdest);
-        if (agent.Raw().getMinlevel() > level || agent.Raw().getMaxlevel() < level) {
-            return false;
-        }
+
         if (this.getOntology().matchTypes(agent.getType(), "AIRPLANE")) {
             if (!tdest.isHasAirport()) {
                 return false;
             }
-        }
-        if (agent.getType().equals("FLYINGBOAT")) {
+        } else if (agent.getType().equals("FLYINGBOAT")) {
             if (!tdest.isHasAirport() && !tdest.isHasPort()) {
                 return false;
             }
+        } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
+            if (!tdest.isHasPort()) {
+                return false;
+            }
+        } else if (agent.Raw().getMinlevel() > level || agent.Raw().getMaxlevel() < level) {
+            return false;
         }
         return true;
     }
 
-    public ArrayList<Point3D> findCourse(liveBot agent, Point3D pdestination) {
+    public String setBaseIn(liveBot agent, String city) {
         Thing tdest;
+        Point3D pdest;
         ArrayList<Point3D> res;
-//        if (!this.isAppropriate(agent, locationName)) {
-//            return null;
-//        }
-//        tdest = this.getThingByName(locationName);
+        if (getThingByName(city) == null) {
+            return "City " + city + " does not exist";
+        }
+        if (!this.isAppropriate(agent, city)) {
+            return "City " + city + " could not be selected for agent " + agent.getName();
+        }
+        tdest = this.getThingByName(city);
+        pdest = tdest.getPosition();
+        if (agent.getType().equals("CORSAIR")) {
+            agent.setPosition(this.placeAtMap(this.getClosestDocking(pdest)));
+        } else {
+            agent.setPosition(pdest);
+        }
+        agent.Raw().setCityBase(city);
+        return "";
+    }
+
+    public String setCourseIn(liveBot agent, String city) {
+        Thing tdest;
+        Point3D pdest;
+        ArrayList<Point3D> res;
+        JsonArray jsares = new JsonArray();
+        if (getThingByName(city) == null) {
+            return "City " + city + " does not exist";
+        }
+        if (!this.isAppropriate(agent, city)) {
+            return "City " + city + " could not be selected for agent " + agent.getName();
+        }
+        tdest = this.getThingByName(city);
+        pdest = tdest.getPosition();
         AStar a;
         a = new AStar(this.getEnvironment().getSurface());
         a.setView(null);
@@ -1038,24 +1085,44 @@ public class World {
             a.setType(PathType.AIRBORNE);
         } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
             a.setType(PathType.MARINE);
-            pdestination = this.getClosestDocking(pdestination);
+            pdest = this.getClosestDocking(pdest);
         } else if (this.getOntology().matchTypes(agent.getType(), "HUMMER")) {
             a.setType(PathType.FULLTERRAIN);
         } else {
             a.setType(PathType.ROAD);
         }
         res = new ArrayList();
-        Plan p;
-        p = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdestination));
-        if (p != null) {
-            for (Choice c : p) {
-                res.add(c.getPosition());
+        Plan path;
+        path = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdest));
+        if (path != null) {
+            int i = 0, istep = agent.Raw().getRange() / 2;
+            for (Choice c : path) {
+                if ((++i) % istep == 0 || i == path.size() - 1) { // 
+                    jsares.add(c.getPosition().toJson());
+                }
             }
+            agent.Raw().encodeSensor(Sensors.COURSE, jsares);
+            agent.Raw().activateCourse();
+            agent.Raw().setCityDestination(city);
+            return "";
+        } else {
+            return "Could not find a path to " + city + " for agent " + agent.getName();
         }
-        return res;
     }
 
-    public Point3D getDestination() {
+    public String setCourseTo(liveBot agent, int tx, int ty) {
+        Thing tdest;
+        Point3D pdest;
+        ArrayList<Point3D> res;
+        JsonArray jsares = new JsonArray();
+        pdest = this.placeAtMap(new Point3D(tx, ty, 0));
+        jsares.add(pdest.toJson());
+        agent.Raw().encodeSensor(Sensors.COURSE, jsares);
+        agent.Raw().activateCourse();
+        return "";
+    }
+
+public Point3D getDestination() {
         return destination;
     }
 

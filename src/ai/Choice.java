@@ -14,7 +14,9 @@ import java.util.ArrayList;
  */
 public class Choice implements Comparable {
 
-    public static final double MIN_UTILITY = Integer.MIN_VALUE, MAX_UTILITY = Integer.MAX_VALUE;
+    public static final double MIN_UTILITY = Integer.MIN_VALUE, 
+            MAX_UTILITY = Integer.MAX_VALUE,
+            PROXIMITY=5.0;
     public static boolean increasing = true;
     String name;
     double utility, g, h;
@@ -216,6 +218,16 @@ public class Choice implements Comparable {
         return this.getName().equals(c.getName());
     }
 
+    public boolean inPosition(Choice other) {
+        return this.getPosition().isEqualTo(other.getPosition());
+    }
+    
+    
+    public boolean inProximity(Choice other) {
+        return this.getPosition().isEqualTo(other.getPosition());
+    }
+    
+    
     public static boolean isIncreasing() {
         return increasing;
     }
@@ -227,4 +239,6 @@ public class Choice implements Comparable {
     public static void setDecreasing() {
         increasing = false;
     }
+    
+  
 }
