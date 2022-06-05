@@ -164,7 +164,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean Ve(Environment E) {
-        if (E == null || E.isCrahsed()) {
+        if (E == null || E.isCrahsed() || E.getStuck()>3) {
             return false;
         }
         return true;
@@ -175,7 +175,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (!Ve(E)) {
             return false;
         }
-        return E.getOntarget();
+        return E.isOverMission();
     }
 
     /**
@@ -306,9 +306,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (remote) {
             closeRemote();
         }
-//        if (problemName != null) {
-//            this.saveSequenceDiagram(problemName + ".seqd");
-//        } else {
+        if (problemName != null) {
+            this.saveSequenceDiagram(problemName + ".seqd");
+        } 
+//        else {
 //            this.saveSequenceDiagram(getName() + ".seqd");
 //        }
         super.takeDown();

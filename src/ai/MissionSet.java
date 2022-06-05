@@ -46,4 +46,10 @@ public class MissionSet extends HashMap<String, Mission> {
         }else
             return null;
     }
+    public Mission getMission(String name) {
+        if (this.keySet().contains(name)) {
+            return this.get(name);
+        }else
+            return null;
+    }
 }

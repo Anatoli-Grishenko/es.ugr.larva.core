@@ -59,12 +59,12 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     protected TextFactory tf;
     protected double stepRadius, stepAngle;
     protected AngleTransporter at;
-    protected Environment externalDecoder;
     protected ArrayList<Map2DColor> sprites;
     protected JButton jbAux;
     protected String sDisplay, sFocus;
     protected OleConfig displayCfg;
     protected Map2DColor mapView;
+    protected OleDashBoard myDash;
 
     public OleSuperMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -72,7 +72,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         Trails = new HashMap();
         isMap = true;
         at = parentPane.getAngleT();
-        externalDecoder = ((OleDashBoard) this.parentPane).decoder;
+        myDash = ((OleDashBoard) this.parentPane);
         setnRows(1);
         setnColumns(3);
         sprites = new ArrayList();
@@ -131,7 +131,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 
 //        jcbDisplay = new JComboBox();
 //        jcbDisplay.addItem("Me");
-//        for (String s : externalDecoder.getCapabilities()) {
+//        for (String s : myDash.getMyDecoder().getCapabilities()) {
 //            jcbDisplay.addItem(s);
 //        }
 //        jcbDisplay.addActionListener(this);
@@ -187,8 +187,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 //        g.setClip(viewPort);
         if (map != null) {
 //            g.setClip(viewPort);
-            if (externalDecoder.getWorldMap() != null) {
-//                scale = odPane.getPreferredSize().getWidth() / this.externalDecoder.getWorldMap().getMap().getWidth();
+            if (myDash.getMyDecoder().getWorldMap() != null) {
+//                scale = odPane.getPreferredSize().getWidth() / this.myDash.getMyDecoder().getWorldMap().getMap().getWidth();
                 scale = osPane.getZoom();
                 if (scale < limitScale) {
                     hasGrid = false;
@@ -225,7 +225,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         if (mapView != null) {
             if (!displayCfg.getTab("Focus").getString("Keep focus on", "None").equals("None")) {
                 if (displayCfg.getTab("Focus").getString("Keep focus on", "None").equals("Myself")) {
-                    focus = externalDecoder.getGPS();
+                    focus = myDash.getMyDecoder().getGPS();
                 }
             } else {
                 focus = null;
@@ -259,17 +259,21 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                     }
                 }
 
-                g.setColor(OleDashBoard.cTrack);
-                ptrail = externalDecoder.getGPSVector();
-                prevTrail = externalDecoder.getGPSVectorMemory(1);
+                if (myDash.getDecoderOf(name).getAlive()) {
+                    g.setColor(OleDashBoard.cTrack);
+                } else {
+                    g.setColor(Color.RED);
+                }
+                ptrail = myDash.getDecoderOf(name).getGPSVector();
+                prevTrail = myDash.getDecoderOf(name).getGPSVectorMemory(1);
                 g.setStroke(new BasicStroke(2));
-//                if (externalDecoder.getCourse()!=null || scale < limitScale) {
-                    p = this.TraceRegularPolygon(ptrail, 4, 5);
-                    g.drawPolygon(p);
-                    p = this.TraceCourse(ptrail, 15);
-                    g.drawPolygon(p);
+//                if (myDash.getMyDecoder().getCourse()!=null || scale < limitScale) {
+                p = this.TraceRegularPolygon(ptrail, 4, 5);
+                g.drawPolygon(p);
+                p = this.TraceCourse(ptrail, 15);
+                g.drawPolygon(p);
 //                } else {
-//                    g.drawImage(sprites.get(externalDecoder.getCompass() / 45).getMap(),
+//                    g.drawImage(sprites.get(myDash.getMyDecoder().getCompass() / 45).getMap(),
 //                            (int) viewX(ptrail.getSource().getXInt() - 0.5),
 //                            (int) viewY(ptrail.getSource().getYInt() - 0.5),
 //                            (int) scale, (int) scale, null);
@@ -287,18 +291,18 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             }
 
             // Paint targets
-            if (externalDecoder.getDestination() != null) {
+            if (myDash.getMyDecoder().getDestination() != null) {
                 Point3D pWaypoint;
-                pWaypoint = externalDecoder.getDestination();
+                pWaypoint = myDash.getMyDecoder().getDestination();
                 g.setColor(OleDashBoard.cAngle);
                 g.setStroke(new BasicStroke(2));
                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
                 g.setStroke(new BasicStroke(1));
-                for (int i = 0; i < externalDecoder.getCourse().length; i++) {
-                    pWaypoint = externalDecoder.getCourse()[i];
+                for (int i = 0; i < myDash.getMyDecoder().getCourse().length; i++) {
+                    pWaypoint = myDash.getMyDecoder().getCourse()[i];
                     g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 2));
                 }
-                pWaypoint = externalDecoder.getTarget();
+                pWaypoint = myDash.getMyDecoder().getTarget();
                 g.setStroke(new BasicStroke(2));
                 g.setColor(Color.CYAN);
                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(pWaypoint, Compass.NORTH), 4, 5));
@@ -309,9 +313,9 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             g.setColor(col);
             g.setStroke(new BasicStroke(1));
 
-            for (Thing t : externalDecoder.getFullCadastre().getAllThings()) {
+            for (Thing t : myDash.getMyDecoder().getFullCadastre().getAllThings()) {
                 if (displayCfg.getTab("Objects").getOle("Objects to display").getBoolean("Cities", false)
-                        && externalDecoder.getFullCadastre() != null) {
+                        && myDash.getMyDecoder().getFullCadastre() != null) {
                     tf = new TextFactory(g);
                     String name = t.getName();
                     g.setColor(col);
@@ -366,7 +370,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         Point3D p3d = t.getPosition();
         g.setColor(OleDashBoard.cAngle);
         g.setStroke(new BasicStroke(1));
-        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, externalDecoder.getCompass() / 45), 6, 3));
+        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, myDash.getMyDecoder().getCompass() / 45), 6, 3));
         tf = new TextFactory(g);
         tf.setsText(t.getName());
         tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
@@ -379,7 +383,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         Point3D p3d = t.getPosition();
         g.setColor(OleDashBoard.cDistance);
         g.setStroke(new BasicStroke(1));
-        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, externalDecoder.getCompass() / 45), 3, 3));
+        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, myDash.getMyDecoder().getCompass() / 45), 3, 3));
         tf = new TextFactory(g);
         tf.setsText(t.getName());
         tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
@@ -418,9 +422,13 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         String s, climb;
         s = name;
 
-        g.setColor(OleDashBoard.cTrack);
-        int fsize = 12;
-        s = String.format("%s  - %s", name, externalDecoder.getType());
+        if (myDash.getDecoderOf(name).getAlive()) {
+            g.setColor(OleDashBoard.cTrack);
+        } else {
+            g.setColor(Color.RED);
+        }
+        int fsize = 10;
+        s = String.format("%s  - %s", name, myDash.getDecoderOf(name).getType());
         tf = new TextFactory(g);
         tf.setPoint(pLabel).setsText(s).setFontSize(fsize).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
@@ -443,8 +451,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
-        s = String.format("e.%03d%% pl.%02d", externalDecoder.getEnergy() * 100 / externalDecoder.getAutonomy(),
-                externalDecoder.getPayload());
+        s = String.format("e.%03d%% pl.%02d", myDash.getDecoderOf(name).getEnergy() * 100 / myDash.getDecoderOf(name).getAutonomy(),
+                myDash.getDecoderOf(name).getPayload());
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
@@ -453,6 +461,12 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         g.setStroke(new BasicStroke());
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
+        s = String.format("%s", myDash.getDecoderOf(name).getTask());
+        tf = new TextFactory(g);
+        pLabel.setY(pLabel.getY() + fsize);
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
+                .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
+        tf.draw();
     }
 
     public int getTrailSize() {

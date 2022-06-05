@@ -37,6 +37,7 @@ public class SensorDecoder {
     protected HashMap<Sensors, JsonArray> indexperception;
     protected Map2DColor hMap;
     protected ArrayList<SimpleVector3D> TraceGPS;
+    protected int stuck;
     // SensorsDISTANCE,
 
     // Memory
@@ -49,7 +50,7 @@ public class SensorDecoder {
         encodeSensor(Sensors.CARGO, new JsonArray());
         encodeSensor(Sensors.PEOPLE, new JsonArray());
         encodeSensor(Sensors.CAPABILITIES, new JsonArray());
-        encodeSensor(Sensors.STOP,false);
+        encodeSensor(Sensors.STOP, false);
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
@@ -61,6 +62,7 @@ public class SensorDecoder {
         mapa.set(content);
         mapa.saveFile("./maps/");
         this.TraceGPS.clear();
+        stuck=0;
         String name = mapa.getFileName();
         return loadWorldMap("./maps/" + name);
 
@@ -149,15 +151,6 @@ public class SensorDecoder {
         return Transform.toJsonArray(new ArrayList(Arrays.asList(d)));
     }
 
-    public void clear() {
-//        indexperception = new HashMap();
-//        this.TraceGPS = new ArrayList();
-//        encodeSensor(Sensors.TRACE, new JsonArray());
-//        encodeSensor(Sensors.CARGO, new JsonArray());
-//        encodeSensor(Sensors.PEOPLE, new JsonArray());
-//        encodeSensor(Sensors.CAPABILITIES, new JsonArray());
-    }
-
     public Map2DColor getWorldMap() {
         return hMap;
     }
@@ -176,6 +169,30 @@ public class SensorDecoder {
             res[i] = jsa.get(i).asDouble();
         }
         return res;
+    }
+
+    public String getMission() {
+        if (this.getSensor(Sensors.MISSION) != null) {
+            return this.getSensor(Sensors.MISSION).get(0).asString();
+        } else {
+            return null;
+        }
+    }
+
+    public void setMission(String Name) {
+        encodeSensor(Sensors.MISSION, encodeValues(Name));
+    }
+
+    public String getTask() {
+        if (this.getSensor(Sensors.TASK) != null) {
+            return this.getSensor(Sensors.TASK).get(0).asString();
+        } else {
+            return null;
+        }
+    }
+
+    public void setTask(String Name) {
+        encodeSensor(Sensors.TASK, encodeValues(Name));
     }
 
     public String getCityBase() {
@@ -227,7 +244,11 @@ public class SensorDecoder {
     }
 
     public String getSessionid() {
-        return this.getSensor(Sensors.SESSIONID).get(0).asString();
+        if (this.getSensor(Sensors.SESSIONID) != null) {
+            return this.getSensor(Sensors.SESSIONID).get(0).asString();
+        } else {
+            return null;
+        }
     }
 
     public void setSessionid(String Sessionid) {
@@ -393,7 +414,6 @@ public class SensorDecoder {
     public void setStop(boolean stop) {
         encodeSensor(Sensors.STOP, encodeValues(stop));
     }
-
 
     public void setAlive(boolean Alive) {
         encodeSensor(Sensors.ALIVE, encodeValues(Alive));
@@ -640,10 +660,10 @@ public class SensorDecoder {
         Point3D me = getGPS();
         Vector3D Busca = new Vector3D(me, p);
 
-        int v = (int) Norte.angleXYTo(Busca);
+//        int v = (int) Norte.angleXYTo(Busca);
 //        v = 360 - v + 360;
 //        return (int) v % 360;
-        return v;
+        return Norte.angleXYTo(Busca);
     }
 
     public double getAbsoluteAngularTo(Point3D orig, Point3D dest) {
@@ -651,10 +671,10 @@ public class SensorDecoder {
         Point3D me = orig;
         Vector3D Busca = new Vector3D(me, dest);
 
-        int v = (int) Norte.angleXYTo(Busca);;
+        int v = (int) Norte.angleXYTo(Busca);
 //        v = 270 - v;
 //        return (int) v % 360;
-        return v;
+        return Norte.angleXYTo(Busca);
     }
 
     public double getRelativeAngularto(Point3D orig, int compass, Point3D dest) {
@@ -912,7 +932,7 @@ public class SensorDecoder {
         return res;
     }
 
-    public Point3D [] getCourse() {
+    public Point3D[] getCourse() {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
         if (jsaReading == null) {
@@ -1025,9 +1045,18 @@ public class SensorDecoder {
         if (this.getGPS() != null) {
             if (this.TraceGPS.size() == 0 || !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
                 this.TraceGPS.add(0, this.getGPSVector());
-            }
+            } else {
+            if (TraceGPS.size()>2 && !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
+                stuck ++;
+            } else
+                stuck = 0;
+        }
 
         }
+    }
+    
+    public int getStuck(){
+        return stuck;
     }
 
     public void feedPerception(String content) {

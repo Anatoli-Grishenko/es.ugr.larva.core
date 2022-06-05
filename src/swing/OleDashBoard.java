@@ -44,15 +44,16 @@ import world.SensorDecoder;
 public class OleDashBoard extends OleDrawPane {
 
     public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0), cDial = SwingTools.doDarker(Color.WHITE), cBad = new Color(50, 0, 0),
-            cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN), cGround = new Color(51,25,0),
+            cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN), cGround = new Color(51, 25, 0),
             cGoal = Color.YELLOW, cTrack = Color.GREEN, cCompass = Color.WHITE, cLabels = SwingTools.doDarker(Color.WHITE),
-            cSea=new Color(0, 0, 41);
+            cSea = new Color(0, 0, 41);
 
     public HashMap<String, OleSensor> mySensorsVisual, myExternalSensor;
     public ArrayList<String> layoutSensors;
+    public String agentOwner;
 
     protected Component myParent;
-    public Environment decoder;
+    protected HashMap<String, Environment> decoderSet;
     OleSemiDial osAltitude, osBattery;
     OleSensor osGround;
     OleRotatory orCompass1;
@@ -77,11 +78,20 @@ public class OleDashBoard extends OleDrawPane {
         mySensorsVisual = new HashMap();
         myExternalSensor = new HashMap();
         layoutSensors = new ArrayList();
-        decoder = new Environment();
+        decoderSet = new HashMap();
         this.setLayout((LayoutManager) null);
         agentName = nameagent;
+        agentOwner = "";
         availableDashBoard = false;
         initLayout();
+    }
+
+    public Environment getMyDecoder() {
+        return decoderSet.get(agentOwner);
+    }
+
+    public Environment getDecoderOf(String name) {
+        return decoderSet.get(name);
     }
 
     @Override
@@ -94,20 +104,20 @@ public class OleDashBoard extends OleDrawPane {
                 mySensorsVisual.get(s).viewSensor(g);
             }
         }
-//        if (decoder.getVisualData().length > 0) {
+//        if (getMyDecoder().getVisualData().length > 0) {
 //            Map2DColor m;
 //            int zoom = 4;
 //            g.setColor(Color.WHITE);
-//            m = decoder.getFullZenitalVisual();
+//            m = getMyDecoder().getFullZenitalVisual();
 //            g.drawImage(m.getMap(), 0, 700, m.getWidth() * 3, m.getHeight() * 3, null);
 //            g.drawRect(0, 700, m.getWidth() * 3, m.getHeight() * 3);
-//            m = decoder.getRelativeVisual();
+//            m = getMyDecoder().getRelativeVisual();
 //            g.drawImage(m.getMap(), 200, 700, m.getWidth() * 4, m.getHeight() * 4, null);
 //            g.drawRect(200, 700, m.getWidth() * 4, m.getHeight() * 4);
-//            m = decoder.getRelativeVisual();
+//            m = getMyDecoder().getRelativeVisual();
 //            g.drawImage(m.getMap(), 400, 700, m.getWidth() * 4, m.getHeight() * 4, null);
 //            g.drawRect(400, 700, m.getWidth() * 4, m.getHeight() * 4);
-//            m = decoder.getPolarVisual();
+//            m = getMyDecoder().getPolarVisual();
 //            g.drawImage(m.getMap(), 600, 700, m.getWidth() * 4, m.getHeight() * 4, null);
 //            g.drawRect(600, 700, m.getWidth() * 4, m.getHeight() * 4);
 //        }
@@ -127,7 +137,7 @@ public class OleDashBoard extends OleDrawPane {
     }
 
     protected void Layout4() {
-        int hLabels = 0, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110;
+        int hLabels = 0, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110, skipdials=ldials+25; //(int) (5*ww/4);
 
         osMap = new OleSuperMap(this, "MAP");
         osMap.setBounds(0 * ww, hLabels, 5 * ww, 5 * ww);
@@ -153,7 +163,7 @@ public class OleDashBoard extends OleDrawPane {
         orCompass1.setnDivisions(8);
         orCompass1.setLabels(new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE"});
         orCompass1.showScaleNumbers(true);
-        orCompass1.setBounds(5 * ww, 20 + hLabels, ldials, ldials);
+        orCompass1.setBounds(5 * ww, 20 + hLabels+0*skipdials, ldials, ldials);
         orCompass1.setForeground(this.cLabels);
         orCompass1.setBackground(this.cGauge);
 //        orCompass1.showFrame(true);
@@ -166,7 +176,7 @@ public class OleDashBoard extends OleDrawPane {
         osAltitude.setStartAngle(225);
         osAltitude.setEndAngle(0);
         osAltitude.setnDivisions(10);
-        osAltitude.setBounds(5 * ww, 20 + hLabels + ldials, ldials, ldials);
+        osAltitude.setBounds(5 * ww, 20 + hLabels+1*skipdials, ldials, ldials);
         osAltitude.setForeground(this.cLabels);
         osAltitude.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
         osAltitude.setSimplifiedDial(true);
@@ -186,7 +196,7 @@ public class OleDashBoard extends OleDrawPane {
         osGround.setStartAngle(225);
         osGround.setEndAngle(0);
         osGround.setnDivisions(10);
-        osGround.setBounds(5 * ww, 20 + hLabels + ldials * 2, ldials, ldials);
+        osGround.setBounds(5 * ww, 20 + hLabels+2*skipdials, ldials, ldials);
         osGround.setForeground(this.cLabels);
         osGround.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
         osGround.setSimplifiedDial(true);
@@ -207,7 +217,7 @@ public class OleDashBoard extends OleDrawPane {
         osBattery.setStartAngle(180);
         osBattery.setEndAngle(0);
         osBattery.setnDivisions(4);
-        osBattery.setBounds(5 * ww, 20 + hLabels + ldials * 3, ldials, ldials);
+        osBattery.setBounds(5 * ww, 20 + hLabels+3*skipdials, ldials, ldials);
         osBattery.setForeground(this.cLabels);
         osBattery.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
         osBattery.setSimplifiedDial(true);
@@ -364,27 +374,30 @@ public class OleDashBoard extends OleDrawPane {
 //        System.out.println("DashBoard Preprocess");
 
         if (content.contains("filedata")) {
-//            System.out.println("filedata");
             Ole ocontent = new Ole().set(content);
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
             this.clear();
-            decoder.setWorldMap(ofile.toString(), maxlevel);
-            osMap.setMap(decoder.getWorldMap());
-//            osMap.validate();
+            agentName = ocontent.getString("requester", "");
+            agentOwner = agentName;
+            decoderSet.clear();
+            decoderSet.put(agentName, new Environment());
+            decoderSet.get(agentName).setWorldMap(ofile.toString(), maxlevel);
+            osMap.setMap(decoderSet.get(agentName).getWorldMap());
             this.osAltitude.setAlertLimitAbove(maxlevel);
             osHud.resetTerrain();
             availableDashBoard = false;
             res = true;
+            System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
         } else if (content.contains("perceptions")) {
 //            System.out.println("DashBoard perceptions");
             availableDashBoard = true;
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
-            decoder.setExternalObjects(content);
+            getMyDecoder().setExternalObjects(content);
         } else if (content.contains("people")) {
-            decoder.setExternalObjects(content);
+            getMyDecoder().setExternalObjects(content);
         }
         this.repaint();
 
@@ -395,53 +408,46 @@ public class OleDashBoard extends OleDrawPane {
         String stepbystep = "";
 
         try {
-            decoder.feedPerception(perception);
-//            System.out.println(decoder.printStatus(" Dashboard of " + decoder.getName()));
-            if (decoder.getAlive()) {
+            JsonObject jsoperception = Json.parse(perception).asObject();
+            agentName = jsoperception.getString("name", "");
+            System.out.println("Received perceptions of agent " + agentName);
+            if (agentName.length() == 0) {
+                return;
+            }
+            if (decoderSet.get(agentName) == null) {
+                decoderSet.put(agentName, new Environment());
+            }
+            decoderSet.get(agentName).feedPerception(jsoperception);
+            osMap.addTrail(agentName, decoderSet.get(agentName).getGPSVector());
+            if (!agentName.equals(agentOwner)) {
+                return;
+            }
+//            System.out.println(getMyDecoder().printStatus(" Dashboard of " + getMyDecoder().getName()));
+            if (getMyDecoder().getAlive()) {
                 cLabels = SwingTools.doDarker(Color.WHITE);
             } else {
                 cLabels = SwingTools.doDarker(Color.RED);
             }
-//            System.out.println("Processed : "+decoder.getNSteps());
-//            String[] trace = decoder.getTrace();
-//            if (trace != null) { //&& iIter > trace.length && trace.length>0) {
-//                for (; iTrace < trace.length; iTrace++) {
-//                    this.addAction(trace[iTrace]);
-//                }
-//            }
-//            if (!decoder.getName().equals(this.agentName))
-//                    return;
-//            if (!decoder.getName().equals("")) {
-//                if (!topLabels.containsLabel("Name")) {
-//                    topLabels.addLabel("Name", decoder.getName());
-//                }
-//            }
-            if (!decoder.getSessionid().equals("")) {
-//                if (!topLabels.containsLabel("SSID")) {
-//                    topLabels.addLabel("SSID", decoder.getSessionid());
-//                }
-//                ((OleApplication)this.myParent.getParent()).addStatus(decoder.getSessionid());
-                this.olCommand.setName(decoder.getSessionid());
+            if (getMyDecoder().getSessionid() != null) {
+                this.olCommand.setName(getMyDecoder().getSessionid());
             } else {
                 this.olCommand.setName("COMMAND");
             }
-
-//            osAltitude.setAlertLimitAbove(decoder.getMaxlevel());
-            olGPS.setCurrentValue(decoder.getGPS().toArray());
-            orCompass1.setCurrentValue(decoder.getCompass());
+            olGPS.setCurrentValue(getMyDecoder().getGPS().toArray());
+            orCompass1.setCurrentValue(getMyDecoder().getCompass());
 //            orCompass1.setHidden(this.mySensorsVisual.get("AUX").isMap);
-            osGround.setCurrentValue(decoder.getGround());
+            osGround.setCurrentValue(getMyDecoder().getGround());
 //            osGround.setHidden(this.mySensorsVisual.get("AUX").isMap);
-            osAltitude.setCurrentValue(decoder.getGPS().getZInt());
-            if (osAltitude.getMaxValue() != (decoder.getMaxlevel())) {
-                osAltitude.setMinValue(decoder.getMinlevel());
-                osAltitude.setMaxValue(decoder.getMaxlevel());
-                osAltitude.setAlertLimitAbove(decoder.getMaxlevel() - 10);
+            osAltitude.setCurrentValue(getMyDecoder().getGPS().getZInt());
+            if (osAltitude.getMaxValue() != (getMyDecoder().getMaxlevel())) {
+                osAltitude.setMinValue(getMyDecoder().getMinlevel());
+                osAltitude.setMaxValue(getMyDecoder().getMaxlevel());
+                osAltitude.setAlertLimitAbove(getMyDecoder().getMaxlevel() - 10);
             }
 //            osAltitude.setHidden(this.mySensorsVisual.get("AUX").isMap);
-            osBattery.setCurrentValue(decoder.getEnergy());
-            if (osBattery.getMaxValue() != decoder.getAutonomy()) {
-                osBattery.setMaxValue(decoder.getAutonomy());
+            osBattery.setCurrentValue(getMyDecoder().getEnergy());
+            if (osBattery.getMaxValue() != getMyDecoder().getAutonomy()) {
+                osBattery.setMaxValue(getMyDecoder().getAutonomy());
                 osBattery.setAlertLimitBelow((int) (osBattery.getMaxValue() / 15));
                 pal = new Palette();
                 pal.addWayPoint(0, Color.RED);
@@ -450,41 +456,40 @@ public class OleDashBoard extends OleDrawPane {
                 pal.addWayPoint(75, Color.YELLOW);
                 pal.addWayPoint(76, Color.YELLOW);
                 pal.addWayPoint(100, Color.GREEN);
-                pal.fillWayPoints(decoder.getAutonomy());
+                pal.fillWayPoints(getMyDecoder().getAutonomy());
                 osBattery.setPalette(pal);
             }
 //            osBattery.setHidden(this.mySensorsVisual.get("AUX").isMap);
 
-            odLed[0].setCurrentValue(decoder.getAlive());
-            odLed[1].setCurrentValue(decoder.getOntarget());
-            odLed[2].setCurrentValue(decoder.getCargo().length > 0);
-            olBurnt.getAllReadings()[0][0] = decoder.getEnergyburnt();
-            olSteps.setCurrentValue(decoder.getNSteps());
+            odLed[0].setCurrentValue(getMyDecoder().getAlive());
+            odLed[1].setCurrentValue(getMyDecoder().getOntarget());
+            odLed[2].setCurrentValue(getMyDecoder().getCargo().length > 0);
+            olBurnt.getAllReadings()[0][0] = getMyDecoder().getEnergyburnt();
+            olSteps.setCurrentValue(getMyDecoder().getNSteps());
             olTime.setCurrentValue(tstart.elapsedTimeSecs(new TimeHandler()));
 
-            String newBag[] = decoder.getTrace();
+            String newBag[] = getMyDecoder().getTrace();
             if (newBag.length > olCommand.getBagSize()) {
                 for (int i = olCommand.getBagSize(); i < newBag.length; i++) {
                     olCommand.addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + newBag[i]);
                 }
             }
-//            if (decoder.getStatus().length() > 0) {
-//                olCommand.addToBag(emojis.INFO + " " + decoder.getStatus());
+//            if (getMyDecoder().getStatus().length() > 0) {
+//                olCommand.addToBag(emojis.INFO + " " + getMyDecoder().getStatus());
 //            }
-//            osAltitude.setAlertLimitAbove(decoder.getMaxlevel() - 10);
+//            osAltitude.setAlertLimitAbove(getMyDecoder().getMaxlevel() - 10);
 
-            String newCargo[] = decoder.getCargo();
+            String newCargo[] = getMyDecoder().getCargo();
             if (newCargo.length > olPayload.getBag().size()) {
                 for (int i = olPayload.getBagSize(); i < newCargo.length; i++) {
                     olPayload.addToBag(String.format("%03d ", this.mySensorsVisual.get("PAYLOAD").getBagSize()) + newCargo[i]);
                 }
             }
-            osMap.addTrail(decoder.getName(), decoder.getGPSVector());
 
-            SimpleVector3D me = decoder.getGPSVector();
+            SimpleVector3D me = getMyDecoder().getGPSVector();
             PolarSurface ps = new PolarSurface(me);
             ps.setRadius(15);
-            Map2DColor sensor = ps.applyPolarTo(decoder.getWorldMap());
+            Map2DColor sensor = ps.applyPolarTo(getMyDecoder().getWorldMap());
             lastPerception = perception;
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
@@ -498,7 +503,7 @@ public class OleDashBoard extends OleDrawPane {
 //            JsonObject jso = Json.parse(goals).asObject();
 //            mySensorsVisual.get("MAP").setJsaGoals(jso.get("goals").asArray());
 //            mySensorsVisual.get("AUX").setJsaGoals(jso.get("goals").asArray());
-//            decoder.findCourseTo(new Point3D(10,0,decoder.getAltitude()));
+//            getMyDecoder().findCourseTo(new Point3D(10,0,getMyDecoder().getAltitude()));
 //        } catch (Exception ex) {
 //
 //        }

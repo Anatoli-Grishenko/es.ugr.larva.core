@@ -72,7 +72,7 @@ public class Environment extends SensorDecoder {
             return false;
         }
         this.live = World.registerAgent(name, r.name(), attach);
-        World.locateAgent(live, new Point3D(-1,-1,0));
+        World.locateAgent(live, new Point3D(-1, -1, 0));
 //        System.out.println(live.getPerceptions().toString());
 //        feedPerception(this.live.getPerceptions());
         return true;
@@ -101,7 +101,8 @@ public class Environment extends SensorDecoder {
                 census.fromJson(jsoThings.get("cities").asArray());
             }
             if (jsoThings.get("missions") != null) {
-                Missions = new MissionSet(jsoThings.get("cities").asArray());
+                Missions = new MissionSet(jsoThings.get("missions").asArray());
+                System.out.println("\n\n\nMissions : " + Missions.size() + " " + Missions.keySet().toString() + "\n\n\n");
             }
             cache();
         } catch (Exception ex) {
@@ -438,7 +439,7 @@ public class Environment extends SensorDecoder {
     }
 
     public boolean isFreeRight() {
-        return this.getLidarRightmost()>= -getMaxslope () && getLidarRightmost()<= getMaxslope ()
+        return this.getLidarRightmost() >= -getMaxslope() && getLidarRightmost() <= getMaxslope()
                 && getVisualRightmost() >= this.getMinlevel()
                 && getVisualRightmost() <= this.getMaxlevel();
     }
@@ -447,22 +448,24 @@ public class Environment extends SensorDecoder {
         return getRelativeAngular() >= -90 && getRelativeAngular() <= 90;
 //        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
+
     public boolean isTargetFront() {
         return getRelativeAngular() > -22 && getRelativeAngular() < 22;
 //        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
+
     public boolean isTargetBack() {
         return getRelativeAngular() == 180;
 //        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
 
     public boolean isTargetLeft() {
-        return getRelativeAngular() >= 0;
+        return getRelativeAngular() > 0;
 //        return getRelativeAngular() >= 45;
     }
 
     public boolean isTargetRight() {
-        return getRelativeAngular() < 0;
+        return getRelativeAngular() <= 0;
 //        return getRelativeAngular() <= -45;
     }
 
@@ -525,18 +528,105 @@ public class Environment extends SensorDecoder {
     public ThingSet getCensus() {
         return census;
     }
-    
+
     public String[] getCityList() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
 
-    public int getNMissions() {
+    public int getNumMissions() {
         return Missions.size();
     }
+
     public String getMissionName(int i) {
         return Missions.getMission(i).getName();
     }
-    public String [] getMission(int i) {
+
+    public String[] getAllMissions() {
+        return Transform.toArrayString(new ArrayList(Missions.keySet()));
+    }
+
+    public String[] getMissionTasks(int i) {
         return Transform.toArrayString(Missions.getMission(i));
     }
+
+    public String[] getMissionTasks(String name) {
+        if (Missions.containsKey(name)) {
+            return Transform.toArrayString(Missions.get(name));
+        } else {
+            return null;
+        }
+    }
+
+    public void activateMission(String name) {
+        this.setMission(name);
+        this.setTask(nextTask());
+    }
+
+    public void activateMission(int i) {
+        this.setMission(getMissionName(i));
+        this.setTask(nextTask());
+    }
+
+    public boolean isOverMission() {
+//        System.out.println("\n\n\nMissions (isOver): " + Missions.size() + " " + Missions.keySet().toString() + "\n\n\n");
+        if (Missions.get(getCurrentMission()) != null) {
+            return Missions.getMission(getCurrentMission()).size() == 0 && this.checkCurrentTask();
+        } else {
+            return true;
+        }
+
+    }
+
+    public boolean isOverTask() {
+        if (Missions.get(getCurrentMission()) != null) {
+            return Missions.getMission(getCurrentMission()).size() == 0;
+        } else {
+            return true;
+        }
+
+    }
+
+    public String nextTask() {
+        String res;
+        if (Missions.get(getCurrentMission()) != null) {
+            if (!isOverMission()) {
+                res = Missions.get(getCurrentMission()).get(0);
+                setTask(res);
+                Missions.get(getCurrentMission()).remove(0);
+                return res;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+
+    }
+
+    public String getCurrentMission() {
+        return this.getMission();
+    }
+
+    public String getCurrentTask() {
+        return this.getTask();
+    }
+
+    public boolean checkCurrentTask() {
+        boolean res = false;
+        String task[] = getCurrentTask().split(" ");
+        Point3D p;
+
+        switch (task[0]) {
+            case "MOVEIN":
+            case "MOVETO":
+                res = this.getGPS().isEqualTo(this.getDestination());
+                break;
+            default:
+                res = false;
+                break;
+
+        }
+        return res;
+    }
+
 }

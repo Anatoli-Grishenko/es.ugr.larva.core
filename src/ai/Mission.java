@@ -31,7 +31,7 @@ public class Mission extends ArrayList<String>{
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name.toUpperCase();
     }
     public JsonArray toJson() {
         JsonArray res = new JsonArray();
@@ -41,4 +41,5 @@ public class Mission extends ArrayList<String>{
         }
         return res;
     }
+    
 }

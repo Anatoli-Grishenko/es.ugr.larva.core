@@ -209,12 +209,16 @@ public class liveBot extends Thing {
     public liveBot rotateLeft() {
         setSlope(0);
         setOrientation(liveBot.this.rotateLeft(getOrientation()));
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return this;
     }
 
     public liveBot rotateRight() {
         setSlope(0);
         setOrientation(liveBot.this.rotateRight(getOrientation()));
+        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return this;
     }
 

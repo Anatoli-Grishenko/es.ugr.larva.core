@@ -263,6 +263,13 @@ public class LARVABaseAgent extends Agent {
         return DFSetMyServices(Transform.toArrayString(prevServices));
     }
 
+    public boolean DFRemoveMyServices(String[] services) {
+        ArrayList <String> prevServices;
+        prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
+        prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
+        return DFSetMyServices(Transform.toArrayString(prevServices));
+    }
+
     /**
      * It allows the de-registration of all services.
      */
@@ -286,8 +293,8 @@ public class LARVABaseAgent extends Agent {
         dfd.setName(new AID(agentname, AID.ISLOCALNAME));
         for (String s : services) {
             sd = new ServiceDescription();
-            sd.setName(s.toUpperCase());
-            sd.setType(s.toUpperCase());
+            sd.setName(s); //.toUpperCase());
+            sd.setType(s); //.toUpperCase());
             dfd.addServices(sd);
         }
         try {

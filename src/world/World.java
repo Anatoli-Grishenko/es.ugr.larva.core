@@ -270,22 +270,22 @@ public class World {
                 }
                 Point3D p;
                 JsonArray jsap;
-                if (ocfg.getFieldList().contains("start")) {
-                    jsap = ocfg.get("start").asArray();
-                    p = new Point3D(jsap);
-                    p = this.placeAtMap(p);
-                    start = p;
-                } else {
-                    start = null;
-                }
-                if (ocfg.getFieldList().contains("destination")) {
-                    jsap = ocfg.get("destination").asArray();
-                    p = new Point3D(jsap);
-                    p = this.placeAtMap(p);
-                    destination = p;
-                } else {
-                    destination = null;
-                }
+//                if (ocfg.getFieldList().contains("start")) {
+//                    jsap = ocfg.get("start").asArray();
+//                    p = new Point3D(jsap);
+//                    p = this.placeAtMap(p);
+//                    start = p;
+//                } else {
+//                    start = null;
+//                }
+//                if (ocfg.getFieldList().contains("destination")) {
+//                    jsap = ocfg.get("destination").asArray();
+//                    p = new Point3D(jsap);
+//                    p = this.placeAtMap(p);
+//                    destination = p;
+//                } else {
+//                    destination = null;
+//                }
                 if (ocfg.getFieldList().contains("missions")) {
                     _missions = new MissionSet(ocfg.get("missions").asArray());
                 }
@@ -329,6 +329,7 @@ public class World {
     public MissionSet getMissions() {
         return _missions;
     }
+
     public Thing addThing(Thing i, PROPERTY[] visible) {
 //        if (i.getPosition() == null) {
 //            if (!i.getType().equals("ENVIRONMENT")) {
@@ -1076,7 +1077,7 @@ public class World {
         a = new AStar(this.getEnvironment().getSurface());
         a.setView(null);
         a.setApp(null);
-        a.setMaxSeconds(30);
+        a.setMaxSeconds(10);
         a.setMaxDepth(1000);
         a.setMinlevel(agent.Raw().getMinlevel());
         a.setMaxlevel(agent.Raw().getMaxlevel());
@@ -1097,9 +1098,13 @@ public class World {
         if (path != null) {
             int i = 0, istep = agent.Raw().getRange() / 2;
             for (Choice c : path) {
-                if ((++i) % istep == 0 || i == path.size() - 1) { // 
+
+                if (i == path.size() - 1 ) {  
                     jsares.add(c.getPosition().toJson());
-                }
+                } else if (i>0 && i % istep == 0 ){ // 
+                    jsares.add(c.getPosition().toJson());
+                } 
+                i++;
             }
             agent.Raw().encodeSensor(Sensors.COURSE, jsares);
             agent.Raw().activateCourse();
@@ -1122,7 +1127,7 @@ public class World {
         return "";
     }
 
-public Point3D getDestination() {
+    public Point3D getDestination() {
         return destination;
     }
 
