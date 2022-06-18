@@ -472,6 +472,7 @@ public class OleHud extends OleSensor {
             if ((int) (maxlevel * tscale) == y) {
                 c = Color.RED;
             }
+            
             if (z >= 0) {
                 if (lastZ < 0 || t > 0) {
                     lastZ = z;
@@ -480,7 +481,7 @@ public class OleHud extends OleSensor {
                     c = OleDashBoard.cTrack;
                 }
             }
-            terrain.setColor(tx, terrain.getHeight() - 1 - y, c);
+            terrain.setColor(tx, terrain.getHeight() - 1 - y, SwingTools.mergeColors(c, terrain.getColor(tx, terrain.getHeight() - 1 - y), (int)(y*100/(terrain.getHeight()*0.50))));
         }
     }
 }

@@ -39,9 +39,9 @@ public class OleAgentTile extends OleFoldablePane {
     AgentReport myReport;
     OlePerformeter olpTime, olpInbox, olpOutbox;
     OleToolBar oltbMain, oltbExternal;
-    boolean showPerformance = false;
+    boolean showPerformance = false, hasconfig = false;
 
-    public OleAgentTile(OleApplication parent, AgentReport report) {
+    public OleAgentTile(OleApplication parent, AgentReport report, boolean hasConfigFile) {
         super(parent, new JLabelRobot(parent, report.getAgentName()));
 
         myStatus = Status.OFF;
@@ -67,11 +67,14 @@ public class OleAgentTile extends OleFoldablePane {
         mybOff.setBorderPainted(true);
         mybOff.setContentAreaFilled(true);
         mybOff.setIcon(new Dimension(icon, icon));
-        mybConfig = new OleButton(parent, "Configure " + myReport.getAgentName(), "settings");
-        mybConfig.setExtraFlat();
-        mybConfig.setBorderPainted(true);
-        mybConfig.setContentAreaFilled(true);
-        mybConfig.setIcon(new Dimension(icon, icon));
+        this.hasconfig = hasConfigFile;
+        if (this.hasconfig) {
+            mybConfig = new OleButton(parent, "Configure " + myReport.getAgentName(), "settings");
+            mybConfig.setExtraFlat();
+            mybConfig.setBorderPainted(true);
+            mybConfig.setContentAreaFilled(true);
+            mybConfig.setIcon(new Dimension(icon, icon));
+        }
         if (showPerformance) {
             olpTime = new OlePerformeter(this, 100, icon, 2000);
             olpInbox = new OlePerformeter(this, 100, icon, 5);
@@ -87,7 +90,9 @@ public class OleAgentTile extends OleFoldablePane {
         oltbExternal.setPreferredSize(new Dimension(100, 24));
         oltbMain.addButton(mybOn);
         oltbMain.addButton(mybOff);
-        oltbMain.addButton(mybConfig);
+        if (hasconfig) {
+            oltbMain.addButton(mybConfig);
+        }
 
         this.getFoldablePane().add(oltbMain);
         this.getFoldablePane().add(oltbExternal);
@@ -123,12 +128,16 @@ public class OleAgentTile extends OleFoldablePane {
         if (myStatus == Status.OFF) {
             mybOn.setEnabled(true);
             mybOff.setEnabled(false);
-            this.mybConfig.setEnabled(true);
+            if (hasconfig) {
+                this.mybConfig.setEnabled(true);
+            }
             mylLabel.setForeground(Color.BLACK);
         } else {
             mybOn.setEnabled(false);
             mybOff.setEnabled(true);
-            this.mybConfig.setEnabled(false);
+            if (hasconfig) {
+                this.mybConfig.setEnabled(false);
+            }
             mylLabel.setForeground(OleApplication.DodgerBlue);
         }
         mylLabel.setText(myReport.getAgentName());

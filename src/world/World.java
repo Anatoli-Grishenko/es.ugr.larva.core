@@ -57,7 +57,7 @@ public class World {
     protected HashMap<PROPERTY, ArrayList<Thing>> _visibility;
     protected Ontology _ontology;
     protected String name, spalette;
-    protected boolean _godmode = false, debug = false;
+    protected boolean _godmode = false, debug = false, hasMap;
     protected String _surfaceName;
     protected OleConfig cfg;
     protected JsonArray oThings;
@@ -71,6 +71,7 @@ public class World {
         this.name = name;
         _population = new ThingSet();
         _visibility = new HashMap<>();
+        hasMap = false;
         _ontology = new Ontology().add("THING", Ontology.ROOT).add("ENVIRONMENT", "THING").add("OBJECT", "THING");
         filter = new String[range][range];
         String N = "0", NE = "1", E = "2", SE = "3", S = "4", SW = "5", W = "6", NW = "7";
@@ -117,6 +118,10 @@ public class World {
         }
     }
 
+    public boolean hasMap() {
+        return hasMap;
+    }
+    
     protected boolean filterReading(int x, int y, int range, int orientation) {
         return filter[cx + x - range / 2][cy + y - range / 2].contains("." + orientation + ".");
     }

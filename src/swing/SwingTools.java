@@ -214,4 +214,22 @@ public class SwingTools {
         }
         return newpoly;
     }
+    
+    public static Color mergeColors(Color c1, Color c2, int percentage) {
+        int r,g,b;
+        percentage = Math.min(100,percentage);
+        r = (c1.getRed()*percentage+c2.getRed()*(100-percentage))/100;
+        g = (c1.getGreen()*percentage+c2.getGreen()*(100-percentage))/100;
+        b = (c1.getBlue()*percentage+c2.getBlue()*(100-percentage))/100;
+        return new Color(r,g,b);        
+    }
+    
+    public static Color gradualColor(Color c1, int percentage) {
+        int r,g,b;
+        percentage = Math.min(100,percentage);
+        r = (c1.getRed()*percentage)/100;
+        g = (c1.getGreen()*percentage)/100;
+        b = (c1.getBlue()*percentage)/100;
+        return new Color(r,g,b);        
+    }
 }

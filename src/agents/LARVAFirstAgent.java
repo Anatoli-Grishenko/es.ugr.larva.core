@@ -8,14 +8,18 @@ package agents;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
+import com.eclipsesource.json.JsonObject;
 import console.Console;
+import crypto.Keygen;
 import data.Ole;
 import data.OleConfig;
 import data.OleFile;
 import data.OleSet;
 import data.Transform;
 import disk.Logger;
+import glossary.Signals;
 import jade.core.AID;
+import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.awt.Color;
@@ -26,6 +30,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +49,7 @@ import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleButton;
 import swing.OleToolBar;
+import tools.emojis;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -92,7 +98,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected String userName = "";
 
     // Its known sequence diagram
-    SequenceDiagram sd;
+    protected static SequenceDiagram sd;
     //
     protected String title, mySessionmanager = "", problemName;
 
@@ -164,7 +170,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean Ve(Environment E) {
-        if (E == null || E.isCrahsed() || E.getStuck()>3) {
+        if (E == null || E.isCrahsed() || E.getStuck() > 3) {
             return false;
         }
         return true;
@@ -185,7 +191,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void setup() {
         stepsDone = new OleSet();
         stepsSent = new OleSet();
-        sd = new SequenceDiagram();
+        if (sd == null) {
+            sd = new SequenceDiagram();
+        }
         traceRunSteps = false;
         super.setup();
         addRunStep("MILES00");
@@ -217,22 +225,87 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.frameDelay = oleConfig.getTab("Display").getInt("Frame delay", -1);
             showConsole = this.oleConfig.getTab("Display").getBoolean("Show console");
             showRemote = this.oleConfig.getTab("Display").getBoolean("Show remote");
+        } else {
+            myReport = new AgentReport(getName(), this.getClass(), 100);
         }
         SWaitButtons = new Semaphore(0);
         E = new Environment();
         if (showRemote) {
             openRemote();
         }
+        doNotExit();
+    }
+
+    public void LARVAwait(int milis) {
+        try {
+            Thread.sleep(milis);
+        } catch (InterruptedException ex) {
+        }
+
+    }
+
+    /**
+     * This method encapsulates code of the agent, usually the most external
+     * layer, and catches every possible exception, informs the teacher and
+     * moves to emergency mode: that is, only the ADMIN channel is open. Froom
+     * here the agent might go back to work if it receives the clearance from
+     * the teacher. The goal is catching the un caught exceptions in the main
+     * body and resume the activity in the main body loop or to simple die;
+     *
+     * @param r The piece of code to be safely executed.
+     */
+    public void doShield(Runnable r) {
+        try {
+            r.run();
+        } catch (ExitRequestedException ex) {
+            exit = true;
+//                doDelete();
+        } catch (Exception ex) {
+            JsonObject res = logger.logException(ex);
+            this.Alert("Uncaught exception\n"
+                    + emojis.WARNING + " " + res.getString("uncaught-exception", "")
+                    + "\n" + emojis.INFO + " " + res.getString("info", title));
+        }
+    }
+
+    public void doExit() {
+        throw new ExitRequestedException(Signals.EXITREQUESTED.name(), new IOException());
+    }
+
+    public void doNotExit() {
+        exit = false;
+    }
+
+    @Override
+    protected void BehaviourDefaultSetup() {
+        defaultBehaviour = new Behaviour() {
+            @Override
+            public void action() {
+                doShield(() -> {
+                    preExecute();
+                    Execute();
+                    postExecute();
+                    ncycles++;
+                });
+                if (isExit()) {
+                    doDelete();
+                }
+            }
+
+            @Override
+            public boolean done() {
+                return exit;
+            }
+
+        };
+        this.addBehaviour(defaultBehaviour);
     }
 
     @Override
     public void postExecute() {
         myReport.tick();
         if (this.frameDelay > 0 && (!remote || cont)) {
-            try {
-                Thread.sleep(this.frameDelay);
-            } catch (InterruptedException ex) {
-            }
+            LARVAwait(frameDelay);
         }
     }
 
@@ -306,9 +379,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (remote) {
             closeRemote();
         }
-        if (problemName != null) {
-            this.saveSequenceDiagram(problemName + ".seqd");
-        } 
+//        if (problemName != null) {
+//            this.saveSequenceDiagram(problemName + ".seqd");
+//        }
 //        else {
 //            this.saveSequenceDiagram(getName() + ".seqd");
 //        }
@@ -408,7 +481,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean doLARVACheckin() {
         Info("Checking-in to LARVA");
         if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
-            Error("Sorry, no identity manager service has been found");
+            Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
             IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
@@ -434,9 +507,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     this.getUserData(checkin.getContent());
                     return true;
                 } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
-                    Error("Check in to LARVA refused.\nDetails: " + checkin.getContent());
+                    Error("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
                 } else {
-                    Error("Could not check in to LARVA.\nDetails: " + checkin.getContent());
+                    Error("Could not checkin at LARVA.\nDetails: " + checkin.getContent());
                 }
             }
             return false;
@@ -488,6 +561,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (traceRunSteps) {
             addRunStep("MILES10");
         }
+        msg.addUserDefinedParameter("ACLMID", Keygen.getHexaKey(20));
 //        if (myDashboard != null && msg.getContent() != null
         if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
             String skey = msg.getConversationId(), sman;
@@ -897,7 +971,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
-    private String getSequenceDiagram() {
+    public String getSequenceDiagram() {
         return sd.printSequenceDiagram();
     }
 
@@ -905,17 +979,25 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             PrintStream out = new PrintStream(new File(filename));
             out.println(getSequenceDiagram());
-            JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
-            if (taSeq != null) {
-                taSeq.append(filename);
-                taSeq.append(getSequenceDiagram());
-                taSeq.validate();
+            try {
+                JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
+                if (taSeq != null) {
+//                    taSeq.append(filename);
+                    taSeq.setText(filename);
+                    taSeq.append(getSequenceDiagram());
+                    taSeq.validate();
+                }
+            } catch (Exception ex) {
+                //Info(getSequenceDiagram());
             }
         } catch (FileNotFoundException ex) {
             Error("Unable to save Sequence Diagram into file " + filename);
         }
     }
 
+    public void clearSequenceDiagram() {
+        sd.clear();
+    }
     public void getUserData(String welcome) {
         userID = -1;
         userName = "";

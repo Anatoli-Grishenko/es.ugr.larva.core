@@ -79,6 +79,11 @@ public class OleDataBase implements ReportableObject {
         closeConnection();
     }
 
+    public Connection getDBconnection() {
+        return _DBconnection;
+    }
+
+    
     public boolean defineConnection(String host, int port, String database, String user, String password) {
         _host = host;
         _port = port;
