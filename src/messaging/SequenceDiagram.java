@@ -23,16 +23,22 @@ import tools.TimeHandler;
  */
 public class SequenceDiagram {
 
-    ArrayList<String> players;
+    ArrayList<String> players, ACLMIDs;
     ArrayList<Sequence> sequences;
     int width = 35;
     String blackboard = "", template = "%-" + width + "s", nextline = "";
 
     public SequenceDiagram() {
-        players = new ArrayList();
-        sequences = new ArrayList();
+        clear();
     }
 
+    public void clear() {
+        players = new ArrayList();
+        ACLMIDs = new ArrayList();
+        sequences = new ArrayList();
+        blackboard="";
+        nextline="";
+    }
     public int size() {
         return sequences.size();
     }
@@ -192,21 +198,24 @@ public class SequenceDiagram {
         }
     }
 
-    public void addSequence(String sender, String receiver, String content) {
-
-        Sequence ns = new Sequence();
-        ns.sender = sender.trim();
-        ns.receiver = receiver.trim();
-        ns.content = content == null ? "" : content.trim();
-        ns.date = TimeHandler.Now();
-        sequences.add(ns);
-        addPlayer(ns.sender);
-        addPlayer(ns.receiver);
-    }
+//    public void addSequence(String sender, String receiver, String content) {
+//
+//        Sequence ns = new Sequence();
+//        ns.sender = sender.trim();
+//        ns.receiver = receiver.trim();
+//        ns.content = content == null ? "" : content.trim();
+//        ns.date = TimeHandler.Now();
+//        sequences.add(ns);
+//        addPlayer(ns.sender);
+//        addPlayer(ns.receiver);
+//    }
 
     public void addSequence(ACLMessage msg) {
 
-        Sequence ns = new Sequence();
+        if (ACLMIDs.contains(msg.getUserDefinedParameter("ACLMID")))
+            return;
+        ACLMIDs.add(msg.getUserDefinedParameter("ACLMID"));
+        Sequence ns = new Sequence(); 
         ns.sender = msg.getSender().getLocalName().trim();
         ns.replywith = msg.getReplyWith();
         ns.inreplyto = msg.getInReplyTo();
@@ -231,19 +240,19 @@ public class SequenceDiagram {
         nextLine();
         for (int i = 0; i < size(); i++) {
             this.printDate(sequences.get(i));
+//            nextLine();
+//            this.printPerformative(sequences.get(i));
             nextLine();
-            this.printPerformative(sequences.get(i));
-            nextLine();
-            if (sequences.get(i).replywith != null) {
-                this.printRW(sequences.get(i));
-                nextLine();
-
-            }
-            if (sequences.get(i).inreplyto != null) {
-                this.printIRT(sequences.get(i));
-                nextLine();
-
-            }
+//            if (sequences.get(i).replywith != null) {
+//                this.printRW(sequences.get(i));
+//                nextLine();
+//
+//            }
+//            if (sequences.get(i).inreplyto != null) {
+//                this.printIRT(sequences.get(i));
+//                nextLine();
+//
+//            }
             this.printContent(sequences.get(i));
             nextLine();
             this.printArrow(sequences.get(i));

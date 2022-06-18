@@ -468,14 +468,14 @@ public class JADEBoot {
             } catch (Exception ex) {
             }
         }
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {
-        }
+//        try {
+//            Thread.sleep(5000);
+//        } catch (Exception e) {
+//        }
         return this;
     }
 
-    public JADEBoot WaitAndShutDown() {
+    public JADEBoot WaitToShutDown() {
         WaitToClose();
         ShutDown();
         return this;
@@ -484,11 +484,11 @@ public class JADEBoot {
         Close();
         Info("Turning off JadeBoot");
         turnOff(_firstContainer);
-        try {
-            Thread.sleep(2500);
-        } catch (Exception e) {
-        }
-        turnOff(_secondContainer);
+//        try {
+//            Thread.sleep(2500);
+//        } catch (Exception e) {
+//        }
+        //turnOff(_secondContainer);
         System.exit(0);
         return this;
     }

@@ -145,12 +145,6 @@ public class LARVABaseAgent extends Agent {
 
     public void postExecute() { }
 
-    public void doExit() {
-        exit= true;
-    }
-    public void doNotExit() {
-        exit= false;
-    }
     //
     // DF+
     //
@@ -484,8 +478,6 @@ public class LARVABaseAgent extends Agent {
         };
         this.addBehaviour(defaultBehaviour);
     }
-
-
 
     public boolean isCheckedin() {
         return checkedin;

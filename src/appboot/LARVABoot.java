@@ -152,9 +152,12 @@ public class LARVABoot {
         sShutdown = new Semaphore(0);
         doSwing = new Semaphore(1);
         doJade = new Semaphore(1);
+        String saux;
         switch (_style) {
             case METAL:
-                this._appConfiguration = getClass().getResource("/resources/config/MetalBoot.app").toString().replace("file:", "");
+                saux = getClass().getResource("/resources/config/MetalBoot.app").toString().replace("file:", "");
+//                System.out.println("\n\n\n=====\n"+saux+"\n===\n\n\n");
+                this._appConfiguration = saux;
                 break;
             case LIGHT:
                 this._appConfiguration = getClass().getResource("/resources/config/LightBoot.app").toString().replace("file:", "");
@@ -278,7 +281,6 @@ public class LARVABoot {
         pScroll = new JScrollPane(_XUI);
         pScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         tabbedPane.addTab("XUI", pScroll);
-        tabbedPane.setSelectedIndex(3);
         shareableGUI.put("XUI", _XUI);
         appMain.getMainPanel().add(tabbedPane, BorderLayout.CENTER);
         appMain.setSize(new Dimension(app.getOptions().getOle("FrameSize").getInt("width", 640),
@@ -297,6 +299,12 @@ public class LARVABoot {
             if (oleConfig.getTab("Connection").getBoolean("Autoconnect", false)) {
                 Boot();
             }
+            if (this.oleConfig.getTab("Identity").getBoolean("Open XUI", false)) {
+                tabbedPane.setSelectedIndex(3);
+            } else {
+                tabbedPane.setSelectedIndex(0);
+            }
+
         } else {
             for (String s : appMain.getToolBar().getButtonList()) {
                 if (!s.toUpperCase().equals("EXIT")) {
@@ -447,10 +455,11 @@ public class LARVABoot {
      * @return The own instance
      */
     public LARVABoot Boot(String host, int port) {
+        appMain.showProgress("Booting Jade", 0, 10);
         this.selectConnection(host, port);
         showStatus();
         if (_connected) {
-            appMain.getToolBar().getButton("Passport").setEnabled(false);
+//            appMain.getToolBar().getButton("Passport").setEnabled(false);
             appMain.getToolBar().getButton("Connect").setEnabled(false);
         }
         return this;
@@ -666,7 +675,12 @@ public class LARVABoot {
         if (oPassport != null) {
             ag.setOwnerName(oPassport.getName());
         }
-        OleAgentTile otAux = new OleAgentTile(appMain, ag);
+        OleAgentTile otAux;
+        if (new File("config/Problems.conf").exists()) {
+            otAux = new OleAgentTile(appMain, ag, true);
+        } else {
+            otAux = new OleAgentTile(appMain, ag, false);
+        }
         otAux.updateReport();
         pTiles.addFoldable(otAux);
         otAux.showSummary();
@@ -750,11 +764,8 @@ public class LARVABoot {
                 _tiles.get(name).doActivate();
             }
         }
-        if (this.oleConfig.getTab("Display").getBoolean("Open XUI",false) &&
-                _tiles.get(_xuiName) == null) {
-            if (oPassport != null) {
-                launchAgent(_xuiName, XUIAgent.class);
-            }
+        if (oPassport != null && _tiles.get(_xuiName) == null) {
+            launchAgent(_xuiName, XUIAgent.class);
         }
         return this;
     }
