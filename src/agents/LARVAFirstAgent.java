@@ -120,6 +120,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
 
+    public LARVAFirstAgent() {
+        super();
+        stepsDone = new OleSet();
+        stepsSent = new OleSet();
+        if (sd == null) {
+            sd = new SequenceDiagram();
+        }
+        traceRunSteps = false;
+        addRunStep("MILES00");
+
+    }
+
     public double Reward(Environment E) {
         return E.getDistance();
     }
@@ -189,14 +201,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public void setup() {
-        stepsDone = new OleSet();
-        stepsSent = new OleSet();
-        if (sd == null) {
-            sd = new SequenceDiagram();
-        }
-        traceRunSteps = false;
         super.setup();
-        addRunStep("MILES00");
         addRunStep("MILES01");
         this.logger.setEcho(true);
         // create a new frame to store text field and button
@@ -262,9 +267,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //                doDelete();
         } catch (Exception ex) {
             JsonObject res = logger.logException(ex);
-            this.Alert("Uncaught exception\n"
-                    + emojis.WARNING + " " + res.getString("uncaught-exception", "")
-                    + "\n" + emojis.INFO + " " + res.getString("info", title));
+            String message ="";
+            message += emojis.CALENDAR+" "+res.getString("date", "")+"\n";
+            res = res.get("record").asObject();
+            message += emojis.ROBOT+" "+res.getString("agent", "")+"\n";
+            message += emojis.WARNING + " UNCAUGHT EXCEPTION\n" + res.getString("uncaught-exception", "")+"\n";
+            message += emojis.INFO + " INFO\n" + res.getString("info", title)+"\n";
+            this.Alert(message);
+            exit=true;
         }
     }
 
@@ -370,9 +380,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     public void takeDown() {
-        if (traceRunSteps) {
             addRunStep("MILES03");
-        }
         if (this.SWaitButtons.availablePermits() == 0) {
             this.SWaitButtons.release();
         }
@@ -399,9 +407,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     protected void Error(String message) {
-        if (traceRunSteps) {
             addRunStep("MILES02");
-        }
         logger.logError(message);
         if (isSwing()) {
             myText.append(logger.getLastlog());
@@ -417,9 +423,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @param message The informative message
      */
     protected void Info(String message) {
-        if (traceRunSteps) {
             addRunStep("MILES02");
-        }
         logger.logMessage(message);
         if (isSwing() && logger.isEcho()) {
             myText.append(logger.getLastlog() + "");
@@ -441,9 +445,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             FileReader fmypassport = new FileReader(passportFileName);
             mypassport = new Scanner(fmypassport).useDelimiter("\\Z").next();
-            if (traceRunSteps) {
                 addRunStep("MILES20");
-            }
             return true;
         } catch (Exception ex) {
             Error("Unable to load passport file " + passportFileName);
@@ -483,6 +485,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
             Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
+            if (mypassport.length()==0)
+                return false;
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
             IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
             Info("Found agent " + IdentityManager + " as Identity Manager");
@@ -497,9 +501,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             if (checkin == null) {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
-                if (traceRunSteps) {
                     addRunStep("MILES20");
-                }
                 checkout = checkin.createReply();
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
@@ -558,9 +560,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @param msg The ACL message to be sent
      */
     protected void LARVAsend(ACLMessage msg) {
-        if (traceRunSteps) {
             addRunStep("MILES10");
-        }
         msg.addUserDefinedParameter("ACLMID", Keygen.getHexaKey(20));
 //        if (myDashboard != null && msg.getContent() != null
         if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
@@ -633,9 +633,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     private ACLMessage LARVAblockingReceive(long milis) {
         ACLMessage res;
         boolean repeat = false;
-        if (traceRunSteps) {
             addRunStep("MILES13");
-        }
         do {
             repeat = false;
             res = blockingReceive();
@@ -663,9 +661,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public ACLMessage LARVAblockingReceive(MessageTemplate t) {
         ACLMessage res;
         boolean repeat = false;
-        if (traceRunSteps) {
             addRunStep("MILES13");
-        }
         do {
             repeat = false;
             res = blockingReceive();
@@ -694,9 +690,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected ACLMessage LARVAblockingReceive(MessageTemplate t, long milis) {
         ACLMessage res;
         boolean repeat = false;
-        if (traceRunSteps) {
             addRunStep("MILES13");
-        }
         do {
             repeat = false;
             res = blockingReceive();
@@ -890,9 +884,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetProviderList() {
-        if (traceRunSteps) {
             addRunStep("MILES21");
-        }
         return super.DFGetProviderList();
     }
 
@@ -904,10 +896,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetServiceList() {
-        if (traceRunSteps) {
             addRunStep("MILES21");
-        }
-
         return super.DFGetServiceList();
     }
 
@@ -920,9 +909,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllProvidersOf(String service) {
-        if (traceRunSteps) {
             addRunStep("MILES21");
-        }
         return super.DFGetAllProvidersOf(service);
     }
 
@@ -934,9 +921,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
-        if (traceRunSteps) {
             addRunStep("MILES21");
-        }
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
@@ -949,13 +934,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public boolean DFHasService(String agentName, String service) {
-        if (traceRunSteps) {
             addRunStep("MILES21");
-        }
         return super.DFHasService(agentName, service);
     }
 
     private void addRunStep(String step) {
+        if (!traceRunSteps) {
+            return;
+        }
         if (stepsSent.size() == 0 && stepsDone.findItem(step)) {
             return;
         }
@@ -998,6 +984,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void clearSequenceDiagram() {
         sd.clear();
     }
+
     public void getUserData(String welcome) {
         userID = -1;
         userName = "";

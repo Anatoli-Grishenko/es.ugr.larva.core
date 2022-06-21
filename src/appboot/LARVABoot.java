@@ -632,7 +632,11 @@ public class LARVABoot {
 
         MicroRuntime.startJADE(pr, null);
         _containerName = MicroRuntime.getContainerName();
+        _connected = true;
+        Info("Connected to Jade");
+        appMain.showProgress("Connected to JADE");
         doCompleted("CONNECT");
+        
         return this;
     }
 
@@ -764,7 +768,7 @@ public class LARVABoot {
                 _tiles.get(name).doActivate();
             }
         }
-        if (oPassport != null && _tiles.get(_xuiName) == null) {
+        if (oPassport != null && _tiles.get(_xuiName) == null && this.oleConfig.getTab("Identity").getBoolean("Open XUI", false)) {
             launchAgent(_xuiName, XUIAgent.class);
         }
         return this;
