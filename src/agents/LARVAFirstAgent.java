@@ -103,7 +103,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected String title, mySessionmanager = "", problemName;
 
     protected OleSet stepsDone, stepsSent;
-    protected boolean traceRunSteps;
+    protected boolean traceRunSteps=false;
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
@@ -120,19 +120,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
 
-    public LARVAFirstAgent() {
-        super();
-        stepsDone = new OleSet();
-        stepsSent = new OleSet();
-        if (sd == null) {
-            sd = new SequenceDiagram();
-        }
-        traceRunSteps = false;
-        addRunStep("MILES00");
-
-    }
-
-    public double Reward(Environment E) {
+   public double Reward(Environment E) {
         return E.getDistance();
     }
 
@@ -202,6 +190,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void setup() {
         super.setup();
+        stepsDone = new OleSet();
+        stepsSent = new OleSet();
+        if (sd == null) {
+            sd = new SequenceDiagram();
+        }
+        addRunStep("MILES00");
         addRunStep("MILES01");
         this.logger.setEcho(true);
         // create a new frame to store text field and button
