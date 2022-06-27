@@ -239,11 +239,11 @@ public class LARVABaseAgent extends Agent {
      * @return
      */
     public boolean DFSetMyServices(String[] services) {
+        Info("Services registered " + Transform.toArrayList(services).toString());
         if (this.DFGetAllServicesProvidedBy(getLocalName()).size() > 0) {
             DFRemoveAllMyServices();
         }
         if (this.DFSetServices(getLocalName(), services)) {
-            Info("Registering services " + Transform.toArrayList(services).toString());
             return true;
         }
 
@@ -252,6 +252,7 @@ public class LARVABaseAgent extends Agent {
 
     public boolean DFAddMyServices(String[] services) {
         ArrayList <String> prevServices;
+        Info("Adding services "+new ArrayList(Transform.toArrayList(services)));
         prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
         prevServices.addAll(new ArrayList(Transform.toArrayList(services)));
         return DFSetMyServices(Transform.toArrayString(prevServices));
@@ -259,6 +260,7 @@ public class LARVABaseAgent extends Agent {
 
     public boolean DFRemoveMyServices(String[] services) {
         ArrayList <String> prevServices;
+        Info("Removing services "+new ArrayList(Transform.toArrayList(services)));
         prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
         prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
         return DFSetMyServices(Transform.toArrayString(prevServices));

@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -69,7 +71,7 @@ public class Ole extends JsonObject {
         BADVALUE, OLEMETA,
         INTEGER, DOUBLE, STRING, ARRAY, BOOLEAN,
         OLELIST, OLEBITMAP, OLEFILE, OLEACLM, OLEPASSPORT, OLEREPORT,
-        OLETABLE, OLEQUERY, OLERECORD, OLESENSOR, OLEPOINT, OLECONFIG,  OLEDOT, OLEMENU,
+        OLETABLE, OLEQUERY, OLERECORD, OLESENSOR, OLEPOINT, OLECONFIG, OLEDOT, OLEMENU,
         ADMINPASSPORT, DBQUERY, NOTIFICATION,
         REQUEST, ANSWER, VECTOR, ENTITY,
         OLE, DIALOG
@@ -81,7 +83,7 @@ public class Ole extends JsonObject {
     /**
      * @brief Determine whether a JsonObject is also a Ole object
      * @param jso a regular JsonObject
-     * @return 
+     * @return
      */
     public static boolean isOle(JsonObject jso) {
         if (jso.get(oletype.OLEMETA.name()) != null) {
@@ -101,7 +103,7 @@ public class Ole extends JsonObject {
         return new Ole(jsole);
     }
 
-   protected static JsonValue Ole2JsonValue(JsonValue jsobject) {
+    protected static JsonValue Ole2JsonValue(JsonValue jsobject) {
         JsonValue jsvres;
         if (jsobject.isArray()) {
             jsvres = new JsonArray();
@@ -123,7 +125,8 @@ public class Ole extends JsonObject {
     }
 
     /**
-     * @brief Export a valid Ole Object into a plain JsonObject, removing any META information
+     * @brief Export a valid Ole Object into a plain JsonObject, removing any
+     * META information
      * @param odata The Ole object to export
      * @return A valid JsonObject without any META information
      */
@@ -159,7 +162,7 @@ public class Ole extends JsonObject {
 
     /**
      * @brief Import constructor
-     * @param jsole 
+     * @param jsole
      */
     public Ole(JsonObject jsole) {
         fromJson(jsole);
@@ -167,7 +170,7 @@ public class Ole extends JsonObject {
 
     /**
      * @brief Parse constructor
-     * @param s 
+     * @param s
      */
     public Ole(String s) {
         parse(s);
@@ -183,7 +186,7 @@ public class Ole extends JsonObject {
 
     /**
      * @brief removes all fields
-     * @return 
+     * @return
      */
     public Ole clear() {
         ArrayList<String> names = new ArrayList(this.getFieldList());
@@ -278,7 +281,7 @@ public class Ole extends JsonObject {
         return toString(WriterConfig.MINIMAL);
     }
 
-    public  Ole parse(String s) {
+    public Ole parse(String s) {
         try {
             JsonObject jsole;
             String definit;
@@ -472,7 +475,7 @@ public class Ole extends JsonObject {
 
     //////////////////////////////////////////// Crypto  
     public boolean isEncrypted() {
-       return myCryptor != null;
+        return myCryptor != null;
     }
 
     /**
@@ -497,7 +500,7 @@ public class Ole extends JsonObject {
         myCryptor = null;
         return this;
     }
-    
+
     public Cryptor getCryptor() {
         return this.myCryptor;
     }
@@ -517,7 +520,7 @@ public class Ole extends JsonObject {
         try {
             String str = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
             if (str.contains("resource:/")) {
-                String base= getClass().getResource("/resources/").toString();
+                String base = getClass().getResource("/resources/").toString();
                 str = str.replaceAll("resource:/resources/", base);
             }
             parse(str);
@@ -636,8 +639,9 @@ public class Ole extends JsonObject {
     public final ArrayList getArray(String field) {
         if (get(field) != null && getFieldType(field).equals(oletype.ARRAY.name())) {
             return new ArrayList(Transform.toArrayList(get(field).asArray()));
-        } else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -782,4 +786,28 @@ public class Ole extends JsonObject {
         }
         return this;
     }
+
+//    public void serialize(Object o, Class c) {
+//        Ole res = new Ole();
+//        String getterName;
+//        ArrayList<Field> myFields,
+//                fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+//        myFields = fullFields;
+//        for (Field f : myFields) {
+//            try {
+//                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+//                Method getter = c.getDeclaredMethod(getterName);
+//                if (f.getType() == boolean.class
+//                        || f.getType() == int.class
+//                        || f.getType() == long.class
+//                        || f.getType() == double.class
+//                        || f.getType() == String.class) {
+//                    res.setFieldGeneric(f.getName(), getter.invoke(this));
+//                }
+//            } catch (Exception ex) {
+//            }
+//        }
+//        return res;
+//
+//    }
 }

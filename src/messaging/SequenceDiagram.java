@@ -240,8 +240,8 @@ public class SequenceDiagram {
         nextLine();
         for (int i = 0; i < size(); i++) {
             this.printDate(sequences.get(i));
-//            nextLine();
-//            this.printPerformative(sequences.get(i));
+            nextLine();
+            this.printPerformative(sequences.get(i));
             nextLine();
 //            if (sequences.get(i).replywith != null) {
 //                this.printRW(sequences.get(i));

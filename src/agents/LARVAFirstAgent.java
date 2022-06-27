@@ -8,6 +8,7 @@ package agents;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
+import appboot.XUITTY;
 import com.eclipsesource.json.JsonObject;
 import console.Console;
 import crypto.Keygen;
@@ -93,7 +94,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //    protected SensorDecoder Deco;
     private ACLMessage checkin, checkout;
     private String IdentityManager;
-    
+
     protected int userID = -1;
     protected String userName = "";
 
@@ -101,17 +102,17 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected static SequenceDiagram sd;
     //
     protected String title, mySessionmanager = "", problemName;
-    
+
     protected OleSet stepsDone, stepsSent;
     protected boolean traceRunSteps = false;
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
-    
+
     protected Environment E;
     protected DecisionSet A;
     protected String myMission[], missionName;
-    
+
     protected Semaphore SWaitButtons;
     protected boolean cont = true, each = true, remote = false;
     OleAgentTile externalTile;
@@ -119,11 +120,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     OleButton olbContinue, olbPause, olbNext, olbUntil;
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
+    protected XUITTY xuitty;
     
     public double Reward(Environment E) {
         return E.getDistance();
     }
-    
+
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
             return null;
@@ -134,7 +136,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             return A.BestChoice();
         }
     }
-    
+
     protected DecisionSet Prioritize(Environment E, DecisionSet A) {
         for (Choice a : A) {
             if (Va(E, a)) {
@@ -146,7 +148,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         A.sort();
         return A;
     }
-    
+
     protected Environment T(Environment E, Choice a) {
         if (!Ve(E)) {
             return null;
@@ -154,7 +156,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             return E.simmulate(a);
         }
     }
-    
+
     protected double U(Environment E) {
         if (!Ve(E)) {
             return Choice.MAX_UTILITY;
@@ -164,19 +166,19 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             return Reward(E);
         }
     }
-    
+
     protected boolean Va(Environment E, Choice a) {
         return true;
     }
-    
+
     protected boolean Ve(Environment E) {
         if (E == null || E.isCrahsed() || E.getStuck() > 3) {
             return false;
         }
         return true;
-        
+
     }
-    
+
     protected boolean G(Environment E) {
         if (!Ve(E)) {
             return false;
@@ -234,13 +236,17 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         doNotExit();
     }
-    
+
     public void LARVAwait(int milis) {
         try {
             Thread.sleep(milis);
         } catch (InterruptedException ex) {
         }
-        
+
+    }
+
+    public void LARVAblock() {
+        this.defaultBehaviour.block();
     }
 
     /**
@@ -271,15 +277,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             exit = true;
         }
     }
-    
+
     public void doExit() {
         throw new ExitRequestedException(Signals.EXITREQUESTED.name(), new IOException());
     }
-    
+
     public void doNotExit() {
         exit = false;
     }
-    
+
     @Override
     protected void BehaviourDefaultSetup() {
         defaultBehaviour = new Behaviour() {
@@ -295,16 +301,16 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     doDelete();
                 }
             }
-            
+
             @Override
             public boolean done() {
                 return exit;
             }
-            
+
         };
         this.addBehaviour(defaultBehaviour);
     }
-    
+
     @Override
     public void postExecute() {
         myReport.tick();
@@ -312,12 +318,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             LARVAwait(frameDelay);
         }
     }
-    
+
     @Override
     public void preExecute() {
         waitRemoteSemaphore();
     }
-    
+
     protected void waitRemoteSemaphore() {
         if (remote) {
             iUntil++;
@@ -331,7 +337,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 }
             }
         }
-        
+
     }
 
     /**
@@ -371,7 +377,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         return res;
     }
-    
+
     @Override
     public void takeDown() {
         addRunStep("MILES03");
@@ -511,7 +517,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             }
             return false;
         }
-        
+
         return false;
     }
 
@@ -617,23 +623,22 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 repeat = false;
             }
         } while (repeat);
-        Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
-        
-        sd.addSequence(res);
-        
         this.checkReceivedMessage(res);
-        
-        myReport.setInBox(myReport.getInBox() + 1);
+        if (res != null) {
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+            sd.addSequence(res);
+            myReport.setInBox(myReport.getInBox() + 1);
+        }
         return res;
     }
-    
-    private ACLMessage LARVAblockingReceive(long milis) {
+
+    public ACLMessage LARVAblockingReceive(long milis) {
         ACLMessage res;
         boolean repeat = false;
         addRunStep("MILES13");
         do {
             repeat = false;
-            res = blockingReceive();
+            res = blockingReceive(milis);
             if (res != null && res.getContent().contains("filedata")) {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
@@ -648,20 +653,22 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 repeat = false;
             }
         } while (repeat);
-        if (res != null) {
-//            Info("⬛ Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
-        }
         this.checkReceivedMessage(res);
+        if (res != null) {
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+            sd.addSequence(res);
+            myReport.setInBox(myReport.getInBox() + 1);
+        }
         return res;
     }
-    
+
     public ACLMessage LARVAblockingReceive(MessageTemplate t) {
         ACLMessage res;
         boolean repeat = false;
         addRunStep("MILES13");
         do {
             repeat = false;
-            res = blockingReceive();
+            res = blockingReceive(t);
             if (res != null && res.getContent().contains("filedata")) {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
@@ -676,21 +683,22 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 repeat = false;
             }
         } while (repeat);
-        if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
-        }
         this.checkReceivedMessage(res);
-        sd.addSequence(res);
+        if (res != null) {
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+            sd.addSequence(res);
+            myReport.setInBox(myReport.getInBox() + 1);
+        }
         return res;
     }
-    
+
     protected ACLMessage LARVAblockingReceive(MessageTemplate t, long milis) {
         ACLMessage res;
         boolean repeat = false;
         addRunStep("MILES13");
         do {
             repeat = false;
-            res = blockingReceive();
+            res = blockingReceive(t, milis);
             if (res != null && res.getContent().contains("filedata")) {
                 Ole ocontent = new Ole().set(res.getContent());
                 OleFile ofile = new OleFile(ocontent.getOle("surface"));
@@ -705,11 +713,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 repeat = false;
             }
         } while (repeat);
-        if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, true));
-            sd.addSequence(res);
-        }
         this.checkReceivedMessage(res);
+        if (res != null) {
+            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
+            sd.addSequence(res);
+            myReport.setInBox(myReport.getInBox() + 1);
+        }
         return res;
     }
 
@@ -739,10 +748,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 if (res.getContent().contains("has been closed")) {
                     addRunStep("MILES25");
                 }
-                
+
             }
         }
-        
+
     }
 
     /**
@@ -757,7 +766,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (isSwing()) {
             int op = JOptionPane.showConfirmDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
-            
+
             return op == JOptionPane.YES_OPTION;
         } else {
             return super.Confirm(message);
@@ -829,13 +838,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             return super.inputLine(message);
         }
     }
-    
+
     protected void doSwingLater(Runnable what) {
         SwingUtilities.invokeLater(() -> {
             what.run();
         });
     }
-    
+
     protected void doSwingWait(Runnable what) {
         try {
             SwingUtilities.invokeAndWait(() -> {
@@ -934,7 +943,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         addRunStep("MILES21");
         return super.DFHasService(agentName, service);
     }
-    
+
     private void addRunStep(String step) {
         if (!traceRunSteps) {
             return;
@@ -953,11 +962,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             stepsSent = new OleSet();
         }
     }
-    
+
     public String getSequenceDiagram() {
         return sd.printSequenceDiagram();
     }
-    
+
     public void saveSequenceDiagram(String filename) {
         try {
             PrintStream out = new PrintStream(new File(filename));
@@ -977,11 +986,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             Error("Unable to save Sequence Diagram into file " + filename);
         }
     }
-    
+
     public void clearSequenceDiagram() {
         sd.clear();
     }
-    
+
     public void getUserData(String welcome) {
         userID = -1;
         userName = "";
@@ -1000,11 +1009,17 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             }
         }
     }
-    
+
+    protected void openXUITTY() {
+        xuitty = new XUITTY();
+        xuitty.init((JPanel) this.payload.getGuiComponents().get("XUI"));
+        xuitty.clearScreen();
+        xuitty.render();
+}
     protected void closeRemote() {
         externalTB.removeAll();
     }
-    
+
     protected void openRemote() {
         this.cont = false;
         OleApplication parentApp = this.payload.getParent();
@@ -1019,7 +1034,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         olbContinue.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbContinue.addActionListener(this);
         externalTB.addButton(olbContinue);
-        
+
         olbPause = new OleButton(parentApp, "PAUSE", "pause_circle");
 //        olbPause.setExtraFlat();
         olbPause.setExtraFlat();
@@ -1028,7 +1043,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         olbPause.setIcon(new Dimension(sizeButtons, sizeButtons));
         olbPause.addActionListener(this);
         externalTB.addButton(olbPause);
-        
+
         olbNext = new OleButton(parentApp, "NEXT", "not_started");
         olbNext.setExtraFlat();
         olbNext.setBorderPainted(true);
@@ -1047,10 +1062,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.olbNext.setEnabled(true);
         this.olbPause.setEnabled(false);
         this.olbUntil.setEnabled(true);
-        
+
         remote = true;
     }
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
@@ -1088,5 +1103,5 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             break;
         }
     }
-    
+
 }
