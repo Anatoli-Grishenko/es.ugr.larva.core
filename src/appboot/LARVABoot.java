@@ -848,6 +848,7 @@ public class LARVABoot {
         } while (!exit);
 //        System.out.println("Manager exiting");
         ShutDown();
+        System.exit(0);
     }
 
     /**
