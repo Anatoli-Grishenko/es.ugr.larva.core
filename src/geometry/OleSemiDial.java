@@ -84,6 +84,7 @@ public class OleSemiDial extends OleSensor {
             }
             g.setColor(this.getForeground());
             f = parentPane.getFont();
+            f.deriveFont(12f);
             //g.setFont(f.deriveFont(Font.BOLD));
 //            Point3D target = parentPane.getAngleT().alphaPoint(0, labelRadius, center);
 //        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(270, labelRadius, center),
