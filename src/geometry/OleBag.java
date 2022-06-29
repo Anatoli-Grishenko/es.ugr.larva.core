@@ -66,7 +66,7 @@ JButton tbAux;
             g.fillRoundRect(mX + 3, mY + 3, mW - 6, mH - 6, 10, 10);
         }
         Point3D top = new Point3D(this.getBounds().x + this.getBounds().width / 2, this.getBounds().y + 3);
-        TextFactory tf = new TextFactory(g).setsText(getName()).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+        TextFactory tf = new TextFactory(g).setsText(getName()).setFontSize(12).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
         g.setColor(Color.WHITE);
         tf.draw();
         return this;

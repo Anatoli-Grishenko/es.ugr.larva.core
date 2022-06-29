@@ -133,12 +133,12 @@ public class OleSemiDial extends OleSensor {
             }
             g.setColor(this.getForeground());
             f = parentPane.getFont();
-            //g.setFont(f.deriveFont(Font.BOLD));
+            g.setFont(f.deriveFont(Font.BOLD).deriveFont(12f));
             Point3D target = parentPane.getAngleT().alphaPoint(270, labelRadius, center);
 //        oDrawString(g, sRead, parentPane.getAngleT().alphaPoint(270, labelRadius, center),
 //                parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.BOTTOM);
             oDrawString(g, getName(), parentPane.getAngleT().alphaPoint(270, dialRadius, center),
-                    parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.TOP);
+                    12, SwingConstants.CENTER, SwingConstants.TOP);
             oDrawCounter(g, sRead, parentPane.getAngleT().alphaPoint(270, labelRadius, center),
                     (int) (0.5 * mW), SwingConstants.CENTER, SwingConstants.BOTTOM);
 

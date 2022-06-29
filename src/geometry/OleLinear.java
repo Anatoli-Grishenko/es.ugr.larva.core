@@ -58,12 +58,12 @@ public class OleLinear extends OleSensor {
             for (int i = 0; i < getnColumns()+1; i++) {
                 if (i==0) {
                     what=this.getName();
-                    tf = new TextFactory(g).setsText(what).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+                    tf = new TextFactory(g).setsText(what).setFontSize(12).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
                     g.setColor(this.getForeground());
                     tf.draw();
                     top.setY(top.getY()+(this.getBounds().height-6)/(this.getnColumns()+2));
                 } else {                    
-                    tf = new TextFactory(g).setValue((int)this.getAllReadings()[0][i-1],4).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).validate();
+                    tf = new TextFactory(g).setFontSize(12).setValue((int)this.getAllReadings()[0][i-1],4).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).validate();
                     this.oDrawCounter(g, tf.getsText(),top, 
                         this.getBounds().width-6, SwingConstants.CENTER, SwingConstants.TOP);
                     top.setY(top.getY()+(this.getBounds().height-6)/(this.getnColumns()+2));

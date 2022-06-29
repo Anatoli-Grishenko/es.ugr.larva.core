@@ -85,9 +85,11 @@ public class OleDiode extends OleSensor {
         } else {
             g.setColor(Color.DARK_GRAY);
         }
+        Font f = g.getFont();
+        g.setFont(f.deriveFont(12f));
         oDrawString(g, getName(), parentPane.getAngleT().alphaPoint(270,0, center),
                 parentPane.getFont().getSize(), SwingConstants.CENTER, SwingConstants.CENTER);
-        return this;
+        g.setFont(f);        return this;
     }
 
 }
