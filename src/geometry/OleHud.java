@@ -349,7 +349,7 @@ public class OleHud extends OleSensor {
                 setHalign(SwingConstants.CENTER).setValign(SwingConstants.BOTTOM).setFontSize(15).setTextStyle(Font.BOLD).validate();
         g.setColor(OleDashBoard.cDial);
         tf.draw();
-
+        
         tf = new TextFactory(g);
         tf.setX(viewPort.x + 10).setY(center.getYInt() + 10).setFontSize(15).setTextStyle(Font.BOLD).
                 setHalign(SwingConstants.LEFT).setValign(SwingConstants.TOP).

@@ -21,6 +21,7 @@ import geometry.SimpleVector3D;
 import glossary.Roles;
 import glossary.Sensors;
 import java.util.ArrayList;
+import tools.emojis;
 import world.ThingSet;
 import world.Perceptor;
 import world.SensorDecoder;
@@ -79,9 +80,13 @@ public class Environment extends SensorDecoder {
     }
 
     public Environment setExternalPerceptions(String perceptions) {
-        feedPerception(perceptions);
-        cache();
-        return this;
+        try {
+            feedPerception(perceptions);
+            cache();
+            return this;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public Environment setExternalObjects(String things) {

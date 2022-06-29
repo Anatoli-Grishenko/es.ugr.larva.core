@@ -24,6 +24,7 @@ public class emojis {
             REPLY = "↩️",
             MEDICAL = "🆘",
             COMPETENCE = "📐",
+            GLOBE="🧭🌍",
             SKULL = "\ud83d\udc80",
             WARNING = "\u26a0",
             OK = "\u2705",

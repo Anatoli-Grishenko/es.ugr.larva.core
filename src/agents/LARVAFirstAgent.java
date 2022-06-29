@@ -1010,6 +1010,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+    protected void setupEnvironment() {
+        E = new Environment();
+    }
+    
+    protected Environment getEnvironment(){
+        return E;
+    }
     protected void openXUITTY() {
         xuitty = new XUITTY();
         xuitty.init((JPanel) this.payload.getGuiComponents().get("XUI"));
@@ -1104,4 +1111,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+    public void setFrameDelay(int milis) {
+        this.frameDelay=milis;
+        cont=true;
+    }
 }

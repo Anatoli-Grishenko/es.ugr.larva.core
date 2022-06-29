@@ -83,7 +83,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         } catch (IOException ex) {
         }
         hasGrid = false;
-        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
+        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true,   \"Trail\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
                 + "}";
         displayCfg = new OleConfig();
         displayCfg.set(doptions);
@@ -207,6 +207,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             stepValue2 = 1;
             setnDivisions(10);
             drawLineRuler(g, SwingTools.DimensionToRectangle(odPane.getPreferredSize()), 10);
+            this.showTrail=this.displayCfg.getTab("Objects").getOle("Objects to display").getBoolean("Trail",false);
+            this.setTrailSize(100);
 //            g.setClip(null);
         }
         return this;
@@ -461,7 +463,12 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         g.setStroke(new BasicStroke());
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
-        s = String.format("%s", myDash.getDecoderOf(name).getTask());
+        String task = myDash.getDecoderOf(name).getTask();
+        if (task == null) {
+            s = String.format("%s", "NO TASK");
+        } else {
+            s = String.format("%s", task);
+        }
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
@@ -493,6 +500,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 odlg = new OleDialog(null, "Display Options");
                 if (odlg.run(displayCfg, "Objects")) {
                     displayCfg = odlg.getResult();
+                    displayCfg.saveAsFile("config/", "displayoptions.json", true);
                     prepareMap();
                 }
                 break;
@@ -500,6 +508,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 odlg = new OleDialog(null, "Display Options");
                 if (odlg.run(displayCfg, "Focus")) {
                     displayCfg = odlg.getResult();
+                    displayCfg.saveAsFile("config/", "displayoptions.json", true);
                     prepareMap();
                 }
                 break;
@@ -507,6 +516,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 odlg = new OleDialog(null, "Display Options");
                 if (odlg.run(displayCfg, "Type of map")) {
                     displayCfg = odlg.getResult();
+                    displayCfg.saveAsFile("config/", "displayoptions.json", true);
                     prepareMap();
                 }
                 break;

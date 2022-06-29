@@ -62,7 +62,7 @@ public class SensorDecoder {
         mapa.set(content);
         mapa.saveFile("./maps/");
         this.TraceGPS.clear();
-        stuck=0;
+        stuck = 0;
         String name = mapa.getFileName();
         return loadWorldMap("./maps/" + name);
 
@@ -212,7 +212,10 @@ public class SensorDecoder {
     }
 
     public String getName() {
-        return this.getSensor(Sensors.NAME).get(0).asString();
+        if (this.getSensor(Sensors.NAME) != null) {
+            return this.getSensor(Sensors.NAME).get(0).asString();
+        } else
+            return null;
     }
 
     public void setName(String Name) {
@@ -1046,16 +1049,17 @@ public class SensorDecoder {
             if (this.TraceGPS.size() == 0 || !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
                 this.TraceGPS.add(0, this.getGPSVector());
             } else {
-            if (TraceGPS.size()>2 && !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
-                stuck ++;
-            } else
-                stuck = 0;
-        }
+                if (TraceGPS.size() > 2 && !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
+                    stuck++;
+                } else {
+                    stuck = 0;
+                }
+            }
 
         }
     }
-    
-    public int getStuck(){
+
+    public int getStuck() {
         return stuck;
     }
 
@@ -1375,6 +1379,7 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
+            case "AT_ST":
             case "HEMTT":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);

@@ -275,14 +275,14 @@ public class World {
                 }
                 Point3D p;
                 JsonArray jsap;
-//                if (ocfg.getFieldList().contains("start")) {
-//                    jsap = ocfg.get("start").asArray();
-//                    p = new Point3D(jsap);
-//                    p = this.placeAtMap(p);
-//                    start = p;
-//                } else {
-//                    start = null;
-//                }
+                if (ocfg.getFieldList().contains("start")) {
+                    jsap = ocfg.get("start").asArray();
+                    p = new Point3D(jsap);
+                    p = this.placeAtMap(p);
+                    start = p;
+                } else {
+                    start = null;
+                }
 //                if (ocfg.getFieldList().contains("destination")) {
 //                    jsap = ocfg.get("destination").asArray();
 //                    p = new Point3D(jsap);
