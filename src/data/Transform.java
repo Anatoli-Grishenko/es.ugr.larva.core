@@ -213,6 +213,7 @@ public class Transform {
         }
         return jsamatrix;
     }
+
     public static JsonArray Matrix2JsonArray(double[][] raw) {
         int w = raw.length, h = raw[0].length;
         JsonArray jsamatrix = new JsonArray(), jsarow;
@@ -234,4 +235,9 @@ public class Transform {
         }
         return jsamatrix;
     }
+
+    public static String outOf(String v[]) {
+        return v[(int) (Math.random() * v.length)];
+    }
+
 }

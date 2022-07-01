@@ -1364,7 +1364,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 6);
-                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1380,6 +1380,47 @@ public class SensorDecoder {
                 });
                 break;
             case "AT_ST":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 20);
+                encodeSensor(Sensors.MAXCARGO, 1);
+                encodeSensor(Sensors.AUTONOMY, 1200);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "STF":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 255);
+                encodeSensor(Sensors.MAXCARGO, 1);
+                encodeSensor(Sensors.AUTONOMY, 1200);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
             case "HEMTT":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
@@ -1407,7 +1448,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 6);
                 encodeSensor(Sensors.AUTONOMY, 800);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
@@ -1473,8 +1514,8 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 140);
                 encodeSensor(Sensors.AUTONOMY, 2000);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 31);
-                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.RANGE, 51);
+                encodeSensor(Sensors.BURNRATEMOVE, 5);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
