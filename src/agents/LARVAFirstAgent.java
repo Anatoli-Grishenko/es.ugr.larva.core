@@ -121,7 +121,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
-    
+
     public double Reward(Environment E) {
         return E.getDistance();
     }
@@ -485,7 +485,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
             Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
-            if (mypassport.length() == 0) {
+            if (mypassport == null||mypassport.length() == 0) {
+                this.Error("Please load the passport first");
                 return false;
             }
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
@@ -1013,16 +1014,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected void setupEnvironment() {
         E = new Environment();
     }
-    
-    protected Environment getEnvironment(){
+
+    protected Environment getEnvironment() {
         return E;
     }
+
     protected void openXUITTY() {
         xuitty = new XUITTY();
         xuitty.init((JPanel) this.payload.getGuiComponents().get("XUI"));
         xuitty.clearScreen();
         xuitty.render();
-}
+    }
+
     protected void closeRemote() {
         externalTB.removeAll();
     }
@@ -1112,7 +1115,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void setFrameDelay(int milis) {
-        this.frameDelay=milis;
-        cont=true;
+        this.frameDelay = milis;
+        cont = true;
     }
 }
