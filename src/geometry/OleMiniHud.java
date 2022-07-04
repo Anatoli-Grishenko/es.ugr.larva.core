@@ -523,7 +523,7 @@ public class OleMiniHud extends OleSensor {
                             }
 
                         };
-                        odpPopUp.setBounds(this.getBounds().x, this.getBounds().y, 50, this.getBounds().height);
+                        odpPopUp.setBounds(this.getBounds().x, this.getBounds().y, 35, this.getBounds().height);
                         myDash.add(odpPopUp);
                         odpPopUp.setVisible(true);
                         myDash.repaint();

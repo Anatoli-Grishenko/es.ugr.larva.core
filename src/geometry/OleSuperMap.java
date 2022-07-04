@@ -140,7 +140,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                             }
 
                         };
-                        odpPopUp.setBounds(this.getBounds().x+this.getBounds().width, 0, 50, this.getBounds().height);
+                        odpPopUp.setBounds(this.getBounds().x+this.getBounds().width, 0, 35, this.getBounds().height);
                         myDash.add(odpPopUp, 0);
                         odpPopUp.setVisible(true);
                         myDash.repaint();

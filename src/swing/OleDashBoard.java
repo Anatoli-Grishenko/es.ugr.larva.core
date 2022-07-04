@@ -492,10 +492,10 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 }
             }
 
-            SimpleVector3D me = getMyDecoder().getGPSVector();
-            PolarSurface ps = new PolarSurface(me,me);
-            ps.setRadius(15);
-            Map2DColor sensor = ps.applyPolarTo(getMyDecoder().getWorldMap());
+//            SimpleVector3D me = getMyDecoder().getGPSVector();
+//            PolarSurface ps = new PolarSurface(me,me);
+//            ps.setRadius(15);
+//            Map2DColor sensor = ps.applyPolarTo(getMyDecoder().getWorldMap());
             lastPerception = perception;
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);

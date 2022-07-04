@@ -1054,7 +1054,7 @@ public abstract class OleSensor extends JComponent {
     }
 
     public void paintPalette(Graphics2D g, Palette palette, Rectangle bounds) {
-        Rectangle r = new Rectangle(1, 40, 30, bounds.height - 50),
+        Rectangle r = new Rectangle(1, 40, bounds.width/3, bounds.height - 50),
                 r2 = new Rectangle(0, 0, bounds.width, bounds.height);
         int x, y, level;
         x = pux;
