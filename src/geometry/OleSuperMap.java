@@ -21,6 +21,8 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.image.RescaleOp;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import map2D.Palette;
 import swing.OleDashBoard;
 import swing.OleDialog;
 import swing.OleDrawPane;
+import swing.OleFrame;
 import swing.OleScrollPane;
 import swing.OleSensor;
 import swing.SwingTools;
@@ -64,7 +67,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     protected String sDisplay, sFocus;
     protected OleConfig displayCfg;
     protected Map2DColor mapView;
-    protected OleDashBoard myDash;
+    protected Palette palette;
 
     public OleSuperMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -92,6 +95,15 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         } else {
             displayCfg.saveAsFile("config/", "displayoptions.json", true);
         }
+        palette = new Palette();
+        palette.addWayPoint(0, new Color(0, 0, 128));
+        palette.addWayPoint(5, new Color(0, 0, 1, 0));
+        palette.addWayPoint(10, new Color(0, 160, 0));
+        palette.addWayPoint(40, new Color(51, 60, 0));
+        palette.addWayPoint(75, new Color(153, 79, 0));
+        palette.addWayPoint(100, Color.WHITE);
+        palette.fillWayPoints(256);
+
         this.setScaledCoordinates(false);
     }
 
@@ -114,7 +126,34 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         };
         odPane.setBounds(viewPort);
         odPane.setPreferredSize(SwingTools.RectangleToDimension(viewPort));
-        osPane = new OleScrollPane(odPane);
+//        osPane = new OleScrollPane(odPane);
+        osPane = new OleScrollPane(odPane) {
+            @Override
+            public void Clicked(MouseEvent e) {
+                if (e.isControlDown() || e.isShiftDown()) {
+                    if (odpPopUp == null) {
+                        setPopUpData(osPane.getRealX(e.getX()), osPane.getRealY(e.getY()));
+                        odpPopUp = new OleDrawPane() {
+                            @Override
+                            public void OleDraw(Graphics2D g) {
+                                paintPalette(g, palette, this.getBounds());
+                            }
+
+                        };
+                        odpPopUp.setBounds(this.getBounds().x+this.getBounds().width, 0, 50, this.getBounds().height);
+                        myDash.add(odpPopUp, 0);
+                        odpPopUp.setVisible(true);
+                        myDash.repaint();
+                    } else {
+                        odpPopUp.setVisible(false);
+                        myDash.remove(odpPopUp);
+                        odpPopUp= null;
+                    }
+                } else {
+                    super.Clicked(e);
+                }
+            }
+        };
         osPane.setBounds(screenPort);
         osPane.setBackground(Color.BLACK);
         osPane.setPreferredSize(SwingTools.RectangleToDimension(screenPort));
@@ -207,7 +246,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             stepValue2 = 1;
             setnDivisions(10);
             drawLineRuler(g, SwingTools.DimensionToRectangle(odPane.getPreferredSize()), 10);
-            this.showTrail=this.displayCfg.getTab("Objects").getOle("Objects to display").getBoolean("Trail",false);
+            this.showTrail = this.displayCfg.getTab("Objects").getOle("Objects to display").getBoolean("Trail", false);
             this.setTrailSize(100);
 //            g.setClip(null);
         }
@@ -234,7 +273,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             }
             // Paint map
             osPane.setFocusOn(focus);
-            RescaleOp darken = new RescaleOp(0.5f, 0, null);
+//            RescaleOp darken = new RescaleOp(0.5f, 0, null);
             int nw = (int) (odPane.getPreferredSize().getWidth()),
                     nh = (int) (odPane.getPreferredSize().getHeight());
 //            g.drawImage(darken.filter(mapView.getMap(), null), 0, 0, nw, nh, null);
@@ -341,7 +380,6 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 
             }
         }
-
         return this;
     }
 
@@ -535,14 +573,6 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     }
 
     protected void prepareMap() {
-        Palette pal = new Palette();
-        pal.addWayPoint(0, new Color(0, 0, 128));
-        pal.addWayPoint(5, new Color(0, 0, 1, 0));
-        pal.addWayPoint(10, new Color(0, 160, 0));
-        pal.addWayPoint(40, new Color(51, 60, 0));
-        pal.addWayPoint(75, new Color(153, 79, 0));
-        pal.addWayPoint(100, Color.WHITE);
-        pal.fillWayPoints(256);
         switch (displayCfg.getTab("Type of map").getString("Display map", "Heightmap")) {
             case "Heightmap":
                 mapView = new Map2DColor(map.getWidth(), map.getHeight());
@@ -556,7 +586,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 mapView = new Map2DColor(map.getWidth(), map.getHeight());
                 for (int x = 0; x < map.getWidth(); x++) {
                     for (int y = 0; y < map.getHeight(); y++) {
-                        mapView.setColor(x, y, pal.getColor(map.getStepLevel(x, y)));
+                        mapView.setColor(x, y, palette.getColor(map.getStepLevel(x, y)));
                     }
                 }
                 break;

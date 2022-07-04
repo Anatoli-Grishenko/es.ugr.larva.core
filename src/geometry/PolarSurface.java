@@ -19,40 +19,65 @@ public class PolarSurface {
 
     protected SimpleVector3D center;
     protected int radius;
-    protected HashMap<Integer, ArrayList<SimpleVector3D>> pSurface;
+    protected HashMap<Integer, ArrayList<SimpleVector3D>> pSurface, pPoints;
 
-    public PolarSurface(SimpleVector3D c) {
+//    public PolarSurface(SimpleVector3D c) {
+//        center = c.clone();
+//        pSurface = new HashMap();
+//        pPoints = new HashMap();
+//        radius = 1;
+//        pSurface.put(radius, new ArrayList());
+//        pSurface.get(radius).add(center);
+//        pPoints.put(radius, new ArrayList());
+//        pPoints.get(radius).add(center);
+//    }
+
+    public PolarSurface(SimpleVector3D c, SimpleVector3D real) {
         center = c.clone();
         pSurface = new HashMap();
+        pPoints = new HashMap();
         radius = 1;
         pSurface.put(radius, new ArrayList());
         pSurface.get(radius).add(center);
+        pPoints.put(radius, new ArrayList());
+        pPoints.get(radius).add(real.clone());
     }
 
     public PolarSurface setRadius(int n) {
-        SimpleVector3D svAux;
-        ArrayList<SimpleVector3D> previousLevel;
+        SimpleVector3D svAux, svPAux;
+        ArrayList<SimpleVector3D> previousLevel, previousPoints;
         if (n == 1) {
             return this;
         } else {
             setRadius(n - 1);
             pSurface.put(n, new ArrayList());
+            pPoints.put(n, new ArrayList());
             previousLevel = pSurface.get(n - 1);
+            previousPoints= pPoints.get(n-1);
             svAux = previousLevel.get(0);
+            svPAux = previousPoints.get(0);
             pSurface.get(n).add(svAux.myLeft());
+            pPoints.get(n).add(svPAux.myLeft());
             for (int i = 0; i < previousLevel.size(); i++) {
                 svAux = previousLevel.get(i);
+                svPAux = previousPoints.get(i);
                 if (i < previousLevel.size() / 2) {
                     pSurface.get(n).add(svAux.myFrontLeft());
+                    pPoints.get(n).add(svPAux.myFrontLeft());
                 } else if (i == previousLevel.size() / 2) {
                     pSurface.get(n).add(svAux.myFrontLeft());
                     pSurface.get(n).add(svAux.myFront());
                     pSurface.get(n).add(svAux.myFrontRight());
+                    pPoints.get(n).add(svPAux.myFrontLeft());
+                    pPoints.get(n).add(svPAux.myFront());
+                    pPoints.get(n).add(svPAux.myFrontRight());
                 } else {
                     pSurface.get(n).add(svAux.myFrontRight());
+                    pPoints.get(n).add(svPAux.myFrontRight());
                 }
             }
             pSurface.get(n).add(svAux.myRight());
+            pPoints.get(n).add(svPAux.myRight());
             return this;
         }
     }
@@ -138,6 +163,23 @@ public class PolarSurface {
             for (int x = 0; x < thisLevel.size(); x++) {
                 svFrom = thisLevel.get(x);
                 res[x][level] = m[svFrom.getSource().getXInt()][svFrom.getSource().getYInt()];
+            }
+        }
+        return res;
+    }
+
+    public Point3D [][] applyPolarToPoints(int m[][]) {
+        SimpleVector3D svRes, svFrom;
+        ArrayList<SimpleVector3D> thisLevel;
+        Point3D res[][] = new Point3D[(this.getNLevels() - 1) * 4 + 1][this.getNLevels()];
+        for (Point3D[] row : res) {
+            Arrays.fill(row, null);
+        }
+        for (int level = 0; level < this.getNLevels(); level++) {
+            thisLevel = pPoints.get(level + 1);
+            for (int x = 0; x < thisLevel.size(); x++) {
+                svFrom = thisLevel.get(x);
+                res[x][level] = svFrom.getSource();
             }
         }
         return res;

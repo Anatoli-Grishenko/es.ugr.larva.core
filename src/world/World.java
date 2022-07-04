@@ -455,7 +455,7 @@ public class World {
         int range = p.getRange(), orientation = who.getOrientation();
         Point3D prange;
         Point3D observable;
-        PolarSurface ps = new PolarSurface(vectororientation);
+        PolarSurface ps = new PolarSurface(vectororientation,vectororientation);
         ps.setRadius(range / 2 + 1);
         double x1, y1, x2, y2, incrx;
         if (range == 1) { // single rangle

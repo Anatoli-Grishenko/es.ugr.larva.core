@@ -283,7 +283,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
         return res;
@@ -293,7 +293,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyAbsoluteTo(initial);
         return res;
@@ -303,7 +303,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()),myv);
         ps.setRadius(mww / 2 + 1);
         res = ps.applyRelativeTo(initial);
         return res;

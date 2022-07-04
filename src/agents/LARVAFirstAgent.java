@@ -485,7 +485,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
             Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
-            if (mypassport == null||mypassport.length() == 0) {
+            if (mypassport == null || mypassport.length() == 0) {
                 this.Error("Please load the passport first");
                 return false;
             }
@@ -1031,7 +1031,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected void openRemote() {
-        this.cont = false;
         OleApplication parentApp = this.payload.getParent();
         externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
         externalTB = externalTile.getExternalToolBar();
@@ -1072,50 +1071,74 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.olbNext.setEnabled(true);
         this.olbPause.setEnabled(false);
         this.olbUntil.setEnabled(true);
-
         remote = true;
+         remotePause();
+   }
+
+    public void remotePlay() {
+        if (this.remote) {
+            this.SWaitButtons.release();
+            this.cont = true;
+            this.olbContinue.setEnabled(false);
+            this.olbNext.setEnabled(false);
+            this.olbPause.setEnabled(true);
+            this.olbUntil.setEnabled(false);
+        }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        switch (e.getActionCommand()) {
-            case "CONTINUE":
-                this.SWaitButtons.release();
-                this.cont = true;
-                this.olbContinue.setEnabled(false);
-                this.olbNext.setEnabled(false);
-                this.olbPause.setEnabled(true);
-                this.olbUntil.setEnabled(false);
-                break;
-            case "PAUSE":
-                this.SWaitButtons.release();
-                this.cont = false;
-                this.olbContinue.setEnabled(true);
-                this.olbNext.setEnabled(true);
-                this.olbPause.setEnabled(false);
-                this.olbUntil.setEnabled(true);
-                break;
-            case "NEXT":
-                this.olbContinue.setEnabled(true);
-                this.olbNext.setEnabled(true);
-                this.olbPause.setEnabled(false);
-                this.olbUntil.setEnabled(true);
-                this.SWaitButtons.release();
-                break;
-            case "UNTIL":
-                try {
+    public void remotePause() {
+        if (this.remote) {
+            this.cont = false;
+            this.SWaitButtons.drainPermits();
+            this.olbContinue.setEnabled(true);
+            this.olbNext.setEnabled(true);
+            this.olbPause.setEnabled(false);
+            this.olbUntil.setEnabled(true);
+        }
+    }
+
+    public void remoteNextStep() {
+        if (this.remote) {
+            this.cont = false;
+            this.olbContinue.setEnabled(true);
+            this.olbNext.setEnabled(true);
+            this.olbPause.setEnabled(false);
+            this.olbUntil.setEnabled(true);
+            this.SWaitButtons.release();
+        }
+    }
+
+    public void remoteJumpSteps() {
+        if (this.remote) {
+            try {
                 nUntil = Integer.parseInt(this.inputLine("Please execute the agent until it reachesthe following steps"));
             } catch (Exception ex) {
                 nUntil = -1;
             }
             this.cont = true;
             this.SWaitButtons.release();
-            break;
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()) {
+            case "CONTINUE":
+                remotePlay();
+                break;
+            case "PAUSE":
+                remotePause();
+                break;
+            case "NEXT":
+                remoteNextStep();
+                break;
+            case "UNTIL":
+                remoteJumpSteps();
+                break;
         }
     }
 
     public void setFrameDelay(int milis) {
         this.frameDelay = milis;
-        cont = true;
     }
 }

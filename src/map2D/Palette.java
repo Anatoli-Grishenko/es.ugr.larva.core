@@ -10,6 +10,10 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import static crypto.Keygen.getHexaKey;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import swing.OleDashBoard;
@@ -199,6 +203,22 @@ public class Palette {
             palette.put(i, new Color(jsacolor.get(0).asInt(), jsacolor.get(1).asInt(), jsacolor.get(2).asInt()));
         }
         return this;
+    }
+
+    public void paintPalette(Graphics2D g, Rectangle r) {
+        int cw = r.width - 4, ch = 2;
+        Font f = g.getFont();
+        g.setFont(new Font(f.getFamily(), f.getStyle(), 10));
+        g.setColor(Color.WHITE);
+        for (int i = 0; i <= size(); i++) {
+            g.setColor(getColor(size() - i));
+            g.fillRect(r.x, r.y + i * ch, r.width, ch);
+            g.setColor(Color.WHITE);
+            if (i %20 == 0 || i == size()) {
+                g.drawString(String.format("%03d", size() - i), r.x + r.width, r.y + i * ch + 10);
+            }
+        }
+        g.setFont(f);
     }
 }
 

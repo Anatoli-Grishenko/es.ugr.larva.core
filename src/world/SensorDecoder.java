@@ -730,7 +730,7 @@ public class SensorDecoder {
         int initial[][] = this.getCourseData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
         return res;
@@ -743,9 +743,23 @@ public class SensorDecoder {
         int initial[][] = this.getVisualData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
+        return res;
+    }
+
+    public Point3D[][] getPolarPoints() {
+        if (getVisualData() == null) {
+            return null;
+        }
+        int initial[][] = this.getVisualData();
+        Point3D res[][];
+        SimpleVector3D myv = this.getGPSVector();
+        int mww = initial[0].length, mhh = initial.length;
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()), myv);
+        ps.setRadius(mhh / 2 + 1);
+        res = ps.applyPolarToPoints(initial);
         return res;
     }
 
@@ -756,7 +770,7 @@ public class SensorDecoder {
         int initial[][] = this.getLidarData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
         return res;
@@ -769,7 +783,7 @@ public class SensorDecoder {
         int initial[][] = this.getThermalData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
         return res;
@@ -782,7 +796,7 @@ public class SensorDecoder {
         int initial[][] = this.getLidarData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyAbsoluteTo(initial);
         return res;
@@ -795,7 +809,7 @@ public class SensorDecoder {
         int initial[][] = this.getThermalData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyAbsoluteTo(initial);
         return res;
@@ -808,7 +822,7 @@ public class SensorDecoder {
         int initial[][] = this.getVisualData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyAbsoluteTo(initial);
         return res;
@@ -821,7 +835,7 @@ public class SensorDecoder {
         int initial[][] = this.getVisualData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()),myv);
         ps.setRadius(mww / 2 + 1);
         res = ps.applyRelativeTo(initial);
         return res;
@@ -834,7 +848,7 @@ public class SensorDecoder {
         int initial[][] = this.getLidarData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()),myv);
         ps.setRadius(mww / 2 + 1);
         res = ps.applyRelativeTo(initial);
         return res;
@@ -847,7 +861,7 @@ public class SensorDecoder {
         int initial[][] = this.getThermalData(), res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()));
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()),myv);
         ps.setRadius(mww / 2 + 1);
         res = ps.applyRelativeTo(initial);
         return res;
@@ -1382,7 +1396,7 @@ public class SensorDecoder {
             case "AT_ST":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
-                encodeSensor(Sensors.MAXSLOPE, 20);
+                encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 1);
                 encodeSensor(Sensors.AUTONOMY, 1200);
                 encodeSensor(Sensors.ENERGYBURNT, 0);

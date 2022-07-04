@@ -13,7 +13,7 @@ import data.Ole;
 import data.OleFile;
 import geometry.OleBag;
 import geometry.OleDiode;
-import geometry.OleHud;
+import geometry.OleMiniHud;
 import geometry.OleLabels;
 import geometry.OleLinear;
 import geometry.OleSuperMap;
@@ -28,6 +28,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.JPanel;
@@ -41,7 +45,7 @@ import world.SensorDecoder;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class OleDashBoard extends OleDrawPane {
+public class OleDashBoard extends OleDrawPane implements MouseListener {
 
     public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0), cDial = SwingTools.doDarker(Color.WHITE), cBad = new Color(50, 0, 0),
             cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN), cGround = new Color(51, 25, 0),
@@ -61,7 +65,7 @@ public class OleDashBoard extends OleDrawPane {
     OleLinear olTime, olSteps, olGPS, olBurnt;
     OleBag olPayload, olCommand;
     OleSuperMap osMap;
-    OleHud osHud;
+    OleMiniHud osHud;
     OleLabels topLabels;
     Palette pal;
     String sperception = "", agentName, otherAgents;
@@ -72,6 +76,7 @@ public class OleDashBoard extends OleDrawPane {
     TimeHandler tstart;
     boolean showTrail, availableDashBoard;
     int trailSize;
+    OleFrame of;
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -84,6 +89,7 @@ public class OleDashBoard extends OleDrawPane {
         agentOwner = "";
         availableDashBoard = false;
         initLayout();
+        this.addMouseListener(this);
     }
 
     public Environment getMyDecoder() {
@@ -137,7 +143,7 @@ public class OleDashBoard extends OleDrawPane {
     }
 
     protected void Layout4() {
-        int hLabels = 0, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110, skipdials=ldials+25; //(int) (5*ww/4);
+        int hLabels = 0, yy = hLabels, xx = 0, ww = 150, ww2 = 50, hh = 25, ldials = 110, skipdials = ldials + 25; //(int) (5*ww/4);
 
         osMap = new OleSuperMap(this, "MAP");
         osMap.setBounds(0 * ww, hLabels, 5 * ww, 5 * ww);
@@ -146,7 +152,7 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleHud(this, "AUX");
+        osHud = new OleMiniHud(this, "AUX");
         osHud.setBounds(5 * ww, hLabels, 5 * ww, 5 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -163,7 +169,7 @@ public class OleDashBoard extends OleDrawPane {
         orCompass1.setnDivisions(8);
         orCompass1.setLabels(new String[]{"N", "NW", "W", "SW", "S", "SE", "E", "NE"});
         orCompass1.showScaleNumbers(true);
-        orCompass1.setBounds(5 * ww, 20 + hLabels+0*skipdials, ldials, ldials);
+        orCompass1.setBounds(5 * ww, 20 + hLabels + 0 * skipdials, ldials, ldials);
         orCompass1.setForeground(this.cLabels);
         orCompass1.setBackground(this.cGauge);
 //        orCompass1.showFrame(true);
@@ -176,7 +182,7 @@ public class OleDashBoard extends OleDrawPane {
         osAltitude.setStartAngle(225);
         osAltitude.setEndAngle(0);
         osAltitude.setnDivisions(10);
-        osAltitude.setBounds(5 * ww, 20 + hLabels+1*skipdials, ldials, ldials);
+        osAltitude.setBounds(5 * ww, 20 + hLabels + 1 * skipdials, ldials, ldials);
         osAltitude.setForeground(this.cLabels);
         osAltitude.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
         osAltitude.setSimplifiedDial(true);
@@ -196,7 +202,7 @@ public class OleDashBoard extends OleDrawPane {
         osGround.setStartAngle(225);
         osGround.setEndAngle(0);
         osGround.setnDivisions(10);
-        osGround.setBounds(5 * ww, 20 + hLabels+2*skipdials, ldials, ldials);
+        osGround.setBounds(5 * ww, 20 + hLabels + 2 * skipdials, ldials, ldials);
         osGround.setForeground(this.cLabels);
         osGround.setBackground(this.cGauge); //SwingTools.doDarker(Color.DARK_GRAY));
         osGround.setSimplifiedDial(true);
@@ -217,7 +223,7 @@ public class OleDashBoard extends OleDrawPane {
         osBattery.setStartAngle(180);
         osBattery.setEndAngle(0);
         osBattery.setnDivisions(4);
-        osBattery.setBounds(5 * ww, 20 + hLabels+3*skipdials, ldials, ldials);
+        osBattery.setBounds(5 * ww, 20 + hLabels + 3 * skipdials, ldials, ldials);
         osBattery.setForeground(this.cLabels);
         osBattery.setBackground(Color.BLACK); //SwingTools.doDarker(Color.DARK_GRAY));
         osBattery.setSimplifiedDial(true);
@@ -487,7 +493,7 @@ public class OleDashBoard extends OleDrawPane {
             }
 
             SimpleVector3D me = getMyDecoder().getGPSVector();
-            PolarSurface ps = new PolarSurface(me);
+            PolarSurface ps = new PolarSurface(me,me);
             ps.setRadius(15);
             Map2DColor sensor = ps.applyPolarTo(getMyDecoder().getWorldMap());
             lastPerception = perception;
@@ -537,7 +543,7 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleHud(this, "AUX");
+        osHud = new OleMiniHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -753,7 +759,7 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleHud(this, "AUX");
+        osHud = new OleMiniHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -975,7 +981,7 @@ public class OleDashBoard extends OleDrawPane {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleHud(this, "AUX");
+        osHud = new OleMiniHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -1185,6 +1191,27 @@ public class OleDashBoard extends OleDrawPane {
         this.addSensor(osBattery);
         myParent.validate();
 
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+            osHud.mouseClicked(e);
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
     }
 
 }

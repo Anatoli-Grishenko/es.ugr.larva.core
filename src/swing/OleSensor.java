@@ -5,6 +5,7 @@
  */
 package swing;
 
+import Environment.Environment;
 import com.eclipsesource.json.JsonArray;
 import geometry.AngleTransporter;
 import geometry.Point3D;
@@ -81,6 +82,10 @@ public abstract class OleSensor extends JComponent {
     public JsonArray jsaGoals = new JsonArray();
     public OleScrollPane osPane;
     public OleDrawPane odPane;
+    protected Environment decoder;
+    protected OleDashBoard myDash;
+    protected OleDrawPane odpPopUp;
+    protected int pux, puy;
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
@@ -96,6 +101,7 @@ public abstract class OleSensor extends JComponent {
         bag = new ArrayList();
         baseValue = 0;
         at = parentPane.getAngleT();
+        myDash = ((OleDashBoard) this.parentPane);
     }
 
     @Override
@@ -108,6 +114,14 @@ public abstract class OleSensor extends JComponent {
         mH = this.getBounds().height;
         origin = new Point3D(mX, mY);
         center = new Point3D(mX + mW / 2, mY + mH / 2);
+    }
+
+    public Environment getDecoder() {
+        return decoder;
+    }
+
+    public void setDecoder(Environment decoder) {
+        this.decoder = decoder;
     }
 
     public abstract OleSensor layoutSensor(Graphics2D g);
@@ -779,7 +793,7 @@ public abstract class OleSensor extends JComponent {
 
     public void setMap(Map2DColor map) {
         this.map = map;
-        
+
     }
 
     public boolean isMap() {
@@ -1021,7 +1035,7 @@ public abstract class OleSensor extends JComponent {
             if (osPane == null) {
                 return (int) (y);
             } else {
-                return (int) ((y+0.5) * scale);
+                return (int) ((y + 0.5) * scale);
             }
         }
     }
@@ -1032,6 +1046,54 @@ public abstract class OleSensor extends JComponent {
 
     public void setScaledCoordinates(boolean scaledCoordinates) {
         this.scaledCoordinates = scaledCoordinates;
+    }
+
+    public void setPopUpData(int x, int y) {
+        pux = x;
+        puy = y;
+    }
+
+    public void paintPalette(Graphics2D g, Palette palette, Rectangle bounds) {
+        Rectangle r = new Rectangle(1, 40, 30, bounds.height - 50),
+                r2 = new Rectangle(0, 0, bounds.width, bounds.height);
+        int x, y, level;
+        x = pux;
+        y = puy;
+//        x = myDash.getDecoderOf(this.myDash.agentOwner).getGPS().getXInt();
+//        y = myDash.getDecoderOf(this.myDash.agentOwner).getGPS().getYInt();
+        int cw = r.width - 4;
+        double ch = r.height * 1.0 / 256;
+        level = myDash.getMyDecoder().getWorldMap().getStepLevel(x, y);
+        Font f = g.getFont();
+        g.setFont(new Font(f.getFamily(), f.getStyle(), 10));
+        g.setBackground(Color.BLACK);
+        g.setColor(Color.BLACK);
+        g.fill(r2);
+        g.setColor(Color.WHITE);
+        g.drawString(String.format("X:%03d", x), 1, 10);
+        g.drawString(String.format("Y:%03d", y), 1, 20);
+        g.drawString(String.format("Z:%03d", level), 1, 30);
+        for (int i = 0; i <= palette.size(); i++) {
+            g.setColor(palette.getColor(palette.size() - i));
+            g.fillRect(r.x, (int) (r.y + i * ch), r.width, (int) (ch + 2));
+        }
+        g.setColor(Color.WHITE);
+        for (int i = 0; i <= palette.size(); i++) {
+            if (i % 20 == 0 || i == palette.size()) {
+                g.drawString(String.format("%03d", palette.size() - i), r.x + r.width, (int) (r.y + i * ch + 10));
+            }
+        }
+        g.setColor(Color.GREEN);
+        g.fillRect(r.x + r.width / 2, (int) (r.y + (palette.size() - level) * ch), r.width / 2, (int) (ch + 2));
+        g.setColor(Color.BLACK);
+        g.fillRect(r.x + r.width, (int) (r.y + (palette.size() - level) * ch - 5), r.width, 12);
+        g.setColor(Color.GREEN);
+        g.drawString(String.format("%03d", level), r.x + r.width, (int) (r.y + (palette.size() - level) * ch + 5));
+
+        g.setFont(f);
+        g.setColor(Color.WHITE);
+        g.draw(SwingTools.doNarrow(r2, 1));
+
     }
 
 }
