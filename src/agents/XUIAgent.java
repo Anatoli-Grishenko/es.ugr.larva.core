@@ -39,7 +39,7 @@ public class XUIAgent extends LARVAFirstAgent {
     public void setup() {
         super.setup();
         logger = new Logger();
-        logger.offEcho();
+        logger.onEcho();
         logger.onOverwrite();
         logger.onTabular();
         logger.setLoggerFileName(this.getLocalName() + ".json");

@@ -13,7 +13,7 @@ import data.Ole;
 import data.OleFile;
 import geometry.OleBag;
 import geometry.OleDiode;
-import geometry.OleMiniHud;
+import geometry.OleHud;
 import geometry.OleLabels;
 import geometry.OleLinear;
 import geometry.OleSuperMap;
@@ -65,7 +65,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     OleLinear olTime, olSteps, olGPS, olBurnt;
     OleBag olPayload, olCommand;
     OleSuperMap osMap;
-    OleMiniHud osHud;
+    OleHud osHud;
     OleLabels topLabels;
     Palette pal;
     String sperception = "", agentName, otherAgents;
@@ -77,6 +77,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     boolean showTrail, availableDashBoard;
     int trailSize;
     OleFrame of;
+    int ndash, nprepr;
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -152,7 +153,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleMiniHud(this, "AUX");
+        osHud = new OleHud(this, "AUX");
         osHud.setBounds(5 * ww, hLabels, 5 * ww, 5 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -393,11 +394,14 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             this.osAltitude.setAlertLimitAbove(maxlevel);
             osHud.resetTerrain();
             availableDashBoard = false;
+            ndash=0;
+            this.nprepr=0;
             res = true;
             System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
         } else if (content.contains("perceptions")) {
 //            System.out.println("DashBoard perceptions");
             availableDashBoard = true;
+            System.out.println("ndash "+ndash++);
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
@@ -428,7 +432,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             if (!agentName.equals(agentOwner)) {
                 return;
             }
-//            System.out.println(getMyDecoder().printStatus(" Dashboard of " + getMyDecoder().getName()));
             if (getMyDecoder().getAlive()) {
                 cLabels = SwingTools.doDarker(Color.WHITE);
             } else {
@@ -441,9 +444,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             }
             olGPS.setCurrentValue(getMyDecoder().getGPS().toArray());
             orCompass1.setCurrentValue(getMyDecoder().getCompass());
-//            orCompass1.setHidden(this.mySensorsVisual.get("AUX").isMap);
             osGround.setCurrentValue(getMyDecoder().getGround());
-//            osGround.setHidden(this.mySensorsVisual.get("AUX").isMap);
             osAltitude.setCurrentValue(getMyDecoder().getGPS().getZInt());
             if (osAltitude.getMaxValue() != (getMyDecoder().getMaxlevel())) {
                 osAltitude.setMinValue(getMyDecoder().getMinlevel());
@@ -465,14 +466,13 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 pal.fillWayPoints(getMyDecoder().getAutonomy());
                 osBattery.setPalette(pal);
             }
-//            osBattery.setHidden(this.mySensorsVisual.get("AUX").isMap);
-
             odLed[0].setCurrentValue(getMyDecoder().getAlive());
             odLed[1].setCurrentValue(getMyDecoder().getOntarget());
             odLed[2].setCurrentValue(getMyDecoder().getCargo().length > 0);
             olBurnt.getAllReadings()[0][0] = getMyDecoder().getEnergyburnt();
             olSteps.setCurrentValue(getMyDecoder().getNSteps());
             olTime.setCurrentValue(tstart.elapsedTimeSecs(new TimeHandler()));
+            osHud.setCurrentValue(-1); // Ficticious, just to update terrain
 
             String newBag[] = getMyDecoder().getTrace();
             if (newBag.length > olCommand.getBagSize()) {
@@ -480,10 +480,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                     olCommand.addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + newBag[i]);
                 }
             }
-//            if (getMyDecoder().getStatus().length() > 0) {
-//                olCommand.addToBag(emojis.INFO + " " + getMyDecoder().getStatus());
-//            }
-//            osAltitude.setAlertLimitAbove(getMyDecoder().getMaxlevel() - 10);
 
             String newCargo[] = getMyDecoder().getCargo();
             if (newCargo.length > olPayload.getBag().size()) {
@@ -492,11 +488,9 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 }
             }
 
-//            SimpleVector3D me = getMyDecoder().getGPSVector();
-//            PolarSurface ps = new PolarSurface(me,me);
-//            ps.setRadius(15);
-//            Map2DColor sensor = ps.applyPolarTo(getMyDecoder().getWorldMap());
             lastPerception = perception;
+            System.out.println("nprepr  "+nprepr++);
+
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
             ex.printStackTrace(System.out);
@@ -543,7 +537,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleMiniHud(this, "AUX");
+        osHud = new OleHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -759,7 +753,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleMiniHud(this, "AUX");
+        osHud = new OleHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
@@ -981,7 +975,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osMap.showFrame(true);
         osMap.validate();
 
-        osHud = new OleMiniHud(this, "AUX");
+        osHud = new OleHud(this, "AUX");
         osHud.setBounds(4 * ww, hLabels, 4 * ww, 4 * ww);
         osHud.setForeground(Color.WHITE);
         osHud.setBackground(Color.BLACK);
