@@ -1396,7 +1396,7 @@ public class SensorDecoder {
             case "AT_ST":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
-                encodeSensor(Sensors.MAXSLOPE, 255);
+                encodeSensor(Sensors.MAXSLOPE, 20);
                 encodeSensor(Sensors.MAXCARGO, 1);
                 encodeSensor(Sensors.AUTONOMY, 1200);
                 encodeSensor(Sensors.ENERGYBURNT, 0);

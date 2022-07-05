@@ -428,17 +428,19 @@ public class OleMiniHud extends OleSensor {
         int p = 0;
         g.setClip(null);
         if (d != null) {
+                this.addTerrain(1, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
 //            for (int x = 0; x < d[0].length; x++) {
 //                if (x > 0) {
 //                    p = (2 * (x + 1) + 1) / 2;
 //                }
 //                this.addTerrain(tx + x, d[p][x], -1, myDash.getMyDecoder().getMaxlevel());
 //            }
-            if (tx == 0 || (myDash.getMyDecoder().getGPSMemorySize() > 1 && myDash.getMyDecoder().getGPSMemory(1).planeDistanceTo(myDash.getMyDecoder().getGPS()) > 0)) {
-                this.addTerrain(1, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
-            } else {
-                this.addTerrain(0, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
-            }
+
+//            if (tx == 0 || (myDash.getMyDecoder().getGPSMemorySize() > 1 && myDash.getMyDecoder().getGPSMemory(1).planeDistanceTo(myDash.getMyDecoder().getGPS()) > 0)) {
+//                this.addTerrain(1, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
+//            } else {
+//                this.addTerrain(0, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
+//            }
             g.drawImage(terrain.getMap(), screenPort.x + 10, viewPort.height - 90, null);
             g.setColor(Color.WHITE);
             g.drawRect(screenPort.x + 9, viewPort.height - 91, terrain.getWidth() + 2, terrain.getHeight() + 2);
