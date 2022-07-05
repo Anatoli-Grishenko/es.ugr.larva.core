@@ -447,11 +447,11 @@ public class OleHud extends OleSensor {
 //                this.addTerrain(tx + x, d[p][x], -1, myDash.getMyDecoder().getMaxlevel());
 //            }
 
-        System.out.print("\n\nHud " + (this.countHud++) + "\n\n");
+//        System.out.print("\n\nHud " + (this.countHud++) + "\n\n");
         g.drawImage(terrain.getMap(), screenPort.x + 10, viewPort.height - 90, null);
         g.setColor(Color.WHITE);
         g.drawRect(screenPort.x + 9, viewPort.height - 91, terrain.getWidth() + 2, terrain.getHeight() + 2);
-        System.out.print("\n\nTerrain " + (this.countTerrain++) + "\n\n");
+//        System.out.print("\n\nTerrain " + (this.countTerrain++) + "\n\n");
         return this;
     }
 

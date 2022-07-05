@@ -397,11 +397,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             ndash=0;
             this.nprepr=0;
             res = true;
-            System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
+//            System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
         } else if (content.contains("perceptions")) {
 //            System.out.println("DashBoard perceptions");
             availableDashBoard = true;
-            System.out.println("ndash "+ndash++);
+//            System.out.println("ndash "+ndash++);
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
@@ -420,7 +420,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         try {
             JsonObject jsoperception = Json.parse(perception).asObject();
             agentName = jsoperception.getString("name", "");
-            System.out.println("Received perceptions of agent " + agentName);
+//            System.out.println("Received perceptions of agent " + agentName);
             if (agentName.length() == 0) {
                 return;
             }
@@ -489,7 +489,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             }
 
             lastPerception = perception;
-            System.out.println("nprepr  "+nprepr++);
 
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
