@@ -26,7 +26,8 @@ public class Point3D {
 
     public Point3D() {
         clear();
-        _dim = 0;
+        _dim = 3;
+        setX(Integer.MIN_VALUE).setY(Integer.MIN_VALUE).setZ(Integer.MIN_VALUE);    
     }
 
     public Point3D(double x, double y, double z) {

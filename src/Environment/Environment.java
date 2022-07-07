@@ -43,6 +43,7 @@ public class Environment extends SensorDecoder {
     protected int[] shortPolar;
     protected ThingSet cadastre;
     protected ThingSet census;
+    protected int slope;
     MissionSet Missions;
 
     public Environment() {
@@ -82,6 +83,11 @@ public class Environment extends SensorDecoder {
     public Environment setExternalPerceptions(String perceptions) {
         try {
             feedPerception(perceptions);
+            if (this.getGPSMemorySize() > 1) {
+                slope = this.getGPS().getZInt() - this.getGPSMemory(1).getZInt();
+            } else {
+                slope =  0;
+            }
             cache();
             return this;
         } catch (Exception ex) {
@@ -167,7 +173,11 @@ public class Environment extends SensorDecoder {
             case "MOVE":
                 incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
                 incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
-                incrz = 0;
+                if (this.getMaxslope() >= this.getMaxlevel()/2) {  // AIRBORNE
+                    incrz = 0;
+                } else {
+                    incrz = this.getVisualHere() - this.getVisualFront();
+                }
                 movement = true;
                 break;
             case "LEFT":
@@ -210,6 +220,7 @@ public class Environment extends SensorDecoder {
             default:
         }
         if (movement) {
+            result.slope = incrz;
             result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
             result.setEnergy(this.getEnergy() - 1);
             result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
@@ -223,8 +234,31 @@ public class Environment extends SensorDecoder {
             } else {
                 result.setOntarget(false);
             }
+            result.setAlive(result.willBeAlive());
         }
         return result;
+    }
+
+    public boolean willBeAlive() {
+        if (getGPS().getZ() < getVisualHere()) {
+            return false;
+        }
+        if (getGPS().getX() < 0 || getGPS().getX() >= getWorldWidth()) {
+            return false;
+        }
+        if (getGPS().getY() < 0 || getGPS().getY() >= getWorldHeight()) {
+            return false;
+        }
+        if (getEnergy() < 1) {
+            return false;
+        }
+        if (getSlope() > getMaxslope() || getSlope() < -getMaxslope()) {
+            return false;
+        }
+        if (getGPS().getZ() > getMaxlevel() || getGPS().getZ() < getMinlevel()) {
+            return false;
+        }
+        return true;
     }
 
     public void cache() {
@@ -283,7 +317,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()), myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyPolarTo(initial);
         return res;
@@ -293,7 +327,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()),myv);
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh / 2, myv.getsOrient()), myv);
         ps.setRadius(mhh / 2 + 1);
         res = ps.applyAbsoluteTo(initial);
         return res;
@@ -303,7 +337,7 @@ public class Environment extends SensorDecoder {
         int initial[][] = data, res[][];
         SimpleVector3D myv = this.getGPSVector();
         int mww = initial[0].length, mhh = initial.length / 2 + 1;
-        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()),myv);
+        PolarSurface ps = new PolarSurface(new SimpleVector3D(mww / 2, mhh - 1, myv.getsOrient()), myv);
         ps.setRadius(mww / 2 + 1);
         res = ps.applyRelativeTo(initial);
         return res;
@@ -412,6 +446,11 @@ public class Environment extends SensorDecoder {
 
     public boolean isCrahsed() {
         return !this.getAlive();
+    }
+
+    public int getSlope() {
+        return slope;
+
     }
 
     public boolean isEnergyExhausted() {

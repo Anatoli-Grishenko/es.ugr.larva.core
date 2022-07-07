@@ -122,10 +122,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
 
-    public double Reward(Environment E) {
-        return E.getDistance();
-    }
 
+    
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
             return null;
@@ -139,17 +137,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected DecisionSet Prioritize(Environment E, DecisionSet A) {
         for (Choice a : A) {
-            if (Va(E, a)) {
-                a.setUtility(U(T(E, a)));
-            } else {
-                a.setUtility(Choice.MAX_UTILITY);
-            }
+            a.setUtility(U(E,a));
         }
         A.sort();
         return A;
     }
 
-    protected Environment T(Environment E, Choice a) {
+    protected Environment S(Environment E, Choice a) {
         if (!Ve(E)) {
             return null;
         } else {
@@ -160,11 +154,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected double U(Environment E) {
         if (!Ve(E)) {
             return Choice.MAX_UTILITY;
-        } else if (E.getOntarget()) {
-            return -1000;
         } else {
-            return Reward(E);
+            return E.getDistance();
         }
+    }
+
+    protected double U(Environment E, Choice a) {
+        return U(S(E,a));
     }
 
     protected boolean Va(Environment E, Choice a) {
@@ -180,10 +176,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean G(Environment E) {
-        if (!Ve(E)) {
-            return false;
-        }
-        return E.isOverMission();
+        return E.getOntarget();
     }
 
     /**

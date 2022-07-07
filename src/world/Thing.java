@@ -101,6 +101,10 @@ public class Thing extends Entity3D {
         JsonObject jsoreading = new JsonObject().add("name", getName()).add("perceptions", res);
         myPerceptions.feedPerception(jsoreading);
         myPerceptions.encodeSensor(Sensors.NAME, SensorDecoder.encodeValues(getName()));
+        myPerceptions.encodeSensor(Sensors.WORLDHEIGHT, 
+                SensorDecoder.encodeValues(this.getWorld().getEnvironment().getSurface().getHeight()));
+        myPerceptions.encodeSensor(Sensors.WORLDWIDTH, 
+                SensorDecoder.encodeValues(this.getWorld().getEnvironment().getSurface().getWidth()));
     }
 
     public int sizePerceptions() {

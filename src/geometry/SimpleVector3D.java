@@ -22,22 +22,26 @@ public class SimpleVector3D extends Vector3D {
 
     protected int sOrient;
 
+    public SimpleVector3D() {
+        super(new Point3D(), new Point3D());
+    }
+
     public SimpleVector3D(Point3D t, int orientation) {
-        super(t, new Point3D(t.getX() + nextX[(8+orientation) % 8], t.getY() + nextY[(8+orientation) % 8], t.getZ()));
+        super(t, new Point3D(t.getX() + nextX[(8 + orientation) % 8], t.getY() + nextY[(8 + orientation) % 8], t.getZ()));
         sOrient = orientation % 8;
     }
 
     public SimpleVector3D(int x, int y, int orient) {
-        super(new Point3D(x, y, 0), new Point3D(x, y, 0).plus(new Point3D(nextX[orient % 8], nextY[orient % 8],0)));
+        super(new Point3D(x, y, 0), new Point3D(x, y, 0).plus(new Point3D(nextX[orient % 8], nextY[orient % 8], 0)));
         sOrient = orient % 8;
     }
 
     public SimpleVector3D(Point3D s, Point3D t) {
         super(s, t);
-       int aux=getInverseOrientation();
-       if (aux !=8) {           
-           sOrient=aux;
-       }
+        int aux = getInverseOrientation();
+        if (aux != 8) {
+            sOrient = aux;
+        }
     }
 
     public int getInverseOrientation() {
@@ -127,11 +131,11 @@ public class SimpleVector3D extends Vector3D {
 
     @Override
     public String toString() {
-        return getSource().toString() + "--(" + this.getsOrient() + "|" +Compass.NAME[this.getsOrient()]+"|"+ this.canonical().getTarget().toString() + ")-->" + getTarget().toString();
+        return getSource().toString() + "--(" + this.getsOrient() + "|" + Compass.NAME[this.getsOrient()] + "|" + this.canonical().getTarget().toString() + ")-->" + getTarget().toString();
     }
 
-   public boolean isEqualTo(SimpleVector3D other)  {
-       return other.getSource().isEqualTo(getSource())
-               && other.getTarget().isEqualTo(getTarget());
-   }
+    public boolean isEqualTo(SimpleVector3D other) {
+        return other.getSource().isEqualTo(getSource())
+                && other.getTarget().isEqualTo(getTarget());
+    }
 }
