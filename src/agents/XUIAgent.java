@@ -39,10 +39,11 @@ public class XUIAgent extends LARVAFirstAgent {
     public void setup() {
         super.setup();
         logger = new Logger();
-        logger.onEcho();
-        logger.onOverwrite();
-        logger.onTabular();
-        logger.setLoggerFileName(this.getLocalName() + ".json");
+        logger.offEcho();
+//        logger.onEcho();
+//        logger.onOverwrite();
+//        logger.onTabular();
+//        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         myDashBoard = new OleDashBoard(_XUI, "XUI");

@@ -164,24 +164,24 @@ public class liveBot extends Thing {
     }
 
     public liveBot moveForward(int units) {
-        setSlope(Raw().getPolarLidar()[2][1]);
-        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
-        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+        setSlope(-Raw().getPolarLidar()[2][1]);
+//        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+//        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(this.getVector().canonical().clone().scalar(units));
     }
 
     public liveBot moveUp(int units) {
         setSlope(5);
 
-        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
-        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+//        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+//        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
     }
 
     public liveBot moveDown(int units) {
         setSlope(-5);
-        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
-        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
+//        Raw().setEnergy(Raw().getEnergy() - Raw().getBurnratemove());
+//        Raw().setEnergyburnt(Raw().getEnergyburnt() + Raw().getBurnratemove());
         return move(Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
     }
 

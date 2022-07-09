@@ -127,46 +127,47 @@ public class SwingTools {
     }
 
     public static Color doLighter(Color c) {
-        float ratio=1.5f;
-        int r=c.getRed(), g=c.getGreen(), b=c.getBlue();
-        r = (int) (r*ratio);
-        g = (int)(g*ratio);
-        b = (int)(b*ratio);
-        return new Color(r,g,b);
+        float ratio = 1.5f;
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue();
+        r = (int) (r * ratio);
+        g = (int) (g * ratio);
+        b = (int) (b * ratio);
+        return new Color(r, g, b);
     }
-    
+
     public static Color doDarker(Color c) {
-        float ratio=1.5f;
-        int r=c.getRed(), g=c.getGreen(), b=c.getBlue();
-        r = (int) (r/ratio);
-        g = (int)(g/ratio);
-        b = (int)(b/ratio);
-        return new Color(r,g,b);
+        float ratio = 1.5f;
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue();
+        r = (int) (r / ratio);
+        g = (int) (g / ratio);
+        b = (int) (b / ratio);
+        return new Color(r, g, b);
     }
-    
+
     public static Rectangle doBroad(Rectangle r, int units) {
-        Rectangle res= new Rectangle(r.x-units,r.y-units,r.width+2*units, r.height+2*units);
+        Rectangle res = new Rectangle(r.x - units, r.y - units, r.width + 2 * units, r.height + 2 * units);
         return res;
     }
-    
+
     public static Rectangle doNarrow(Rectangle r, int units) {
-        Rectangle res= new Rectangle(r.x+units,r.y+units,r.width-2*units, r.height-2*units);
+        Rectangle res = new Rectangle(r.x + units, r.y + units, r.width - 2 * units, r.height - 2 * units);
         return res;
     }
-    
+
     public static Rectangle DimensionToRectangle(Dimension d) {
-        return new Rectangle(0,0,d.width,d.height);
+        return new Rectangle(0, 0, d.width, d.height);
     }
-    
+
     public static Dimension RectangleToDimension(Rectangle r) {
         return new Dimension((int) r.getWidth(), (int) r.getHeight());
     }
+
     public static Polygon TraceRegularPolygon(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1) {
         return TraceRegularPolygon(at, sv, npoints, radius1, 0);
     }
 
     public static Polygon TraceRegularPolygon(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1, int rotate) {
-        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY();
+        int xsv = (int) sv.getSource().getX(), ysv = (int) sv.getSource().getY();
         Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
         double alpha;
         Polygon p = new Polygon();
@@ -174,13 +175,13 @@ public class SwingTools {
             p1 = at.alphaPoint(360 / npoints * np - rotate, radius1, pxsv);
             p.addPoint(p1.getXInt(), p1.getYInt());
         }
-        p1 = at.alphaPoint(0-rotate, radius1, pxsv);
+        p1 = at.alphaPoint(0 - rotate, radius1, pxsv);
         p.addPoint(p1.getXInt(), p1.getYInt());
         return p;
     }
 
     public static Polygon TraceRegularStar(geometry.AngleTransporter at, SimpleVector3D sv, int npoints, int radius1, int radius2) {
-        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY();
+        int xsv = (int) sv.getSource().getX(), ysv = (int) sv.getSource().getY();
         Point3D pxsv = new Point3D(xsv, ysv), p1, pmid1, p2;
         double alpha = 0, increment = 360 / npoints;
         Polygon p = new Polygon();
@@ -197,7 +198,7 @@ public class SwingTools {
     }
 
     public static Polygon TraceCourse(SimpleVector3D sv, int length) {
-        int xsv = (int)sv.getSource().getX(), ysv = (int)sv.getSource().getY(), 
+        int xsv = (int) sv.getSource().getX(), ysv = (int) sv.getSource().getY(),
                 xsv2 = xsv + sv.canonical().getTarget().getXInt() * length, ysv2 = ysv + sv.canonical().getTarget().getYInt() * length;
         Polygon p = new Polygon();
         p.addPoint(xsv, ysv);
@@ -207,29 +208,34 @@ public class SwingTools {
     }
 
     public static Polygon transformPolygon(Polygon p, double scale, double shiftx, double shifty) {
-        Polygon newpoly= new Polygon();
-        for (int i=0; i<p.npoints; i++) {
-            newpoly.addPoint((int)(shiftx+(p.xpoints[i])*scale),
-            (int)(shifty+(p.ypoints[i])*scale));
+        Polygon newpoly = new Polygon();
+        for (int i = 0; i < p.npoints; i++) {
+            newpoly.addPoint((int) (shiftx + (p.xpoints[i]) * scale),
+                    (int) (shifty + (p.ypoints[i]) * scale));
         }
         return newpoly;
     }
-    
+
     public static Color mergeColors(Color c1, Color c2, int percentage) {
-        int r,g,b;
-        percentage = Math.min(100,percentage);
-        r = (c1.getRed()*percentage+c2.getRed()*(100-percentage))/100;
-        g = (c1.getGreen()*percentage+c2.getGreen()*(100-percentage))/100;
-        b = (c1.getBlue()*percentage+c2.getBlue()*(100-percentage))/100;
-        return new Color(r,g,b);        
+        int r, g, b;
+        percentage = Math.min(100, percentage);
+        r = (c1.getRed() * percentage + c2.getRed() * (100 - percentage)) / 100;
+        g = (c1.getGreen() * percentage + c2.getGreen() * (100 - percentage)) / 100;
+        b = (c1.getBlue() * percentage + c2.getBlue() * (100 - percentage)) / 100;
+        return new Color(r, g, b);
     }
-    
+
     public static Color gradualColor(Color c1, int percentage) {
-        int r,g,b;
-        percentage = Math.min(100,percentage);
-        r = (c1.getRed()*percentage)/100;
-        g = (c1.getGreen()*percentage)/100;
-        b = (c1.getBlue()*percentage)/100;
-        return new Color(r,g,b);        
+        int r, g, b;
+        percentage = Math.min(100, percentage);
+        r = (c1.getRed() * percentage) / 100;
+        g = (c1.getGreen() * percentage) / 100;
+        b = (c1.getBlue() * percentage) / 100;
+        return new Color(r, g, b);
     }
+
+    public static String getRelativeResource(String originalResource) {
+        return "../" + originalResource.substring(originalResource.indexOf("es.ugr.larva.core"));
+    }
+
 }

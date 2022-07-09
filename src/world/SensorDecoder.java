@@ -1391,7 +1391,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
-                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
                     capability.LEFT.name().toUpperCase(),
@@ -1407,11 +1407,11 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 20);
                 encodeSensor(Sensors.MAXCARGO, 1);
-                encodeSensor(Sensors.AUTONOMY, 1200);
+                encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
-                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
                     capability.LEFT.name().toUpperCase(),
@@ -1427,11 +1427,11 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 1);
-                encodeSensor(Sensors.AUTONOMY, 1200);
+                encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
-                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
                     capability.LEFT.name().toUpperCase(),

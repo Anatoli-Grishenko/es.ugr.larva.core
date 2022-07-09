@@ -168,7 +168,7 @@ public class Environment extends SensorDecoder {
 //                dincry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
 
         int incrx = 0, incry = 0, incrz = 0;
-
+        result.cache();
         switch (action.toUpperCase()) {
             case "MOVE":
                 incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
@@ -176,7 +176,8 @@ public class Environment extends SensorDecoder {
                 if (this.getMaxslope() >= this.getMaxlevel()/2) {  // AIRBORNE
                     incrz = 0;
                 } else {
-                    incrz = this.getVisualHere() - this.getVisualFront();
+//                    incrz = this.getVisualFront() - this.getVisualHere() ;
+                    incrz = -this.getLidarFront(); //this.getVisualFront() - this.getVisualHere() ;
                 }
                 movement = true;
                 break;
@@ -222,12 +223,17 @@ public class Environment extends SensorDecoder {
         if (movement) {
             result.slope = incrz;
             result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
-            result.setEnergy(this.getEnergy() - 1);
+            result.setEnergy(this.getEnergy() - this.getBurnratemove());
             result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
             result.encodeSensor(Sensors.THERMAL, Transform.Matrix2JsonArray(result.thermalData));
             result.visualData = Transform.shift(this.visualData, incrx, incry, Perceptor.NULLREAD);
             result.encodeSensor(Sensors.VISUAL, Transform.Matrix2JsonArray(result.visualData));
             result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
+            for (int lx=0; lx<result.lidarData.length; lx++) {
+                for (int ly=0; ly<result.lidarData[0].length; ly++) {
+                    result.lidarData[lx][ly] = (int)(result.lidarData[lx][ly]== Choice.MAX_UTILITY? Choice.MAX_UTILITY: result.lidarData[lx][ly]+incrz);
+                }
+            }
             result.encodeSensor(Sensors.LIDAR, Transform.Matrix2JsonArray(result.lidarData));
             if (result.getTarget() != null) {
                 result.setOntarget(result.getGPS().isEqualTo(result.getTarget()));

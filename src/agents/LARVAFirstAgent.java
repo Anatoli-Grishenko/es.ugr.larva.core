@@ -122,8 +122,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
 
-
-    
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
             return null;
@@ -137,7 +135,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected DecisionSet Prioritize(Environment E, DecisionSet A) {
         for (Choice a : A) {
-            a.setUtility(U(E,a));
+            a.setUtility(U(E, a));
         }
         A.sort();
         return A;
@@ -160,11 +158,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected double U(Environment E, Choice a) {
-        return U(S(E,a));
-    }
-
-    protected boolean Va(Environment E, Choice a) {
-        return true;
+        return U(S(E, a));
     }
 
     protected boolean Ve(Environment E) {
@@ -177,6 +171,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected boolean G(Environment E) {
         return E.getOntarget();
+    }
+
+    protected boolean Va(Environment E, Choice a) {
+        return true;
     }
 
     /**
@@ -1065,8 +1063,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.olbPause.setEnabled(false);
         this.olbUntil.setEnabled(true);
         remote = true;
-         remotePause();
-   }
+        remotePause();
+    }
 
     public void remotePlay() {
         if (this.remote) {

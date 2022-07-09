@@ -513,7 +513,8 @@ public class OleHud extends OleSensor {
                     c = OleDashBoard.cTrack;
                 }
             }
-            terrain.setColor(tx, terrain.getHeight() - 1 - y, SwingTools.mergeColors(c, terrain.getColor(tx, terrain.getHeight() - 1 - y), (int) (y * 100 / (terrain.getHeight() * 0.50))));
+            terrain.setColor(tx, terrain.getHeight() - 1 - y, c);
+//            terrain.setColor(tx, terrain.getHeight() - 1 - y, SwingTools.mergeColors(c, terrain.getColor(tx, terrain.getHeight() - 1 - y), (int) (y * 100 / (terrain.getHeight() * 0.50))));
         }
     }
 
