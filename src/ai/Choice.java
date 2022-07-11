@@ -19,7 +19,7 @@ public class Choice implements Comparable {
             ANY_VALUE=5,
             PROXIMITY=5.0;
     public static boolean increasing = true;
-    String name;
+    String name, annotation;
     double utility, g, h;
     boolean valid;
     Point3D position;
@@ -136,6 +136,7 @@ public class Choice implements Comparable {
 
     }
 
+    @Override
     public String toString() {
         String res = "";
 
@@ -144,9 +145,9 @@ public class Choice implements Comparable {
             res += "," + String.format("%5.2f", this.getUtility());
         }
         if (valid) {
-            res = "[+" + res + "+]";
+            res = "[+" + res+(this.getAnnotation()!= null?" <"+this.getAnnotation()+">": "") + "+]";
         } else {
-            res = "{-" + res + "-}";
+            res = "[-" + res+(this.getAnnotation()!= null?" <"+this.getAnnotation()+">": "") + "-]";
         }
         return res;
     }
@@ -239,6 +240,14 @@ public class Choice implements Comparable {
 
     public static void setDecreasing() {
         increasing = false;
+    }
+
+    public String getAnnotation() {
+        return annotation;
+    }
+
+    public void setAnnotation(String annotation) {
+        this.annotation = annotation;
     }
     
   

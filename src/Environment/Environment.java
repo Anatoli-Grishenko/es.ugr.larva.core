@@ -241,6 +241,7 @@ public class Environment extends SensorDecoder {
                 result.setOntarget(false);
             }
             result.setAlive(result.willBeAlive());
+            result.setGround(result.getLidarHere());
         }
         return result;
     }
