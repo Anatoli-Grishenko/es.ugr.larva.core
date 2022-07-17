@@ -16,7 +16,7 @@ public class Choice implements Comparable {
 
     public static final double MIN_UTILITY = Integer.MIN_VALUE, 
             MAX_UTILITY = Integer.MAX_VALUE,
-            ANY_VALUE=5,
+            ANY_VALUE=MAX_UTILITY/2,
             PROXIMITY=5.0;
     public static boolean increasing = true;
     String name, annotation;

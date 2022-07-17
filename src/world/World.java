@@ -121,7 +121,7 @@ public class World {
     public boolean hasMap() {
         return hasMap;
     }
-    
+
     protected boolean filterReading(int x, int y, int range, int orientation) {
         return filter[cx + x - range / 2][cy + y - range / 2].contains("." + orientation + ".");
     }
@@ -455,7 +455,7 @@ public class World {
         int range = p.getRange(), orientation = who.getOrientation();
         Point3D prange;
         Point3D observable;
-        PolarSurface ps = new PolarSurface(vectororientation,vectororientation);
+        PolarSurface ps = new PolarSurface(vectororientation, vectororientation);
         ps.setRadius(range / 2 + 1);
         double x1, y1, x2, y2, incrx;
         if (range == 1) { // single rangle
@@ -1092,24 +1092,30 @@ public class World {
         } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
             a.setType(PathType.MARINE);
             pdest = this.getClosestDocking(pdest);
-        } else if (this.getOntology().matchTypes(agent.getType(), "HUMMER")) {
+        } else if (this.getOntology().matchTypes(agent.getType(), "FULLROAD")) {
             a.setType(PathType.FULLTERRAIN);
         } else {
             a.setType(PathType.ROAD);
         }
         res = new ArrayList();
         Plan path;
+        Point3D lastPoint = null;
         path = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdest));
         if (path != null) {
-            int i = 0, istep = agent.Raw().getRange() / 2;
+            int i = 0, istep = agent.Raw().getRange() * 2;
             for (Choice c : path) {
-
-                if (i == path.size() - 1 ) {  
-                    jsares.add(c.getPosition().toJson());
-                } else if (i>0 && i % istep == 0 ){ // 
-                    jsares.add(c.getPosition().toJson());
-                } 
+//                if (i == path.size() - 1) {
+//                    lastPoint = c.getPosition();
+//                    jsares.add(lastPoint.toJson());
+//                } else 
+                if (i > 0 && i % istep == 0) { // 
+                    lastPoint = c.getPosition();
+                    jsares.add(lastPoint.toJson());
+                }
                 i++;
+            }
+            if (lastPoint == null || !lastPoint.isEqualTo(pdest)) {
+                    jsares.add(pdest.toJson());
             }
             agent.Raw().encodeSensor(Sensors.COURSE, jsares);
             agent.Raw().activateCourse();

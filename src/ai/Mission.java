@@ -22,7 +22,7 @@ public class Mission extends ArrayList<String>{
     public Mission(JsonArray jsa) {
         setName(jsa.get(0).asString());
         for (int i=1; i<jsa.size(); i++) {
-            this.add(jsa.get(i).asString());
+            this.addTask(jsa.get(i).asString());
         }
     }
     
@@ -33,6 +33,7 @@ public class Mission extends ArrayList<String>{
     public void setName(String name) {
         this.name = name.toUpperCase();
     }
+    
     public JsonArray toJson() {
         JsonArray res = new JsonArray();
         res.add(getName());
@@ -40,6 +41,10 @@ public class Mission extends ArrayList<String>{
             res.add(sm);
         }
         return res;
+    }
+    public Mission addTask(String task) {
+        this.add(task);
+        return this;
     }
     
 }

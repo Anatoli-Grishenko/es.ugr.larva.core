@@ -140,14 +140,14 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                             }
 
                         };
-                        odpPopUp.setBounds(this.getBounds().x+this.getBounds().width, 0, 35, this.getBounds().height);
+                        odpPopUp.setBounds(this.getBounds().x + this.getBounds().width, 0, 35, this.getBounds().height);
                         myDash.add(odpPopUp, 0);
                         odpPopUp.setVisible(true);
                         myDash.repaint();
                     } else {
                         odpPopUp.setVisible(false);
                         myDash.remove(odpPopUp);
-                        odpPopUp= null;
+                        odpPopUp = null;
                     }
                 } else {
                     super.Clicked(e);
@@ -463,7 +463,14 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         s = name;
 
         if (myDash.getDecoderOf(name).getAlive()) {
-            g.setColor(OleDashBoard.cTrack);
+            if (myDash.getDecoderOf(name).getType().equals("VAAT")
+                    || myDash.getDecoderOf(name).getType().equals("BB1F")
+                    || myDash.getDecoderOf(name).getType().equals("YV")
+                    || myDash.getDecoderOf(name).getType().equals("DEST")) {
+                g.setColor(Color.ORANGE);
+            } else {
+                g.setColor(OleDashBoard.cTrack);
+            }
         } else {
             g.setColor(Color.RED);
         }

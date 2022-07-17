@@ -53,6 +53,15 @@ public class OlePassport extends Ole {
         return this;
     }
 
+    public Ole setPassport(String fullpassport) {
+        String sload="", publicPassport;
+        Scanner reader;
+             setField("rawPassport",fullpassport);
+             publicPassport=fullpassport.split(separator)[0];
+             setField("name",this.getCryptor().deCrypt64(publicPassport));
+        return this;
+    }
+
 
     private final void InitPassport() {
         setType(oletype.OLEPASSPORT.name());

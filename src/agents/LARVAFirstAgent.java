@@ -8,24 +8,25 @@ package agents;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
+import ai.MissionSet;
 import appboot.XUITTY;
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import console.Console;
 import crypto.Keygen;
 import data.Ole;
 import data.OleConfig;
-import data.OleFile;
 import data.OleSet;
 import data.Transform;
 import disk.Logger;
+import static disk.Logger.trimFullString;
 import glossary.Signals;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -34,16 +35,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
-import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
-import javax.swing.border.Border;
 import messaging.ACLMessageTools;
 import messaging.SequenceDiagram;
 import swing.OleAgentTile;
@@ -77,11 +75,11 @@ import tools.emojis;
  * <li> Support for reading, writing and transmission of any file, of any type
  * and size.
  * <li> Provides a basic behaviour, which has to be acvivated nevertheless, in
- * order to start working without any background on Jade behaviours. This is a
- * repeatable behaviour (Execute()) which acts as the main body of most agents
- * and an associated boolean variable to control the exit and, therefore, the
- * death of the agent.
- * </ul>
+ order to start working without any background on Jade behaviours. This is a
+ repeatable behaviour (Execute()) which acts as the main body of most agents
+ and an associated boolean variable to control the LARVAexit and, therefore, the
+ death of the agent.
+ </ul>
  *
  */
 public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
@@ -111,7 +109,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected Environment E;
     protected DecisionSet A;
-    protected String myMission[], missionName;
 
     protected Semaphore SWaitButtons;
     protected boolean cont = true, each = true, remote = false;
@@ -121,6 +118,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
+
+    protected MissionSet Missions;
+    protected int iTask, nTasks;
+    protected String myMission[], missionName, taskName, sessionAlias;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -183,6 +184,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void setup() {
         super.setup();
+        Missions = new MissionSet();
         stepsDone = new OleSet();
         stepsSent = new OleSet();
         if (sd == null) {
@@ -254,7 +256,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             r.run();
         } catch (ExitRequestedException ex) {
-            exit = true;
+            LARVAexit = true;
 //                doDelete();
         } catch (Exception ex) {
             JsonObject res = logger.logException(ex);
@@ -265,7 +267,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             message += emojis.WARNING + " UNCAUGHT EXCEPTION\n" + res.getString("uncaught-exception", "") + "\n";
             message += emojis.INFO + " INFO\n" + res.getString("info", title) + "\n";
             this.Alert(message);
-            exit = true;
+            LARVAexit = true;
         }
     }
 
@@ -274,7 +276,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void doNotExit() {
-        exit = false;
+        LARVAexit = false;
     }
 
     @Override
@@ -295,7 +297,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
             @Override
             public boolean done() {
-                return exit;
+                return LARVAexit;
             }
 
         };
@@ -372,9 +374,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void takeDown() {
         addRunStep("MILES03");
-        if (this.SWaitButtons.availablePermits() == 0) {
-            this.SWaitButtons.release();
-        }
         if (remote) {
             closeRemote();
         }
@@ -401,9 +400,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         addRunStep("MILES02");
         logger.logError(message);
         if (isSwing()) {
-            myText.append(logger.getLastlog());
-            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-            myApp.Error(message);
+            if (myText != null) {
+                myText.append(logger.getLastlog());
+                myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
+            }
+            Alert(message);
         }
     }
 
@@ -416,10 +417,16 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected void Info(String message) {
         addRunStep("MILES02");
         logger.logMessage(message);
-        if (isSwing() && logger.isEcho()) {
-            myText.append(logger.getLastlog() + "");
+        try {
+            if (isSwing() && logger.isEcho()) {
+                if (myText != null) {
+                    myText.append(logger.getLastlog() + "");
 //            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-            myText.setCaretPosition(Math.max(myText.getText().length(), 0));
+                    myText.setCaretPosition(Math.max(myText.getText().length(), 0));
+                }
+            }
+        } catch (Exception ex) {
+
         }
     }
 
@@ -556,26 +563,28 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (!ACLMessageTools.getMainReceiver(msg).equals(this.IdentityManager)) {
             addRunStep("MILES10");
         }
-        msg.addUserDefinedParameter("ACLMID", Keygen.getHexaKey(20));
-//        if (myDashboard != null && msg.getContent() != null
-        if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
-            String skey = msg.getConversationId(), sman;
-            if (skey != null && !this.DFGetAllProvidersOf("SESSION MANAGER " + skey).isEmpty()) {
-//                ACLMessage aux = new ACLMessage(msg.getPerformative());
-//                aux.setSender(msg.getSender());
-//                aux.setConversationId(msg.getConversationId());
-//                aux.setReplyWith(msg.getReplyWith());
-//                aux.setInReplyTo(msg.getInReplyTo());
-//                aux.setOntology(msg.getOntology());
-//                aux.setProtocol(msg.getProtocol());
-                sman = this.DFGetAllProvidersOf("SESSION MANAGER " + skey).get(0);
-                msg.addReceiver(new AID(sman, AID.ISLOCALNAME));
-//                aux.addReceiver(new AID(sman, AID.ISLOCALNAME));
-//                this.send(aux);
-//                Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(aux, false));
-//                sd.addSequence(aux);
-            }
+        if (msg.getUserDefinedParameter("ACLMID") == null) {
+            msg.addUserDefinedParameter("ACLMID", Keygen.getHexaKey(20));
         }
+//        if (myDashboard != null && msg.getContent() != null
+//        if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
+//            String skey = msg.getConversationId(), sman;
+//            if (skey != null && !this.DFGetAllProvidersOf("SESSION MANAGER " + skey).isEmpty()) {
+////                ACLMessage aux = new ACLMessage(msg.getPerformative());
+////                aux.setSender(msg.getSender());
+////                aux.setConversationId(msg.getConversationId());
+////                aux.setReplyWith(msg.getReplyWith());
+////                aux.setInReplyTo(msg.getInReplyTo());
+////                aux.setOntology(msg.getOntology());
+////                aux.setProtocol(msg.getProtocol());
+//                sman = this.DFGetAllProvidersOf("SESSION MANAGER " + skey).get(0);
+//                msg.addReceiver(new AID(sman, AID.ISLOCALNAME));
+////                aux.addReceiver(new AID(sman, AID.ISLOCALNAME));
+////                this.send(aux);
+////                Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(aux, false));
+////                sd.addSequence(aux);
+//            }
+//        }
 //        if (msg.getContent() != null
 //                && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
 //                || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
@@ -601,19 +610,19 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive();
-            if (res != null && res.getContent().contains("filedata")) {
-                Ole ocontent = new Ole().set(res.getContent());
-                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-                int maxlevel = ocontent.getInt("maxflight");
-                E.setWorldMap(ofile.toString(), maxlevel);
-                if (!getLocalName().startsWith("XUI")) {
-                    repeat = true;
-                }
-            }
-            if (res != null && res.getContent().contains("perceptions")) {
-                E.feedPerception(res.getContent());
-                repeat = false;
-            }
+//            if (res != null && res.getContent().contains("filedata")) {
+//                Ole ocontent = new Ole().set(res.getContent());
+//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+//                int maxlevel = ocontent.getInt("maxflight");
+//                E.setWorldMap(ofile.toString(), maxlevel);
+//                if (!getLocalName().startsWith("XUI")) {
+//                    repeat = true;
+//                }
+//            }
+//            if (res != null && res.getContent().contains("perceptions")) {
+//                E.feedPerception(res.getContent());
+//                repeat = false;
+//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -631,19 +640,19 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(milis);
-            if (res != null && res.getContent().contains("filedata")) {
-                Ole ocontent = new Ole().set(res.getContent());
-                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-                int maxlevel = ocontent.getInt("maxflight");
-                E.setWorldMap(ofile.toString(), maxlevel);
-                if (!getLocalName().startsWith("XUI")) {
-                    repeat = true;
-                }
-            }
-            if (res != null && res.getContent().contains("perceptions")) {
-                E.feedPerception(res.getContent());
-                repeat = false;
-            }
+//            if (res != null && res.getContent().contains("filedata")) {
+//                Ole ocontent = new Ole().set(res.getContent());
+//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+//                int maxlevel = ocontent.getInt("maxflight");
+//                E.setWorldMap(ofile.toString(), maxlevel);
+//                if (!getLocalName().startsWith("XUI")) {
+//                    repeat = true;
+//                }
+//            }
+//            if (res != null && res.getContent().contains("perceptions")) {
+//                E.feedPerception(res.getContent());
+//                repeat = false;
+//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -661,19 +670,19 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(t);
-            if (res != null && res.getContent().contains("filedata")) {
-                Ole ocontent = new Ole().set(res.getContent());
-                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-                int maxlevel = ocontent.getInt("maxflight");
-                E.setWorldMap(ofile.toString(), maxlevel);
-                if (!getLocalName().startsWith("XUI")) {
-                    repeat = true;
-                }
-            }
-            if (res != null && res.getContent().contains("perceptions")) {
-                E.feedPerception(res.getContent());
-                repeat = false;
-            }
+//            if (res != null && res.getContent().contains("filedata")) {
+//                Ole ocontent = new Ole().set(res.getContent());
+//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+//                int maxlevel = ocontent.getInt("maxflight");
+//                E.setWorldMap(ofile.toString(), maxlevel);
+//                if (!getLocalName().startsWith("XUI")) {
+//                    repeat = true;
+//                }
+//            }
+//            if (res != null && res.getContent().contains("perceptions")) {
+//                E.feedPerception(res.getContent());
+//                repeat = false;
+//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -691,19 +700,19 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(t, milis);
-            if (res != null && res.getContent().contains("filedata")) {
-                Ole ocontent = new Ole().set(res.getContent());
-                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-                int maxlevel = ocontent.getInt("maxflight");
-                E.setWorldMap(ofile.toString(), maxlevel);
-                if (!getLocalName().startsWith("XUI")) {
-                    repeat = true;
-                }
-            }
-            if (res != null && res.getContent().contains("perceptions")) {
-                E.feedPerception(res.getContent());
-                repeat = false;
-            }
+//            if (res != null && res.getContent().contains("filedata")) {
+//                Ole ocontent = new Ole().set(res.getContent());
+//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
+//                int maxlevel = ocontent.getInt("maxflight");
+//                E.setWorldMap(ofile.toString(), maxlevel);
+//                if (!getLocalName().startsWith("XUI")) {
+//                    repeat = true;
+//                }
+//            }
+//            if (res != null && res.getContent().contains("perceptions")) {
+//                E.feedPerception(res.getContent());
+//                repeat = false;
+//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -1000,6 +1009,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             } catch (Exception ex) {
             }
         }
+        this.sessionAlias = trimFullString(userName);
     }
 
     protected void setupEnvironment() {
@@ -1018,10 +1028,22 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected void closeRemote() {
-        externalTB.removeAll();
+        if (remote) {
+            if (externalTB != null) {
+                externalTB.removeAll();
+                externalTB.repaint();
+            }
+            if (this.SWaitButtons != null && this.SWaitButtons.availablePermits() == 0) {
+                this.SWaitButtons.release();
+            }
+            remote = false;
+        }
     }
 
     protected void openRemote() {
+        if (remote) {
+            return;
+        }
         OleApplication parentApp = this.payload.getParent();
         externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
         externalTB = externalTile.getExternalToolBar();
@@ -1132,4 +1154,167 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void setFrameDelay(int milis) {
         this.frameDelay = milis;
     }
+
+    /////////////////// MISSIONS ////////////////77
+    protected void clearCourseSelection() {
+        missionName = null;
+        setTask(null);
+        E.setTarget(null);
+        E.setDestination(null);
+
+    }
+
+    protected void decodeMissions(String things) {
+        clearCourseSelection();
+        JsonObject jsoThings = Json.parse(things).asObject();
+        JsonArray jsathings;
+        if (jsoThings.get("missions") != null) {
+            Missions = new MissionSet(jsoThings.get("missions").asArray());
+        }
+    }
+
+    protected String getCurrentMission() {
+        String agentName = getLocalName();
+        return getCurrentMission(agentName);
+    }
+
+    protected String getCurrentTask() {
+        String agentName = getLocalName();
+        return getCurrentTask(agentName);
+    }
+
+    protected String getagentType(String agentName) {
+        if (this.AMSIsConnected(agentName)) {
+            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
+                if (service.startsWith("TYPE")) {
+                    return service.replaceAll("TYPE ", "");
+                }
+            }
+
+        }
+        return "";
+    }
+
+    protected String getCurrentMission(String agentName) {
+        if (this.AMSIsConnected(agentName)) {
+            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
+                if (service.startsWith("MISSION")) {
+                    return service.replaceAll("MISSION ", "");
+                }
+            }
+
+        }
+        return "";
+    }
+
+    protected String getCurrentTask(String agentName) {
+        if (this.AMSIsConnected(agentName)) {
+            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
+                if (service.startsWith("TASK")) {
+                    return service.replaceAll("TASK ", "");
+                }
+            }
+
+        }
+        return "";
+    }
+
+    protected boolean setTask() {
+        if (missionName != null && Missions.containsKey(missionName) && iTask < nTasks) {
+            return setTask(Missions.get(missionName).get(iTask++));
+        } else {
+            return false;
+        }
+    }
+
+    protected boolean setTask(String task) {
+        if (missionName != null) { // && (Missions.get(missionName).contains(task) || task.equals("PARKING"))) {
+            taskName = task;
+            for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
+                if (service.startsWith("TASK")) {
+                    this.DFRemoveMyServices(new String[]{service});
+                }
+            }
+            this.DFAddMyServices(new String[]{"TASK " + task});
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public String activateMission(String mission) {
+        if (Missions.keySet().contains(mission)) {
+            if (Missions.containsKey(mission)) {
+                missionName = mission;
+                for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
+                    if (service.startsWith("MISSION")) {
+                        this.DFRemoveMyServices(new String[]{service});
+                    }
+                }
+                iTask = 0;
+                if (mission != null) {
+                    nTasks = getMissionLength(missionName);
+                    this.DFAddMyServices(new String[]{"MISSION " + missionName});
+                    return activateTask();
+                } else {
+                    nTasks = 0;
+                }
+                return "ERROR";
+            } else {
+                return "ERROR";
+            }
+        }
+        return "ERROR";
+    }
+
+    public int getNumMissions() {
+        return Missions.size();
+    }
+
+    public String[] getAllMissions() {
+        return Transform.toArrayString(new ArrayList(Missions.keySet()));
+    }
+
+    public String[] getMissionTasks(String mission) {
+        if (Missions.keySet().contains(mission)) {
+            return Transform.toArrayString(Missions.get(mission));
+        } else {
+            return null;
+        }
+    }
+
+    public int getMissionLength(String mission) {
+        if (Missions.keySet().contains(mission)) {
+            return Missions.get(mission).size();
+        } else {
+            return -1;
+        }
+    }
+
+    public boolean isOverCurrentMission() {
+        return iTask == nTasks && isOverCurrentTask();
+    }
+
+    public boolean isOverCurrentTask() {
+        if (missionName != null && Missions.get(missionName) != null) {
+            String task = taskName;
+            switch (task.split(" ")[0]) {
+                case "MOVEIN":
+                case "MOVETO":
+                    return E.getGPS().isEqualTo(E.getTarget());
+                default:
+                    return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    protected String activateTask() {
+        Error("Method activateTask has not been defined yet.");
+        System.exit(1);
+        return "";
+    }
+
+    
 }

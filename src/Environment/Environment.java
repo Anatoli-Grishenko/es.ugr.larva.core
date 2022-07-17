@@ -44,7 +44,6 @@ public class Environment extends SensorDecoder {
     protected ThingSet cadastre;
     protected ThingSet census;
     protected int slope;
-    MissionSet Missions;
 
     public Environment() {
         super();
@@ -52,7 +51,6 @@ public class Environment extends SensorDecoder {
         World = new World("innerworld");
         cadastre = new ThingSet();
         census = new ThingSet();
-        Missions = new MissionSet();
     }
 
     public Environment(Environment other) {
@@ -86,7 +84,7 @@ public class Environment extends SensorDecoder {
             if (this.getGPSMemorySize() > 1) {
                 slope = this.getGPS().getZInt() - this.getGPSMemory(1).getZInt();
             } else {
-                slope =  0;
+                slope = 0;
             }
             cache();
             return this;
@@ -110,10 +108,6 @@ public class Environment extends SensorDecoder {
                     census = new ThingSet();
                 }
                 census.fromJson(jsoThings.get("cities").asArray());
-            }
-            if (jsoThings.get("missions") != null) {
-                Missions = new MissionSet(jsoThings.get("missions").asArray());
-                System.out.println("\n\n\nMissions : " + Missions.size() + " " + Missions.keySet().toString() + "\n\n\n");
             }
             cache();
         } catch (Exception ex) {
@@ -153,7 +147,9 @@ public class Environment extends SensorDecoder {
     public Environment clone() {
         Environment res = new Environment();
         for (Sensors sname : this.indexperception.keySet()) {
-            res.encodeSensor(sname, Json.parse(getSensor(sname).toString()).asArray());
+            if (getSensor(sname) != null) {
+                res.encodeSensor(sname, Json.parse(getSensor(sname).toString()).asArray());
+            }
         }
         res.hMap = this.hMap;
         return res;
@@ -173,7 +169,7 @@ public class Environment extends SensorDecoder {
             case "MOVE":
                 incrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
                 incry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
-                if (this.getMaxslope() >= this.getMaxlevel()/2) {  // AIRBORNE
+                if (this.getMaxslope() >= this.getMaxlevel() / 2) {  // AIRBORNE
                     incrz = 0;
                 } else {
 //                    incrz = this.getVisualFront() - this.getVisualHere() ;
@@ -229,9 +225,9 @@ public class Environment extends SensorDecoder {
             result.visualData = Transform.shift(this.visualData, incrx, incry, Perceptor.NULLREAD);
             result.encodeSensor(Sensors.VISUAL, Transform.Matrix2JsonArray(result.visualData));
             result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
-            for (int lx=0; lx<result.lidarData.length; lx++) {
-                for (int ly=0; ly<result.lidarData[0].length; ly++) {
-                    result.lidarData[lx][ly] = (int)(result.lidarData[lx][ly]== Choice.MAX_UTILITY? Choice.MAX_UTILITY: result.lidarData[lx][ly]+incrz);
+            for (int lx = 0; lx < result.lidarData.length; lx++) {
+                for (int ly = 0; ly < result.lidarData[0].length; ly++) {
+                    result.lidarData[lx][ly] = (int) (result.lidarData[lx][ly] == Choice.MAX_UTILITY ? Choice.MAX_UTILITY : result.lidarData[lx][ly] + incrz);
                 }
             }
             result.encodeSensor(Sensors.LIDAR, Transform.Matrix2JsonArray(result.lidarData));
@@ -584,100 +580,17 @@ public class Environment extends SensorDecoder {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
 
-    public int getNumMissions() {
-        return Missions.size();
-    }
-
-    public String getMissionName(int i) {
-        return Missions.getMission(i).getName();
-    }
-
-    public String[] getAllMissions() {
-        return Transform.toArrayString(new ArrayList(Missions.keySet()));
-    }
-
-    public String[] getMissionTasks(int i) {
-        return Transform.toArrayString(Missions.getMission(i));
-    }
-
-    public String[] getMissionTasks(String name) {
-        if (Missions.containsKey(name)) {
-            return Transform.toArrayString(Missions.get(name));
-        } else {
-            return null;
-        }
-    }
-
-    public void activateMission(String name) {
-        this.setMission(name);
-        this.setTask(nextTask());
-    }
-
-    public void activateMission(int i) {
-        this.setMission(getMissionName(i));
-        this.setTask(nextTask());
-    }
-
-    public boolean isOverMission() {
-//        System.out.println("\n\n\nMissions (isOver): " + Missions.size() + " " + Missions.keySet().toString() + "\n\n\n");
-        if (Missions.get(getCurrentMission()) != null) {
-            return Missions.getMission(getCurrentMission()).size() == 0 && this.checkCurrentTask();
-        } else {
-            return true;
-        }
-
-    }
-
-    public boolean isOverTask() {
-        if (Missions.get(getCurrentMission()) != null) {
-            return Missions.getMission(getCurrentMission()).size() == 0;
-        } else {
-            return true;
-        }
-
-    }
-
-    public String nextTask() {
-        String res;
-        if (Missions.get(getCurrentMission()) != null) {
-            if (!isOverMission()) {
-                res = Missions.get(getCurrentMission()).get(0);
-                setTask(res);
-                Missions.get(getCurrentMission()).remove(0);
-                return res;
-            } else {
-                return null;
+    public Point3D getCityPosition(String city) {
+        if (new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))).contains(city)) {
+            ArrayList <String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
+            for (String scity : positions) {
+                if  (scity.split(" ")[0].equals(city)) {
+                    return new Point3D(scity.split(" ")[1]);
+                }
             }
+            return null;
         } else {
             return null;
         }
-
     }
-
-    public String getCurrentMission() {
-        return this.getMission();
-    }
-
-    public String getCurrentTask() {
-        return this.getTask();
-    }
-
-    public boolean checkCurrentTask() {
-        boolean res = false;
-        String task[] = getCurrentTask().split(" ");
-        Point3D p;
-
-        switch (task[0]) {
-            case "MOVEIN":
-            case "MOVETO":
-                res = this.getGPS().isEqualTo(this.getDestination());
-                break;
-            default:
-                res = false;
-                break;
-
-        }
-        return res;
-    }
-
 }

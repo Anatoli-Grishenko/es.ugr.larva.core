@@ -68,13 +68,13 @@ public class TimeHandler {
         return _theTime.isEqual(t._theTime);
     }
     
-    public long elapsedTimeSecs(TimeHandler other) {
+    public long elapsedTimeSecsUntil(TimeHandler other) {
         Duration res = Duration.between(_theTime, other._theTime);
         
         return res.getSeconds();
     }
     
-    public long elapsedTimeMilisecs(TimeHandler other) {
+    public long elapsedTimeMilisecsUntil(TimeHandler other) {
         Duration res = Duration.between(_theTime, other._theTime);
         
         return res.getNano()/1000000;
@@ -93,7 +93,7 @@ public class TimeHandler {
     
     public String toString(TimeHandler other) {
         String res;
-        long secs = this.elapsedTimeSecs(other);
+        long secs = this.elapsedTimeSecsUntil(other);
         if (secs <20 )
             res = ""+secs+" s"; //Less than one minute ago";
         else if (secs <60 )

@@ -146,7 +146,7 @@ public class Search {
     }
 
     public int timeLeft() {
-        return this.getMaxSeconds() - (int) this.getStartTime().elapsedTimeSecs(new TimeHandler());
+        return this.getMaxSeconds() - (int) this.getStartTime().elapsedTimeSecsUntil(new TimeHandler());
     }
 
     public boolean timeOver() {

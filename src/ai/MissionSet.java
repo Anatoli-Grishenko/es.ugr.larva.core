@@ -30,6 +30,7 @@ public class MissionSet extends HashMap<String, Mission> {
             }
         }
     }
+    
     public JsonArray toJson(){
         JsonObject res = new JsonObject(); 
         JsonArray jsares= new JsonArray();
@@ -51,5 +52,18 @@ public class MissionSet extends HashMap<String, Mission> {
             return this.get(name);
         }else
             return null;
+    }
+    
+    public MissionSet addMission(String mission) {
+        if (this.get(mission) == null) {
+            this.put(mission, new Mission(mission));
+        }
+        return this;
+    }
+    public MissionSet addTask(String mission, String task) {
+        if (this.get(mission) != null) {
+            this.get(mission).addTask(task);
+        }
+        return this;
     }
 }

@@ -6,9 +6,11 @@
 package swing;
 
 import Environment.Environment;
+import agents.LARVAFirstAgent;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleFile;
 import geometry.OleBag;
@@ -78,6 +80,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     int trailSize;
     OleFrame of;
     int ndash, nprepr;
+    LARVAFirstAgent myXUIAgent;
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -376,6 +379,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         this.olPayload.clear();
     }
 
+    public void setMyXUIAgent(LARVAFirstAgent myXUIAgent) {
+        this.myXUIAgent = myXUIAgent;
+    }
+
+    
     public boolean preProcessACLM(String content) {
         boolean res = false;
 //        System.out.println("DashBoard Preprocess");
@@ -419,6 +427,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 
         try {
             JsonObject jsoperception = Json.parse(perception).asObject();
+//            System.out.println(jsoperception.toString(WriterConfig.PRETTY_PRINT));
             agentName = jsoperception.getString("name", "");
 //            System.out.println("Received perceptions of agent " + agentName);
             if (agentName.length() == 0) {
@@ -471,7 +480,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             odLed[2].setCurrentValue(getMyDecoder().getCargo().length > 0);
             olBurnt.getAllReadings()[0][0] = getMyDecoder().getEnergyburnt();
             olSteps.setCurrentValue(getMyDecoder().getNSteps());
-            olTime.setCurrentValue(tstart.elapsedTimeSecs(new TimeHandler()));
+            olTime.setCurrentValue(tstart.elapsedTimeSecsUntil(new TimeHandler()));
             osHud.setCurrentValue(-1); // Ficticious, just to update terrain
 
             String newBag[] = getMyDecoder().getTrace();

@@ -59,7 +59,7 @@ public class AgentReport {
         pushData(inBoxes, inBox);
         pushData(outBoxes, outBox);
         pushData(lastCycles, lastCycle);
-        setLastCycle((int) Math.abs(timeStamp.elapsedTimeMilisecs(now))+getLastCycle());
+        setLastCycle((int) Math.abs(timeStamp.elapsedTimeMilisecsUntil(now))+getLastCycle());
         setTimeStamp(now);
 //        System.out.println("\n"+agentName+"-|-"+this.getLastCycle()+" "+getInBox()+"-"+getOutBox());
 

@@ -47,6 +47,7 @@ public class XUIAgent extends LARVAFirstAgent {
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         myDashBoard = new OleDashBoard(_XUI, "XUI");
+        myDashBoard.setMyXUIAgent(this);
         myDashBoard.setPreferredSize(new Dimension(1600, 800));
         _XUI.add(myDashBoard, BorderLayout.WEST);
         _XUI.validate();
@@ -78,7 +79,7 @@ public class XUIAgent extends LARVAFirstAgent {
                 break;
             case EXIT:
             default:
-                exit = true;
+                LARVAexit = true;
                 break;
         }
 
@@ -109,6 +110,7 @@ public class XUIAgent extends LARVAFirstAgent {
     }
 
     public Status myIdle() {
+//        System.out.println("TASK TS-FULL "+this.getCurrentTask("TS-FULL"));
         inbox = this.LARVAblockingReceive();
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));

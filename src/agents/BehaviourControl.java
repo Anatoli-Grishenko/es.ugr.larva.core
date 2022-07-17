@@ -83,9 +83,9 @@ public class BehaviourControl implements ReportableObject{
     public long getLatency(String behaviourname){
         TimeHandler start=new TimeHandler(_end.get(behaviourname)), end=new TimeHandler(_end.get(behaviourname)), now =new TimeHandler();
         if (start.isBeforeEq(end)) {
-            return end.elapsedTimeSecs(start);
+            return end.elapsedTimeSecsUntil(start);
         } else {
-            return now.elapsedTimeSecs(start);            
+            return now.elapsedTimeSecsUntil(start);            
         }
         
     }

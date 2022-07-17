@@ -51,11 +51,11 @@ import java.util.Scanner;
  * <li> Support for reading, writing and transmission of any file, of any type
  * and size.
  * <li> Provides a basic behaviour, which has to be acvivated nevertheless, in
- * order to start working without any background on Jade behaviours. This is a
- * repeatable behaviour (Execute()) which acts as the main body of most agents
- * and an associated boolean variable to control the exit and, therefore, the
- * death of the agent.
- * </ul>
+ order to start working without any background on Jade behaviours. This is a
+ repeatable behaviour (Execute()) which acts as the main body of most agents
+ and an associated boolean variable to control the LARVAexit and, therefore, the
+ death of the agent.
+ </ul>
  *
  */
 public class LARVABaseAgent extends Agent {
@@ -77,10 +77,10 @@ public class LARVABaseAgent extends Agent {
     protected Logger logger;
 
     /**
-     * It controls the exit of the default behaviour and the consequent death of
-     * the agent
+     * It controls the LARVAexit of the default behaviour and the consequent death of
+ the agent
      */
-    protected boolean exit;
+    protected boolean LARVAexit;
 
     /**
      * It is true only when the checkin has been succesful
@@ -120,7 +120,7 @@ public class LARVABaseAgent extends Agent {
     @Override
     public void setup() {
         super.setup();
-        exit = true;
+        LARVAexit = true;
         logger.setOwner(this.getLocalName());
         this.BehaviourDefaultSetup();
     }
@@ -474,7 +474,7 @@ public class LARVABaseAgent extends Agent {
 
             @Override
             public boolean done() {
-                return exit;
+                return LARVAexit;
             }
 
         };
@@ -502,11 +502,11 @@ public class LARVABaseAgent extends Agent {
     }
 
     public boolean isExit() {
-        return exit;
+        return LARVAexit;
     }
 
     public void setExit(boolean exit) {
-        this.exit = exit;
+        this.LARVAexit = exit;
     }
 
 }

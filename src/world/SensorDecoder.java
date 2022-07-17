@@ -107,6 +107,10 @@ public class SensorDecoder {
         }
     }
 
+    public void removeSensor(Sensors s) {
+        indexperception.put(s, null);
+    }
+
     public void encodeSensor(Sensors s, JsonArray reading) {
         indexperception.put(s, reading);
     }
@@ -173,11 +177,11 @@ public class SensorDecoder {
         return res;
     }
 
-    public String getMission() {
+    protected String getMission() {
         if (this.getSensor(Sensors.MISSION) != null) {
             return this.getSensor(Sensors.MISSION).get(0).asString();
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -186,10 +190,15 @@ public class SensorDecoder {
     }
 
     public String getTask() {
-        if (this.getSensor(Sensors.TASK) != null) {
-            return this.getSensor(Sensors.TASK).get(0).asString();
+        if (this.getSensor(Sensors.TASK) != null
+                && this.getSensor(Sensors.TASK).get(0) != null) {
+            if (this.getSensor(Sensors.TASK).get(0).isString()) {
+                return this.getSensor(Sensors.TASK).get(0).asString();
+            } else {
+                return "";
+            }
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -395,7 +404,8 @@ public class SensorDecoder {
     }
 
     public boolean getOntarget() {
-        return this.getSensor(Sensors.ONTARGET).get(0).asBoolean();
+//        return this.getSensor(Sensors.ONTARGET).get(0).asBoolean();
+        return (this.getTarget() != null && getTarget().isEqualTo(getGPS()));
     }
 
     public boolean getOnDestination() {
@@ -548,11 +558,12 @@ public class SensorDecoder {
     public int getGPSMemorySize() {
         return this.TraceGPS.size();
     }
-    
+
     public boolean containsGPSMemory(Point3D gps, int max) {
-        for (int i=1; i<max && i<this.getGPSMemorySize(); i++) {
-            if (this.getGPSMemory(i).isEqualTo(gps))
+        for (int i = 1; i < max && i < this.getGPSMemorySize(); i++) {
+            if (this.getGPSMemory(i).isEqualTo(gps)) {
                 return true;
+            }
         }
         return false;
     }
@@ -570,7 +581,11 @@ public class SensorDecoder {
     }
 
     public void setDestination(Point3D destination) {
-        encodeSensor(Sensors.DESTINATION, destination.toJson());
+        if (destination == null) {
+            encodeSensor(Sensors.TARGET, (JsonArray) null);
+        } else {
+            encodeSensor(Sensors.DESTINATION, destination.toJson());
+        }
     }
 
     // Derived sensors
@@ -1387,7 +1402,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 6);
-                encodeSensor(Sensors.RANGE, 21);
+                encodeSensor(Sensors.RANGE, 11);
                 encodeSensor(Sensors.AUTONOMY, 600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1396,6 +1411,94 @@ public class SensorDecoder {
                     capability.MOVE.name().toUpperCase(),
                     capability.LEFT.name().toUpperCase(),
                     capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "VAAT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXCARGO, 25);
+                encodeSensor(Sensors.AUTONOMY, 1600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "BB1F":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXCARGO, 0);
+                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "YV":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXCARGO, 250);
+                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "DEST":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXCARGO, 250);
+                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
                     capability.BOARD.name().toUpperCase(),
                     capability.DEBARK.name().toUpperCase(),
                     capability.RECHARGE.name().toUpperCase(),
@@ -1422,12 +1525,74 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
+            case "ITT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 30);
+                encodeSensor(Sensors.MAXCARGO, 5);
+                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 21);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "SC":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, 15);
+                encodeSensor(Sensors.MAXCARGO, 20);
+                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 31);
+                encodeSensor(Sensors.BURNRATEMOVE, 2);
+                encodeSensor(Sensors.BURNRATEREAD, 2);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
             case "STF":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 1);
                 encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 21);
+                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
+            case "TS":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
+                encodeSensor(Sensors.MAXSLOPE, 255);
+                encodeSensor(Sensors.MAXCARGO, 5);
+                encodeSensor(Sensors.AUTONOMY, 500);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
