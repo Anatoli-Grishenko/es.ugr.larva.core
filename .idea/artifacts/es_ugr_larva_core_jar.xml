@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="es.ugr.larva.core:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/es_ugr_larva_core_jar</output-path>
+    <root id="archive" name="es.ugr.larva.core.jar">
+      <element id="module-output" name="es.ugr.larva.core" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/flatlaf-1.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/javax.mail-1.6.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/com.eclipsesource.json.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/mysql-connector-java-8.0.21.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/jade.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/activation-1.1.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/commons-io-2.8.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../lib/javax.mail-api-1.6.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

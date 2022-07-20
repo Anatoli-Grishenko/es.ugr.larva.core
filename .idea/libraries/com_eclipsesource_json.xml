@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="com.eclipsesource.json">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../lib/com.eclipsesource.json.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
