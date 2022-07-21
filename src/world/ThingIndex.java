@@ -85,7 +85,7 @@ public class ThingIndex {
     public ThingIndex removeIndexTo(Thing t) {
         JsonObject jsot = t.toJson();
         if (jsot.get(getField()) != null) {
-            String toindex = jsot.get(getField()).asString();
+            String toindex = jsot.get(getField()).toString();
             if (index.get(toindex) != null && index.get(toindex).contains(t)) {
                 index.get(toindex).remove(t);
             }

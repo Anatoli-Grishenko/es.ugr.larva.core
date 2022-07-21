@@ -582,9 +582,9 @@ public class Environment extends SensorDecoder {
 
     public Point3D getCityPosition(String city) {
         if (new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))).contains(city)) {
-            ArrayList <String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
+            ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
             for (String scity : positions) {
-                if  (scity.split(" ")[0].equals(city)) {
+                if (scity.split(" ")[0].equals(city)) {
                     return new Point3D(scity.split(" ")[1]);
                 }
             }
@@ -592,5 +592,15 @@ public class Environment extends SensorDecoder {
         } else {
             return null;
         }
+    }
+
+    public String getCurrentCity() {
+        ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
+        for (String scity : positions) {
+            if (new Point3D(scity.split(" ")[1]).isEqualTo(getGPS())) {
+                return scity.split(" ")[0];
+            }
+        }
+        return "";
     }
 }

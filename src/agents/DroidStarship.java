@@ -159,7 +159,7 @@ public class DroidStarship extends LARVAFirstAgent {
     }
 
     public Status MyWait() {
-//        this.setTask("TO_RELEASE");
+//        this.nextTask("TO_RELEASE");
 // Message("My Wait to be released");
 //        this.MyReadPerceptions();
         inbox = LARVAblockingReceive(5000);
@@ -172,7 +172,7 @@ public class DroidStarship extends LARVAFirstAgent {
 
     public Status MyParking() {
         int time = 3000 + (int) (Math.random() * 3000);
-//        this.setTask("PARKING");
+//        this.nextTask("PARKING");
 //        this.MyReadPerceptions();
         LARVAblockingReceive(time);
         // Message("Released");
@@ -214,12 +214,12 @@ public class DroidStarship extends LARVAFirstAgent {
     }
 
     @Override
-    protected String activateTask() {
+    protected String activateNextTask() {
         String parameters[];
         if (this.isOverCurrentMission()) {
             return Status.CLOSEMISSION.name();
         }
-        setTask();
+        nextTask();
         parameters = taskName.split(" ");
         if (parameters[0].equals("MOVEIN")) {
             outbox = session.createReply();
@@ -279,7 +279,7 @@ public class DroidStarship extends LARVAFirstAgent {
                 Info("Moving on to the next tasl");
                 nextWhichwall = whichWall = "NONE";
                 nextdistance = distance = Choice.MAX_UTILITY;
-                return filterStatus(activateTask());
+                return filterStatus(activateNextTask());
             }
         }
         Choice a = Ag(E, A);

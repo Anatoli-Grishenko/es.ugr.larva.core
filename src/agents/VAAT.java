@@ -9,14 +9,19 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class VAAT extends DroidStarshipLevelB {
+public class VAAT extends DroidStarshipLevelA {
     
     @Override
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE VAAT"});        
-//        this.logger.onEcho();
+        this.logger.offEcho();
         onMission=false;
+        this.openRemote();
 //        this.closeRemote();
+        onMission = false;
+        allowCFP = true;
+        allowREQUEST = true;
+        allowParking=false;
     }
 }

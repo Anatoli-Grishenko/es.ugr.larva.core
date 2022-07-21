@@ -332,12 +332,12 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         olPayload.validate();
         xx += 2 * ww2;
         yy = hLabels;
-        olCommand = new OleBag(this, "COMMAND");
-        olCommand.setForeground(Color.GREEN);
-        olCommand.setBackground(Color.DARK_GRAY);
-        olCommand.setBounds(xx, yy, 3 * ww2, 24 * hh);
-        olCommand.showFrame(true);
-        olCommand.validate();
+//        olCommand = new OleBag(this, "COMMAND");
+//        olCommand.setForeground(Color.GREEN);
+//        olCommand.setBackground(Color.DARK_GRAY);
+//        olCommand.setBounds(xx, yy, 3 * ww2, 24 * hh);
+//        olCommand.showFrame(true);
+//        olCommand.validate();
 
         topLabels = new OleLabels(this, "LABELS");
         topLabels.setForeground(Color.WHITE);
@@ -358,7 +358,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         this.addSensor(olSteps);
         this.addSensor(olBurnt);
         this.addSensor(olPayload);
-        this.addSensor(olCommand);
+//olcomm        this.addSensor(olCommand);
         this.addSensor(topLabels);
         this.addSensor(orCompass1);
         this.addSensor(osAltitude);
@@ -375,7 +375,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         for (String s : this.mySensorsVisual.keySet()) {
             this.mySensorsVisual.get(s).clear();
         }
-        this.olCommand.clear();
+//        this.olCommand.clear();
         this.olPayload.clear();
     }
 
@@ -446,11 +446,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             } else {
                 cLabels = SwingTools.doDarker(Color.RED);
             }
-            if (getMyDecoder().getSessionid() != null) {
-                this.olCommand.setName(getMyDecoder().getSessionid());
-            } else {
-                this.olCommand.setName("COMMAND");
-            }
+//            if (getMyDecoder().getSessionid() != null) {
+//                this.olCommand.setName(getMyDecoder().getSessionid());
+//            } else {
+//                this.olCommand.setName("COMMAND");
+//            }
             olGPS.setCurrentValue(getMyDecoder().getGPS().toArray());
             orCompass1.setCurrentValue(getMyDecoder().getCompass());
             osGround.setCurrentValue(getMyDecoder().getGround());
@@ -484,11 +484,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             osHud.setCurrentValue(-1); // Ficticious, just to update terrain
 
             String newBag[] = getMyDecoder().getTrace();
-            if (newBag.length > olCommand.getBagSize()) {
-                for (int i = olCommand.getBagSize(); i < newBag.length; i++) {
-                    olCommand.addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + newBag[i]);
-                }
-            }
+//            if (newBag.length > olCommand.getBagSize()) {
+//                for (int i = olCommand.getBagSize(); i < newBag.length; i++) {
+//                    olCommand.addToBag(String.format("%03d ", this.mySensorsVisual.get("COMMAND").getBagSize()) + newBag[i]);
+//                }
+//            }
 
             String newCargo[] = getMyDecoder().getCargo();
             if (newCargo.length > olPayload.getBag().size()) {

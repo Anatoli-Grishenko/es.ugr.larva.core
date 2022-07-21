@@ -1603,7 +1603,7 @@ public class SensorDecoder {
                     capability.RIGHT.name().toUpperCase(),
                     capability.UP.name().toUpperCase(),
                     capability.DOWN.name().toUpperCase(),
-                    capability.BOARD.name().toUpperCase(),
+                    capability.CAPTURE.name().toUpperCase(),
                     capability.DEBARK.name().toUpperCase(),
                     capability.RECHARGE.name().toUpperCase(),
                     capability.QUERY.name().toUpperCase()

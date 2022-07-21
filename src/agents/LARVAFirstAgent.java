@@ -35,8 +35,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -75,11 +78,11 @@ import tools.emojis;
  * <li> Support for reading, writing and transmission of any file, of any type
  * and size.
  * <li> Provides a basic behaviour, which has to be acvivated nevertheless, in
- order to start working without any background on Jade behaviours. This is a
- repeatable behaviour (Execute()) which acts as the main body of most agents
- and an associated boolean variable to control the LARVAexit and, therefore, the
- death of the agent.
- </ul>
+ * order to start working without any background on Jade behaviours. This is a
+ * repeatable behaviour (Execute()) which acts as the main body of most agents
+ * and an associated boolean variable to control the LARVAexit and, therefore,
+ * the death of the agent.
+ * </ul>
  *
  */
 public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
@@ -90,8 +93,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected JScrollPane myScrPane;
     protected JTextArea myText;
 //    protected SensorDecoder Deco;
-    private ACLMessage checkin, checkout;
-    private String IdentityManager;
+    protected ACLMessage checkin, checkout;
+    protected String IdentityManager;
 
     protected int userID = -1;
     protected String userName = "";
@@ -121,7 +124,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected MissionSet Missions;
     protected int iTask, nTasks;
-    protected String myMission[], missionName, taskName, sessionAlias;
+    protected String myMission[], missionName, taskName, sessionAlias = "";
+
+    protected boolean securedMessages;
+    protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "";
+    protected int nlastSentMsg = 0, nlastSentACLMID = 0, nlastRecMsg = 0, nrecErrors = 0;
+    protected final String ACLMTAG = "ACLMID";
+    protected List<String> errortags = Stream.of("FAILURE", "REFUSE", "NOT-UNDERSTOOD", "BAD ", "ERROR").collect(Collectors.toList());
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -227,6 +236,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (showRemote) {
             openRemote();
         }
+        this.setSecuredMessages(true);
         doNotExit();
     }
 
@@ -414,6 +424,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      *
      * @param message The informative message
      */
+    @Override
     protected void Info(String message) {
         addRunStep("MILES02");
         logger.logMessage(message);
@@ -428,6 +439,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } catch (Exception ex) {
 
         }
+    }
+
+    protected void Print(String message) {
+        logger.logMessage(message);
+        System.out.println(logger.getLastlog());
     }
 
     //
@@ -563,8 +579,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (!ACLMessageTools.getMainReceiver(msg).equals(this.IdentityManager)) {
             addRunStep("MILES10");
         }
-        if (msg.getUserDefinedParameter("ACLMID") == null) {
-            msg.addUserDefinedParameter("ACLMID", Keygen.getHexaKey(20));
+        if (msg.getUserDefinedParameter(ACLMTAG) == null) {
+            msg.addUserDefinedParameter(ACLMTAG, Keygen.getHexaKey(20));
         }
 //        if (myDashboard != null && msg.getContent() != null
 //        if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
@@ -590,6 +606,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //                || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
 //            msg = ACLMessageTools.addDashMark(msg);
 //        }
+        if (this.isSecuredMessages()) {
+            this.secureSend(msg);
+        }
         this.send(msg);
         Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false) + Console.defText(Console.white));
         myReport.setOutBox(myReport.getOutBox() + 1);
@@ -630,10 +649,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             sd.addSequence(res);
             myReport.setInBox(myReport.getInBox() + 1);
         }
+        if (this.isSecuredMessages()) {
+            this.secureReceive(res);
+        }
         return res;
     }
 
-    public ACLMessage LARVAblockingReceive(long milis) {
+    protected ACLMessage LARVAblockingReceive(long milis) {
         ACLMessage res;
         boolean repeat = false;
         addRunStep("MILES13");
@@ -659,6 +681,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
             sd.addSequence(res);
             myReport.setInBox(myReport.getInBox() + 1);
+        }
+        if (this.isSecuredMessages()) {
+            this.secureReceive(res);
         }
         return res;
     }
@@ -690,6 +715,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             sd.addSequence(res);
             myReport.setInBox(myReport.getInBox() + 1);
         }
+        if (this.isSecuredMessages()) {
+            this.secureReceive(res);
+        }
         return res;
     }
 
@@ -719,6 +747,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
             sd.addSequence(res);
             myReport.setInBox(myReport.getInBox() + 1);
+        }
+        if (this.isSecuredMessages()) {
+            this.secureReceive(res);
         }
         return res;
     }
@@ -1009,7 +1040,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             } catch (Exception ex) {
             }
         }
-        this.sessionAlias = trimFullString(userName);
+        if (sessionAlias.length() == 0) {
+            this.sessionAlias = trimFullString(userName);
+        }
     }
 
     protected void setupEnvironment() {
@@ -1158,7 +1191,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     /////////////////// MISSIONS ////////////////77
     protected void clearCourseSelection() {
         missionName = null;
-        setTask(null);
+        setTaskName(null);
         E.setTarget(null);
         E.setDestination(null);
 
@@ -1219,15 +1252,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return "";
     }
 
-    protected boolean setTask() {
+    protected boolean nextTask() {
         if (missionName != null && Missions.containsKey(missionName) && iTask < nTasks) {
-            return setTask(Missions.get(missionName).get(iTask++));
+            return setTaskName(Missions.get(missionName).get(iTask++));
         } else {
             return false;
         }
     }
 
-    protected boolean setTask(String task) {
+    protected boolean setTaskName(String task) {
         if (missionName != null) { // && (Missions.get(missionName).contains(task) || task.equals("PARKING"))) {
             taskName = task;
             for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
@@ -1255,7 +1288,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 if (mission != null) {
                     nTasks = getMissionLength(missionName);
                     this.DFAddMyServices(new String[]{"MISSION " + missionName});
-                    return activateTask();
+                    return activateNextTask();
                 } else {
                     nTasks = 0;
                 }
@@ -1310,11 +1343,93 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
-    protected String activateTask() {
+    protected String activateNextTask() {
         Error("Method activateTask has not been defined yet.");
         System.exit(1);
         return "";
     }
 
-    
+    public boolean isSecuredMessages() {
+        return securedMessages;
+    }
+
+    public void setSecuredMessages(boolean securedMessages) {
+        this.securedMessages = securedMessages;
+    }
+
+    public void secureExit(String why) {
+        this.Alert("Secure messaging has stopped agent " + getLocalName() + " due to " + why);
+        this.doExit();
+    }
+
+    public void secureReceive(ACLMessage msg) {
+//        if (dupReceive(msg)) {
+//            secureExit("Too many messages received");
+//        }
+        if (msg == null) {
+            return;
+        }
+        if (this.isErrorMessage(msg)) {
+            this.nrecErrors++;
+        } else {
+            nrecErrors = 0;
+        }
+        if (nrecErrors > 5) {
+            this.secureExit("Too many consecutive errors");
+        }
+    }
+
+    public void secureSend(ACLMessage msg) {
+        if (dupSend(msg)) {
+            secureExit("Too many messages sent");
+        }
+    }
+
+    public boolean dupSend(ACLMessage msg) {
+//        if (msg.getContent().equals(this.lastSentMsg)) {
+//            nlastSentMsg++;
+//            if (nlastSentMsg > 10) {
+//                return true;
+//            }
+//        } else {
+//            nlastSentMsg = 0;
+//            lastSentMsg = msg.getContent();
+//        }
+        if (msg.getUserDefinedParameter(ACLMTAG).equals(this.lastSentACLMID)) {
+            nlastSentACLMID++;
+            if (nlastSentACLMID > 1) {
+                return true;
+            }
+        } else {
+            lastSentACLMID = msg.getUserDefinedParameter(ACLMTAG);
+            nlastSentACLMID = 0;
+        }
+        return false;
+    }
+
+    public boolean dupReceive(ACLMessage msg) {
+        if (msg.getContent().equals(this.lastRecMsg)) {
+            nlastRecMsg++;
+            if (nlastRecMsg > 10) {
+                return true;
+            }
+        } else {
+            nlastRecMsg = 0;
+            lastRecMsg = msg.getContent();
+        }
+        return false;
+    }
+
+    public boolean isErrorMessage(ACLMessage msg) {
+        if (this.errortags.contains(ACLMessage.getPerformative(msg.getPerformative()))) {
+            return true;
+        }
+        String c = msg.getContent().toUpperCase();
+        for (String s : errortags) {
+            if (c.startsWith(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -888,11 +888,13 @@ public class World {
         agent.readPerceptions();
     }
 
-    public boolean execAgent(liveBot agent, String action) {
+    public boolean execAgent(liveBot agent, String command) {
         boolean res;
         if (agent == null) {
             return false;
         }
+        String parts[] = command.split(" ");
+        String action = parts[0];
         if (agent.getCapabilities().indexOf(action) >= 0 && agent.Raw().getAlive()) {
             agent.Raw().setStatus("");
             glossary.capability enumaction = glossary.capability.valueOf(action);
@@ -926,23 +928,16 @@ public class World {
 //                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
                     res = true;
                     break;
-//                case CAPTURE:
-//                    double x = agent.getPosition().getX(),
-//                     y = agent.getPosition().getY(),
-//                     z = agent.getPosition().getZ(),
-//                     terrainz = getEnvironment().getSurface().getStepLevel(x, y);
-//                    if (z - terrainz <= 5) {
-//                        agent.moveDown((int) (z - terrainz));
-//                                            agent.burnEnergylevel((int) getBurnRate(agent.getRole())); //* (int) (z - terrainz);
-//                        agent.addEnergyBurnt ((int) getBurnRate(agent.getRole()));
-//                        agent.addNumSteps(1);
-//                        res = true;
-//                        break;
-//                    } else {
-//                        agent.Raw().setStatus("Too high to perform touchdown";
-//                        res = true;
-//                        break;
-//                    }
+                case CAPTURE:
+                    String who = command.replace("CAPTURE ", "");
+                    Point3D gps=agent.getPosition(), guy=this.getThingByName(who).getPosition();
+                    if (gps.planeDistanceTo(guy)<15) {
+                        agent.Raw().addCargo(who);
+                        res=true;
+                    } else {
+                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person "+who+" does not seem to be aorund");
+                        res=false;
+                    }
                 case UP:
                     int nups;
                     nups = 5;
@@ -965,7 +960,6 @@ public class World {
                         break;
                     }
                 case RESCUE:
-                case CAPTURE:
 //                    String whatname = isGoal(agent);
 //                    if (!whatname.equals((""))) {
 //                        Thing what = getThing(whatname);

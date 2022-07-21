@@ -9,14 +9,19 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class YV extends DroidStarshipLevelB {
+public class YV extends DroidStarshipLevelA {
     
     @Override
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE YV"});        
-//        this.logger.offEcho();
+        this.logger.offEcho();
         onMission=false;
+        this.openRemote();
 //        this.closeRemote();
+        onMission = false;
+        allowCFP = true;
+        allowREQUEST = true;
+        allowParking=false;
     }
 }

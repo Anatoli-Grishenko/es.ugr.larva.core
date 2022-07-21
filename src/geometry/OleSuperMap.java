@@ -367,16 +367,17 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                             .setFontSize(10).validate();
                     tf.draw();
                 }
-                if (!t.isHasAirport() && !t.isHasPort()) {
-                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
-                } else {
-                    if (t.isHasAirport()) {
-                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 3, 5));
-                    }
-                    if (t.isHasPort()) {
-                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 10, 5));
-                    }
-                }
+                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
+//                if (!t.isHasAirport() && !t.isHasPort()) {
+//                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
+//                } else {
+//                    if (t.isHasAirport()) {
+//                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 3, 5));
+//                    }
+//                    if (t.isHasPort()) {
+//                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 10, 5));
+//                    }
+//                }
 
             }
         }

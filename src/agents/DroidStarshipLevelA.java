@@ -9,6 +9,7 @@ import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
 import ai.MissionSet;
+import static crypto.Keygen.getHexaKey;
 import data.OlePassport;
 import geometry.Point3D;
 import jade.core.AID;
@@ -27,7 +28,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     protected enum Status {
         START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION, OPENMISSION, SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING
     }
-    final int PARKINGTIME = 5, WAITIME = 2;
+    final int PARKINGTIME = 5, WAITIME = 1;
 
     protected Status myStatus;
     protected String service = "PMANAGER", problem = "",
@@ -37,17 +38,21 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     protected String[] contentTokens, cities;
     protected String action = "", preplan = "", baseCity, currentCity, nextCity, myMission;
     protected Point3D gpsBase;
-    protected int indexplan = 0, myEnergy = 0, counterSessionManager=0;
+    protected int indexplan = 0, myEnergy = 0, counterSessionManager = 0;
     protected boolean showPerceptions, onMission, changeMission;
 
-    String whichWall, nextWhichwall;
-    double distance, nextdistance;
+    protected String whichWall, nextWhichwall;
+    protected double distance, nextdistance;
     protected ACLMessage msgMission;
+
+    protected boolean allowREQUEST, allowCFP, allowParking;
+    protected boolean inNegotiation;
+    protected String rw = "";
+    protected Status reaction;
 
     @Override
     public void setup() {
         super.setup();
-        logger.onTabular();
         logger.offEcho();
         this.setFrameDelay(0);
         showPerceptions = false;
@@ -69,14 +74,20 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         problemManager = this.DFGetAllProvidersOf("PManager").get(0);
         Info("Found problem manager " + problemManager);
         myStatus = Status.START;
-        onMission = false;
         myText = null;
-//        openRemote();
     }
 
     @Override
     public void Execute() {
-        Info("Status: " + myStatus.name());
+        if (reaction != null) {
+            myStatus = reaction;
+            reaction = null;
+            Info("Reacting to " + this.getCurrentTask());
+            Info("Status: " + myStatus.name() + "(" + taskName + ")");
+        } else {
+            Info("Status: " + myStatus.name());
+
+        }
         switch (myStatus) {
             case START:
                 myStatus = Status.CHECKIN;
@@ -123,16 +134,39 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     }
 
     public Status MyWait() {
-        return filterStatus(Status.EXIT.name());
+        return Status.EXIT;
     }
 
     public Status MyCheckin() {
-        Info("Loading passport and checking-in to LARVA");
-        OlePassport op = new OlePassport();
-        op.setPassport("TlBDIEFnZW50cw== ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pVHpJNWRXNWlOblZxVTNCbVp6TlVSaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEEyTFRJeUlERTFPalE1T2pNMU9qVXlNeUlzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJaMlZ1ZEhNaWZRPT0=");
-        if (!doLARVACheckin()) {
-            Alert("Unable to checkin");
+        boolean cin;
+        String fakepassport = "TlBDIEFnZW50cw== ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pVHpJNWRXNWlOblZxVTNCbVp6TlVSaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEEyTFRJeUlERTFPalE1T2pNMU9qVXlNeUlzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJaMlZ1ZEhNaWZRPT0=",
+                realpassport = mypassport;
+        if (this.doLARVACheckin()) {
+            doLARVACheckout();
+        }
+        Info("Checking-in to LARVA");
+        ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
+        AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
+        outbox.setSender(getAID());
+        outbox.addReceiver(IM);
+        outbox.setContent(fakepassport);
+        this.LARVAsend(outbox);
+        checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
+        if (checkin == null) {
+            Alert("Agent " + IdentityManager + " does not answer. Not checked in");
             return Status.EXIT;
+        } else {
+            checkout = checkin.createReply();
+            if (checkin.getPerformative() == ACLMessage.CONFIRM) {
+                checkedin = true;
+                Info(checkin.getContent());
+            } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
+                Alert("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
+                return Status.EXIT;
+            } else {
+                Alert("Could not checkin at LARVA.\nDetails: " + checkin.getContent());
+                return Status.EXIT;
+            }
         }
         return Status.JOINSESSION;
     }
@@ -144,86 +178,52 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
 
     public Status MyChooseMission() {
         myMission = chooseMission();
-        return filterStatus(Status.OPENMISSION.name());
+        Info("Selected mission: " + myMission);
+        return Status.OPENMISSION;
     }
 
     public Status MyOpenMission() {
         nextWhichwall = whichWall = "NONE";
         nextdistance = distance = Choice.MAX_UTILITY;
+        Info("Activating mission " + myMission);
         return filterStatus(activateMission(myMission));
     }
 
     public Status MyCloseMission() {
-        return filterStatus(Status.CHOOSEMISSION.name());
+        return Status.CHOOSEMISSION;
     }
 
     public Status MyParking() {
+        if (!allowParking) {
+            return Status.CHOOSEMISSION;
+        }
         int time = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
-        boolean CFP, exit = false;
+        boolean exit = false;
         TimeHandler tini, tend;
         long remaining;
         tini = new TimeHandler();
         tend = new TimeHandler();
-        CFP = false;
         while (!exit) {
-            this.setTask("PARKING " + (time - tini.elapsedTimeSecsUntil(tend)));
+            this.setTaskName("PARKING " + (time - tini.elapsedTimeSecsUntil(tend)));
             this.MyReadPerceptions();
-            inbox = LARVAblockingReceive(500);
-            if (inbox != null) {
-                contentTokens = inbox.getContent().split(" ");
-                if (isOnMission()) {
-                    if (contentTokens[0].toUpperCase().equals("CANCEL")) {
-                        this.offMission();
-                        continue;
-                    } 
-                } else {
-                    if (!CFP && contentTokens[0].toUpperCase().equals("CFP")) {
-                        if (contentTokens[1].equals("BYDISTANCE")) {
-                            String city = contentTokens[2];
-                            Point3D citypos = E.getCityPosition(city), mypos = E.getGPS();
-                            outbox = inbox.createReply();
-                            outbox.setContent("Propose " + citypos.planeDistanceTo(mypos));
-                            this.LARVAsend(outbox);
-                            CFP = true;
-                            continue;
-                        } else if (contentTokens[1].equals("BYCARGO")) {
-                            outbox = inbox.createReply();
-                            outbox.setContent("Propose " + E.getMaxcargo());
-                            this.LARVAsend(outbox);
-                            CFP = true;
-                            continue;
-                        }
-                    } else if (CFP && contentTokens[0].toUpperCase().equals("ACCEPT")) {
-                        if (contentTokens[1].toUpperCase().equals("MOVEIN")) {
-                            onMission(inbox, "MOVEIN " + contentTokens[2]);
-                            outbox = msgMission.createReply();
-                            outbox.setContent("Agree");
-                            this.LARVAsend(outbox);
-                            return filterStatus(Status.OPENMISSION.name());
-                        }
-                    } else if (CFP && contentTokens[0].toUpperCase().equals("REJECT")) {
-                        CFP = false;
-                        continue;
-                    }
-                }
-                outbox = inbox.createReply();
-                outbox.setContent("Refuse");
-                this.LARVAsend(outbox);
+            inbox = this.LARVAblockingReceive(500);
+            if (this.isOnMission()) {
+                Info("Skip to mission mission " + this.getCurrentTask());
+                return Status.OPENMISSION;
             }
             tend = new TimeHandler();
-            exit = tini.elapsedTimeSecsUntil(tend) >= time && !CFP;
+            exit = tini.elapsedTimeSecsUntil(tend) >= time;
         }
-        // Message("Released");
-        return filterStatus(Status.CHOOSEMISSION.name());
+        return Status.CHOOSEMISSION;
     }
 
     protected boolean MyExecuteAction(String action) {
         Info("Executing action " + action);
         outbox = session.createReply();
         outbox.setContent("Request execute " + action + " session " + sessionKey);
-        toSessionManager(outbox);
+        LARVAsend(outbox);
         this.myEnergy++;
-        session = this.fromSessionManager();
+        session = LARVAblockingReceive();
         if (session.getContent().toUpperCase().startsWith("INFORM")) {
             return true;
         } else {
@@ -236,7 +236,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         Info("Reading perceptions");
         outbox = session.createReply();
         outbox.setContent("Query sensors session " + sessionKey);
-        toSessionManager(outbox);
+        LARVAsend(outbox);
         this.myEnergy++;
         session = this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
 //        session = this.fromSessionManager(); //this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
@@ -256,18 +256,25 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     }
 
     @Override
-    protected String activateTask() {
+    protected String activateNextTask() {
         String parameters[];
         if (this.isOverCurrentMission()) {
             return Status.CLOSEMISSION.name();
         }
-        setTask();
+        nextTask();
+        if (isOnMission()) {
+            taskName = getCurrentTask() + " (" + msgMission.getSender().getLocalName() + ")";
+            setTaskName(taskName);
+        }
         parameters = taskName.split(" ");
         if (parameters[0].equals("MOVEIN")) {
+            if (parameters[1].equals(getEnvironment().getCurrentCity())) {
+                return Status.SOLVEMISSION.name();
+            }
             outbox = session.createReply();
             outbox.setContent("Request course into " + parameters[1] + " Session " + sessionKey);
-            toSessionManager(outbox);
-            session = this.fromSessionManager();
+            LARVAsend(outbox);
+            session = LARVAblockingReceive();
             if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
                 E.setExternalPerceptions(session.getContent());
                 Info("Successfully found a route in " + taskName);
@@ -280,8 +287,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             outbox = session.createReply();
             outbox.setContent("Request course into " + Integer.parseInt(parameters[1]) + " "
                     + Integer.parseInt(parameters[2]) + " Session " + sessionKey);
-            this.toSessionManager(outbox);
-            session = this.fromSessionManager();
+            LARVAsend(outbox);
+            session = LARVAblockingReceive();
             if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
                 E.setExternalPerceptions(session.getContent());
                 Info("Successfully found a rote to " + taskName);
@@ -290,6 +297,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 Info("Failed to find a rote to " + taskName);
                 return Status.CHOOSEMISSION.name();
             }
+        } else if (parameters[0].equals("EXIT")) {
+            return Status.CHECKOUT.name();
         } else {
             return Status.CHOOSEMISSION.name();
         }
@@ -307,28 +316,28 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                     outbox.setContent("INFORM OK");
                     this.LARVAsend(outbox);
                 }
-                return filterStatus(Status.PARKING.name());
+                return Status.PARKING;
             }
         }
         Choice a = Ag(E, A);
 //        System.out.println("Alternatives " + A.toString());
         if (a == null) {
             Alert("Found no action to execute");
-            return filterStatus(Status.CHECKOUT.name());
+            return Status.CHECKOUT;
         } else {// Execute
 //            Info("Excuting " + a);
 //            System.out.println("Excuting " + a);
             if (!Ve(E)) {
                 this.Error("The agent is not alive: " + E.getStatus());
-                return filterStatus(Status.CHECKOUT.name());
+                return Status.CHECKOUT;
             }
             if (!this.MyExecuteAction(a.getName())) {
-                return filterStatus(Status.EXIT.name());
+                return Status.EXIT;
             }
             if (!this.MyReadPerceptions()) {
-                return filterStatus(Status.EXIT.name());
+                return Status.EXIT;
             }
-            return filterStatus(Status.SOLVEMISSION.name());
+            return Status.SOLVEMISSION;
         }
     }
 
@@ -345,6 +354,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         Missions.clear();
         Missions.addMission(mission);
         Missions.addTask(mission, mission);
+        Info("New mission " + mission);
     }
 
     protected void defMission(String mission, String tasks[]) {
@@ -353,6 +363,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         for (String task : tasks) {
             Missions.addTask(mission, task);
         }
+        Info("New mission " + mission);
     }
 
     public Status MyJoinSession() {
@@ -378,7 +389,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         }
         this.DFAddMyServices(new String[]{"DROIDSHIP", sessionKey});
         if (!this.doQueryCities()) {
-            return filterStatus(Status.EXIT.name());
+            return Status.EXIT;
         }
         cities = E.getCityList();
         if (cities.length == 0) {
@@ -390,14 +401,14 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         Info("Joining session with base in  " + baseCity);
         outbox = session.createReply();
         outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
-        this.toSessionManager(outbox);
-        session = this.fromSessionManager();
+        LARVAsend(outbox);
+        session = LARVAblockingReceive();
         if (!session.getContent().toUpperCase().startsWith("CONFIRM")) {
             Error("Could not join session " + sessionKey + " due to " + session.getContent());
             return Status.CHECKOUT;
         }
         if (!this.MyReadPerceptions()) {
-            return filterStatus(Status.EXIT.name());
+            return Status.EXIT;
         }
         gpsBase = E.getGPS();
         return Status.CHOOSEMISSION;
@@ -409,29 +420,14 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         outbox.setSender(this.getAID());;
         outbox.addReceiver(new AID(sessionManager, AID.ISLOCALNAME));
         outbox.setContent("Query CITIES session " + sessionKey);
-        this.toSessionManager(outbox);
-        session = fromSessionManager();
+        LARVAsend(outbox);
+        session = LARVAblockingReceive();
         if (session.getContent().toUpperCase().startsWith("FAILURE")) {
             return false;
         } else {
             E.setExternalPerceptions(session.getContent());
             return true;
         }
-    }
-
-    protected void toSessionManager(ACLMessage msg) {
-        if (missionName == null || missionName.length() == 0) {
-            msg.setReplyWith("NOMISSION");
-        } else {
-            msg.setReplyWith(missionName);
-        }
-        counterSessionManager++;
-        this.LARVAsend(msg);
-    }
-
-    protected ACLMessage fromSessionManager() {
-        counterSessionManager--;
-        return this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
     }
 
     public Status filterStatus(String s) {
@@ -456,8 +452,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         onMission = true;
         changeMission = true;
         msgMission = msg;
+        defMission(mission);
         myMission = mission;
-        defMission(myMission);
     }
 
     public void offMission() {
@@ -536,4 +532,115 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         }
     }
 
+    protected boolean isUnexpected(ACLMessage msg) {
+        return !msg.getSender().getLocalName().equals(sessionManager);
+    }
+
+    @Override
+    protected void LARVAsend(ACLMessage msg) {
+        rw = getHexaKey(16);
+        msg.setReplyWith(rw);
+        super.LARVAsend(msg);
+    }
+
+    @Override
+    protected ACLMessage LARVAblockingReceive() {
+        ACLMessage res;
+        while (true) {
+            res = super.LARVAblockingReceive();
+            if (isUnexpected(res)) {
+                this.processUnexpectedMessage(res);
+            } else {
+                return res;
+            }
+        }
+    }
+
+    @Override
+    protected ACLMessage LARVAblockingReceive(long milis) {
+        ACLMessage res;
+        TimeHandler tini = new TimeHandler(), tend = tini;
+        while (tini.elapsedTimeMilisecsUntil(tend) < milis) {
+            res = super.LARVAblockingReceive(milis);
+            if (res != null) {
+                if (isUnexpected(res)) {
+                    this.processUnexpectedMessage(res);
+                } else {
+                    return res;
+                }
+            }
+            tend = new TimeHandler();
+        }
+        return null;
+    }
+
+    protected void processUnexpectedMessage(ACLMessage msg) {
+        logger.onEcho();
+        String tokens[] = msg.getContent().split(",")[0].split(" ");
+        Info("Unexpected " + msg.getContent());
+        if (isOnMission()) {
+            if (tokens[0].toUpperCase().equals("CANCEL")) {
+                Info("Received CANCEL");
+                this.offMission();
+                logger.offEcho();
+                return;
+            }
+        } else {
+            if (!inNegotiation && allowCFP && tokens[0].toUpperCase().equals("CFP")) { // inNegotiation BYDISTANCE MOVEIN A,MOVEIN C,CAPTURE 5 JEDI,MOVEIN D, TRANSFERTO 5 JEDI TS_FULL
+                Info("Received CFP " + msg.getContent());
+                if (tokens[1].equals("BYDISTANCE")) {
+                    String city = tokens[3];
+                    Point3D citypos = E.getCityPosition(city), mypos = E.getGPS();
+                    outbox = msg.createReply();
+                    outbox.setContent("Propose " + citypos.planeDistanceTo(mypos));
+                    Info("City: " + city + "->" + citypos.planeDistanceTo(mypos));
+                    this.LARVAsend(outbox);
+                    inNegotiation = true;
+                    return;
+                } else if (tokens[1].toUpperCase().equals("BYCARGO")) {
+                    outbox = msg.createReply();
+                    outbox.setContent("Propose " + E.getMaxcargo());
+                    this.LARVAsend(outbox);
+                    inNegotiation = true;
+                    return;
+                }
+            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().toUpperCase().equals("ACCEPT")) {
+                Info("Received ACCEPT " + msg.getContent());
+                if (tokens[1].toUpperCase().equals("MOVEIN")) {
+                    outbox = msg.createReply();
+                    outbox.setContent("Agree");
+                    this.LARVAsend(outbox);
+                    Message("Contrated by " + msg.getContent());
+                    inNegotiation = false;
+                    onMission(msg, tokens[2] + " " + tokens[3]);
+                    Info("new task " + this.getCurrentTask());
+                    reaction = Status.OPENMISSION;
+                    return;
+                }
+            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().equals("REJECT")) {
+                Info("Received REJECT");
+                inNegotiation = false;
+                return;
+            } else if (!inNegotiation && allowREQUEST && tokens[0].toUpperCase().equals("REQUEST")) {
+                Info("Received REQUEST " + msg.getContent());
+                if (tokens[2].toUpperCase().equals("MOVEIN")) {
+                    outbox = msg.createReply();
+                    outbox.setContent("Agree");
+                    this.LARVAsend(outbox);
+                    Message("Agree to " + msg.getContent());
+                    inNegotiation = false;
+                    String newMission = tokens[2] + " " + tokens[3];
+                    onMission(msg, newMission);
+                    Info("On mission " + newMission);
+                    reaction = Status.OPENMISSION;
+                    return;
+                }
+            }
+        }
+        Message("Refuse to " + msg.getContent());
+        Info("Refuse " + msg.getContent());
+        outbox = msg.createReply();
+        outbox.setContent("Refuse");
+        this.LARVAsend(outbox);
+    }
 }
