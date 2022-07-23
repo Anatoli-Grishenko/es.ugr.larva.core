@@ -9,9 +9,11 @@ import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
 import ai.MissionSet;
+import ai.Plan;
 import static crypto.Keygen.getHexaKey;
 import data.OlePassport;
 import geometry.Point3D;
+import geometry.SimpleVector3D;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -49,6 +51,34 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     protected boolean inNegotiation;
     protected String rw = "";
     protected Status reaction;
+
+    protected Plan behaviour = null;
+    protected Environment Ei, Ef;
+    protected Choice a;
+
+    protected Plan AgPlan(Environment E, DecisionSet A) {
+        Plan result;
+        Ei = E.clone();
+        Plan p = new Plan();
+        for (int i = 0; i < Ei.getRange() / 2 - 2; i++) {
+            Ei.cache();
+            if (!Ve(Ei)) {
+                return null;
+            } else if (G(Ei)) {
+                return p;
+            } else {
+                a = super.Ag(Ei, A);
+                if (a != null) {
+                    p.add(a);
+                    Ef = S(Ei, a);
+                    Ei = Ef;
+                } else {
+                    return null;
+                }
+            }
+        }
+        return p;
+    }
 
     @Override
     public void setup() {
@@ -339,6 +369,26 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             }
             return Status.SOLVEMISSION;
         }
+
+//        behaviour = AgPlan(E, A);
+//        if (behaviour == null || behaviour.isEmpty()) {
+//            Alert("Found no plan to execute");
+//            return Status.CHECKOUT;
+//        } else {// Execute
+//            Info("Found plan: " + behaviour.toString());
+//            while (!behaviour.isEmpty()) {
+//                a = behaviour.get(0);
+//                behaviour.remove(0);
+//                Info("Excuting " + a);
+//                this.MyExecuteAction(a.getName());
+//                if (!Ve(E)) {
+//                    this.Error("The agent is not alive: " + E.getStatus());
+//                    return Status.CHECKOUT;
+//                }
+//            }
+//            this.MyReadPerceptions();
+//            return Status.SOLVEMISSION;
+//        }
     }
 
     protected String chooseMission() {
@@ -350,21 +400,6 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         return missionName;
     }
 
-    protected void defMission(String mission) {
-        Missions.clear();
-        Missions.addMission(mission);
-        Missions.addTask(mission, mission);
-        Info("New mission " + mission);
-    }
-
-    protected void defMission(String mission, String tasks[]) {
-        Missions.clear();
-        Missions.addMission(mission);
-        for (String task : tasks) {
-            Missions.addTask(mission, task);
-        }
-        Info("New mission " + mission);
-    }
 
     public Status MyJoinSession() {
         sessionKey = "";
@@ -578,6 +613,14 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         logger.onEcho();
         String tokens[] = msg.getContent().split(",")[0].split(" ");
         Info("Unexpected " + msg.getContent());
+        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
+            outbox = msg.createReply();
+            String answer = "";
+            answer += "NAME " + getLocalName() + "TYPE, " + E.getType() + ",CITY " + getEnvironment().getCurrentCity();
+            answer += "GPS" + E.getGPS().toString() + ",COURSE "+SimpleVector3D.Dir[E.getGPSVector().getsOrient()]+", PAYLOAD " + E.getPayload();
+            LARVAsend(outbox);
+            return;
+        }
         if (isOnMission()) {
             if (tokens[0].toUpperCase().equals("CANCEL")) {
                 Info("Received CANCEL");

@@ -6,6 +6,7 @@
 package agents;
 
 import geometry.Point3D;
+import geometry.SimpleVector3D;
 import jade.lang.acl.ACLMessage;
 import tools.TimeHandler;
 
@@ -35,6 +36,13 @@ public class DEST extends DroidStarshipLevelA {
 
         while (true) {
             inbox = this.LARVAblockingReceive(1000);
+            if (inbox != null) {
+                if (inbox.getContent().toUpperCase().startsWith("REORTING")){
+                    Message("Received report "+inbox.getContent());
+                    this.defMission("THEEND", new String[]{"MOVETO 0 0", "EXIT"});
+                    this.activateMission("THEEND");
+                }
+            }
             if (this.isOnMission()) {
                 return Status.OPENMISSION;
             }
@@ -76,7 +84,7 @@ public class DEST extends DroidStarshipLevelA {
         currentCity = baseCity;
         Info("Joining session with base in  " + baseCity);
         outbox = session.createReply();
-        outbox.setContent("Request join session " + sessionKey + " at 1 1");
+        outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
         LARVAsend(outbox);
         session = LARVAblockingReceive();
         if (!session.getContent().toUpperCase().startsWith("CONFIRM")) {
@@ -87,16 +95,24 @@ public class DEST extends DroidStarshipLevelA {
             return Status.EXIT;
         }
         gpsBase = E.getGPS();
-        this.defMission("FINAL", new String[]{"MOVEIN " + baseCity, "EXIT"});
-        myMission = this.activateMission("FINAL");
-        return Status.CHOOSEMISSION;
+//        this.defMission("FINAL", new String[]{"MOVEIN " + baseCity, "EXIT"});
+//        myMission = this.activateMission("FINAL");
+//        return Status.CHOOSEMISSION;
+        return Status.PARKING;
     }
 
     @Override
     protected void processUnexpectedMessage(ACLMessage msg) {
+        String sep=";";
         logger.onEcho();
         String tokens[] = msg.getContent().split(",")[0].split(" ");
         Info("Unexpected " + msg.getContent());
+        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
+            outbox = msg.createReply();
+            outbox.setContent(Transponder());
+            LARVAsend(outbox);
+            return;
+        }
         if (isOnMission()) {
         } else {
             if (tokens[0].toUpperCase().equals("REPORT")) {

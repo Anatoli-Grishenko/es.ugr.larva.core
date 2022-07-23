@@ -948,7 +948,7 @@ public class World {
                     break;
                 case RECHARGE:
                     if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
-                            agent.getPosition().getY())) {
+                            agent.getPosition().getY()) && agent.getPosition().getZ()>5) {
 
                         agent.Raw().setEnergy(agent.Raw().getAutonomy());
                         res = true;

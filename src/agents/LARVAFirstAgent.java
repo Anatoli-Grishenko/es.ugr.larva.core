@@ -21,6 +21,7 @@ import data.OleSet;
 import data.Transform;
 import disk.Logger;
 import static disk.Logger.trimFullString;
+import geometry.SimpleVector3D;
 import glossary.Signals;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
@@ -1196,6 +1197,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         E.setDestination(null);
 
     }
+    protected void defMission(String mission) {
+        Missions.clear();
+        Missions.addMission(mission);
+        Missions.addTask(mission, mission);
+        Info("New mission " + mission);
+    }
+
+    protected void defMission(String mission, String tasks[]) {
+        Missions.clear();
+        Missions.addMission(mission);
+        for (String task : tasks) {
+            Missions.addTask(mission, task);
+        }
+        Info("New mission " + mission);
+    }
 
     protected void decodeMissions(String things) {
         clearCourseSelection();
@@ -1260,6 +1276,16 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+//    protected boolean setCityName() {
+//        for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
+//            if (service.startsWith("GROUNDED")) {
+//                this.DFRemoveMyServices(new String[]{service});
+//            }
+//        }
+//        this.DFAddMyServices(new String[]{"GROUNDED " + E.getCurrentCity()});
+//        return true;
+//    }
+//
     protected boolean setTaskName(String task) {
         if (missionName != null) { // && (Missions.get(missionName).contains(task) || task.equals("PARKING"))) {
             taskName = task;
@@ -1336,7 +1362,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 case "MOVETO":
                     return E.getGPS().isEqualTo(E.getTarget());
                 default:
-                    return false;
+                    return true;
             }
         } else {
             return true;
@@ -1347,6 +1373,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         Error("Method activateTask has not been defined yet.");
         System.exit(1);
         return "";
+    }
+
+    protected String Transponder() {
+        String sep=";",answer = "TRANSPONDER" + sep;
+        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
+        if (E.getGround() > 0) {
+            answer += sep + "ONAIR";
+        } else {
+            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
+        }
+        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
+        return answer;
     }
 
     public boolean isSecuredMessages() {

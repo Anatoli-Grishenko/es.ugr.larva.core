@@ -9,4 +9,8 @@ package glossary;
  *
  * @author lcv
  */
-public enum Goals { MOVETO, BOARD, DEBARK, TRANSFERTO, TRANSFERFROM};
+public enum Goals { 
+    MOVEIN, MOVETO, CAPTURE, 
+    RECRUIT, TRANSFERTO, DEBARK, 
+    LIST, REPORT, INFORM
+};

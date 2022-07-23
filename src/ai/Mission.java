@@ -22,7 +22,7 @@ public class Mission extends ArrayList<String>{
     public Mission(JsonArray jsa) {
         setName(jsa.get(0).asString());
         for (int i=1; i<jsa.size(); i++) {
-            this.addTask(jsa.get(i).asString());
+            this.addGoal(jsa.get(i).asString());
         }
     }
     
@@ -42,7 +42,7 @@ public class Mission extends ArrayList<String>{
         }
         return res;
     }
-    public Mission addTask(String task) {
+    public Mission addGoal(String task) {
         this.add(task);
         return this;
     }

@@ -160,8 +160,6 @@ public class Environment extends SensorDecoder {
         String action = a.getName();
         Environment result = this.clone();
         boolean movement = false;
-//                dincrx = (int) Compass.SHIFT[this.getCompass() / 45].moduloX();
-//                dincry = (int) Compass.SHIFT[this.getCompass() / 45].moduloY();
 
         int incrx = 0, incry = 0, incrz = 0;
         result.cache();

@@ -5,10 +5,10 @@
  */
 package glossary;
 
-/**
- *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
- */
-public enum Mission {
-    MOVEIN, MOVETO, CAPTURE, RECRUIT, TRANSFERTO, DEBARK
-}
+///**
+// *
+// * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+// */
+//public enum Mission {
+//    MOVEIN, MOVETO, CAPTURE, RECRUIT, TRANSFERTO, DEBARK, LIST, REPORT, INFORM
+//}

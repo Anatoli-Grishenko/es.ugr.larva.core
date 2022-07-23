@@ -1425,7 +1425,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.AUTONOMY, 1600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
-                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
@@ -1447,7 +1447,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.AUTONOMY, 3600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
-                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
@@ -1469,7 +1469,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.AUTONOMY, 3600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
-                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),
@@ -1491,7 +1491,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.AUTONOMY, 3600);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
-                encodeSensor(Sensors.BURNRATEMOVE, 1);
+                encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
                     capability.MOVE.name().toUpperCase(),

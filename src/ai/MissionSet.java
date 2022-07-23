@@ -62,7 +62,7 @@ public class MissionSet extends HashMap<String, Mission> {
     }
     public MissionSet addTask(String mission, String task) {
         if (this.get(mission) != null) {
-            this.get(mission).addTask(task);
+            this.get(mission).addGoal(task);
         }
         return this;
     }

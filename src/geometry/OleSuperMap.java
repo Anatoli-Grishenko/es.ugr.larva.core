@@ -367,7 +367,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                             .setFontSize(10).validate();
                     tf.draw();
                 }
-                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
+                g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
 //                if (!t.isHasAirport() && !t.isHasPort()) {
 //                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
 //                } else {
@@ -464,10 +464,11 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         s = name;
 
         if (myDash.getDecoderOf(name).getAlive()) {
-            if (myDash.getDecoderOf(name).getType().equals("VAAT")
+            if (myDash.getDecoderOf(name).getType().equals("DEST")) {
+                g.setColor(Color.RED);
+            } else if (myDash.getDecoderOf(name).getType().equals("VAAT")
                     || myDash.getDecoderOf(name).getType().equals("BB1F")
-                    || myDash.getDecoderOf(name).getType().equals("YV")
-                    || myDash.getDecoderOf(name).getType().equals("DEST")) {
+                    || myDash.getDecoderOf(name).getType().equals("YV")) {
                 g.setColor(Color.ORANGE);
             } else {
                 g.setColor(OleDashBoard.cTrack);

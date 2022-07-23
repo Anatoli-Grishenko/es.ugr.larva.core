@@ -49,7 +49,7 @@ public class OleHud extends OleSensor {
     protected HashMap<String, ArrayList<SimpleVector3D>> Trails;
     protected Polygon hudView[][];
     protected Point3D hudPoints[][];
-    protected int vpStrecht = 37, spStrecht = 22, twidth, theight, tx;
+    protected int vpStrecht = 37, spStrecht = 22, twidth, theight, tx, baseTerrain;
     protected double tscale;
     protected Polygon p;
     protected int cell, nLevels, nTiles, trailSize = 0, limitScale = 7, lastZ = -1, countTerrain, countHud;
@@ -485,14 +485,29 @@ public class OleHud extends OleSensor {
             }
         }
         tx = 0;
+        baseTerrain = 0;
         lastZ = -1;
         this.countTerrain = 0;
         this.countHud = 0;
     }
 
     public void addTerrain(int t, int visual, int z, int maxlevel) {
+        int skip=25;
         Color c;
         tx = tx + t;
+        if (tx == terrain.getWidth()+baseTerrain) {
+            terrain.shiftLeft(skip);
+            baseTerrain += skip;
+            for (int i = tx; i < tx+skip; i++) {
+                for (int j = 0; j < terrain.getHeight(); j++) {
+                    if (j % 16 == 0 || i % 25 == 0) {
+                        setTerrain(i, j, Color.DARK_GRAY);
+                    } else {
+                        setTerrain(i, j, Color.BLACK);
+                    }
+                }
+            }
+        }
         int y1 = (int) (Math.min(z, lastZ) * tscale),
                 y2 = (int) (Math.max(z, lastZ) * tscale);
         for (int y = 0; y < theight; y++) {
@@ -513,9 +528,13 @@ public class OleHud extends OleSensor {
                     c = OleDashBoard.cTrack;
                 }
             }
-            terrain.setColor(tx, terrain.getHeight() - 1 - y, c);
+            setTerrain(tx, terrain.getHeight() - 1 - y, c);
 //            terrain.setColor(tx, terrain.getHeight() - 1 - y, SwingTools.mergeColors(c, terrain.getColor(tx, terrain.getHeight() - 1 - y), (int) (y * 100 / (terrain.getHeight() * 0.50))));
         }
+    }
+
+    public void setTerrain(int x, int y, Color c) {
+        terrain.setColor(x-baseTerrain, y, c);
     }
 
     public void mouseClicked(MouseEvent e) {
