@@ -28,7 +28,7 @@ import world.Perceptor;
 public class DroidStarshipLevelA extends LARVAFirstAgent {
 
     protected enum Status {
-        START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION, OPENMISSION, SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING
+        START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION, SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING
     }
     final int PARKINGTIME = 5, WAITIME = 1;
 
@@ -55,33 +55,45 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     protected Plan behaviour = null;
     protected Environment Ei, Ef;
     protected Choice a;
+    protected TimeHandler tini, tend;
+    protected int realParkingTime;
 
-    protected Plan AgPlan(Environment E, DecisionSet A) {
-        Plan result;
-        Ei = E.clone();
-        Plan p = new Plan();
-        for (int i = 0; i < Ei.getRange() / 2 - 2; i++) {
-            Ei.cache();
-            if (!Ve(Ei)) {
-                return null;
-            } else if (G(Ei)) {
-                return p;
-            } else {
-                a = super.Ag(Ei, A);
-                if (a != null) {
-                    p.add(a);
-                    Ef = S(Ei, a);
-                    Ei = Ef;
-                } else {
-                    return null;
-                }
+    @Override
+    public void doPublishMyStatus() {
+        for (String sservice : DFGetAllServicesProvidedBy(getLocalName())) {
+            if (sservice.startsWith("MISSION")) {
+                DFRemoveMyServices(new String[]{sservice});
+            }
+            if (sservice.startsWith("GOAL")) {
+                DFRemoveMyServices(new String[]{sservice});
+            }
+            if (sservice.startsWith("GROUND")) {
+                DFRemoveMyServices(new String[]{sservice});
             }
         }
-        return p;
+        DFAddMyServices(new String[]{"MISSION " + E.getCurrentMission().getName()});
+        if (myStatus == Status.PARKING) {
+            if (E.getType().equals("DEST")) {
+                DFAddMyServices(new String[]{"GOAL WAITING REPORT"});
+            } else {
+                if (this.allowParking) {
+                    DFAddMyServices(new String[]{"GOAL PARKING "
+                        + (realParkingTime - tini.elapsedTimeSecsUntil(tend))});
+                }
+            }
+        } else {
+            DFAddMyServices(new String[]{"GOAL " + E.getCurrentGoal()});
+        }
+        if (getEnvironment().getGround() == 0) {
+            DFAddMyServices(new String[]{"GROUND " + getEnvironment().getCurrentCity()});
+        }
+        this.MyReadPerceptions();
     }
 
     @Override
     public void setup() {
+        this.allowExceptionShield = false;
+        this.setSecuredMessages(true);
         super.setup();
         logger.offEcho();
         this.setFrameDelay(0);
@@ -112,8 +124,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         if (reaction != null) {
             myStatus = reaction;
             reaction = null;
-            Info("Reacting to " + this.getCurrentTask());
-            Info("Status: " + myStatus.name() + "(" + taskName + ")");
+            Info("Reacting to " + E.getCurrentGoal());
+            Info("Status: " + myStatus.name() + "(" + E.getCurrentGoal() + ")");
         } else {
             Info("Status: " + myStatus.name());
 
@@ -130,9 +142,6 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 break;
             case CHOOSEMISSION:
                 myStatus = MyChooseMission();
-                break;
-            case OPENMISSION:
-                myStatus = MyOpenMission();
                 break;
             case SOLVEMISSION:
                 myStatus = MySolveProblem();
@@ -151,7 +160,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 break;
             case EXIT:
             default:
-                doExit();
+                this.LARVAexit = true;
                 break;
         }
     }
@@ -175,7 +184,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             doLARVACheckout();
         }
         Info("Checking-in to LARVA");
-        ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
+        outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
         AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
         outbox.setSender(getAID());
         outbox.addReceiver(IM);
@@ -206,17 +215,26 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         return Status.EXIT;
     }
 
-    public Status MyChooseMission() {
-        myMission = chooseMission();
-        Info("Selected mission: " + myMission);
-        return Status.OPENMISSION;
+    public String mySelectCity() {
+        String city;
+        city = cities[(int) (Math.random() * cities.length)];
+        return city;
     }
 
-    public Status MyOpenMission() {
-        nextWhichwall = whichWall = "NONE";
-        nextdistance = distance = Choice.MAX_UTILITY;
-        Info("Activating mission " + myMission);
-        return filterStatus(activateMission(myMission));
+    public String mySelectCityCourse() {
+        String city;
+        this.MyReadPerceptions();
+        do {
+            city = cities[(int) (Math.random() * cities.length)];
+        } while (city.equals(E.getCurrentCity()) && !this.doFindCourseIn(city));
+        return city;
+    }
+
+    public Status MyChooseMission() {
+        nextCity = mySelectCity();
+        E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
+        this.doPublishMyStatus();
+        return Status.SOLVEMISSION;
     }
 
     public Status MyCloseMission() {
@@ -224,25 +242,26 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     }
 
     public Status MyParking() {
+        realParkingTime = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
+        tini = new TimeHandler();
+        tend = new TimeHandler();
+        this.MyReadPerceptions();
+        if (getEnvironment().getGround() == 0) {
+            this.doPublishMyStatus();
+        }
         if (!allowParking) {
             return Status.CHOOSEMISSION;
         }
-        int time = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
         boolean exit = false;
-        TimeHandler tini, tend;
         long remaining;
-        tini = new TimeHandler();
-        tend = new TimeHandler();
         while (!exit) {
-            this.setTaskName("PARKING " + (time - tini.elapsedTimeSecsUntil(tend)));
-            this.MyReadPerceptions();
+            this.doPublishMyStatus();
             inbox = this.LARVAblockingReceive(500);
             if (this.isOnMission()) {
-                Info("Skip to mission mission " + this.getCurrentTask());
-                return Status.OPENMISSION;
+                return Status.SOLVEMISSION;
             }
             tend = new TimeHandler();
-            exit = tini.elapsedTimeSecsUntil(tend) >= time;
+            exit = tini.elapsedTimeSecsUntil(tend) >= realParkingTime;
         }
         return Status.CHOOSEMISSION;
     }
@@ -285,121 +304,111 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         return Thread.currentThread().getStackTrace()[2].getMethodName();
     }
 
-    @Override
-    protected String activateNextTask() {
-        String parameters[];
-        if (this.isOverCurrentMission()) {
-            return Status.CLOSEMISSION.name();
+    public Status MyMoveProblem() {
+        // Analizar objetivo
+        if (G(E)) {
+            Info("Target reached");
+            return Status.PARKING;
         }
-        nextTask();
-        if (isOnMission()) {
-            taskName = getCurrentTask() + " (" + msgMission.getSender().getLocalName() + ")";
-            setTaskName(taskName);
-        }
-        parameters = taskName.split(" ");
-        if (parameters[0].equals("MOVEIN")) {
-            if (parameters[1].equals(getEnvironment().getCurrentCity())) {
-                return Status.SOLVEMISSION.name();
+        Choice a = Ag(E, A);
+        if (a == null) {
+            Alert("Found no action to execute");
+            return Status.CLOSEMISSION;
+        } else {// Execute
+            Info("Excuting " + a);
+//            System.out.println("Alternatives " + A.toString());
+//            System.out.println("Excuting " + a);
+            this.MyExecuteAction(a.getName());
+            this.MyReadPerceptions();
+            if (!Ve(E)) {
+                this.Error("The agent is not alive: " + E.getStatus());
+                return Status.CLOSEMISSION;
             }
-            outbox = session.createReply();
-            outbox.setContent("Request course into " + parameters[1] + " Session " + sessionKey);
-            LARVAsend(outbox);
-            session = LARVAblockingReceive();
-            if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
-                E.setExternalPerceptions(session.getContent());
-                Info("Successfully found a route in " + taskName);
-                return Status.SOLVEMISSION.name();
-            } else {
-                Info("Failed to find a route to " + taskName);
-                return Status.CHOOSEMISSION.name();
-            }
-        } else if (parameters[0].equals("MOVETO")) {
-            outbox = session.createReply();
-            outbox.setContent("Request course into " + Integer.parseInt(parameters[1]) + " "
-                    + Integer.parseInt(parameters[2]) + " Session " + sessionKey);
-            LARVAsend(outbox);
-            session = LARVAblockingReceive();
-            if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
-                E.setExternalPerceptions(session.getContent());
-                Info("Successfully found a rote to " + taskName);
-                return Status.SOLVEMISSION.name();
-            } else {
-                Info("Failed to find a rote to " + taskName);
-                return Status.CHOOSEMISSION.name();
-            }
-        } else if (parameters[0].equals("EXIT")) {
-            return Status.CHECKOUT.name();
-        } else {
-            return Status.CHOOSEMISSION.name();
+            return Status.SOLVEMISSION;
         }
     }
 
     public Status MySolveProblem() {
-        // Analizar objetivo
-        if (G(E)) {
-            Info("Target reached");
-            if (isOverCurrentMission()) {
-                Info("The problem is over");
-                if (onMission) {
-                    outbox = msgMission.createReply();
-                    outbox.setPerformative(ACLMessage.INFORM);
-                    outbox.setContent("INFORM OK");
-                    this.LARVAsend(outbox);
+        if (E.getCurrentMission().isOver()) {
+            this.offMission();
+            return Status.PARKING;
+        }
+        String goal[] = E.getCurrentGoal().split(" ");
+        switch (goal[0]) {
+            case "MOVETO":
+                if (E.getGPS().getX() == Integer.parseInt(goal[1])
+                        && E.getGPS().getY() == Integer.parseInt(goal[2])
+                        && E.getGround() == 0) {
+                    E.getCurrentMission().nextGoal();
+                    this.doPublishMyStatus();
+                    return Status.SOLVEMISSION;
+                } else if (this.doFindCourseTo(Integer.parseInt(goal[1]), Integer.parseInt(goal[2]))) {
+                    return MyMoveProblem();
+                } else {
+                    Alert("Sorry, I cannot find a route in " + goal[0]);
                 }
-                return Status.PARKING;
-            }
-        }
-        Choice a = Ag(E, A);
-//        System.out.println("Alternatives " + A.toString());
-        if (a == null) {
-            Alert("Found no action to execute");
-            return Status.CHECKOUT;
-        } else {// Execute
-//            Info("Excuting " + a);
-//            System.out.println("Excuting " + a);
-            if (!Ve(E)) {
-                this.Error("The agent is not alive: " + E.getStatus());
-                return Status.CHECKOUT;
-            }
-            if (!this.MyExecuteAction(a.getName())) {
+                return Status.SOLVEMISSION;
+            case "MOVEIN":
+                if (E.getCurrentCity().equals(goal[1])) {
+                    E.getCurrentMission().nextGoal();
+                    this.doPublishMyStatus();
+                    return Status.SOLVEMISSION;
+                } else {
+                    if (this.doFindCourseIn(nextCity)) {
+                        return MyMoveProblem();
+                    } else {
+                        return Status.CLOSEMISSION;
+                    }
+                }
+            case "EXIT":
+                this.doPublishMyStatus();
                 return Status.EXIT;
-            }
-            if (!this.MyReadPerceptions()) {
-                return Status.EXIT;
-            }
-            return Status.SOLVEMISSION;
+            default:
+                Alert("Sorry I do not know how to reach goal " + E.getCurrentGoal());
+                return Status.CLOSEMISSION;
         }
-
-//        behaviour = AgPlan(E, A);
-//        if (behaviour == null || behaviour.isEmpty()) {
-//            Alert("Found no plan to execute");
-//            return Status.CHECKOUT;
-//        } else {// Execute
-//            Info("Found plan: " + behaviour.toString());
-//            while (!behaviour.isEmpty()) {
-//                a = behaviour.get(0);
-//                behaviour.remove(0);
-//                Info("Excuting " + a);
-//                this.MyExecuteAction(a.getName());
-//                if (!Ve(E)) {
-//                    this.Error("The agent is not alive: " + E.getStatus());
-//                    return Status.CHECKOUT;
-//                }
-//            }
-//            this.MyReadPerceptions();
-//            return Status.SOLVEMISSION;
-//        }
     }
 
-    protected String chooseMission() {
-        do {
-            nextCity = cities[(int) (Math.random() * cities.length)];
-        } while (nextCity.equals(currentCity));
-        missionName = "MOVEIN " + nextCity;
-        defMission(missionName);
-        return missionName;
+    public boolean doFindCourseIn(String destination) {
+        if (E.getDestinationCity().equals(destination)) {
+            return true;
+        }
+        if (E.getCurrentCity().equals(destination)) {
+            Message("I am already there");
+            return true;
+        }
+        Info("Searching a route in " + destination);
+        outbox = session.createReply();
+        outbox.setContent("Request course in " + destination + " Session " + sessionKey);
+        Info("Request course in " + destination + " Session " + sessionKey);
+        this.LARVAsend(outbox);
+        session = this.LARVAblockingReceive();
+        if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
+            E.setExternalPerceptions(session.getContent());
+            Info("Successfully found a route in " + destination);
+            return true;
+        } else {
+            Info("Failed to find a route to " + destination);
+            return false;
+        }
     }
 
+    public boolean doFindCourseTo(int x, int y) {
+        Info("Searching a route to " + x + " " + y);
+        outbox = session.createReply();
+        outbox.setContent("Request course to " + x + " " + y + " Session " + sessionKey);
+        Info("Request course to " + x + " " + y + " Session " + sessionKey);
+        this.LARVAsend(outbox);
+        session = this.LARVAblockingReceive();
+        if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
+            E.setExternalPerceptions(session.getContent());
+            Info("Successfully found a route");
+            return true;
+        } else {
+            Info("Failed to find a route");
+            return false;
+        }
+    }
 
     public Status MyJoinSession() {
         sessionKey = "";
@@ -431,7 +440,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             Error("Sorry this agent can only join worlds with cities");
             return Status.CHECKOUT;
         }
-        baseCity = cities[(int) (Math.random() * cities.length)];
+        baseCity = this.mySelectCity();
+//cities[(int) (Math.random() * cities.length)];
         currentCity = baseCity;
         Info("Joining session with base in  " + baseCity);
         outbox = session.createReply();
@@ -483,12 +493,11 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         return onMission;
     }
 
-    public void onMission(ACLMessage msg, String mission) {
+    public void onMission(ACLMessage msg, String mission, String[] goals) {
         onMission = true;
         changeMission = true;
         msgMission = msg;
-        defMission(mission);
-        myMission = mission;
+        E.setCurrentMission(mission, goals);
     }
 
     public void offMission() {
@@ -617,7 +626,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             outbox = msg.createReply();
             String answer = "";
             answer += "NAME " + getLocalName() + "TYPE, " + E.getType() + ",CITY " + getEnvironment().getCurrentCity();
-            answer += "GPS" + E.getGPS().toString() + ",COURSE "+SimpleVector3D.Dir[E.getGPSVector().getsOrient()]+", PAYLOAD " + E.getPayload();
+            answer += "GPS" + E.getGPS().toString() + ",COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + ", PAYLOAD " + E.getPayload();
             LARVAsend(outbox);
             return;
         }
@@ -655,9 +664,9 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                     this.LARVAsend(outbox);
                     Message("Contrated by " + msg.getContent());
                     inNegotiation = false;
-                    onMission(msg, tokens[2] + " " + tokens[3]);
-                    Info("new task " + this.getCurrentTask());
-                    reaction = Status.OPENMISSION;
+                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
+                    Info("new task " + E.getCurrentGoal());
+                    reaction = Status.SOLVEMISSION;
                     return;
                 }
             } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().equals("REJECT")) {
@@ -672,10 +681,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                     this.LARVAsend(outbox);
                     Message("Agree to " + msg.getContent());
                     inNegotiation = false;
-                    String newMission = tokens[2] + " " + tokens[3];
-                    onMission(msg, newMission);
-                    Info("On mission " + newMission);
-                    reaction = Status.OPENMISSION;
+                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
+                    reaction = Status.SOLVEMISSION;
                     return;
                 }
             }

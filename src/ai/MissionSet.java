@@ -24,29 +24,21 @@ public class MissionSet extends HashMap<String, Mission> {
     public MissionSet(JsonArray jsa) {
         Mission m;
         for (JsonValue jsva : jsa) {
-            if (jsva.isArray()) {
-                m = new Mission(jsva.asArray());
-                put(m.getName(), m);
-            }
+            m = new Mission(jsva.asString());
+            put(m.getName(), m);
         }
     }
-    
-    public JsonArray toJson(){
-        JsonObject res = new JsonObject(); 
-        JsonArray jsares= new JsonArray();
+
+    public JsonArray toJson() {
+        JsonArray jsares = new JsonArray();
         Mission m;
-        for (String smission:this.keySet()) {
+        for (String smission : this.keySet()) {
             m = get(smission);
-            jsares.add(m.toJson());
+            jsares.add(m.toString());
         }
         return jsares;
     }
-    public Mission getMission(int i) {
-        if (0<=i && i<size()) {
-            return this.get(new ArrayList(this.keySet()).get(i));
-        }else
-            return null;
-    }
+
     public Mission getMission(String name) {
         if (this.keySet().contains(name)) {
             return this.get(name);
@@ -60,7 +52,7 @@ public class MissionSet extends HashMap<String, Mission> {
         }
         return this;
     }
-    public MissionSet addTask(String mission, String task) {
+    public MissionSet addGoal(String mission, String task) {
         if (this.get(mission) != null) {
             this.get(mission).addGoal(task);
         }

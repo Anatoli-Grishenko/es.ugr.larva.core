@@ -15,14 +15,15 @@ public class BB1F extends DroidStarshipLevelA {
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE BB1F"});        
-        this.logger.offEcho();
-        onMission=false;
-        this.openRemote();
-//        this.closeRemote();
+                this.logger.offEcho();
         onMission = false;
+//        this.openRemote();
+        this.closeRemote();
+        this.showPerceptions=false;
         allowCFP = true;
         allowREQUEST = true;
-        allowParking=false;
+        allowParking = true;
+
     }
 }
 

@@ -8,6 +8,7 @@ package agents;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
+import ai.Mission;
 import ai.MissionSet;
 import appboot.XUITTY;
 import com.eclipsesource.json.Json;
@@ -15,8 +16,10 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import console.Console;
 import crypto.Keygen;
+import static crypto.Keygen.getHexaKey;
 import data.Ole;
 import data.OleConfig;
+import data.OlePassport;
 import data.OleSet;
 import data.Transform;
 import disk.Logger;
@@ -24,9 +27,12 @@ import static disk.Logger.trimFullString;
 import geometry.SimpleVector3D;
 import glossary.Signals;
 import jade.core.AID;
+import jade.core.MicroRuntime;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.wrapper.AgentController;
+import jade.wrapper.ContainerController;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,6 +58,8 @@ import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleButton;
 import swing.OleToolBar;
+import static tools.Internet.getExtIPAddress;
+import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
 
 /**
@@ -123,15 +131,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
 
-    protected MissionSet Missions;
-    protected int iTask, nTasks;
-    protected String myMission[], missionName, taskName, sessionAlias = "";
+//    protected MissionSet Missions;
+    protected Mission currentMission;
+//    protected int iTask, nTasks;
+    protected String sessionAlias = "";
 
     protected boolean securedMessages;
     protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "";
     protected int nlastSentMsg = 0, nlastSentACLMID = 0, nlastRecMsg = 0, nrecErrors = 0;
     protected final String ACLMTAG = "ACLMID";
     protected List<String> errortags = Stream.of("FAILURE", "REFUSE", "NOT-UNDERSTOOD", "BAD ", "ERROR").collect(Collectors.toList());
+    protected BaseFactoryAgent baseFactory;
+    protected boolean allowExceptionShield = true;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -194,7 +205,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void setup() {
         super.setup();
-        Missions = new MissionSet();
+//        Missions = new MissionSet();
         stepsDone = new OleSet();
         stepsSent = new OleSet();
         if (sd == null) {
@@ -206,8 +217,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         // create a new frame to store text field and button
         if (this.getArguments() != null && this.getArguments().length > 0) {
             payload = (LARVAPayload) this.getArguments()[0];
-            myText = (JTextArea) payload.getGuiComponents().get("Activity log");
-            myApp = payload.getParent();
+            if (payload.getGuiComponents() != null) {
+                myText = (JTextArea) payload.getGuiComponents().get("Activity log");
+                myApp = payload.getParent();
+            }
             if (payload.getoPassport() != null) {
                 this.mypassport = payload.getoPassport().getField("rawPassport");
             }
@@ -283,7 +296,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void doExit() {
-        throw new ExitRequestedException(Signals.EXITREQUESTED.name(), new IOException());
+        if (this.allowExceptionShield) {
+            throw new ExitRequestedException(Signals.EXITREQUESTED.name(), new IOException());
+        } else {
+            doSoftExit();
+        }
+    }
+
+    public void doSoftExit() {
+        LARVAexit = true;
     }
 
     public void doNotExit() {
@@ -292,27 +313,49 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     protected void BehaviourDefaultSetup() {
-        defaultBehaviour = new Behaviour() {
-            @Override
-            public void action() {
-                doShield(() -> {
+        if (this.allowExceptionShield) {
+            defaultBehaviour = new Behaviour() {
+                @Override
+                public void action() {
+                    doShield(() -> {
+                        preExecute();
+                        Execute();
+                        postExecute();
+                        ncycles++;
+                    });
+                    if (isExit()) {
+                        doDelete();
+                    }
+                }
+
+                @Override
+                public boolean done() {
+                    return LARVAexit;
+                }
+
+            };
+            this.addBehaviour(defaultBehaviour);
+        } else {
+            defaultBehaviour = new Behaviour() {
+                @Override
+                public void action() {
                     preExecute();
                     Execute();
                     postExecute();
                     ncycles++;
-                });
-                if (isExit()) {
-                    doDelete();
+                    if (isExit()) {
+                        doDelete();
+                    }
                 }
-            }
 
-            @Override
-            public boolean done() {
-                return LARVAexit;
-            }
+                @Override
+                public boolean done() {
+                    return LARVAexit;
+                }
 
-        };
-        this.addBehaviour(defaultBehaviour);
+            };
+            this.addBehaviour(defaultBehaviour);
+        }
     }
 
     @Override
@@ -652,6 +695,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         if (this.isSecuredMessages()) {
             this.secureReceive(res);
+        }
+        if (this.isErrorMessage(res)) {
+            Alert("Error found " + res.getContent());
         }
         return res;
     }
@@ -1190,46 +1236,17 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     /////////////////// MISSIONS ////////////////77
-    protected void clearCourseSelection() {
-        missionName = null;
-        setTaskName(null);
-        E.setTarget(null);
-        E.setDestination(null);
-
-    }
-    protected void defMission(String mission) {
-        Missions.clear();
-        Missions.addMission(mission);
-        Missions.addTask(mission, mission);
-        Info("New mission " + mission);
-    }
-
-    protected void defMission(String mission, String tasks[]) {
-        Missions.clear();
-        Missions.addMission(mission);
-        for (String task : tasks) {
-            Missions.addTask(mission, task);
+    
+    protected String chooseMission() {
+        Info("Choosing a mission");
+        String m = "";
+        if (getEnvironment().getAllMissions().length == 1) {
+            m = getEnvironment().getAllMissions()[0];
+        } else {
+            m = this.inputSelect("Please chhoose a mission", getEnvironment().getAllMissions(), "");
         }
-        Info("New mission " + mission);
-    }
-
-    protected void decodeMissions(String things) {
-        clearCourseSelection();
-        JsonObject jsoThings = Json.parse(things).asObject();
-        JsonArray jsathings;
-        if (jsoThings.get("missions") != null) {
-            Missions = new MissionSet(jsoThings.get("missions").asArray());
-        }
-    }
-
-    protected String getCurrentMission() {
-        String agentName = getLocalName();
-        return getCurrentMission(agentName);
-    }
-
-    protected String getCurrentTask() {
-        String agentName = getLocalName();
-        return getCurrentTask(agentName);
+        Info("Selected mission " + m);
+        return m;
     }
 
     protected String getagentType(String agentName) {
@@ -1244,139 +1261,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return "";
     }
 
-    protected String getCurrentMission(String agentName) {
-        if (this.AMSIsConnected(agentName)) {
-            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
-                if (service.startsWith("MISSION")) {
-                    return service.replaceAll("MISSION ", "");
-                }
-            }
-
-        }
-        return "";
-    }
-
-    protected String getCurrentTask(String agentName) {
-        if (this.AMSIsConnected(agentName)) {
-            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
-                if (service.startsWith("TASK")) {
-                    return service.replaceAll("TASK ", "");
-                }
-            }
-
-        }
-        return "";
-    }
-
-    protected boolean nextTask() {
-        if (missionName != null && Missions.containsKey(missionName) && iTask < nTasks) {
-            return setTaskName(Missions.get(missionName).get(iTask++));
-        } else {
-            return false;
-        }
-    }
-
-//    protected boolean setCityName() {
-//        for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
-//            if (service.startsWith("GROUNDED")) {
-//                this.DFRemoveMyServices(new String[]{service});
-//            }
-//        }
-//        this.DFAddMyServices(new String[]{"GROUNDED " + E.getCurrentCity()});
-//        return true;
-//    }
-//
-    protected boolean setTaskName(String task) {
-        if (missionName != null) { // && (Missions.get(missionName).contains(task) || task.equals("PARKING"))) {
-            taskName = task;
-            for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
-                if (service.startsWith("TASK")) {
-                    this.DFRemoveMyServices(new String[]{service});
-                }
-            }
-            this.DFAddMyServices(new String[]{"TASK " + task});
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public String activateMission(String mission) {
-        if (Missions.keySet().contains(mission)) {
-            if (Missions.containsKey(mission)) {
-                missionName = mission;
-                for (String service : this.DFGetAllServicesProvidedBy(getLocalName())) {
-                    if (service.startsWith("MISSION")) {
-                        this.DFRemoveMyServices(new String[]{service});
-                    }
-                }
-                iTask = 0;
-                if (mission != null) {
-                    nTasks = getMissionLength(missionName);
-                    this.DFAddMyServices(new String[]{"MISSION " + missionName});
-                    return activateNextTask();
-                } else {
-                    nTasks = 0;
-                }
-                return "ERROR";
-            } else {
-                return "ERROR";
-            }
-        }
-        return "ERROR";
-    }
-
-    public int getNumMissions() {
-        return Missions.size();
-    }
-
-    public String[] getAllMissions() {
-        return Transform.toArrayString(new ArrayList(Missions.keySet()));
-    }
-
-    public String[] getMissionTasks(String mission) {
-        if (Missions.keySet().contains(mission)) {
-            return Transform.toArrayString(Missions.get(mission));
-        } else {
-            return null;
-        }
-    }
-
-    public int getMissionLength(String mission) {
-        if (Missions.keySet().contains(mission)) {
-            return Missions.get(mission).size();
-        } else {
-            return -1;
-        }
-    }
-
-    public boolean isOverCurrentMission() {
-        return iTask == nTasks && isOverCurrentTask();
-    }
-
-    public boolean isOverCurrentTask() {
-        if (missionName != null && Missions.get(missionName) != null) {
-            String task = taskName;
-            switch (task.split(" ")[0]) {
-                case "MOVEIN":
-                case "MOVETO":
-                    return E.getGPS().isEqualTo(E.getTarget());
-                default:
-                    return true;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    protected String activateNextTask() {
-        Error("Method activateTask has not been defined yet.");
-        System.exit(1);
-        return "";
-    }
-
+    //////////////////////
     protected String Transponder() {
-        String sep=";",answer = "TRANSPONDER" + sep;
+        String sep = ";", answer = "TRANSPONDER" + sep;
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
             answer += sep + "ONAIR";
@@ -1419,7 +1306,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     public void secureSend(ACLMessage msg) {
         if (dupSend(msg)) {
-            secureExit("Too many messages sent");
+            secureExit("Too many consecutive messages sent");
+        }
+        if (msg.getContent() == null) {
+            secureExit("You are sending a message with an empty content. Please use .setContent() properly");
+        }
+        if (ACLMessageTools.getAllReceivers(msg) == null || ACLMessageTools.getAllReceivers(msg).length() == 0) {
+            secureExit("You are sending a message with an empty receiver. Please use .addReceiver() properly");
         }
     }
 
@@ -1459,7 +1352,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public boolean isErrorMessage(ACLMessage msg) {
-        if (this.errortags.contains(ACLMessage.getPerformative(msg.getPerformative()))) {
+        if (this.errortags.contains(msg.getContent().split(" ")[0].toUpperCase())) {
             return true;
         }
         String c = msg.getContent().toUpperCase();
@@ -1470,4 +1363,61 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         return false;
     }
+
+    public void doPublishMyStatus() {
+        for (String service : DFGetAllServicesProvidedBy(getLocalName())) {
+            if (service.startsWith("MISSION")) {
+                DFRemoveMyServices(new String[]{service});
+            }
+            if (service.startsWith("GOAL")) {
+                DFRemoveMyServices(new String[]{service});
+            }
+        }
+        DFAddMyServices(new String[]{"MISSION " + E.getCurrentMission().getName()});
+        DFAddMyServices(new String[]{"GOAL " + E.getCurrentGoal()});
+    }
+
+    public boolean doLaunchSubagent(Class c) {
+        OlePassport oPassport = new OlePassport();
+        oPassport.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
+        LARVAPayload payload = new LARVAPayload();
+        payload.setOlecfg(oleConfig);
+        payload.setoPassport(oPassport);
+        Object _args[] = new Object[1];
+        _args[0] = payload;
+        if (false) {
+            return baseFactory.fastMicroBirth(c.getName().substring(0,1) + getHexaKey(3), c, _args);
+        } else {
+            return baseFactory.fastBirth(c.getName().substring(0,1) + getHexaKey(3), c, _args);
+        }
+
+    }
+
+    public boolean doPrepareNPC(int n, Class c) {
+        if (baseFactory == null) {
+            baseFactory = new BaseFactoryAgent(this);
+        }
+        boolean res = true;
+        for (int i = 0; i < n & res; i++) {
+            res = doLaunchSubagent(c);
+        }
+        return res;
+    }
+
+    public void doDestroyNPC() {
+//        if (baseFactory == null) {
+//            return;
+//        }
+////        for (String sagent: baseFactory.getAllAgentNames()) {
+////            baseFactory.killAgent(sagent);
+////        }
+////        for (String scontainer: baseFactory.getAllContainerNames()) {
+////            baseFactory.killContainer(scontainer);
+////        }
+        if (baseFactory != null) {
+            baseFactory.killAllExit();
+            baseFactory = null;
+        }
+    }
+
 }

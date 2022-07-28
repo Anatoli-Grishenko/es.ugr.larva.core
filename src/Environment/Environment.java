@@ -5,9 +5,10 @@
  */
 package Environment;
 
+import agents.LARVAFirstAgent;
 import ai.AStar;
 import ai.Choice;
-import ai.MissionSet;
+import ai.Mission;
 import ai.Plan;
 import ai.Search;
 import com.eclipsesource.json.Json;
@@ -21,7 +22,6 @@ import geometry.SimpleVector3D;
 import glossary.Roles;
 import glossary.Sensors;
 import java.util.ArrayList;
-import tools.emojis;
 import world.ThingSet;
 import world.Perceptor;
 import world.SensorDecoder;
@@ -47,8 +47,8 @@ public class Environment extends SensorDecoder {
 
     public Environment() {
         super();
-        shortPolar = new int[5];
-        World = new World("innerworld");
+//        shortPolar = new int[5];
+//        World = new World("innerworld");
         cadastre = new ThingSet();
         census = new ThingSet();
     }
@@ -215,6 +215,7 @@ public class Environment extends SensorDecoder {
             default:
         }
         if (movement) {
+            result.currentMission=this.currentMission;
             result.slope = incrz;
             result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
             result.setEnergy(this.getEnergy() - this.getBurnratemove());
@@ -500,7 +501,7 @@ public class Environment extends SensorDecoder {
     }
 
     public boolean isTargetBack() {
-        return getRelativeAngular() == 180;
+        return getRelativeAngular() >90 || getRelativeAngular() < -90;
 //        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
 
@@ -592,13 +593,4 @@ public class Environment extends SensorDecoder {
         }
     }
 
-    public String getCurrentCity() {
-        ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
-        for (String scity : positions) {
-            if (new Point3D(scity.split(" ")[1]).isEqualTo(getGPS())) {
-                return scity.split(" ")[0];
-            }
-        }
-        return "";
-    }
 }

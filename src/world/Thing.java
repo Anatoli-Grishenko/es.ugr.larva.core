@@ -101,9 +101,9 @@ public class Thing extends Entity3D {
         JsonObject jsoreading = new JsonObject().add("name", getName()).add("perceptions", res);
         myPerceptions.feedPerception(jsoreading);
         myPerceptions.encodeSensor(Sensors.NAME, SensorDecoder.encodeValues(getName()));
-        myPerceptions.encodeSensor(Sensors.WORLDHEIGHT, 
+        myPerceptions.encodeSensor(Sensors.WORLDHEIGHT,
                 SensorDecoder.encodeValues(this.getWorld().getEnvironment().getSurface().getHeight()));
-        myPerceptions.encodeSensor(Sensors.WORLDWIDTH, 
+        myPerceptions.encodeSensor(Sensors.WORLDWIDTH,
                 SensorDecoder.encodeValues(this.getWorld().getEnvironment().getSurface().getWidth()));
     }
 
@@ -119,15 +119,7 @@ public class Thing extends Entity3D {
         res.add("orientation", this.getOrientation());
         res.add("position", new JsonArray().
                 add(getPosition().getXInt()).add(getPosition().getYInt()).add(getPosition().getZInt()));
-        if (getType().equals("people")) {
-            res.add("properties", new JsonArray().add("position").add("presence"));
-            res.add("belongs", this.getBelongsTo());
-        } else {
-            res.add("properties", new JsonArray());
-            res.add("hasport", isHasPort());
-            res.add("hasheliport", isHasHeliport());
-            res.add("hasairport", isHasAirport());
-        }
+        res.add("belongs", this.getBelongsTo());
 
 //        res.add("objectid", this.getId());
 //        res.add("name", this.getName());
@@ -195,6 +187,5 @@ public class Thing extends Entity3D {
     public void setBelongsTo(String _belongsTo) {
         this._belongsTo = _belongsTo;
     }
-
 
 }

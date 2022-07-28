@@ -5,8 +5,6 @@
  */
 package geometry;
 
-import glossary.direction;
-import static crypto.Keygen.getAlphaNumKey;
 import static crypto.Keygen.getAlphaNumKey;
 import static crypto.Keygen.getHexaKey;
 import java.awt.Color;
@@ -154,10 +152,12 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
         return res;
     }
 
+    @Override
     public int compareTo(Entity3D other) {
         return (int) (1000 * getCenter().planeDistanceTo(other.getCenter()));
     }
     
+    @Override
     public int compare(Entity3D one, Entity3D other) {
         return one.compareTo(other);
     }

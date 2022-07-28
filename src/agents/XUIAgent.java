@@ -110,7 +110,7 @@ public class XUIAgent extends LARVAFirstAgent {
     }
 
     public Status myIdle() {
-//        System.out.println("TASK TS-FULL "+this.getCurrentTask("TS-FULL"));
+//        System.out.println("TASK TS-FULL "+this.getCurrentGoal("TS-FULL"));
         inbox = this.LARVAblockingReceive();
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));

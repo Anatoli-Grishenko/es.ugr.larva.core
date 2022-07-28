@@ -261,7 +261,10 @@ public class World {
                 oThings = oaux.get("things").asArray();
                 for (JsonValue jsvthing : oaux.get("things").asArray()) {
                     JsonObject jsothing = jsvthing.asObject();
-                    ArrayList<String> properties = new ArrayList(Transform.toArrayListString(jsothing.get("properties").asArray()));
+                    ArrayList<String> properties = new ArrayList();
+                    if (jsothing.get("properties") != null) {
+                        properties = new ArrayList(Transform.toArrayListString(jsothing.get("properties").asArray()));
+                    }
                     PROPERTY[] props = new PROPERTY[properties.size()];
                     for (int i = 0; i < properties.size(); i++) {
                         props[i] = PROPERTY.valueOf(properties.get(i).toUpperCase());
@@ -930,13 +933,14 @@ public class World {
                     break;
                 case CAPTURE:
                     String who = command.replace("CAPTURE ", "");
-                    Point3D gps=agent.getPosition(), guy=this.getThingByName(who).getPosition();
-                    if (gps.planeDistanceTo(guy)<15) {
+                    Point3D gps = agent.getPosition(),
+                     guy = this.getThingByName(who).getPosition();
+                    if (gps.planeDistanceTo(guy) < 15) {
                         agent.Raw().addCargo(who);
-                        res=true;
+                        res = true;
                     } else {
-                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person "+who+" does not seem to be aorund");
-                        res=false;
+                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
+                        res = false;
                     }
                 case UP:
                     int nups;
@@ -948,7 +952,7 @@ public class World {
                     break;
                 case RECHARGE:
                     if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
-                            agent.getPosition().getY()) && agent.getPosition().getZ()>5) {
+                            agent.getPosition().getY()) && agent.getPosition().getZ() > 5) {
 
                         agent.Raw().setEnergy(agent.Raw().getAutonomy());
                         res = true;
@@ -1109,7 +1113,7 @@ public class World {
                 i++;
             }
             if (lastPoint == null || !lastPoint.isEqualTo(pdest)) {
-                    jsares.add(pdest.toJson());
+                jsares.add(pdest.toJson());
             }
             agent.Raw().encodeSensor(Sensors.COURSE, jsares);
             agent.Raw().activateCourse();

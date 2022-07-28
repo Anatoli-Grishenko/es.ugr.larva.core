@@ -5,10 +5,13 @@
  */
 package world;
 
+import ai.Mission;
+import ai.MissionSet;
 import ai.TracePositions;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleFile;
@@ -38,8 +41,10 @@ public class SensorDecoder {
     protected Map2DColor hMap;
     protected ArrayList<SimpleVector3D> TraceGPS;
     protected int stuck;
-    // SensorsDISTANCE,
+    protected Mission currentMission;
+    protected String cachedCurrentCity = "", cachedDestinationCity = "";
 
+    // SensorsDISTANCE,
     // Memory
     // ParametersBURNRATEMOVE, BURNRATEREAD,
     // Behaviour
@@ -83,14 +88,14 @@ public class SensorDecoder {
         return true;
     }
 
-    protected JsonArray getSensor(Sensors s) {
+    public JsonArray getSensor(Sensors s) {
         if (this.indexperception.keySet().contains(s)) {
             return indexperception.get(s);
         }
         return null;
     }
 
-    protected JsonArray getSensor(String sensorname) {
+    public JsonArray getSensor(String sensorname) {
         try {
             Sensors s = Sensors.valueOf(sensorname);
             return getSensor(s);
@@ -177,35 +182,33 @@ public class SensorDecoder {
         return res;
     }
 
-    protected String getMission() {
-        if (this.getSensor(Sensors.MISSION) != null) {
-            return this.getSensor(Sensors.MISSION).get(0).asString();
-        } else {
-            return "";
-        }
-    }
-
-    public void setMission(String Name) {
-        encodeSensor(Sensors.MISSION, encodeValues(Name));
-    }
-
-    public String getTask() {
-        if (this.getSensor(Sensors.TASK) != null
-                && this.getSensor(Sensors.TASK).get(0) != null) {
-            if (this.getSensor(Sensors.TASK).get(0).isString()) {
-                return this.getSensor(Sensors.TASK).get(0).asString();
-            } else {
-                return "";
-            }
-        } else {
-            return "";
-        }
-    }
-
-    public void setTask(String Name) {
-        encodeSensor(Sensors.TASK, encodeValues(Name));
-    }
-
+//    protected String getMission() {
+//        if (this.getSensor(Sensors.MISSIONSET) != null) {
+//            return this.getSensor(Sensors.MISSIONSET).get(0).asString();
+//        } else {
+//            return "";
+//        }
+//    }
+//
+//    public void setMission(String Name) {
+//        encodeSensor(Sensors.MISSIONSET, encodeValues(Name));
+//    }
+//    public String getGoal() {
+//        if (this.getSensor(Sensors.CURRENTMISSION) != null
+//                && this.getSensor(Sensors.CURRENTMISSION).get(0) != null) {
+//            if (this.getSensor(Sensors.CURRENTMISSION).get(0).isString()) {
+//                return this.getSensor(Sensors.CURRENTMISSION).get(0).asString();
+//            } else {
+//                return "";
+//            }
+//        } else {
+//            return "";
+//        }
+//    }
+//
+//    public void setTask(String Name) {
+//        encodeSensor(Sensors.CURRENTMISSION, encodeValues(Name));
+//    }
     public String getCityBase() {
         return this.getSensor(Sensors.CITYBASE).get(0).asString();
     }
@@ -486,6 +489,40 @@ public class SensorDecoder {
                 break;
             }
         }
+    }
+
+    public String[] getAllMissions() {
+        String res[] = new String[this.getSensor(Sensors.MISSIONSET).size()];
+        int i = 0;
+        for (JsonValue jsv : this.getSensor(Sensors.MISSIONSET)) {
+            String mission[] = jsv.asString().split(Mission.sepMissions);
+            res[i++] = mission[0];
+        }
+        return res;
+    }
+
+    public void setMissions(String[] missionset) {
+        encodeSensor(Sensors.MISSIONSET, encodeValues(missionset));
+    }
+
+    public String getMission(String missionName) {
+        ArrayList<String> mission = new ArrayList(Transform.toArrayListString(this.getSensor(Sensors.MISSIONSET)));
+        for (String sm : mission) {
+            if (sm.split(Mission.sepMissions)[0].equals(missionName)) {
+                return sm;
+            }
+        }
+        return "";
+    }
+
+    public String[] getMissionGoals(String missionName) {
+        for (String smission : getAllMissions()) {
+            if (smission.startsWith(missionName)) {
+                String fullmission = this.getMission(missionName);
+                return fullmission.replace(missionName + Mission.sepMissions, "").split(Mission.sepMissions);
+            }
+        }
+        return new String[]{};
     }
 
     public String[] getPeople() {
@@ -1069,6 +1106,17 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             encodeSensor(name, jsosensor.get("data").asArray());
+            if (name.toUpperCase().equals(Sensors.COURSE.name()) && getSensor(Sensors.CITIESPOSITIONS)!= null) { // XUI
+                ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
+                Point3D destPoint = this.getCourse(this.getCourse().length - 1);
+                for (String scity : positions) {
+                    Point3D citypos = new Point3D(scity.split(" ")[1]);
+                    if (destPoint.isEqualTo(citypos)) {
+                        this.cachedDestinationCity = scity.split(" ")[0];
+                    }
+                }
+
+            }
         }
     }
 
@@ -1609,6 +1657,28 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
+            case "YT":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
+                encodeSensor(Sensors.MAXSLOPE, 255);
+                encodeSensor(Sensors.MAXCARGO, 30);
+                encodeSensor(Sensors.AUTONOMY, 500);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 21);
+                encodeSensor(Sensors.BURNRATEMOVE, 2);
+                encodeSensor(Sensors.BURNRATEREAD, 1);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.CAPTURE.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.RECHARGE.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
             case "HEMTT":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL + 5);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
@@ -1759,4 +1829,54 @@ public class SensorDecoder {
                 break;
         }
     }
+
+    public Mission getCurrentMission() {
+        return currentMission;
+    }
+
+    public void setCurrentMission(String mission) {
+        String goals[] = getMissionGoals(mission);
+        this.setCurrentMission(mission, goals);
+    }
+
+    public void setCurrentMission(String missionName, String goals[]) {
+        currentMission = new Mission(missionName, goals);
+
+    }
+
+    ///////////////////// GOALS
+    public String getCurrentGoal() {
+        return getCurrentMission().getCurrentGoal();
+    }
+
+    public String setNextGoal() {
+        if (getCurrentMission().isOver()) {
+            return "";
+        } else {
+            getCurrentMission().nextGoal();
+            return "";
+        }
+    }
+
+    public String getCurrentCity() {
+        if (getGround() == 0) {
+            ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
+            for (String scity : positions) {
+                if (new Point3D(scity.split(" ")[1]).isEqualTo(getGPS())) {
+                    cachedCurrentCity = scity.split(" ")[0];
+                    return cachedCurrentCity;
+                }
+            }
+        }
+        return "MOVING";
+    }
+
+    public String getDestinationCity() {
+        if (getDestination() != null) {
+            return this.cachedDestinationCity;
+        } else {
+            return "NONE";
+        }
+    }
+
 }

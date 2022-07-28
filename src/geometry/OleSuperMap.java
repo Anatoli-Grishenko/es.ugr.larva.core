@@ -8,6 +8,7 @@ package geometry;
 import Environment.Environment;
 import com.eclipsesource.json.JsonObject;
 import data.OleConfig;
+import glossary.Sensors;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -510,11 +511,11 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         g.setStroke(new BasicStroke());
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
-        String task = myDash.getDecoderOf(name).getTask();
-        if (task == null) {
+        String goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
+        if (goal == null) {
             s = String.format("%s", "NO TASK");
         } else {
-            s = String.format("%s", task);
+            s = String.format("%s", goal);
         }
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
