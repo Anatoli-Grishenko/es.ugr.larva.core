@@ -8,6 +8,7 @@ package agents;
 import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
+import ai.Mission;
 import ai.MissionSet;
 import ai.Plan;
 import static crypto.Keygen.getHexaKey;
@@ -57,37 +58,33 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     protected Choice a;
     protected TimeHandler tini, tend;
     protected int realParkingTime;
+    protected boolean needCourse = true;
 
     @Override
-    public void doPublishMyStatus() {
-        for (String sservice : DFGetAllServicesProvidedBy(getLocalName())) {
-            if (sservice.startsWith("MISSION")) {
-                DFRemoveMyServices(new String[]{sservice});
-            }
-            if (sservice.startsWith("GOAL")) {
-                DFRemoveMyServices(new String[]{sservice});
-            }
-            if (sservice.startsWith("GROUND")) {
-                DFRemoveMyServices(new String[]{sservice});
-            }
-        }
-        DFAddMyServices(new String[]{"MISSION " + E.getCurrentMission().getName()});
+    protected String Transponder() {
+        String goal = "";
+        String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
+
         if (myStatus == Status.PARKING) {
             if (E.getType().equals("DEST")) {
-                DFAddMyServices(new String[]{"GOAL WAITING REPORT"});
+                goal = "GOAL WAITING REPORT";
             } else {
                 if (this.allowParking) {
-                    DFAddMyServices(new String[]{"GOAL PARKING "
-                        + (realParkingTime - tini.elapsedTimeSecsUntil(tend))});
+                    goal = "GOAL PARKING " + (realParkingTime - tini.elapsedTimeSecsUntil(tend));
                 }
             }
         } else {
-            DFAddMyServices(new String[]{"GOAL " + E.getCurrentGoal()});
+            goal = "GOAL " + E.getCurrentGoal();
         }
-        if (getEnvironment().getGround() == 0) {
-            DFAddMyServices(new String[]{"GROUND " + getEnvironment().getCurrentCity()});
+        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
+        if (E.getGround() > 0) {
+            answer += sep + "ONAIR";
+        } else {
+            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
         }
-        this.MyReadPerceptions();
+        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
+        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + goal;
+        return answer;
     }
 
     @Override
@@ -117,6 +114,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         Info("Found problem manager " + problemManager);
         myStatus = Status.START;
         myText = null;
+        this.securedMessages = true;
     }
 
     @Override
@@ -233,7 +231,8 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     public Status MyChooseMission() {
         nextCity = mySelectCity();
         E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
-        this.doPublishMyStatus();
+        this.replyTransponder(session);
+        this.needCourse = true;
         return Status.SOLVEMISSION;
     }
 
@@ -247,7 +246,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         tend = new TimeHandler();
         this.MyReadPerceptions();
         if (getEnvironment().getGround() == 0) {
-            this.doPublishMyStatus();
+            this.replyTransponder(session);
         }
         if (!allowParking) {
             return Status.CHOOSEMISSION;
@@ -255,7 +254,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         boolean exit = false;
         long remaining;
         while (!exit) {
-            this.doPublishMyStatus();
+            this.replyTransponder(session);
             inbox = this.LARVAblockingReceive(500);
             if (this.isOnMission()) {
                 return Status.SOLVEMISSION;
@@ -331,6 +330,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     public Status MySolveProblem() {
         if (E.getCurrentMission().isOver()) {
             this.offMission();
+            needCourse = true;
             return Status.PARKING;
         }
         String goal[] = E.getCurrentGoal().split(" ");
@@ -340,7 +340,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                         && E.getGPS().getY() == Integer.parseInt(goal[2])
                         && E.getGround() == 0) {
                     E.getCurrentMission().nextGoal();
-                    this.doPublishMyStatus();
+                    this.replyTransponder(session);
                     return Status.SOLVEMISSION;
                 } else if (this.doFindCourseTo(Integer.parseInt(goal[1]), Integer.parseInt(goal[2]))) {
                     return MyMoveProblem();
@@ -351,17 +351,23 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             case "MOVEIN":
                 if (E.getCurrentCity().equals(goal[1])) {
                     E.getCurrentMission().nextGoal();
-                    this.doPublishMyStatus();
+                    this.replyTransponder(session);
                     return Status.SOLVEMISSION;
                 } else {
-                    if (this.doFindCourseIn(nextCity)) {
-                        return MyMoveProblem();
-                    } else {
-                        return Status.CLOSEMISSION;
+                    if (needCourse) {
+                        if (!this.doFindCourseIn(E.getCurrentGoal().replaceAll("MOVEIN ", ""))) {
+                            Alert("Sorry, I cannot find a route in " + goal[0]);
+                            this.LARVAwait(1000);
+                            E.getCurrentMission().nextGoal();
+                            this.replyTransponder(session);
+                            return Status.SOLVEMISSION;
+                        }
+                        needCourse = false;
                     }
+                    return MyMoveProblem();
                 }
             case "EXIT":
-                this.doPublishMyStatus();
+                this.replyTransponder(session);
                 return Status.EXIT;
             default:
                 Alert("Sorry I do not know how to reach goal " + E.getCurrentGoal());
@@ -693,4 +699,5 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         outbox.setContent("Refuse");
         this.LARVAsend(outbox);
     }
+
 }

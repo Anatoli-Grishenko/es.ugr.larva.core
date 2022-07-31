@@ -22,6 +22,6 @@ public class VAAT extends DroidStarshipLevelA {
         this.showPerceptions=false;
         allowCFP = true;
         allowREQUEST = true;
-        allowParking = true;
+        allowParking = false;
     }
 }

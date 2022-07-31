@@ -44,6 +44,7 @@ import swing.OleScrollPane;
 import swing.OleSensor;
 import swing.SwingTools;
 import swing.TextFactory;
+import tools.TimeHandler;
 import tools.emojis;
 import world.Thing;
 
@@ -79,13 +80,13 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         myDash = ((OleDashBoard) this.parentPane);
         setnRows(1);
         setnColumns(3);
-        sprites = new ArrayList();
-        try {
-            for (int i = 0; i < 8; i++) {
-                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/explorer" + i + ".png").toString().replace("file:", "")));
-            }
-        } catch (IOException ex) {
-        }
+//        sprites = new ArrayList();
+//        try {
+//            for (int i = 0; i < 8; i++) {
+//                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/explorer" + i + ".png").toString().replace("file:", "")));
+//            }
+//        } catch (IOException ex) {
+//        }
         hasGrid = false;
         String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true,   \"Trail\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
                 + "}";
@@ -260,7 +261,16 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         return this;
     }
 
+//    public void Purge() {
+//        TimeHandler tnow = new TimeHandler();
+//        for (String sname : Trails.keySet()) {
+//            if (this.myDash.getDecoderOf(sname).getLastRead().elapsedTimeSecsUntil(tnow) > 10) {
+//                Trails.remove(sname);
+//            }
+//        }
+//    }
     public OleSensor viewSuperSensor(Graphics2D g) {
+//        TimeHandler tnow = new TimeHandler();
         Point3D focus = null;
         layoutSensor(g);
         String label;
@@ -288,6 +298,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 
             // Paint agents trails
             for (String name : Trails.keySet()) {
+//                if (this.myDash.getDecoderOf(name).getLastRead().elapsedTimeSecsUntil(tnow) < 10000) {
                 if (this.isShowTrail()) {
                     for (int i = 2; i < Trails.get(name).size(); i++) {
                         ptrail = Trails.get(name).get(i);
@@ -330,6 +341,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         (int) (map.getWidth() * scale),
                         (int) (map.getHeight() * scale)
                 );
+//                }
             }
 
             // Paint targets
@@ -511,12 +523,14 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         g.setStroke(new BasicStroke());
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
-        String goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
-        if (goal == null) {
-            s = String.format("%s", "NO TASK");
+        String goal;
+        if (myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL) != null && 
+                myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).isString()) {
+            goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
         } else {
-            s = String.format("%s", goal);
+            goal = " XXX";
         }
+        s = String.format("%s", goal);
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)

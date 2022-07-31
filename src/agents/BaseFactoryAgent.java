@@ -37,13 +37,14 @@ public class BaseFactoryAgent implements ReportableObject {
         myContainers = new HashMap();
         creatorAgent = owner;
         creatorContainer = creatorAgent.getContainerController();
-        try {
-            creatorContainerName = creatorContainer.getContainerName();
-            myContainers.put(creatorContainerName, creatorContainer);
-        } catch (ControllerException ex) {
-            creatorContainerName = "UNKNOWN";
-        }
+//        try {
+//            creatorContainerName = creatorContainer.getContainerName();
+//            myContainers.put(creatorContainerName, creatorContainer);
+//        } catch (ControllerException ex) {
+//            creatorContainerName = "UNKNOWN";
+//        }
         rt = jade.core.Runtime.instance();
+        System.out.println("****************"+rt.getClass().getCanonicalName());
     }
 
     public ArrayList<String> getAllAgentNames() {

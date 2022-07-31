@@ -10,8 +10,11 @@ import data.OleFile;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.ImageIcon;
+import static swing.SwingTools.getFileListResource;
 
 /**
  *
@@ -42,13 +45,22 @@ public class OleIconSet {
 
     protected void loadFolder(HashMap<String, ImageIcon> m, String folder) {
         File folderinputs[], item, dir;
-        dir = new File(getClass().getResource("/resources/icons/" + folder + "/").toString().replace("file:", ""));
-        folderinputs = dir.listFiles();
-        for (File f : folderinputs) {
-            String name = f.getName(), resource;
-            resource = getClass().getResource("/resources/icons/" + folder + "/" + name).toString().replace("file:", "");
-            m.put(f.getName().replace(".png", ""), new ImageIcon(resource));
+        String resourceFolder = "resources/icons/" + folder;
+        HashMap<String, InputStream> iconset = getFileListResource(resourceFolder);
+        for (String sfname : iconset.keySet()) {
+            try {
+                m.put(sfname.replace(".png", "").replace(resourceFolder+"/",""), new ImageIcon(iconset.get(sfname).readAllBytes()));
+            } catch (Exception ex) {
+
+            }
         }
+//        dir = new File(getClass().getResource("/resources/icons/" + folder + "/").toString().replace("file:", ""));
+//        folderinputs = dir.listFiles();
+//        for (File f : folderinputs) {
+//            String name = f.getName(), resource;
+//            resource = getClass().getResource("/resources/icons/" + folder + "/" + name).toString().replace("file:", "");
+//            m.put(f.getName().replace(".png", ""), new ImageIcon(resource));
+//        }
     }
 
     public HashMap<String, ImageIcon> getRegular() {
@@ -65,40 +77,49 @@ public class OleIconSet {
 
     public ImageIcon getRegularIcon(String iconName, int w, int h) {
         if (regular.keySet().contains(iconName)) {
-            return new ImageIcon(regular.get(iconName).getImage().getScaledInstance(w,h, Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(regular.get(iconName).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
+
     public ImageIcon getHighlightIcon(String iconName, int w, int h) {
         if (highlight.keySet().contains(iconName)) {
-            return new ImageIcon(highlight.get(iconName).getImage().getScaledInstance(w,h, Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(highlight.get(iconName).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
-    
+
     public ImageIcon getInactiveIcon(String iconName, int w, int h) {
         if (inactive.keySet().contains(iconName)) {
-            return new ImageIcon(inactive.get(iconName).getImage().getScaledInstance(w,h, Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(inactive.get(iconName).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
+
     public ImageIcon getRegularIcon(String iconName, Dimension d) {
         if (regular.keySet().contains(iconName)) {
-            return new ImageIcon(regular.get(iconName).getImage().getScaledInstance((int)d.getWidth(),(int) d.getHeight(), Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(regular.get(iconName).getImage().getScaledInstance((int) d.getWidth(), (int) d.getHeight(), Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
+
     public ImageIcon getHighlightIcon(String iconName, Dimension d) {
         if (highlight.keySet().contains(iconName)) {
-            return new ImageIcon(highlight.get(iconName).getImage().getScaledInstance((int)d.getWidth(),(int) d.getHeight(), Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(highlight.get(iconName).getImage().getScaledInstance((int) d.getWidth(), (int) d.getHeight(), Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
-    
+
     public ImageIcon getInactiveIcon(String iconName, Dimension d) {
         if (inactive.keySet().contains(iconName)) {
-            return new ImageIcon(inactive.get(iconName).getImage().getScaledInstance((int)d.getWidth(),(int) d.getHeight(), Image.SCALE_SMOOTH));
-        } else
+            return new ImageIcon(inactive.get(iconName).getImage().getScaledInstance((int) d.getWidth(), (int) d.getHeight(), Image.SCALE_SMOOTH));
+        } else {
             return null;
+        }
     }
 }

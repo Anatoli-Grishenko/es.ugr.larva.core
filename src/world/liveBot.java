@@ -31,14 +31,14 @@ import static glossary.Roles.HUMMER;
  */
 public class liveBot extends Thing {
 
-    String groupname;
+    String groupname, currentMission, currentGoal;
     Point3D origin, destination;
     ArrayList<String> capabilities, attachments;
 //    JsonObject lastPerceptions;
     Color colorcode;
     public String relpywith;
     int initialDistance = -1, currentDistance, order, slope;
-    int energyBurnt = -1, timeSecs = 0;
+    int energyBurnt = -1, timeSecs = 0, userID;
     String myCommitment = "";
 
     public liveBot(String name) {
@@ -287,6 +287,30 @@ public class liveBot extends Thing {
 
     public void setSlope(int slope) {
         this.slope = slope;
+    }
+
+    public String getCurrentMission() {
+        return currentMission;
+    }
+
+    public void setCurrentMission(String currentMission) {
+        this.currentMission = currentMission;
+    }
+
+    public String getCurrentGoal() {
+        return currentGoal;
+    }
+
+    public void setCurrentGoal(String currentGoal) {
+        this.currentGoal = currentGoal;
+    }
+
+    public int getUserID() {
+        return userID;
+    }
+
+    public void setUserID(int userID) {
+        this.userID = userID;
     }
 
 }

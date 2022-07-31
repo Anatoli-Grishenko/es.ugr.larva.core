@@ -17,12 +17,19 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import swing.SwingTools;
+import static swing.SwingTools.getFileResource;
 import tools.TimeHandler;
 
 /**
@@ -517,15 +524,66 @@ public class Ole extends JsonObject {
      * @return A reference to the instance
      */
     public Ole loadFile(String fullfilename) {
+        if (fullfilename.startsWith("/resources")) {
+            loadFile(getFileResource(fullfilename));
+            return this;
+        } else {
+            try {
+                String str = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
+                if (str.contains("resource:/")) {
+                    String base = getClass().getResource("/resources/").toString();
+                    str = str.replaceAll("resource:/resources/", base);
+                }
+//                Pattern resourcePattern = Pattern.compile("@@.*@@");
+//                Matcher resourcesID = resourcePattern.matcher(str);
+//                if (resourcesID.find()) {
+//                    for (int i = 0; i < resourcesID.groupCount(); i++) {
+//                        String base = resourcesID.group(i).replaceAll("@@", "");
+//                        PrintStream ops = new PrintStream(new File("./base"+i+".png"));
+//                        ops.print(Arrays.toString(SwingTools.getBytesResource("resources/"+base)));
+//                        str = str.replace(resourcesID.group(i),base);
+//                    }
+//                }
+                parse(str);
+            } catch (Exception ex) {
+                System.err.println("(OLE) Error loading file " + fullfilename + " " + ex.toString());
+            }
+            return this;
+        }
+    }
+
+    public Ole loadFile(InputStream is) {
         try {
-            String str = new Scanner(new File(fullfilename)).useDelimiter("\\Z").next();
+            String str = new Scanner(is).useDelimiter("\\Z").next();
+//            Pattern resourcePattern = Pattern.compile("@@.*@@");
+//            Matcher resourcesID = resourcePattern.matcher(str);
+//            int i = 0;
+//            while (resourcesID.find()) {
+//                String base, basefile;
+//                base = resourcesID.group();
+//                basefile = base.replaceAll("@@", "");
+//                String replacement = "./base" + i++ + ".png";
+//                PrintStream ops = new PrintStream(new File(replacement));
+//                ops.print(Arrays.toString(SwingTools.getBytesResource("resources/" + base)));
+//                ops.close();
+//                str = str.replace(base, replacement);
+//
+//            }
+//                if (resourcesID.find()) {
+//                    for (int i = 0; i < resourcesID.groupCount(); i++) {
+//                        String base = resourcesID.group(i).replaceAll("@@", "");
+//                        PrintStream ops = new PrintStream(new File("./base"+i+".png"));
+//                        ops.print(Arrays.toString(SwingTools.getBytesResource("resources/"+base)));
+//                        str = str.replace(resourcesID.group(i),base);
+//                    }
+//                }
             if (str.contains("resource:/")) {
                 String base = getClass().getResource("/resources/").toString();
                 str = str.replaceAll("resource:/resources/", base);
             }
             parse(str);
         } catch (Exception ex) {
-            System.err.println("Error loading file " + fullfilename + " " + ex.toString());
+            System.err.println("(OLE) Error loading inputstream " + is.toString() + " " + ex.toString());
         }
         return this;
     }

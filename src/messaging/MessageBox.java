@@ -17,6 +17,8 @@ import java.util.concurrent.Semaphore;
  */
 public class MessageBox {
 
+    public static final String ACLMID = "ACLMID";
+
     public static enum BoxQueue {
         CONVERSATIONID, SENDER, INREPLYTO, PERFORMATIVE
     };
@@ -46,25 +48,33 @@ public class MessageBox {
 //        performativeQueue = new HashMap();
     }
 
-    public void pushMessage(ACLMessage m) {
-        String mid, tag = "ACLMID";
-        if (m.getUserDefinedParameter(tag) == null) {
-            mid = Keygen.getAlphaNumKey(20);
-            m.addUserDefinedParameter(tag, mid);
+    public String getMessageID(ACLMessage msg) {
+        if (msg.getUserDefinedParameter("ACLMID") == null) {
+            return "";
+        } else {
+            return msg.getUserDefinedParameter("ACLMID");
         }
-        mid = m.getUserDefinedParameter(tag);
+    }
+
+    public void pushMessage(ACLMessage m) {
+        String mid;
+        if (m.getUserDefinedParameter(ACLMID) == null) {
+            mid = Keygen.getAlphaNumKey(20);
+            m.addUserDefinedParameter(ACLMID, mid);
+        }
+        mid = this.getMessageID(m);
         masterID.add(mid);
         masterMessage.put(mid, m);
         smMaster.release(1);
         for (BoxQueue q : BoxQueue.values()) {
-            tag = getTag(q, m);
-            if (masterQueue.get(q).get(tag) == null) {
-                masterQueue.get(q).put(tag, new ArrayList());
+            mid = getTag(q, m);
+            if (masterQueue.get(q).get(ACLMID) == null) {
+                masterQueue.get(q).put(ACLMID, new ArrayList());
             }
 //            System.out.println("Pushing "+q.name()+" "+ACLMessageTools.fancyWriteACLM(m));
-            masterQueue.get(q).get(tag).add(mid);
-            if (smQueue.get(q).keySet().contains(tag)) {
-                smQueue.get(q).get(tag).release(1);
+            masterQueue.get(q).get(ACLMID).add(mid);
+            if (smQueue.get(q).keySet().contains(ACLMID)) {
+                smQueue.get(q).get(ACLMID).release(1);
 //                System.out.println("Releasing  "+q.name()+" "+ACLMessageTools.fancyWriteACLM(m));
             }
         }
@@ -179,7 +189,6 @@ public class MessageBox {
 //            System.err.println("MessageBox :" + ex.toString());
 //        }
 //    }
-
     @Override
     public String toString() {
         String res = "";

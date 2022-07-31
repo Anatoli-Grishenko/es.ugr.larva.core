@@ -59,7 +59,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     public String agentOwner;
 
     protected Component myParent;
-    protected HashMap<String, Environment> decoderSet;
+    protected  HashMap<String, Environment> decoderSet;
     OleSemiDial osAltitude, osBattery;
     OleSensor osGround;
     OleRotatory orCompass1;
@@ -95,6 +95,19 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         initLayout();
         this.addMouseListener(this);
     }
+
+//    public void purge() {
+//        TimeHandler thNow = new TimeHandler();
+//        ArrayList<String> purge = new ArrayList();
+//        for (String sname : this.decoderSet.keySet()) {
+//            if (decoderSet.get(sname).getLastRead().elapsedTimeSecsUntil(thNow) > 10) {
+//                purge.add(sname);
+//            }
+//        }
+//        for (String s : purge) {
+//            decoderSet.remove(s);
+//        }
+//    }
 
     public Environment getMyDecoder() {
         return decoderSet.get(agentOwner);
@@ -383,7 +396,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         this.myXUIAgent = myXUIAgent;
     }
 
-    
     public boolean preProcessACLM(String content) {
         boolean res = false;
 //        System.out.println("DashBoard Preprocess");
@@ -402,8 +414,8 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             this.osAltitude.setAlertLimitAbove(maxlevel);
             osHud.resetTerrain();
             availableDashBoard = false;
-            ndash=0;
-            this.nprepr=0;
+            ndash = 0;
+            this.nprepr = 0;
             res = true;
 //            System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
         } else if (content.contains("perceptions")) {
@@ -424,7 +436,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 
     public void feedPerception(String perception) {
         String stepbystep = "";
-
+//        this.purge();
         try {
             JsonObject jsoperception = Json.parse(perception).asObject();
 //            System.out.println(jsoperception.toString(WriterConfig.PRETTY_PRINT));
@@ -1197,7 +1209,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-            osHud.mouseClicked(e);
+        osHud.mouseClicked(e);
     }
 
     @Override

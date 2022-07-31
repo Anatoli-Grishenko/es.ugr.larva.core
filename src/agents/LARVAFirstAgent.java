@@ -142,7 +142,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected final String ACLMTAG = "ACLMID";
     protected List<String> errortags = Stream.of("FAILURE", "REFUSE", "NOT-UNDERSTOOD", "BAD ", "ERROR").collect(Collectors.toList());
     protected BaseFactoryAgent baseFactory;
-    protected boolean allowExceptionShield = true;
+    protected boolean allowExceptionShield = true, allowSequenceDiagrams = false;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -485,6 +485,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+    protected void InfoACLM(String message, ACLMessage msg) {
+        if (logger.isEcho()) {
+            Info(message + " " + ACLMessageTools.fancyWriteACLM(msg, false));
+        }
+    }
+
     protected void Print(String message) {
         logger.logMessage(message);
         System.out.println(logger.getLastlog());
@@ -654,9 +660,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.secureSend(msg);
         }
         this.send(msg);
-        Info("⭕> Sending ACLM " + ACLMessageTools.fancyWriteACLM(msg, false) + Console.defText(Console.white));
+        InfoACLM("⭕> Sending ACLM ", msg);
         myReport.setOutBox(myReport.getOutBox() + 1);
-        sd.addSequence(msg);
+        if (this.isactiveSequenceDiagrams()) {
+            sd.addSequence(msg);
+        }
     }
 
     /**
@@ -689,8 +697,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
-            sd.addSequence(res);
+            InfoACLM("⭕< Received ACLM ", res);
+            if (this.isactiveSequenceDiagrams()) {
+                sd.addSequence(res);
+            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -725,8 +735,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
-            sd.addSequence(res);
+            InfoACLM("⭕< Received ACLM ", res);
+            if (this.isactiveSequenceDiagrams()) {
+                sd.addSequence(res);
+            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -758,8 +770,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
-            sd.addSequence(res);
+            InfoACLM("⭕< Received ACLM ", res);
+            if (this.isactiveSequenceDiagrams()) {
+                sd.addSequence(res);
+            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -791,8 +805,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
-            Info("⭕< Received ACLM " + ACLMessageTools.fancyWriteACLM(res, false));
-            sd.addSequence(res);
+            InfoACLM("⭕< Received ACLM ", res);
+            if (this.isactiveSequenceDiagrams()) {
+                sd.addSequence(res);
+            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -860,12 +876,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public void Alert(String message) {
-        if (isSwing()) {
+//        if (isSwing()) {
             JOptionPane.showMessageDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.WARNING_MESSAGE);
-        } else {
-            Info(message);
-        }
+//        } else {
+//            Info(message);
+//        }
     }
 
     /**
@@ -1236,7 +1252,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     /////////////////// MISSIONS ////////////////77
-    
     protected String chooseMission() {
         Info("Choosing a mission");
         String m = "";
@@ -1263,7 +1278,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     //////////////////////
     protected String Transponder() {
-        String sep = ";", answer = "TRANSPONDER" + sep;
+        String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
             answer += sep + "ONAIR";
@@ -1271,7 +1286,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             answer += sep + "GROUND " + getEnvironment().getCurrentCity();
         }
         answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
+        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + E.getCurrentGoal();
         return answer;
+    }
+
+    public void replyTransponder(ACLMessage request) {
+        outbox = request.createReply();
+        outbox.setPerformative(ACLMessage.INFORM);
+        outbox.setContent("INFORM" + Mission.sepMissions + Transponder());
+        this.LARVAsend(outbox);
     }
 
     public boolean isSecuredMessages() {
@@ -1364,19 +1387,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return false;
     }
 
-    public void doPublishMyStatus() {
-        for (String service : DFGetAllServicesProvidedBy(getLocalName())) {
-            if (service.startsWith("MISSION")) {
-                DFRemoveMyServices(new String[]{service});
-            }
-            if (service.startsWith("GOAL")) {
-                DFRemoveMyServices(new String[]{service});
-            }
-        }
-        DFAddMyServices(new String[]{"MISSION " + E.getCurrentMission().getName()});
-        DFAddMyServices(new String[]{"GOAL " + E.getCurrentGoal()});
-    }
-
     public boolean doLaunchSubagent(Class c) {
         OlePassport oPassport = new OlePassport();
         oPassport.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
@@ -1385,10 +1395,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         payload.setoPassport(oPassport);
         Object _args[] = new Object[1];
         _args[0] = payload;
-        if (false) {
-            return baseFactory.fastMicroBirth(c.getName().substring(0,1) + getHexaKey(3), c, _args);
+        if (oleConfig.getOptions().getOle("Connection").getString("boot", "").equals("microjade")) {
+            return baseFactory.fastMicroBirth(c.getName().substring(0, 1) + getHexaKey(3), c, _args);
         } else {
-            return baseFactory.fastBirth(c.getName().substring(0,1) + getHexaKey(3), c, _args);
+            return baseFactory.fastBirth(c.getName().substring(0, 1) + getHexaKey(3), c, _args);
         }
 
     }
@@ -1418,6 +1428,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             baseFactory.killAllExit();
             baseFactory = null;
         }
+    }
+
+    public void activateSequenceDiagrams() {
+        this.allowSequenceDiagrams = true;
+    }
+
+    public void deactivateSequenceDiagrams() {
+        this.allowSequenceDiagrams = false;
+    }
+
+    public boolean isactiveSequenceDiagrams() {
+        return this.allowSequenceDiagrams;
     }
 
 }

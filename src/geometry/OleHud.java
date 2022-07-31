@@ -74,13 +74,13 @@ public class OleHud extends OleSensor {
         myDash = ((OleDashBoard) this.parentPane);
         setnRows(1);
         setnColumns(3);
-        sprites = new ArrayList();
-        try {
-            for (int i = 0; i < 8; i++) {
-                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/explorer" + i + ".png").toString().replace("file:", "")));
-            }
-        } catch (IOException ex) {
-        }
+//        sprites = new ArrayList();
+//        try {
+//            for (int i = 0; i < 8; i++) {
+//                sprites.add(new Map2DColor().loadMapRaw(getClass().getResource("/resources/icons/explorer" + i + ".png").toString().replace("file:", "")));
+//            }
+//        } catch (IOException ex) {
+//        }
         hasGrid = false;
         palette = new Palette();
         palette.addWayPoint(0, Color.BLACK); // BW

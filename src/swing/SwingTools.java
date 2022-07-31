@@ -18,6 +18,21 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -234,8 +249,83 @@ public class SwingTools {
         return new Color(r, g, b);
     }
 
+    public static String dumpRelativeResource(String originalResource) throws IOException {
+        String res;
+        HashMap<String, InputStream> hashmap = getFileListResource(originalResource);
+        for (String sname : hashmap.keySet()) {
+            PrintStream os = null;
+            try {
+                res = "./" + sname;
+                os = new PrintStream(new File(res));
+                os.print(Arrays.toString(hashmap.get(sname).readAllBytes()));
+                os.close();
+                return  res;
+            } catch (FileNotFoundException ex) {
+                return "";
+            } finally {
+                os.close();
+            }
+        }
+        return null;
+    }
+
     public static String getRelativeResource(String originalResource) {
         return "../" + originalResource.substring(originalResource.indexOf("es.ugr.larva.core"));
+//
+//        return "../"+originalResource.substring(originalResource.indexOf("es.ugr.larva.core"))
+//                .replace("es.ugr.larva.core.jar!", "es.ugr.larva.core/dist/es.ugr.larva.core.jar!");
+    }
+
+    public static InputStream getFileResource(String originalResource) {
+        try {
+            File fres = null;
+            JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
+            JarEntry je = jf.getJarEntry("resources/config/MetalBoot.app");
+            if (je == null) {
+                return null;
+            } else {
+                InputStream is = jf.getInputStream(je);
+                return is;
+            }
+        } catch (IOException ex) {
+            return null;
+        }
+    }
+
+    public static byte[] getBytesResource(String originalResource) {
+        try {
+            File fres = null;
+            JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
+            JarEntry je = jf.getJarEntry("resources/config/MetalBoot.app");
+            if (je == null) {
+                return null;
+            } else {
+                InputStream is = jf.getInputStream(je);
+                return is.readAllBytes();
+            }
+        } catch (IOException ex) {
+            return null;
+        }
+    }
+
+    public static HashMap<String, InputStream> getFileListResource(String originalResource) {
+        HashMap<String, InputStream> res = new HashMap();
+        try {
+            JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
+            ArrayList<JarEntry> allEntries = Collections.list(jf.entries());
+            InputStream is;
+            System.out.println("Exploring entries in " + originalResource);
+            for (JarEntry je : allEntries) {
+                if (je.getName().startsWith(originalResource) && je.getName().length() > originalResource.length() + 1) { // Avoids the parent folder
+//                    System.out.println(je.getName());
+                    is = jf.getInputStream(je);
+                    res.put(je.getRealName(), is);
+                }
+            }
+            return res;
+        } catch (IOException ex) {
+            return null;
+        }
     }
 
 }

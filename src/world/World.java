@@ -271,9 +271,11 @@ public class World {
                     }
                     e = new Thing("");
                     e.fromJson(jsothing);
-                    this.addThing(e, props);
 //                    System.out.println("Found thing " + e.getName() + "\n" + e.toString());
-                    e.setPosition(placeAtMap(e.getPosition()));
+                    if (e.getPosition().getX() < terrain.getWidth() && e.getPosition().getY() < terrain.getHeight()) {
+                        this.addThing(e, props);
+                        e.setPosition(placeAtMap(e.getPosition()));
+                    }
 //                    System.out.println("Found thing " + e.getName() + "\n" + e.toString());
                 }
                 Point3D p;

@@ -34,11 +34,15 @@ public class Thing extends Entity3D {
     protected boolean hasHeliport = false, hasPort = false, hasAirport = false, isCity, isMountain, isArea;
     protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
     protected SensorDecoder myPerceptions;
+    protected Sensors[] minimal;
 
     public Thing(String name) {
         super(name);
         _rawSensors = new ArrayList<>();
         myPerceptions = new SensorDecoder();
+        minimal = new Sensors[] {Sensors.GPS,Sensors.CURRENTGOAL,Sensors.CURRENTMISSION,Sensors.ENERGY,Sensors.AUTONOMY,
+            Sensors.PAYLOAD,Sensors.ALIVE, Sensors.COMPASS,Sensors.DESTINATION,
+        Sensors.COURSE, Sensors.TARGET,Sensors.TYPE};
     }
 
     public Thing(String name, World w) {
@@ -46,6 +50,9 @@ public class Thing extends Entity3D {
         _refWorld = w;
         _rawSensors = new ArrayList<>();
         myPerceptions = new SensorDecoder();
+        minimal = new Sensors[] {Sensors.GPS,Sensors.CURRENTGOAL,Sensors.CURRENTMISSION,Sensors.ENERGY,Sensors.AUTONOMY,
+            Sensors.PAYLOAD,Sensors.ALIVE, Sensors.COMPASS,Sensors.DESTINATION,
+        Sensors.COURSE, Sensors.TARGET,Sensors.TYPE};
     }
 
     public void setType(String c) {
@@ -82,6 +89,10 @@ public class Thing extends Entity3D {
     public JsonObject getPerceptions() {
 //        System.out.println("Agent "+this.getName()+" querying "+Raw().indexperception.size()+" perceptions");
         return this.Raw().toJson();
+    }
+
+    public JsonObject getMinimalPerceptions() {
+        return this.Raw().toJson(minimal);
     }
 
     public void readPerceptions() {

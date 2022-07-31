@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import map2D.Map2DColor;
+import tools.TimeHandler;
 
 /**
  *
@@ -43,7 +44,8 @@ public class SensorDecoder {
     protected int stuck;
     protected Mission currentMission;
     protected String cachedCurrentCity = "", cachedDestinationCity = "";
-
+    protected TimeHandler lastRead;
+    
     // SensorsDISTANCE,
     // Memory
     // ParametersBURNRATEMOVE, BURNRATEREAD,
@@ -56,6 +58,7 @@ public class SensorDecoder {
         encodeSensor(Sensors.PEOPLE, new JsonArray());
         encodeSensor(Sensors.CAPABILITIES, new JsonArray());
         encodeSensor(Sensors.STOP, false);
+        lastRead=new TimeHandler();
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
@@ -1009,6 +1012,10 @@ public class SensorDecoder {
         return res;
     }
 
+    public void resetCourse() {
+        this.encodeSensor(Sensors.COURSE, new JsonArray());
+    }
+
     public Point3D[] getCourse() {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
@@ -1877,6 +1884,10 @@ public class SensorDecoder {
         } else {
             return "NONE";
         }
+    }
+    
+    public TimeHandler getLastRead() {
+        return lastRead;
     }
 
 }

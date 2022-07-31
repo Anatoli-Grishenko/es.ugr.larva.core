@@ -6,6 +6,7 @@ package appboot;
 import agents.AgentReport;
 import agents.LARVAPayload;
 import agents.XUIAgent;
+import com.eclipsesource.json.JsonObject;
 import data.Ole;
 import data.OleConfig;
 import data.OlePassport;
@@ -28,11 +29,17 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.logging.Level;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -154,17 +161,33 @@ public class LARVABoot {
         doJade = new Semaphore(1);
         String saux;
         switch (_style) {
-            case METAL:
-                saux = getClass().getResource("/resources/config/MetalBoot.app").toString().replace("file:", "");
-//                System.out.println("\n\n\n=====\n"+saux+"\n===\n\n\n");
-                this._appConfiguration = saux;
-                break;
+            case METAL: {
+//                String saux2 = "";
+//                try {
+//                    JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
+//                    JarEntry je = jf.getJarEntry("resources/config/MetalBoot.app");
+//                    if (je == null) {
+//                        System.out.println("NO ");
+//                    } else {
+//                        InputStream is = jf.getInputStream(je);
+//                        System.out.println("YES "+je.getName());
+//                    }
+//                } catch (IOException ex) {
+//                    System.out.println("ABSOLUTE NO");
+//                }
+//                String saux3="jar:"+getClass().getResource("/resources/config/MetalBoot.app").toString();
+//                System.out.println("--->"+saux3);
+//                saux2=getClass().getResource("/resources/config/MetalBoot.app").toString().replace("file:", "");
+                this._appConfiguration = "/resources/config/MetalBoot.app";
+            }
+            break;
+
             case LIGHT:
-                this._appConfiguration = getClass().getResource("/resources/config/LightBoot.app").toString().replace("file:", "");
+                this._appConfiguration = "/resources/config/LightBoot.app";
                 break;
             case CLASSIC:
             default:
-                this._appConfiguration = getClass().getResource("/resources/config/ClassicBoot.app").toString().replace("file:", "");
+                this._appConfiguration = "/resources/config/ClassicBoot.app";
 
         }
         this._configFileName = "./config/Configuration.conf";
@@ -513,10 +536,6 @@ public class LARVABoot {
         } else {
 
         }
-        if (oleConfig != null) {
-            oleConfig.setField("rebootjade", this._lockRebootFilename);
-            oleConfig.setField("shutdownjade", this._lockShutDownFilename);
-        }
         doCompleted("ARGUMENTS");
         return this;
     }
@@ -567,6 +586,12 @@ public class LARVABoot {
         _platformType = PLATFORM.JADE;
         _host = host;
         _port = port;
+        Ole oconnect = new Ole();
+        oconnect.setField("host",_host);
+        oconnect.setField("port",_port);
+        oconnect.setField("boot", "jade");
+        oleConfig.getOptions().add("Connection", oconnect);
+        oleConfig.saveAsFile("config/", "Configuration.conf", true);
 
         try {
             Info("jade.Boot Host " + _host + "["
@@ -618,6 +643,12 @@ public class LARVABoot {
         _port = port;
         _controllers = new HashMap<>();
         _runningAgents = new ArrayList<>();
+        Ole oconnect = new Ole();
+        oconnect.setField("host",_host);
+        oconnect.setField("port",_port);
+        oconnect.setField("boot", "microjade");
+        oleConfig.getOptions().add("Connection", oconnect);
+        oleConfig.saveAsFile("config/", "Configuration.conf", true);
 
         Info("jade.MicroBoot Host: " + _host + "["
                 + _port + "] <"
@@ -636,7 +667,7 @@ public class LARVABoot {
         Info("Connected to Jade");
         appMain.showProgress("Connected to JADE");
         doCompleted("CONNECT");
-        
+
         return this;
     }
 
