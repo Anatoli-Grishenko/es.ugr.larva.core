@@ -209,7 +209,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         stepsDone = new OleSet();
         stepsSent = new OleSet();
         if (sd == null) {
-            sd = new SequenceDiagram();
+            sd = new SequenceDiagram(this.getLocalName());
         }
         addRunStep("MILES00");
         addRunStep("MILES01");
@@ -251,6 +251,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             openRemote();
         }
         this.setSecuredMessages(true);
+        this.activateSequenceDiagrams();
         doNotExit();
     }
 
@@ -430,6 +431,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         addRunStep("MILES03");
         if (remote) {
             closeRemote();
+        }
+        if (this.isactiveSequenceDiagrams()) {
+            this.saveSequenceDiagram(getName() + ".seqd");
         }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
@@ -632,30 +636,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (msg.getUserDefinedParameter(ACLMTAG) == null) {
             msg.addUserDefinedParameter(ACLMTAG, Keygen.getHexaKey(20));
         }
-//        if (myDashboard != null && msg.getContent() != null
-//        if (msg.getOntology() != null && msg.getOntology().toUpperCase().equals("COMMITMENT")) {
-//            String skey = msg.getConversationId(), sman;
-//            if (skey != null && !this.DFGetAllProvidersOf("SESSION MANAGER " + skey).isEmpty()) {
-////                ACLMessage aux = new ACLMessage(msg.getPerformative());
-////                aux.setSender(msg.getSender());
-////                aux.setConversationId(msg.getConversationId());
-////                aux.setReplyWith(msg.getReplyWith());
-////                aux.setInReplyTo(msg.getInReplyTo());
-////                aux.setOntology(msg.getOntology());
-////                aux.setProtocol(msg.getProtocol());
-//                sman = this.DFGetAllProvidersOf("SESSION MANAGER " + skey).get(0);
-//                msg.addReceiver(new AID(sman, AID.ISLOCALNAME));
-////                aux.addReceiver(new AID(sman, AID.ISLOCALNAME));
-////                this.send(aux);
-////                Info("⬜ Sending ACLM " + ACLMessageTools.fancyWriteACLM(aux, false));
-////                sd.addSequence(aux);
-//            }
-//        }
-//        if (msg.getContent() != null
-//                && (msg.getContent().toUpperCase().contains("REQUEST JOIN")
-//                || (msg.getContent().toUpperCase().contains("QUERY SENSOR")))) {
-//            msg = ACLMessageTools.addDashMark(msg);
-//        }
+        msg = ACLMessageTools.secureACLM(msg);
         if (this.isSecuredMessages()) {
             this.secureSend(msg);
         }
@@ -663,7 +644,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         InfoACLM("⭕> Sending ACLM ", msg);
         myReport.setOutBox(myReport.getOutBox() + 1);
         if (this.isactiveSequenceDiagrams()) {
-            sd.addSequence(msg);
+            this.addSequenceDiagram(msg);
         }
     }
 
@@ -681,19 +662,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive();
-//            if (res != null && res.getContent().contains("filedata")) {
-//                Ole ocontent = new Ole().set(res.getContent());
-//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-//                int maxlevel = ocontent.getInt("maxflight");
-//                E.setWorldMap(ofile.toString(), maxlevel);
-//                if (!getLocalName().startsWith("XUI")) {
-//                    repeat = true;
-//                }
-//            }
-//            if (res != null && res.getContent().contains("perceptions")) {
-//                E.feedPerception(res.getContent());
-//                repeat = false;
-//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -719,19 +687,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(milis);
-//            if (res != null && res.getContent().contains("filedata")) {
-//                Ole ocontent = new Ole().set(res.getContent());
-//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-//                int maxlevel = ocontent.getInt("maxflight");
-//                E.setWorldMap(ofile.toString(), maxlevel);
-//                if (!getLocalName().startsWith("XUI")) {
-//                    repeat = true;
-//                }
-//            }
-//            if (res != null && res.getContent().contains("perceptions")) {
-//                E.feedPerception(res.getContent());
-//                repeat = false;
-//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -754,19 +709,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(t);
-//            if (res != null && res.getContent().contains("filedata")) {
-//                Ole ocontent = new Ole().set(res.getContent());
-//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-//                int maxlevel = ocontent.getInt("maxflight");
-//                E.setWorldMap(ofile.toString(), maxlevel);
-//                if (!getLocalName().startsWith("XUI")) {
-//                    repeat = true;
-//                }
-//            }
-//            if (res != null && res.getContent().contains("perceptions")) {
-//                E.feedPerception(res.getContent());
-//                repeat = false;
-//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -789,19 +731,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         do {
             repeat = false;
             res = blockingReceive(t, milis);
-//            if (res != null && res.getContent().contains("filedata")) {
-//                Ole ocontent = new Ole().set(res.getContent());
-//                OleFile ofile = new OleFile(ocontent.getOle("surface"));
-//                int maxlevel = ocontent.getInt("maxflight");
-//                E.setWorldMap(ofile.toString(), maxlevel);
-//                if (!getLocalName().startsWith("XUI")) {
-//                    repeat = true;
-//                }
-//            }
-//            if (res != null && res.getContent().contains("perceptions")) {
-//                E.feedPerception(res.getContent());
-//                repeat = false;
-//            }
         } while (repeat);
         this.checkReceivedMessage(res);
         if (res != null) {
@@ -877,8 +806,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void Alert(String message) {
 //        if (isSwing()) {
-            JOptionPane.showMessageDialog(null,
-                    message, "Agent " + getLocalName(), JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null,
+                message, "Agent " + getLocalName(), JOptionPane.WARNING_MESSAGE);
 //        } else {
 //            Info(message);
 //        }
@@ -1058,7 +987,25 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+    public void addSequenceDiagram(ACLMessage msg) {
+        sd.addSequence(msg);
+        this.getSequenceDiagram();
+    }
+
     public String getSequenceDiagram() {
+        if (sd.getOwner().equals(this.getLocalName())) {
+            try {
+                JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
+                if (taSeq != null) {
+//                    taSeq.append(filename);
+                    taSeq.setText(getLocalName());
+                    taSeq.append(sd.printSequenceDiagram());
+                    taSeq.validate();
+                }
+            } catch (Exception ex) {
+                //Info(getSequenceDiagram());
+            }
+        }
         return sd.printSequenceDiagram();
     }
 
@@ -1066,17 +1013,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             PrintStream out = new PrintStream(new File(filename));
             out.println(getSequenceDiagram());
-            try {
-                JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
-                if (taSeq != null) {
-//                    taSeq.append(filename);
-                    taSeq.setText(filename);
-                    taSeq.append(getSequenceDiagram());
-                    taSeq.validate();
-                }
-            } catch (Exception ex) {
-                //Info(getSequenceDiagram());
-            }
         } catch (FileNotFoundException ex) {
             Error("Unable to save Sequence Diagram into file " + filename);
         }

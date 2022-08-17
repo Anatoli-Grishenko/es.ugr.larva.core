@@ -13,6 +13,7 @@ import ai.MissionSet;
 import ai.Plan;
 import static crypto.Keygen.getHexaKey;
 import data.OlePassport;
+import static disk.Logger.trimFullString;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
 import jade.core.AID;
@@ -178,9 +179,14 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         boolean cin;
         String fakepassport = "TlBDIEFnZW50cw== ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pVHpJNWRXNWlOblZxVTNCbVp6TlVSaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEEyTFRJeUlERTFPalE1T2pNMU9qVXlNeUlzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJaMlZ1ZEhNaWZRPT0=",
                 realpassport = mypassport;
-        if (this.doLARVACheckin()) {
-            doLARVACheckout();
-        }
+
+//////////////        if (this.doLARVACheckin()) {
+//////////////            doLARVACheckout();
+//////////////        }
+        OlePassport op = new OlePassport();
+        op.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
+        sessionAlias = trimFullString(op.getName());
+        IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
         Info("Checking-in to LARVA");
         outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
         AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
@@ -219,6 +225,13 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         return city;
     }
 
+    public String mySelectNextCity() {
+        String city, around []=E.getCitiesAround(200);
+        
+        city = around[(int) (Math.random() * around.length)];
+        return city;
+    }
+
     public String mySelectCityCourse() {
         String city;
         this.MyReadPerceptions();
@@ -229,7 +242,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     }
 
     public Status MyChooseMission() {
-        nextCity = mySelectCity();
+        nextCity = this.mySelectNextCity();
         E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
         this.replyTransponder(session);
         this.needCourse = true;
@@ -307,7 +320,9 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         // Analizar objetivo
         if (G(E)) {
             Info("Target reached");
-            return Status.PARKING;
+            E.getCurrentMission().nextGoal();
+            needCourse = true;
+            return Status.SOLVEMISSION;
         }
         Choice a = Ag(E, A);
         if (a == null) {
@@ -349,23 +364,21 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 }
                 return Status.SOLVEMISSION;
             case "MOVEIN":
-                if (E.getCurrentCity().equals(goal[1])) {
-                    E.getCurrentMission().nextGoal();
-                    this.replyTransponder(session);
-                    return Status.SOLVEMISSION;
-                } else {
-                    if (needCourse) {
-                        if (!this.doFindCourseIn(E.getCurrentGoal().replaceAll("MOVEIN ", ""))) {
-                            Alert("Sorry, I cannot find a route in " + goal[0]);
-                            this.LARVAwait(1000);
-                            E.getCurrentMission().nextGoal();
-                            this.replyTransponder(session);
-                            return Status.SOLVEMISSION;
-                        }
-                        needCourse = false;
+                String targetCity = getEnvironment().getCurrentGoal().replace("MOVEIN ", "");
+                if (needCourse) {
+                    if (E.getCurrentCity().equals(targetCity)) {
+                        E.getCurrentMission().nextGoal();
+                        return Status.SOLVEMISSION;
                     }
-                    return MyMoveProblem();
+                    if (!this.doFindCourseIn(targetCity)) {
+////                            Alert("Sorry, I cannot find a route in " + goal[0]);
+                        this.LARVAwait(1000);
+                        E.getCurrentMission().nextGoal();
+                        return Status.EXIT;
+                    }
+                    needCourse = false;
                 }
+                return MyMoveProblem();
             case "EXIT":
                 this.replyTransponder(session);
                 return Status.EXIT;
@@ -442,6 +455,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             return Status.EXIT;
         }
         cities = E.getCityList();
+        this.doQueryMissions();
         if (cities.length == 0) {
             Error("Sorry this agent can only join worlds with cities");
             return Status.CHECKOUT;
@@ -479,6 +493,18 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             E.setExternalPerceptions(session.getContent());
             return true;
         }
+    }
+
+    protected Status doQueryMissions() {
+        Info("Querying MISSIONS");
+        outbox = new ACLMessage();
+        outbox.setSender(this.getAID());;
+        outbox.addReceiver(new AID(sessionManager, AID.ISLOCALNAME));
+        outbox.setContent("Query MISSIONS session " + sessionKey);
+        this.LARVAsend(outbox);
+        session = LARVAblockingReceive();
+        E.setExternalPerceptions(session.getContent());
+        return myStatus;
     }
 
     public Status filterStatus(String s) {

@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import swing.SwingTools;
 import static swing.SwingTools.getFileResource;
 import tools.TimeHandler;
+import zip.ZipTools;
 
 /**
  * Generic class for exchanging complex objects and disk files by using JSon as
@@ -868,4 +869,67 @@ public class Ole extends JsonObject {
 //        return res;
 //
 //    }
+    public Ole zipMe() {
+        Ole res = new Ole();
+        String tozip = this.toString();
+        JsonArray data = new JsonArray();
+        try {
+            byte[] bytedata = ZipTools.zipToByte(tozip);
+            for (int i = 0; i < bytedata.length; i++) {
+                data.add((int) bytedata[i]);
+            }
+        } catch (Exception ex) {
+        }
+        res.addField("zipdata");
+        res.set("zipdata", data);
+        return res;
+    }
+
+    public Ole zipThis(String tozip) {
+        Ole res = new Ole();
+        JsonArray data = new JsonArray();
+        try {
+            byte[] bytedata = ZipTools.zipToByte(tozip);
+            for (int i = 0; i < bytedata.length; i++) {
+                data.add((int) bytedata[i]);
+            }
+        } catch (Exception ex) {
+        }
+        res.addField("zipdata");
+        res.set("zipdata", data);
+        return res;
+    }
+
+    public Ole Unzip(Ole zipOle) {
+        if (zipOle.get("zipdata") == null) {
+            return this;
+        }
+        JsonArray content = zipOle.get("zipdata").asArray();
+        byte[] bytedata = new byte[content.size()];
+        for (int i = 0; i < bytedata.length; i++) {
+            bytedata[i] = (byte) content.get(i).asInt();
+        }
+        try {
+            String fromZip = ZipTools.unzipByte(bytedata);
+            this.parse(fromZip);
+        } catch (Exception ex) {
+        }
+        return this;
+    }
+    public String UnzipThis(Ole zipOle) {
+        if (zipOle.get("zipdata") == null) {
+            return "";
+        }
+        JsonArray content = zipOle.get("zipdata").asArray();
+        byte[] bytedata = new byte[content.size()];
+        for (int i = 0; i < bytedata.length; i++) {
+            bytedata[i] = (byte) content.get(i).asInt();
+        }
+        try {
+            String fromZip = ZipTools.unzipByte(bytedata);
+            return fromZip;
+        } catch (Exception ex) {
+        }
+        return "";
+    }
 }

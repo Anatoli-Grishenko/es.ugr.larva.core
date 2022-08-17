@@ -26,12 +26,18 @@ public class SequenceDiagram {
     ArrayList<String> players, ACLMIDs;
     ArrayList<Sequence> sequences;
     int width = 35;
-    String blackboard = "", template = "%-" + width + "s", nextline = "";
+    String blackboard = "", template = "%-" + width + "s", nextline = "", owner;
 
-    public SequenceDiagram() {
+    public SequenceDiagram(String o) {
+        owner = o;
         clear();
     }
 
+    public String getOwner() {
+        return owner;
+    }
+
+    
     public void clear() {
         players = new ArrayList();
         ACLMIDs = new ArrayList();
@@ -115,6 +121,16 @@ public class SequenceDiagram {
                 nextline += "|" + String.format(template, fillField("", ' '));
             } else {
                 nextline += "|" + String.format(template, fillField("CNT:" + s.content.replaceAll("\n", " "), ' '));
+            }
+        }
+    }
+
+    public void printCID(Sequence s) {
+        for (int i = 0; i < players.size(); i++) {
+            if (i != indexPlayer(s.sender)) {
+                nextline += "|" + String.format(template, fillField("", ' '));
+            } else {
+                nextline += "|" + String.format(template, fillField("CID:" + s.conversationid.replaceAll("\n", " "), ' '));
             }
         }
     }
@@ -217,6 +233,7 @@ public class SequenceDiagram {
         ACLMIDs.add(msg.getUserDefinedParameter("ACLMID"));
         Sequence ns = new Sequence(); 
         ns.sender = msg.getSender().getLocalName().trim();
+        ns.conversationid = msg.getConversationId();
         ns.replywith = msg.getReplyWith();
         ns.inreplyto = msg.getInReplyTo();
         ns.receiver = ACLMessageTools.getAllReceivers(msg).trim();
@@ -243,16 +260,21 @@ public class SequenceDiagram {
             nextLine();
             this.printPerformative(sequences.get(i));
             nextLine();
-//            if (sequences.get(i).replywith != null) {
-//                this.printRW(sequences.get(i));
-//                nextLine();
-//
-//            }
-//            if (sequences.get(i).inreplyto != null) {
-//                this.printIRT(sequences.get(i));
-//                nextLine();
-//
-//            }
+            if (sequences.get(i).conversationid != null) {
+                this.printCID(sequences.get(i));
+                nextLine();
+
+            }
+            if (sequences.get(i).replywith != null) {
+                this.printRW(sequences.get(i));
+                nextLine();
+
+            }
+            if (sequences.get(i).inreplyto != null) {
+                this.printIRT(sequences.get(i));
+                nextLine();
+
+            }
             this.printContent(sequences.get(i));
             nextLine();
             this.printArrow(sequences.get(i));
@@ -266,6 +288,6 @@ public class SequenceDiagram {
 
 class Sequence {
 
-    String date, sender, receiver, content, replywith, inreplyto;
+    String date, sender, receiver, content, replywith, inreplyto, conversationid;
     int performative;
 }

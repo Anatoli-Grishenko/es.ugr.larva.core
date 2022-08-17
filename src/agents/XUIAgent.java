@@ -5,9 +5,11 @@
  */
 package agents;
 
+import ai.Mission;
 import data.Ole;
 import data.OleFile;
 import disk.Logger;
+import jade.lang.acl.ACLMessage;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -17,6 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import messaging.ACLMessageTools;
 import swing.OleDashBoard;
+import tools.TimeHandler;
+import static zip.ZipTools.unzipString;
 
 /**
  *
@@ -34,6 +38,11 @@ public class XUIAgent extends LARVAFirstAgent {
     protected boolean showTrail = false;
     protected int trailSize = 0;
     JPanel _XUI, _Server;
+    boolean profiler = false;
+    int nmessages = 0, miliswait, milisnext, sizeraw, sizezip, nagents = 0,
+            totaldistance = 0, totaltargets = 0, runSecs = 60;
+    long Milis = 0;
+    TimeHandler premesg, postmesg, start;
 
     @Override
     public void setup() {
@@ -62,6 +71,18 @@ public class XUIAgent extends LARVAFirstAgent {
         this.showConsole = false;
         this.frameDelay = 0;
         this.cont = true;
+        start = new TimeHandler();
+        System.out.println("XUI" + Mission.sepMissions + "Date" + Mission.sepMissions
+                + "Milis" + Mission.sepMissions
+                + "Num Messages" + Mission.sepMissions
+                + "Msg Wait" + Mission.sepMissions
+                + "Msg loop" + Mission.sepMissions
+                + "Raw" + Mission.sepMissions
+                + "zip" + Mission.sepMissions
+                + "Num Agents" + Mission.sepMissions
+                + "Distance" + Mission.sepMissions
+                + "Targets" + Mission.sepMissions
+        );
     }
 
     @Override
@@ -110,31 +131,91 @@ public class XUIAgent extends LARVAFirstAgent {
     }
 
     public Status myIdle() {
-//        System.out.println("TASK TS-FULL "+this.getCurrentGoal("TS-FULL"));
+        String buffer[];
+        boolean zip = false;
         inbox = this.LARVAblockingReceive();
+//        System.out.println(">>>>>>>>>>>>>>>"+inbox.getContent());
+        if (inbox.getContent().startsWith("ZIPDATA")) {
+            buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
+            zip = true;
+        } else {
+            buffer = new String[]{inbox.getContent()};
+            zip = false;
+        }
+
+        for (String rawcontent : buffer) {
+            String content;
+            if (zip) {
+                content = unzipString(rawcontent);
+            } else {
+                content = rawcontent;
+            }
+            sizezip = inbox.getContent().length();
+            sizeraw = content.length();
+//            System.out.println("Received " + sizeraw + "/" + sizezip + " bytes");
+//        String content = new Ole().UnzipThis(new Ole(inbox.getContent()));
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
-        if (inbox.getContent().contains("filedata")) {
-            oleConfig.loadFile("config/Configuration.conf");
-            showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
-            trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
-            myDashBoard.setTrailSize(trailSize);
-            myDashBoard.setShowTrail(showTrail);
-            this.sessionKey = inbox.getConversationId();
-            myDashBoard.preProcessACLM(inbox.getContent());
-        } else if (inbox.getContent().contains("perceptions")) {
-            myDashBoard.preProcessACLM(inbox.getContent());
-        } else if (inbox.getContent().contains("city")) {
-            System.out.println("Received cadastre");
-            myDashBoard.preProcessACLM(inbox.getContent());
-        } else if (inbox.getContent().contains("people")) {
-            System.out.println("Received census");
-            myDashBoard.preProcessACLM(inbox.getContent());
+            if (content.contains("filedata")) {
+//                System.out.println("Map received");
+                oleConfig.loadFile("config/Configuration.conf");
+                showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
+                trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
+                myDashBoard.setTrailSize(trailSize);
+                myDashBoard.setShowTrail(showTrail);
+                this.sessionKey = inbox.getConversationId();
+                myDashBoard.preProcessACLM(content);
+            } else if (content.contains("perceptions")) {
+//                System.out.println("Perceptions received");
+                myDashBoard.preProcessACLM(content);
+            } else if (content.contains("city")) {
+//                System.out.println("Cities received");
+                myDashBoard.preProcessACLM(content);
+            } else if (content.contains("people")) {
+//                System.out.println("People received");
+                myDashBoard.preProcessACLM(content);
+            }
+            _XUI.repaint();
+            nagents = myDashBoard.decoderSet.keySet().size();
+            int distance = 0, goals = 0;
+            for (String s : myDashBoard.decoderSet.keySet()) {
+                distance += myDashBoard.decoderSet.get(s).getNSteps();
+                goals += (myDashBoard.decoderSet.get(s).getOntarget() ? 1 : 0);
+            }
+            totaldistance = distance;
+            totaltargets += goals;
+            Milis = start.elapsedTimeMilisecsUntil(new TimeHandler());
+//            System.out.println("XUI" + Mission.sepMissions + TimeHandler.Now() + Mission.sepMissions
+//                    + Milis + Mission.sepMissions
+//                    + nmessages + Mission.sepMissions
+//                    + miliswait + Mission.sepMissions
+//                    + milisnext + Mission.sepMissions
+//                    + sizeraw + Mission.sepMissions
+//                    + sizezip + Mission.sepMissions
+//                    + nagents + Mission.sepMissions
+//                    + totaldistance + Mission.sepMissions
+//                    + totaltargets + Mission.sepMissions
+//            );
         }
-        _XUI.repaint();
-//        this.myApp.getDrawingPane().validate();
-//        this.myApp.getDrawingPane().repaint();
+//        if (Milis / 1000 > runSecs) {
+//            return Status.EXIT;
+//        }
         return Status.IDLE;
     }
 
+    @Override
+    public ACLMessage LARVAblockingReceive() {
+        premesg = new TimeHandler();
+        if (postmesg != null) {
+            this.milisnext = (int) postmesg.elapsedTimeMilisecsUntil(premesg);
+        }
+        ACLMessage res = null;
+        while (res == null) {
+            res = this.LARVAblockingReceive(100);
+        }
+        postmesg = new TimeHandler();
+        miliswait = (int) premesg.elapsedTimeMilisecsUntil(postmesg);
+        nmessages++;
+        return res;
+    }
 }

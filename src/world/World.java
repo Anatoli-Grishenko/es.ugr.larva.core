@@ -1083,7 +1083,7 @@ public class World {
         a.setView(null);
         a.setApp(null);
         a.setMaxSeconds(10);
-        a.setMaxDepth(1000);
+        a.setMaxDepth(1500);
         a.setMinlevel(agent.Raw().getMinlevel());
         a.setMaxlevel(agent.Raw().getMaxlevel());
         a.setMaxslope(agent.Raw().getMaxslope());

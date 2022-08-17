@@ -10,6 +10,7 @@ import com.eclipsesource.json.JsonObject;
 import static disk.Logger.trimString;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -17,6 +18,10 @@ import java.util.Iterator;
  * @author lcv
  */
 public class ACLMessageTools {
+
+    static final int Initiators[] = {ACLMessage.REQUEST, ACLMessage.QUERY_IF, ACLMessage.QUERY_REF, ACLMessage.SUBSCRIBE, ACLMessage.CFP},
+            Continuers[] = {ACLMessage.AGREE, ACLMessage.PROPOSE, ACLMessage.ACCEPT_PROPOSAL},
+            Closers[] = {ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM, ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL, ACLMessage.NOT_UNDERSTOOD};
 
     public static enum ACLMEncoding {
         NONE, JSON
@@ -200,7 +205,6 @@ public class ACLMessageTools {
 //        msg.setReplyWith(msg.getReplyWith() + " " + LARVADash.MARK);
 //        return msg;
 //    }
-
     public static AID getMainReceiver(ACLMessage msg) {
         Iterator it;
         it = msg.getAllReceiver();
@@ -211,4 +215,23 @@ public class ACLMessageTools {
         }
     }
 
+    public static boolean isInitiator(ACLMessage msg) {
+//        return msg.getInReplyTo().length()==0;
+        for (int i : Initiators) 
+            if (i==msg.getPerformative())
+                return true;
+        return false;
+    }
+    public static boolean isContinuer(ACLMessage msg) {
+        for (int i : Continuers) 
+            if (i==msg.getPerformative())
+                return true;
+        return false;
+    }
+    public static boolean isCloser(ACLMessage msg) {
+        for (int i : Closers) 
+            if (i==msg.getPerformative())
+                return true;
+        return false;
+    }
 }

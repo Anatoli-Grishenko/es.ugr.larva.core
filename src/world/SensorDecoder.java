@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import map2D.Map2DColor;
 import tools.TimeHandler;
+import static zip.ZipTools.unzipString;
 
 /**
  *
@@ -45,7 +46,7 @@ public class SensorDecoder {
     protected Mission currentMission;
     protected String cachedCurrentCity = "", cachedDestinationCity = "";
     protected TimeHandler lastRead;
-    
+
     // SensorsDISTANCE,
     // Memory
     // ParametersBURNRATEMOVE, BURNRATEREAD,
@@ -58,7 +59,7 @@ public class SensorDecoder {
         encodeSensor(Sensors.PEOPLE, new JsonArray());
         encodeSensor(Sensors.CAPABILITIES, new JsonArray());
         encodeSensor(Sensors.STOP, false);
-        lastRead=new TimeHandler();
+        lastRead = new TimeHandler();
     }
 
     public boolean setWorldMap(String content, int maxlevel) {
@@ -1113,7 +1114,7 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             encodeSensor(name, jsosensor.get("data").asArray());
-            if (name.toUpperCase().equals(Sensors.COURSE.name()) && getSensor(Sensors.CITIESPOSITIONS)!= null) { // XUI
+            if (name.toUpperCase().equals(Sensors.COURSE.name()) && getSensor(Sensors.CITIESPOSITIONS) != null) { // XUI
                 ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
                 Point3D destPoint = this.getCourse(this.getCourse().length - 1);
                 for (String scity : positions) {
@@ -1157,8 +1158,15 @@ public class SensorDecoder {
     }
 
     public void feedPerception(String content) {
-        JsonObject jsoperception = Json.parse(content).asObject();
+        JsonObject jsoperception;
+//        if (content.contains("zipdata")) {
+//            jsoperception = Json.parse(new Ole().UnzipThis(new Ole(content))).asObject();
+//        } else {
+//            jsoperception = Json.parse(content).asObject();
+//        }
 //        System.out.println(jsoperception.toString(WriterConfig.PRETTY_PRINT));
+        String unzipedcontent = unzipString(content);
+        jsoperception = Json.parse(unzipedcontent).asObject();
         feedPerception(jsoperception);
     }
 
@@ -1885,7 +1893,7 @@ public class SensorDecoder {
             return "NONE";
         }
     }
-    
+
     public TimeHandler getLastRead() {
         return lastRead;
     }

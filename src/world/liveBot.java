@@ -33,6 +33,7 @@ public class liveBot extends Thing {
 
     String groupname, currentMission, currentGoal;
     Point3D origin, destination;
+    String originCity, destinationCity;
     ArrayList<String> capabilities, attachments;
 //    JsonObject lastPerceptions;
     Color colorcode;
@@ -311,6 +312,22 @@ public class liveBot extends Thing {
 
     public void setUserID(int userID) {
         this.userID = userID;
+    }
+
+    public String getOriginCity() {
+        return originCity;
+    }
+
+    public void setOriginCity(String originCity) {
+        this.originCity = originCity;
+    }
+
+    public String getDestinationCity() {
+        return destinationCity;
+    }
+
+    public void setDestinationCity(String destinationCity) {
+        this.destinationCity = destinationCity;
     }
 
 }

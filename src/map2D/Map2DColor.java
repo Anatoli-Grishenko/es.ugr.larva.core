@@ -7,9 +7,12 @@ package map2D;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,6 +98,26 @@ public class Map2DColor {
         }
     }
 
+    public Map2DColor(BufferedImage img) {
+        _lmax = _lmin = -1;
+        _map = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                setColor(x, y, new Color(img.getRGB(x, y)));
+            }
+        }
+    }
+
+    public Map2DColor readFrom(byte[] stream) {
+        try {
+            InputStream in = new ByteArrayInputStream(stream);
+            BufferedImage bufImage = ImageIO.read(in);
+            return new Map2DColor(bufImage);
+        } catch (Exception ex) {
+            return new Map2DColor();
+        }
+    }
+
     /**
      * *
      * Carga una imagen desde un archivo en una matriz bidimensional de píxeles,
@@ -136,7 +159,6 @@ public class Map2DColor {
         f = new File(filename);
         this._map = ImageIO.read(f);
         _lmax = _lmin = -1;
-        this.getExtremeHeights();
 
         return this;
     }
@@ -481,7 +503,7 @@ public class Map2DColor {
                 Collections.sort(neighbors);
                 if (getCurveLevel(x, y, step) == neighbors.get(6)) {
                     if (getStepLevel(x, y) < 1) {
-                        res.setColor(x, y, new Color(0,0,50));
+                        res.setColor(x, y, new Color(0, 0, 50));
                     } else {
                         res.setColor(x, y, Color.BLACK);
                     }
@@ -501,4 +523,126 @@ public class Map2DColor {
             return (l + 4) / step;
         }
     }
+
+    public Map2DColor toGrayScale() {
+//        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+//        for (int x = 0; x < getWidth(); x++) {
+//            for (int y = 0; y < getHeight(); y++) {
+//                Color c =this.getColor(x, y);
+//                res.setLevel(x,y, (c.getGreen()+c.getRed()+c.getBlue())*255/(3*255));
+//            }
+//        }
+        return toGrayScale(1.0);
+    }
+
+    public Map2DColor toGrayScale(double scale) {
+        Map2DColor res = new Map2DColor((int) (this.getWidth() * scale), (int) (this.getHeight() * scale));
+        for (int x = 0; x < getWidth() * scale; x++) {
+            for (int y = 0; y < getHeight() * scale; y++) {
+                Color c = this.getColor((int) (x / scale), (int) (y / scale));
+                res.setLevel(x, y, (c.getGreen() + c.getRed() + c.getBlue()) * 255 / (3 * 255));
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor scale(double scale) {
+        Map2DColor res = new Map2DColor((int) (this.getWidth() * scale), (int) (this.getHeight() * scale));
+        for (int x = 0; x < getWidth() * scale; x++) {
+            for (int y = 0; y < getHeight() * scale; y++) {
+                Color c = this.getColor((int) (x / scale), (int) (y / scale));
+                res.setColor(x, y, c);
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor absDiff(Map2DColor other) {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                res.setLevel(x, y, (int) (Math.abs((this.getRawLevel(x, y) - other.getRawLevel(x, y)))));
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor highLight(Map2DColor other) {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                Color c = this.getColor(x, y), c2;
+                if (other.getRawLevel(x, y) > 128) {
+                    c2 = new Color(c.getRed(), 255, c.getBlue());
+                    res.setColor(x, y, c2);
+                } else {
+                    res.setColor(x, y, c);
+                }
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor reduce(int n) {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                res.setLevel(x, y, this.getRawLevel(x, y) >> n << n);
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor threshold(int level) {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                if (this.getRawLevel(x, y) > level) {
+                    res.setLevel(x, y, 255);
+                } else {
+                    res.setLevel(x, y, 1);
+                }
+            }
+        }
+        return res;
+    }
+
+    public Map2DColor findEdges() {
+        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight()),
+                bw = this.toGrayScale();
+        int leftPixel;
+        int rightPixel;
+        int bottomPixel;
+        int rightColor;
+        boolean black;
+        int distance = 40;
+        for (int row = 0; row < this.getHeight(); row++) {
+            for (int col = 0;
+                    col < this.getWidth(); col++) {
+                black = false;
+                leftPixel = getRawLevel(col, row);
+                if (col < getHeight() - 1) {
+                    rightPixel = getRawLevel(col + 1, row);
+                    if (Math.abs(leftPixel - rightPixel) > distance) {
+                        black = true;
+                    }
+                }
+                if (row < getWidth() - 1) {
+                    bottomPixel = getRawLevel(col, row);
+                    if (Math.abs(leftPixel - bottomPixel) > distance) {
+                        bottomPixel = getRawLevel(col, row + 1);
+                        black = true;
+                    }
+
+                }
+                if (black) {
+                    res.setLevel(col, row, 0);
+                } else {
+                    res.setLevel(col, row, 255);
+                }
+            }
+        }
+        return res;
+    }
+
 }

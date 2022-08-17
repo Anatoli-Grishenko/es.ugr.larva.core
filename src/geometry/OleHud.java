@@ -129,6 +129,8 @@ public class OleHud extends OleSensor {
         }
         g.setColor(Color.BLACK);
         g.fill(screenPort);
+        if (myDash.getMyDecoder()== null)
+            return this;
         if (myDash.getMyDecoder().getWorldMap() != null) {
             scale = viewPort.getWidth() / this.myDash.getMyDecoder().getWorldMap().getMap().getWidth();
         }
@@ -258,6 +260,9 @@ public class OleHud extends OleSensor {
         String sCompass, sGoal, sDistance;
         double radius1 = 0, radius2 = 0, alpha1, alpha2;
         Point3D p0, p1, p2, p3;
+
+        if (myDash.getMyDecoder()== null)
+            return this;
 
         g.setClip(viewPort);
         Color cTile, cBackground, cStroke;

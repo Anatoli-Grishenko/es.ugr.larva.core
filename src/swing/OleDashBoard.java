@@ -59,7 +59,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     public String agentOwner;
 
     protected Component myParent;
-    protected  HashMap<String, Environment> decoderSet;
+    public  HashMap<String, Environment> decoderSet;
     OleSemiDial osAltitude, osBattery;
     OleSensor osGround;
     OleRotatory orCompass1;
@@ -402,11 +402,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 
         if (content.contains("filedata")) {
             Ole ocontent = new Ole().set(content);
+            agentName = ocontent.getString("owner", "");
+            agentOwner = agentName;
             OleFile ofile = new OleFile(ocontent.getOle("surface"));
             int maxlevel = ocontent.getInt("maxflight");
             this.clear();
-            agentName = ocontent.getString("requester", "");
-            agentOwner = agentName;
             decoderSet.clear();
             decoderSet.put(agentName, new Environment());
             decoderSet.get(agentName).setWorldMap(ofile.toString(), maxlevel);
@@ -425,7 +425,11 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
+            try{
             getMyDecoder().setExternalObjects(content);
+            } catch(Exception ex) {
+                System.out.println("");
+            }
         } else if (content.contains("people")) {
             getMyDecoder().setExternalObjects(content);
         }

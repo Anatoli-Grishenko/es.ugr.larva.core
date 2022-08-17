@@ -575,6 +575,17 @@ public class Environment extends SensorDecoder {
         return census;
     }
 
+    public String [] getCitiesAround(int radius) {
+        ArrayList <String> citiesaround= new ArrayList();
+        Point3D mypos = this.getGPS();
+        for (String s: getCityList()) {
+            if (getCityPosition(s).planeDistanceTo(mypos)<= radius) {
+                citiesaround.add(s);
+            }
+        }
+        return Transform.toArrayString(citiesaround);
+    }
+    
     public String[] getCityList() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
