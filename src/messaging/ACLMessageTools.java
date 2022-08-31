@@ -12,6 +12,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.Arrays;
 import java.util.Iterator;
+import tools.TimeHandler;
 
 /**
  *
@@ -119,10 +120,11 @@ public class ACLMessageTools {
                 res += ((AID) it.next()).getLocalName() + " ";
             }
             res += (msg.getProtocol() == null ? _NULLVAL : "||PRT" + sep + msg.getProtocol())
-                    + (msg.getConversationId() == null ? _NULLVAL : "||CNV" + sep + msg.getConversationId())
+                    + (msg.getConversationId() == null ? _NULLVAL : "||CID" + sep + msg.getConversationId())
                     + (msg.getEncoding() == null ? _NULLVAL : "||ENC" + sep + msg.getEncoding())
                     + (msg.getReplyWith() == null ? _NULLVAL : "||RPW" + sep + msg.getReplyWith())
                     + (msg.getInReplyTo() == null ? _NULLVAL : "||IRT" + sep + msg.getInReplyTo())
+                    + (msg.getReplyByDate() == null ? _NULLVAL : "||RPB" + sep + new TimeHandler().fromDate(msg.getReplyByDate()).toString())
                     + (msg.getLanguage() == null ? _NULLVAL : "||LAN" + sep + trimString(msg.getLanguage(), 10))
                     + (msg.getOntology() == null ? _NULLVAL : "||ONT" + sep + msg.getOntology());
             res += "||";
@@ -215,23 +217,50 @@ public class ACLMessageTools {
         }
     }
 
+    public static boolean isConversational(ACLMessage msg) {
+        if (msg.getConversationId().length() > 0
+                && msg.getReplyWith().length() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public static boolean isInitiator(ACLMessage msg) {
 //        return msg.getInReplyTo().length()==0;
-        for (int i : Initiators) 
-            if (i==msg.getPerformative())
+        for (int i : Initiators) {
+            if (i == msg.getPerformative()) {
                 return true;
+            }
+        }
         return false;
     }
+
+    public static boolean isInitiator(int performative) {
+//        return msg.getInReplyTo().length()==0;
+        for (int i : Initiators) {
+            if (i == performative) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isContinuer(ACLMessage msg) {
-        for (int i : Continuers) 
-            if (i==msg.getPerformative())
+        for (int i : Continuers) {
+            if (i == msg.getPerformative()) {
                 return true;
+            }
+        }
         return false;
     }
+
     public static boolean isCloser(ACLMessage msg) {
-        for (int i : Closers) 
-            if (i==msg.getPerformative())
+        for (int i : Closers) {
+            if (i == msg.getPerformative()) {
                 return true;
+            }
+        }
         return false;
     }
 }

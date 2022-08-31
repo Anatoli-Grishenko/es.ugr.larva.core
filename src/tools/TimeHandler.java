@@ -30,6 +30,10 @@ public class TimeHandler {
         return new TimeHandler().toString();
     }
 
+    public static TimeHandler nextSecs(long secs) {
+        return new TimeHandler().plusSeconds(secs);
+    }
+
     protected LocalDateTime _theTime;
 
     public TimeHandler() {
@@ -77,11 +81,13 @@ public class TimeHandler {
     }
 
     public boolean isAfterEq(TimeHandler t) {
-        return _theTime.isAfter(t._theTime) || _theTime.isEqual(t._theTime);
+        return this.elapsedTimeSecsUntil(t)>=0;
+//        return _theTime.isAfter(t._theTime) || _theTime.isEqual(t._theTime);
     }
 
     public boolean isBeforeEq(TimeHandler t) {
-        return _theTime.isBefore(t._theTime) || _theTime.isEqual(t._theTime);
+        return this.elapsedTimeSecsUntil(t)<=0;
+//        return _theTime.isBefore(t._theTime) || _theTime.isEqual(t._theTime);
     }
 
     public boolean isEqual(TimeHandler t) {

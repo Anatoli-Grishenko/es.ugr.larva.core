@@ -9,12 +9,14 @@ import static agents.LARVAFirstAgent.sd;
 import crypto.Keygen;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.isInitiator;
 import messaging.DialogueManager;
 import messaging.MessageBox;
 import messaging.MessageBox.BoxQueue;
+import messaging.Utterance;
 import tools.TimeHandler;
 
 /**
@@ -31,65 +33,173 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         DM = new DialogueManager(getLocalName());
     }
 
-    protected boolean LARVAcheckDialogue() {
+    protected void LARVAcheckOpenDialogs() {
         ACLMessage received;
-        received = this.LARVAblockingReceive(100);
+        received = super.LARVAreceive(); //super.LARVAblockingReceive(5);
         while (received != null) {
-            DM.addUtterance(received);
-            received = this.LARVAblockingReceive(100);
+            if (!DM.addUtterance(received)) {
+                ignoreMessage(received);
+            }
+            received = super.LARVAreceive(); //super.LARVAblockingReceive(5);
         }
-        Info("Checking Dialogue status: "+DM.getOpenConversations().length);
-        return DM.getOpenConversations().length>0;
     }
 
-    protected ACLMessage [] LARVAopenConversations() {
-        Info("Retrieving all open conversations");
-        return DM.getOpenConversations();
+    protected boolean LARVAhasOpenDialogs() {
+        LARVAcheckOpenDialogs();
+        return this.LARVAsizeOpenDialogues() > 0;
     }
 
-    protected ACLMessage [] LARVAunexpectedRequests() {
-        Info("Retrieving unexpected requests");
+    protected int LARVAsizeOpenDialogues() {
+        LARVAcheckOpenDialogs();
+        return this.LARVAqueryOpenDialogues().length;
+    }
+
+    protected ACLMessage[] LARVAqueryOpenDialogues() {
+        this.LARVAcheckOpenDialogs();
+        return DM.getOpenDialogues();
+    }
+
+    protected boolean LARVAhasUnexpectedRequests() {
+        LARVAcheckOpenDialogs();
+        return this.LARVAsizeUnexpectedRequests() > 0;
+    }
+
+    protected ACLMessage[] LARVAqueryUnexpectedRequests() {
+        this.LARVAcheckOpenDialogs();
         return DM.getUnexpectedRequests();
     }
 
-    protected ACLMessage [] LARVApendingRequest() {
-        Info("Retrieving unanswered requests");
+    protected int LARVAsizeUnexpectedRequests() {
+        LARVAcheckOpenDialogs();
+        return this.LARVAqueryUnexpectedRequests().length;
+    }
+
+    protected ACLMessage[] LARVAqueryPendingRequests() {
+        this.LARVAcheckOpenDialogs();
         return DM.getMyPendingRequests();
     }
 
-    protected ACLMessage [] LARVAnewAnswers() {
-        Info("Retrieving unread answers");
-        return DM.getNewAnswers();
+    protected boolean LARVAhasPendingRequests() {
+        LARVAcheckOpenDialogs();
+        return this.LARVASizePendingRequests() > 0;
     }
 
-    protected void LARVAstartDialogue(ACLMessage msg) {
-        ACLMessage received;
-        Info("Starting a new utterance");
-        msg = ACLMessageTools.secureACLM(msg);
-        LARVAsend(msg);
-        DM.addUtterance(msg);
+    protected int LARVASizePendingRequests() {
+        LARVAcheckOpenDialogs();
+        return this.LARVAqueryPendingRequests().length;
     }
-    
+
+    protected ACLMessage[] LARVAqueryAnswersTo(ACLMessage msg) {
+        this.LARVAcheckOpenDialogs();
+        return DM.getAllAnswersTo(msg);
+    }
+
+    protected boolean LARVAhasAnswersTo(ACLMessage msg) {
+        LARVAcheckOpenDialogs();
+        return this.LARVASizeAnswersTo(msg) > 0;
+    }
+
+    protected int LARVASizeAnswersTo(ACLMessage msg) {
+        LARVAcheckOpenDialogs();
+        return this.LARVAqueryAnswersTo(msg).length;
+    }
+
+    protected Utterance.Status LARVAgetDialogueStatus(ACLMessage msg) {
+        LARVAcheckOpenDialogs();
+        Utterance u;
+        u=DM.getMyUtterance(msg);
+        if (u==null) {
+            u=DM.getPrevUtterance(msg);
+        }
+        if (u != null) {
+            return u.getMyStatus();
+        } else {
+            return Utterance.Status.CLOSED;
+        }
+    }
+
+    protected void LARVAcloseUtterance(ACLMessage msg) {
+//        Info("\n\n"+" ::Closing utterance about " + msg.getContent());
+//        Info("::DIALOGIC>>>>>>>>>>> Closing " + msg.getContent()
+//                + "\n" + DM.toString());
+//        System.out.println("\n\n"+getLocalName()+" ::Closing utterance about " + msg.getContent());
+//        System.out.println(getLocalName()+" ::DIALOGIC>>>>>>>>>>> Closing " + msg.getContent()
+//                + "\n" + DM.toString());
+        DM.getMyUtterance(msg).close();
+//        Info(" ::DIALOGIC<<<<<<<<<<\n\n\n" + DM.toString());
+//        System.out.println(getLocalName()+" ::DIALOGIC<<<<<<<<<<\n\n\n" + DM.toString());
+    }
+
+//    protected void LARVAcloseConversation(ACLMessage msg) {
+//        DM.closeConversation(msg);
+//    }
+//
+    protected void LARVADialogue(ACLMessage msg) {
+        super.LARVAsend(msg);
+        DM.addUtterance(msg);
+        this.LARVAcheckOpenDialogs();
+    }
+
     protected ACLMessage[] LARVAblockingDialogue(ACLMessage msg) {
-        this.LARVAstartDialogue(msg);
+        this.LARVADialogue(msg);
         return this.LARVAwaitAnswersTo(msg);
     }
-    
+
     protected ACLMessage[] LARVAwaitAnswersTo(ACLMessage msg) {
-        Info("Waiting answers");
-        while (!DM.getUtterance(msg).isOverDue()) {
-            Info("Waiting answers");
-            DM.addUtterance(LARVAblockingReceive());
+        LARVAcheckOpenDialogs();
+        while (DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OPEN) {
+            this.LARVAcheckOpenDialogs();
         }
-        return DM.getUtterance(msg).getAllAnswers();
+        return DM.getMyUtterance(msg).getAllAnswers();
     }
 
-    protected void LARVAAnswerDialogue(ACLMessage msg) {
-        ACLMessage received;
-        Info("Continuing a previous utterance");
-        msg = ACLMessageTools.secureACLM(msg);
-        LARVAsend(msg);
-        DM.addUtterance(msg);
+    @Deprecated
+    @Override
+    protected void LARVAsend(ACLMessage msg) {
     }
 
+    @Deprecated
+    @Override
+    protected ACLMessage LARVAreceive() {
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    protected ACLMessage LARVAblockingReceive() {
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    protected ACLMessage LARVAblockingReceive(long milis) {
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    public ACLMessage LARVAblockingReceive(MessageTemplate t) {
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    protected ACLMessage LARVAblockingReceive(MessageTemplate t, long milis) {
+        return null;
+    }
+
+    public ACLMessage LARVAreplyAll(ACLMessage m) {
+        return m.createReply();
+    }
+
+    public ACLMessage LARVAreplySender(ACLMessage m) {
+        ACLMessage res = m.createReply();
+        res.clearAllReceiver();
+        res.addReceiver(m.getSender());
+        return res;
+    }
+
+    public void ignoreMessage(ACLMessage msg) {
+
+    }
 }

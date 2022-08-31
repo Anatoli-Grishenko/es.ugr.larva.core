@@ -215,7 +215,7 @@ public class Environment extends SensorDecoder {
             default:
         }
         if (movement) {
-            result.currentMission=this.currentMission;
+            result.currentMission = this.currentMission;
             result.slope = incrz;
             result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
             result.setEnergy(this.getEnergy() - this.getBurnratemove());
@@ -501,7 +501,7 @@ public class Environment extends SensorDecoder {
     }
 
     public boolean isTargetBack() {
-        return getRelativeAngular() >90 || getRelativeAngular() < -90;
+        return getRelativeAngular() > 90 || getRelativeAngular() < -90;
 //        return getRelativeAngular() > -45 && getRelativeAngular() < 45;
     }
 
@@ -575,17 +575,21 @@ public class Environment extends SensorDecoder {
         return census;
     }
 
-    public String [] getCitiesAround(int radius) {
-        ArrayList <String> citiesaround= new ArrayList();
+    public String[] getCitiesAround(int radius) {
+        ArrayList<String> citiesaround = new ArrayList();
         Point3D mypos = this.getGPS();
-        for (String s: getCityList()) {
-            if (getCityPosition(s).planeDistanceTo(mypos)<= radius) {
-                citiesaround.add(s);
+        for (String s : getCityList()) {
+            try {
+                if (getCityPosition(s).planeDistanceTo(mypos) <= radius) {
+                    citiesaround.add(s);
+                }
+            } catch (Exception ex) {
+                System.out.println("EX");
             }
         }
         return Transform.toArrayString(citiesaround);
     }
-    
+
     public String[] getCityList() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
@@ -594,8 +598,8 @@ public class Environment extends SensorDecoder {
         if (new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))).contains(city)) {
             ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
             for (String scity : positions) {
-                if (scity.split(" ")[0].equals(city)) {
-                    return new Point3D(scity.split(" ")[1]);
+                if (scity.split(Mission.sepMissions)[0].equals(city)) {
+                    return new Point3D(scity.split(Mission.sepMissions)[1]);
                 }
             }
             return null;

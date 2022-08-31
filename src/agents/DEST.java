@@ -12,6 +12,7 @@ import com.eclipsesource.json.WriterConfig;
 import jade.lang.acl.ACLMessage;
 import world.Thing;
 import world.ThingSet;
+import static zip.ZipTools.unzipString;
 
 /**
  *
@@ -25,16 +26,9 @@ public class DEST extends DroidStarshipLevelA {
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE DEST"});
-        this.logger.offEcho();
-        onMission = false;
-//        this.openRemote();
-//        this.closeRemote();
-        this.showPerceptions = false;
-        allowCFP = true;
-        allowREQUEST = true;
-        allowParking = true;
     }
 
+    @Override
     protected boolean isUnexpected(ACLMessage msg) {
         if (msg.getContent().startsWith("TRANSPOND")) {
             return true;
@@ -45,6 +39,7 @@ public class DEST extends DroidStarshipLevelA {
         return !msg.getSender().getLocalName().equals(sessionManager);
     }
 
+    @Override
     public Status MyParking() {
         this.replyTransponder(session);
 
@@ -58,8 +53,8 @@ public class DEST extends DroidStarshipLevelA {
                     outbox.setContent("Confirm");
                     this.LARVAsend(outbox);
                     nextCity = this.mySelectCityCourse();
-                            //cities[(int) (Math.random() * cities.length)];
-                    this.onMission(null, "EXIT", new String[]{"MOVEIN "+nextCity});
+                    //cities[(int) (Math.random() * cities.length)];
+                    this.onMission(null, "EXIT", new String[]{"MOVEIN " + nextCity});
                 }
             }
             if (this.isOnMission()) {
@@ -141,7 +136,7 @@ public class DEST extends DroidStarshipLevelA {
         currentCity = baseCity;
         Info("Joining session with base at 1 1");
         outbox = session.createReply();
-        outbox.setContent("Request join session " + sessionKey + " in "+baseCity);
+        outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
         LARVAsend(outbox);
 //        currentCity = baseCity;
 //        Info("Joining session with base in  " + baseCity);
@@ -157,7 +152,7 @@ public class DEST extends DroidStarshipLevelA {
 //            return Status.EXIT;
 //        }
         this.doQueryPeople("people");
-        nextCity=this.mySelectCityCourse();
+        nextCity = this.mySelectCityCourse();
         this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity});
 //        this.setCurrentMission("FINAL", new String[]{"MOVEIN " + baseCity, "EXIT"});
 //        myMission = this.activateCurrentMission("FINAL");
@@ -175,6 +170,7 @@ public class DEST extends DroidStarshipLevelA {
             outbox = msg.createReply();
             outbox.setContent(Transponder());
             LARVAsend(outbox);
+            System.out.println(getLocalName()+" TRANSPONDER: "+Transponder());
             return;
         }
         if (isOnMission()) {
@@ -203,7 +199,9 @@ public class DEST extends DroidStarshipLevelA {
         this.LARVAsend(outbox);
         session = LARVAblockingReceive();
         population = new ThingSet();
-        JsonObject jspeople = Json.parse(session.getContent()).asObject().get("thingset").asObject();
+        String unzipedcontent = unzipString(session.getContent());
+
+        JsonObject jspeople = Json.parse(unzipedcontent).asObject().get("thingset").asObject();
 //        System.out.println("CENSUS:"+jspeople.toString(WriterConfig.PRETTY_PRINT));
         population.fromJson(jspeople.get("people").asArray());
         return myStatus;

@@ -5,6 +5,7 @@
  */
 package glossary;
 
+import static crypto.Keygen.getWordo;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +17,8 @@ import java.util.Scanner;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Dictionary {
-    public static final int ALL=Integer.MAX_VALUE;
+
+    public static final int ALL = Integer.MAX_VALUE;
     protected HashMap<String, Dictionary> lexicon;
     protected final String delim = ".";
     protected String root;
@@ -42,6 +44,42 @@ public class Dictionary {
         } catch (Exception ex) {
 
         }
+    }
+
+    public String findFirstWord() {
+        String wordo;
+        ArrayList<String> words;
+        do {
+            wordo = getWordo(4);
+            words = completeWord(wordo, 25);
+        } while (words.size() == 0);
+        return words.get((int) (Math.random() * words.size()));
+    }
+
+    public String findNextWord(String word) {
+        ArrayList<String> words;
+        int n = 3;
+        do {
+            try {
+                words = completeWord(word.substring(word.length() - n), 10);
+                if (words.size() > 0) {
+                    return words.get((int) (Math.random() * words.size()));
+                }
+            } catch (Exception ex) {
+
+            }
+            n--;
+        } while (true);
+    }
+
+    public int checkWords(String prev, String next) {
+        int res = -1, max = (int) (Math.min(prev.length(), next.length()));
+        for (int i = 0; i < max; i++) {
+            if (prev.endsWith(next.substring(0, i + 1))) {
+                res = i;
+            }
+        }
+        return res;
     }
 
     public void addWord(String word) {
@@ -95,8 +133,9 @@ public class Dictionary {
     }
 
     public ArrayList<String> preOrder(int max) {
-        if (max < 0)
+        if (max < 0) {
             return new ArrayList();
+        }
         ArrayList<String> keys = new ArrayList(lexicon.keySet()), res = new ArrayList();
         Collections.sort(keys);
         for (String sk : keys) {
@@ -105,7 +144,7 @@ public class Dictionary {
                     res.add(this.root);
                     max--;
                 } else {
-                    res.addAll(lexicon.get(sk).preOrder(max-res.size()));
+                    res.addAll(lexicon.get(sk).preOrder(max - res.size()));
                 }
             }
         }

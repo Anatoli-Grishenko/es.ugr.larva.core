@@ -8,6 +8,7 @@ package messaging;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javax.net.ssl.SSLEngineResult;
 import static messaging.ACLMessageTools.isInitiator;
 import static messaging.ACLMessageTools.secureACLM;
 import tools.TimeHandler;
@@ -18,119 +19,137 @@ import tools.TimeHandler;
  */
 public class DialogueManager extends HashMap<String, HashMap<String, Utterance>> {
 
-    protected ACLMessage currentMessage;
     protected String AgentOwner;
-    protected ArrayList<ACLMessage> queue;
+    protected ArrayList<ACLMessage> fullQueue;
 
     public DialogueManager(String agentName) {
         super();
-        queue = new ArrayList();
-        AgentOwner = agentName;
+        fullQueue = new ArrayList();
+        this.setAgentOwner(agentName);
+    }
+
+    public String getAgentOwner() {
+        return AgentOwner;
+    }
+
+    public void setAgentOwner(String AgentOwner) {
+        this.AgentOwner = AgentOwner;
     }
 
     public DialogueManager start(ACLMessage msg) {
         addUtterance(msg);
-        currentMessage = msg;
         return this;
     }
 
-    public ACLMessage getCurrentMessage() {
-        return currentMessage;
-    }
-
-//    public boolean isNewUtterance(ACLMessage msg) {
-//        msg = secureACLM(msg);
-//        if (get(msg.getConversationId()) == null) {
+//    public boolean isClosedUtterance(ACLMessage answer) {
+//        answer = secureACLM(answer);
+//        Utterance utt = this.getPrevUtterance(answer);
+//        if (utt == null) {
 //            return true;
-//        }
-//        
-//        if (get(msg.getConversationId()).get(msg.getInReplyTo()) == null) {
-//            return true;
-//        }
-//        return false;
-//    }
-    public boolean isClosedUtterance(ACLMessage answer) {
-        answer = secureACLM(answer);
-        Utterance utt = this.getUtterance(answer);
-        if (utt == null) {
-            return true;
-        } else {
-            return utt.isClosed();
-        }
-//        if (get(answer.getConversationId()) == null) {
-//            return true;
-//        }
-
-//        if (isInitiator(answer)) {
-//            if (get(answer.getConversationId()).get(answer.getReplyWith()) == null) {
-//                return true;
-//            }
-//            return get(answer.getConversationId()).get(answer.getReplyWith()).isOverDue();
 //        } else {
-//            if (get(answer.getConversationId()).get(answer.getInReplyTo()) == null) {
-//                return true;
-//            }
-//            return get(answer.getConversationId()).get(answer.getInReplyTo()).isOverDue();
+//            return utt.getMyStatus() == Utterance.Status.CLOSED;
 //        }
-    }
-
-    public DialogueManager addUtterance(ACLMessage msg) {
+//    }
+//    public DialogueManager closeUtterance(ACLMessage answer) {
+//        answer = secureACLM(answer);
+//        Utterance utt = this.getPrevUtterance(answer);
+//        utt.close();
+//        return this;
+//    }
+//    public DialogueManager closeConversation(ACLMessage answer) {
+//        for (String cid : this.keySet()) {
+//            if (cid.equals(answer.getConversationId())) {
+//                for (String rw : this.get(cid).keySet()) {
+//                    get(cid).get(rw).close();
+//                }
+//            }
+//        }
+//        return this;
+//    }
+    public boolean addUtterance(ACLMessage msg) {
+        boolean result = false;
         Utterance previous, current;
         this.checkDialogue();
-        this.checkinUtterance(msg);
-        previous = this.getUtterance(msg);
+//        System.out.println(this.AgentOwner + ">>>>>> Start processing " + ACLMessageTools.fancyWriteACLM(msg) + "\n" + this.toString());
+        previous = this.getPrevUtterance(msg);
         if (isInitiator(msg)) {
             if (previous == null) {
                 if (get(msg.getConversationId()) == null) {
                     put(msg.getConversationId(), new HashMap());
                 }
-                if (get(msg.getConversationId()).get(msg.getReplyWith()) == null) {
-                    current = new Utterance(AgentOwner, msg);
-                    get(msg.getConversationId()).put(msg.getReplyWith(), current);
-                }
-            } else {
-                if (get(msg.getConversationId()) == null) {
-                    put(msg.getConversationId(), new HashMap());
-                }
-                if (get(msg.getConversationId()).get(msg.getReplyWith()) == null) {
-                    current = new Utterance(AgentOwner, msg);
-                    get(msg.getConversationId()).put(msg.getReplyWith(), current);
-                    previous.process(msg);
-                    current.setParent(previous);
-                }
             }
-        } else {
-            if (!isClosedUtterance(msg)) {
-                getUtterance(msg).process(msg);
+            if (get(msg.getConversationId()).get(msg.getReplyWith()) == null) {
+                current = new Utterance(AgentOwner, msg);
+                current.setParent(previous);
+                get(msg.getConversationId()).put(msg.getReplyWith(), current);
+                result = true;
+            } else {
+                result = false;
+            }
+        }
+        if (!isInitiator(msg) || (result && previous != null)) {
+            if (previous.getMyStatus() == Utterance.Status.OPEN) {
+                getPrevUtterance(msg).process(msg);
+                result = true;
+            } else {
+                if (msg.getPerformative() == ACLMessage.NOT_UNDERSTOOD) {
+                    result = true;
+                }
             }
         }
         this.checkDialogue();
-        if (!msg.getSender().getLocalName().equals(this.AgentOwner)) {
-            queue.add(msg);
+        if (!msg.getSender().getLocalName().equals(this.AgentOwner)
+                || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
+            fullQueue.add(msg);
         }
-        System.out.println("DIALOGUE STATUS:" + this.getOpenConversations().length + " pending answers\n" + toString());
-        return this;
+        if (previous != null && (previous.getMyStatus() == Utterance.Status.COMPLETED
+                || previous.getMyStatus() == Utterance.Status.OVERDUE)) {
+            previous.close();
+        }
+//        System.out.println(this.AgentOwner + "<<<<<<< End processing " + ACLMessageTools.fancyWriteACLM(msg) + "\n" + this.toString());
+//        if (!msg.getSender().getLocalName().equals(this.AgentOwner)) {
+//            fullQueue.add(msg);
+//        }
+//        System.out.println("DIALOGUE STATUS:" + this.getOpenConversations().length + " pending answers\n" + toString());
+        return result;
     }
 
-    public void checkinUtterance(ACLMessage answer) {
-        Utterance u = this.getUtterance(answer);
-        System.out.println("%%% " + this.AgentOwner + " CHECKIN Message " + Utterance.shorten(answer) + (u == null ? "NEW"
-                : "--->" + u.toString()));
-    }
-
-    public Utterance getUtterance(ACLMessage answer) {
-        try {
-            if (isInitiator(answer)) {
-                if (answer.getInReplyTo().length()==0)
-                return get(answer.getConversationId()).get(answer.getReplyWith());
-                else 
-                return get(answer.getConversationId()).get(answer.getInReplyTo());                    
-            } else {
-                return get(answer.getConversationId()).get(answer.getInReplyTo());
-            }
-        } catch (Exception ex) {
+    public Utterance getMyUtterance(ACLMessage answer) {
+        if (get(answer.getConversationId()) != null) {
+            return get(answer.getConversationId()).get(answer.getReplyWith());
+        } else {
             return null;
         }
+//        try {
+//            if (isInitiator(answer)) {
+//                return get(answer.getConversationId()).get(answer.getReplyWith());
+//            } else {
+//                return null;
+//            }
+//        } catch (Exception ex) {
+//            return null;
+//        }
+    }
+
+    public Utterance getPrevUtterance(ACLMessage answer) {
+        if (get(answer.getConversationId()) != null) {
+            return get(answer.getConversationId()).get(answer.getInReplyTo());
+        } else {
+            return null;
+        }
+//        try {
+//            if (isInitiator(answer)) {
+//                if (answer.getInReplyTo().length() == 0) {
+//                    return null;
+//                } else {
+//                    return get(answer.getConversationId()).get(answer.getInReplyTo());
+//                }
+//            } else {
+//                return get(answer.getConversationId()).get(answer.getInReplyTo());
+//            }
+//        } catch (Exception ex) {
+//            return null;
+//        }
     }
 
     public DialogueManager checkDialogue() {
@@ -142,19 +161,34 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return this;
     }
 
-    public ACLMessage[] getNewAnswers() {
-        ACLMessage res[] = queue.toArray(new ACLMessage[queue.size()]);
-        queue.clear();
-        return res;
-    }
-
+//    public ACLMessage[] getNewAnswers() {
+//        ArrayList<ACLMessage> pending = new ArrayList();
+//        for (ACLMessage msg : fullQueue) {
+//            if (!msg.getSender().getLocalName().equals(this.AgentOwner)
+//                    || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
+//                pending.add(msg);
+//            }
+//        }
+//        return pending.toArray(new ACLMessage[pending.pendingReceptions()]);
+//    }
+//
+//    public int sizeNewAnswers() {
+//        int res = 0;
+//        for (ACLMessage msg : fullQueue) {
+//            if (!msg.getSender().getLocalName().equals(this.AgentOwner)
+//                    || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
+//                res++;
+//            }
+//        }
+//        return res;
+//    }
     public ACLMessage[] getUnexpectedRequests() {
         this.checkDialogue();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
-                    if (!get(cid).get(rw).isOverDue()) {
+                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
                         pending.add(get(cid).get(rw).getStarter());
                     }
                 }
@@ -169,7 +203,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
-                    if (get(cid).get(rw).isOverDue()) {
+                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
                         pending.add(get(cid).get(rw).getStarter());
                     }
                 }
@@ -178,12 +212,12 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending.toArray(new ACLMessage[pending.size()]);
     }
 
-    public ACLMessage[] getOpenConversations() {
+    public ACLMessage[] getOpenDialogues() {
         this.checkDialogue();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
-                if (get(cid).get(rw).isOpen()) {
+                if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
                     pending.add(get(cid).get(rw).getStarter());
                 }
 
@@ -192,11 +226,36 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending.toArray(new ACLMessage[pending.size()]);
     }
 
+    public ACLMessage[] getAllAnswersTo(ACLMessage msg) {
+        this.checkDialogue();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        Utterance u = this.getPrevUtterance(msg);
+        if (u != null) {
+            return u.getAllAnswers();
+        } else {
+            return new ACLMessage[0];
+        }
+    }
+
+//    public void dismissACLMessage(ACLMessage msg) {
+//        int res = 0;
+//        ArrayList aux = new ArrayList();
+//        for (ACLMessage m : fullQueue) {
+//            if (!m.getUserDefinedParameter("ACLMID").equals(msg.getUserDefinedParameter("ACLMID"))) {
+//                aux.add(m);
+//            }
+//        }
+//        fullQueue = aux;
+//    }
+//    public ArrayList<ACLMessage> getQueue() {
+//        return fullQueue;
+//    }
     @Override
     public String toString() {
         Utterance u;
         String res = "CONVERSATIONS\n";
         for (String cid : this.keySet()) {
+            res += "|-- CID:" + cid + "\n";
             for (String rw : this.get(cid).keySet()) {
                 u = get(cid).get(rw);
                 if (u.getParent() == null) {
@@ -205,7 +264,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             }
         }
         res += "\n-------------------------------\n";
-        res += "OPEN CONVERSATIONS: " + this.getOpenConversations().length + "\n";
+        res += "OPEN CONVERSATIONS: " + this.getOpenDialogues().length + "\n";
         res += "\tUnexpected: " + this.getUnexpectedRequests().length + "\n";
         res += "\tAnswers: " + this.getMyPendingRequests().length + "\n";
         return res;
@@ -214,10 +273,10 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 
     public String toString(Utterance u, int nest) {
         String res = "";
-        if (nest == 0) {
-            res += "|-- CID:" + u.ConversationID + "\n";
-        }
-        res += "|"+nesting(nest + 1);
+//        if (nest == 0) {
+//            res += "|-- CID:" + u.ConversationID + "\n";
+//        }
+        res += "|" + nesting(nest + 1);
         res += "|--RW:" + u.ReplyWith + " " + u.toString() + "\n";
         if (u.getChildren() != null) {
             for (Utterance child : u.getChildren()) {

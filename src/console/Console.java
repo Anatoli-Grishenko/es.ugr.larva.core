@@ -223,7 +223,7 @@ public class Console {
     public Console print(String s) {
         try {
             this.out().append(s);
-            buffer+=s;
+            buffer += s;
         } catch (Exception ex) {
             System.err.println("Console " + _title + "Error while printing text" + ex.toString());
             System.exit(1);
@@ -234,7 +234,7 @@ public class Console {
 
     public Console println(String s) {
         print(s).print("\n");
-        buffer += s+"\n";
+        buffer += s + "\n";
         _cursorx = 1;
         _cursory++;
         return this;
@@ -596,7 +596,33 @@ public class Console {
 
         return this;
     }
-    
+
+    public Console doFrame(int x, int y, String word, int width) {
+        int y2 = y + 2, x2 = x + width;
+        for (int i = y; i <= y2; i++) {
+            setCursorXY(x, i);
+            print("" + this.windowFrames[0].charAt(5));
+            setCursorXY(x2, i);
+            print("" + this.windowFrames[0].charAt(5));
+        }
+        for (int j = x; j <= x2; j++) {
+            setCursorXY(j, y);
+            print("" + this.windowFrames[0].charAt(4));
+            setCursorXY(j, y2);
+            print("" + this.windowFrames[0].charAt(4));
+        }
+
+        setCursorXY(x, y);
+        print("" + this.windowFrames[0].charAt(0));
+        setCursorXY(x2, y);
+        print("" + this.windowFrames[0].charAt(1));
+        setCursorXY(x, y2);
+        print("" + this.windowFrames[0].charAt(2));
+        setCursorXY(x2, y2);
+        print("" + this.windowFrames[0].charAt(3));
+        return this;
+    }
+
     public Console doGrid(int x, int y, int x2, int y2) {
         for (int i = y; i <= y2; i++) {
             setCursorXY(x, i);

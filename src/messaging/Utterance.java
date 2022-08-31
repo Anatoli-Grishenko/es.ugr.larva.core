@@ -16,7 +16,12 @@ import tools.TimeHandler;
  */
 public class Utterance {
 
-    protected String ConversationID, ReplyWith, Initiator, Owner;
+    public static enum Status {
+        OPEN, OVERDUE, COMPLETED, CLOSED
+    }
+
+    Status myStatus;
+    protected String ConversationID, ReplyWith, Initiator, Owner, Content;
     protected ArrayList<String> Receivers;
     protected TimeHandler Deadline, Start;
     protected Utterance Parent;
@@ -30,6 +35,7 @@ public class Utterance {
         Receivers = new ArrayList();
         Answers = new ArrayList();
         closed = false;
+        myStatus = Status.OPEN;
     }
 
     public Utterance(String AgentName, ACLMessage msg) {
@@ -39,13 +45,16 @@ public class Utterance {
         start(msg);
     }
 
-    
+    public Status getMyStatus() {
+        return myStatus;
+    }
+
     public Utterance setParent(Utterance u) {
         Parent = u;
         if (u != null) {
             u.addChild(this);
         }
-    return this;
+        return this;
     }
 
     public Utterance getParent() {
@@ -80,17 +89,19 @@ public class Utterance {
         return Starter;
     }
 
-    public int size() {
+    public int pendingReceptions() {
         return Receivers.size();
     }
 
-    public Utterance abandon() {
-        Receivers.clear();
-        return this;
-    }
-
+//    public Utterance abandon() {
+//        Receivers.clear();
+//        return this;
+//    }
+//    
     public Utterance close() {
-        abandon();
+//        abandon();
+//        System.out.println("UTT>>>>>>>>>>> Closing "+this.Content);
+        myStatus = Status.CLOSED;
         closed = true;
         return this;
     }
@@ -100,25 +111,31 @@ public class Utterance {
             return this;
         }
         Starter = msg;
-        for (String rcvrs : ACLMessageTools.getAllReceivers(msg).split(",")) {
-            Receivers.add(rcvrs);
+        Initiator = msg.getSender().getLocalName();
+        if (Initiator.equals(this.Owner)) {
+            for (String rcvrs : ACLMessageTools.getAllReceivers(msg).split(",")) {
+                Receivers.add(rcvrs);
+            }
+        } else {
+            Receivers.add(this.Owner);
         }
         try {
             Deadline = new TimeHandler().fromDate(msg.getReplyByDate());
         } catch (Exception ex) {
             Deadline = null;
         }
-        Initiator = msg.getSender().getLocalName();
         Start = new TimeHandler();
         ConversationID = (msg.getConversationId() == null ? "" : msg.getConversationId());
         ReplyWith = (msg.getReplyWith() == null ? "" : msg.getReplyWith());
+        Content = (msg.getContent()== null ? "" : msg.getContent());
         closed = false;
+        myStatus = Status.OPEN;
         return this;
 
     }
 
     public boolean isOverDue() {
-        return (!this.isOnTime() || !isOpen());
+        return (!this.isOnTime() && !isCompleted());
     }
 
     public boolean isClosed() {
@@ -126,7 +143,11 @@ public class Utterance {
     }
 
     public boolean isOpen() {
-        return size() > 0;
+        return pendingReceptions() > 0 && isOnTime();
+    }
+
+    public boolean isCompleted() {
+        return pendingReceptions() == 0 && isOnTime();
     }
 
     public boolean fits(ACLMessage answer) {
@@ -151,16 +172,25 @@ public class Utterance {
         if (Deadline == null) {
             return true;
         } else {
-            return new TimeHandler().isAfterEq(Deadline);
+            TimeHandler now = new TimeHandler();
+//            if (now.isAfterEq(Deadline)) {
+//                System.out.println("Ontime: " + now.toString() + " - " + Deadline.toString());
+//            } else {
+//                System.out.println("Ontime: " + now.toString()+ " >>> " + Deadline.toString());
+//            }
+            return now.isAfterEq(Deadline);
         }
     }
 
     public Utterance check() {
-        if (!this.isOnTime()) {
-            return this.abandon();
-        } else {
-            return this;
+        if (myStatus == Status.OPEN) {
+            if (isOverDue()) {
+                myStatus = Status.OVERDUE;
+            } else if (isCompleted()) {
+                myStatus = Status.COMPLETED;        
+            }
         }
+        return this;
     }
 
     public static String shorten(ACLMessage msg) {
@@ -179,9 +209,12 @@ public class Utterance {
                 ? " sent to " + ACLMessageTools.getAllReceivers(getStarter())
                 : " received from " + Initiator)
                 + " RW: "
-                + getStarter().getReplyWith() + " BY " + this.getDeadline() + " ";
+                + getStarter().getReplyWith() 
+                + " IRT: "
+                + getStarter().getInReplyTo()
+                + " BY " + this.getDeadline() + " ";
         res += "\tReceived answers " + this.getAllAnswers().length + "/" + this.Receivers.size();
-        res += "\t" + (this.isOverDue() ? "CLOSED" : "OPEN");
+        res += "\t" + myStatus.name();
         return res;
     }
 }

@@ -1118,9 +1118,9 @@ public class SensorDecoder {
                 ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
                 Point3D destPoint = this.getCourse(this.getCourse().length - 1);
                 for (String scity : positions) {
-                    Point3D citypos = new Point3D(scity.split(" ")[1]);
+                    Point3D citypos = new Point3D(scity.split(Mission.sepMissions)[1]);
                     if (destPoint.isEqualTo(citypos)) {
-                        this.cachedDestinationCity = scity.split(" ")[0];
+                        this.cachedDestinationCity = scity.split(Mission.sepMissions)[0];
                     }
                 }
 
@@ -1877,8 +1877,8 @@ public class SensorDecoder {
         if (getGround() == 0) {
             ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
             for (String scity : positions) {
-                if (new Point3D(scity.split(" ")[1]).isEqualTo(getGPS())) {
-                    cachedCurrentCity = scity.split(" ")[0];
+                if (new Point3D(scity.split(Mission.sepMissions)[1]).isEqualTo(getGPS())) {
+                    cachedCurrentCity = scity.split(Mission.sepMissions)[0];
                     return cachedCurrentCity;
                 }
             }

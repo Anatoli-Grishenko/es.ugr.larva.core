@@ -27,7 +27,7 @@ import world.Perceptor;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class DroidStarshipLevelA extends LARVAFirstAgent {
+public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     protected enum Status {
         START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION, SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING
@@ -131,14 +131,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
 
     @Override
     public void Execute() {
-        if (reaction != null) {
-            myStatus = reaction;
-            reaction = null;
-            Info("Reacting to " + E.getCurrentGoal());
-            Info("Status: " + myStatus.name() + "(" + E.getCurrentGoal() + ")");
-        } else {
-            Info("Status: " + myStatus.name());
-
+        if (this.LARVAqueryUnexpectedRequests().length>0) {
         }
         switch (myStatus) {
             case START:
@@ -617,48 +610,6 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         } else {
             return goAhead(E, a);
         }
-    }
-
-    protected boolean isUnexpected(ACLMessage msg) {
-        return !msg.getSender().getLocalName().equals(sessionManager);
-    }
-
-    @Override
-    protected void LARVAsend(ACLMessage msg) {
-        rw = getHexaKey(16);
-        msg.setReplyWith(rw);
-        super.LARVAsend(msg);
-    }
-
-    @Override
-    protected ACLMessage LARVAblockingReceive() {
-        ACLMessage res;
-        while (true) {
-            res = super.LARVAblockingReceive();
-            if (isUnexpected(res)) {
-                this.processUnexpectedMessage(res);
-            } else {
-                return res;
-            }
-        }
-    }
-
-    @Override
-    protected ACLMessage LARVAblockingReceive(long milis) {
-        ACLMessage res;
-        TimeHandler tini = new TimeHandler(), tend = tini;
-        while (tini.elapsedTimeMilisecsUntil(tend) < milis) {
-            res = super.LARVAblockingReceive(milis);
-            if (res != null) {
-                if (isUnexpected(res)) {
-                    this.processUnexpectedMessage(res);
-                } else {
-                    return res;
-                }
-            }
-            tend = new TimeHandler();
-        }
-        return null;
     }
 
     protected void processUnexpectedMessage(ACLMessage msg) {

@@ -15,13 +15,5 @@ public class YV extends DroidStarshipLevelA {
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE YV"});        
-        this.logger.offEcho();
-        onMission = false;
-//        this.openRemote();
-        this.closeRemote();
-        this.showPerceptions=false;
-        allowCFP = true;
-        allowREQUEST = true;
-        allowParking = true;
     }
 }

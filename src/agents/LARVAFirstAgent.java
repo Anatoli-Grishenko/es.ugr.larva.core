@@ -103,7 +103,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected JTextArea myText;
 //    protected SensorDecoder Deco;
     protected ACLMessage checkin, checkout;
-    protected String IdentityManager;
+    protected String IdentityManager = "";
 
     protected int userID = -1;
     protected String userName = "";
@@ -432,9 +432,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (remote) {
             closeRemote();
         }
-        if (this.isactiveSequenceDiagrams()) {
-            this.saveSequenceDiagram(getName() + ".seqd");
-        }
+        this.addSequenceDiagram(null);
+//        if (this.isactiveSequenceDiagrams()) {
+        this.saveSequenceDiagram(getName() + ".seqd");
+//        }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
 //        }
@@ -630,9 +631,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @param msg The ACL message to be sent
      */
     protected void LARVAsend(ACLMessage msg) {
-        if (!ACLMessageTools.getMainReceiver(msg).equals(this.IdentityManager)) {
-            addRunStep("MILES10");
-        }
         if (msg.getUserDefinedParameter(ACLMTAG) == null) {
             msg.addUserDefinedParameter(ACLMTAG, Keygen.getHexaKey(20));
         }
@@ -640,12 +638,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (this.isSecuredMessages()) {
             this.secureSend(msg);
         }
+        if (!ACLMessageTools.getMainReceiver(msg).equals(this.IdentityManager)) {
+            addRunStep("MILES10");
+        }
         this.send(msg);
         InfoACLM("⭕> Sending ACLM ", msg);
         myReport.setOutBox(myReport.getOutBox() + 1);
-        if (this.isactiveSequenceDiagrams()) {
-            this.addSequenceDiagram(msg);
-        }
+//        if (this.isactiveSequenceDiagrams()) {
+        this.addSequenceDiagram(msg);
+//        }
     }
 
     /**
@@ -656,6 +657,26 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      *
      * @return
      */
+    protected ACLMessage LARVAreceive() {
+        ACLMessage res;
+        res = receive();
+        if (res != null) {
+            this.checkReceivedMessage(res);
+            InfoACLM("⭕< Received ACLM ", res);
+//            if (this.isactiveSequenceDiagrams()) {
+            this.addSequenceDiagram(res);
+//            }
+            myReport.setInBox(myReport.getInBox() + 1);
+            if (this.isSecuredMessages()) {
+                this.secureReceive(res);
+            }
+            if (this.isErrorMessage(res)) {
+                Alert("Error found " + res.getContent());
+            }
+        }
+        return res;
+    }
+
     protected ACLMessage LARVAblockingReceive() {
         ACLMessage res;
         boolean repeat;
@@ -666,9 +687,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.checkReceivedMessage(res);
         if (res != null) {
             InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                sd.addSequence(res);
-            }
+//            if (this.isactiveSequenceDiagrams()) {
+            this.addSequenceDiagram(res);
+//            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -691,9 +712,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.checkReceivedMessage(res);
         if (res != null) {
             InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                sd.addSequence(res);
-            }
+//            if (this.isactiveSequenceDiagrams()) {
+            this.addSequenceDiagram(res);
+//            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -713,9 +734,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.checkReceivedMessage(res);
         if (res != null) {
             InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                sd.addSequence(res);
-            }
+//            if (this.isactiveSequenceDiagrams()) {
+            this.addSequenceDiagram(res);
+//            }
             myReport.setInBox(myReport.getInBox() + 1);
         }
         if (this.isSecuredMessages()) {
@@ -736,7 +757,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (res != null) {
             InfoACLM("⭕< Received ACLM ", res);
             if (this.isactiveSequenceDiagrams()) {
-                sd.addSequence(res);
+                this.addSequenceDiagram(res);
             }
             myReport.setInBox(myReport.getInBox() + 1);
         }
@@ -988,25 +1009,32 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void addSequenceDiagram(ACLMessage msg) {
-        sd.addSequence(msg);
+        sd.addSequence(msg, getLocalName());
         this.getSequenceDiagram();
     }
 
     public String getSequenceDiagram() {
+        String res = "";
         if (sd.getOwner().equals(this.getLocalName())) {
             try {
-                JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
-                if (taSeq != null) {
+                res = sd.printSequenceDiagram();
+                if (this.isactiveSequenceDiagrams()) {
+                    if (this.payload != null) {
+                        JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
+                        if (taSeq != null) {
 //                    taSeq.append(filename);
-                    taSeq.setText(getLocalName());
-                    taSeq.append(sd.printSequenceDiagram());
-                    taSeq.validate();
+//                    taSeq.setText(getLocalName());
+                            taSeq.setText(res);
+//                    taSeq.append(res);
+                            taSeq.validate();
+                        }
+                    }
                 }
             } catch (Exception ex) {
-                //Info(getSequenceDiagram());
+                ex.printStackTrace();
             }
         }
-        return sd.printSequenceDiagram();
+        return res;
     }
 
     public void saveSequenceDiagram(String filename) {
@@ -1214,7 +1242,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     //////////////////////
     protected String Transponder() {
+        String goal = "";
         String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
+
+        goal = "GOAL " + E.getCurrentGoal();
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
             answer += sep + "ONAIR";
@@ -1222,8 +1253,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             answer += sep + "GROUND " + getEnvironment().getCurrentCity();
         }
         answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
-        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + E.getCurrentGoal();
+        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + goal;
         return answer;
+//    String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
+//        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
+//        if (E.getGround() > 0) {
+//            answer += sep + "ONAIR";
+//        } else {
+//            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
+//        }
+//        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
+//        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + E.getCurrentGoal();
+//        return answer;
     }
 
     public void replyTransponder(ACLMessage request) {

@@ -280,7 +280,7 @@ public class SwingTools {
         try {
             File fres = null;
             JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
-            JarEntry je = jf.getJarEntry("resources/config/MetalBoot.app");
+            JarEntry je = jf.getJarEntry(originalResource);
             if (je == null) {
                 return null;
             } else {
@@ -296,7 +296,7 @@ public class SwingTools {
         try {
             File fres = null;
             JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
-            JarEntry je = jf.getJarEntry("resources/config/MetalBoot.app");
+            JarEntry je = jf.getJarEntry(originalResource);
             if (je == null) {
                 return null;
             } else {

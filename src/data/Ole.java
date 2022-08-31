@@ -526,7 +526,7 @@ public class Ole extends JsonObject {
      */
     public Ole loadFile(String fullfilename) {
         if (fullfilename.startsWith("/resources")) {
-            loadFile(getFileResource(fullfilename));
+            loadFile(getFileResource(fullfilename.substring(1)));
             return this;
         } else {
             try {

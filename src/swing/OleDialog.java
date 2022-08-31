@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -322,7 +323,16 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridwidth = 1;
                 dataPanel.add(bAux, gc);
                 gc.gridx++;
-            } else if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name()) && 
+                    fieldproperties.getString("type", "").equals("icon")) {
+//                    gc.gridx++;
+                    ImageIcon icon=SwingTools.toIcon(ocomponents.getString(sfield, "").replace("file:", ""), -1, fieldproperties.getInt("height", -1));
+                    label = new JLabel(icon);
+                    components.put(sfield, label);
+                    dataPanel.add(label, gc);
+                    gc.gridx++;
+                
+            }else  if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
                 label = new JLabel(sfield);
@@ -474,7 +484,9 @@ public class OleDialog extends JDialog implements ActionListener {
             fieldproperties = olecfg.getProperties(sfield);
             if (ocomponents.getField(sfield).contains("<html>")) {
             } else if (sfield.startsWith("[") && sfield.endsWith("]")) {
-            } else if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name()) && 
+                    fieldproperties.getString("type", "").equals("icon")) {
+            }else  if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
                 if (fieldproperties.getArray("select") != null) { // Combobox
