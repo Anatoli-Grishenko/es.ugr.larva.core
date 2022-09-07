@@ -17,7 +17,7 @@ import tools.TimeHandler;
 public class Utterance {
 
     public static enum Status {
-        OPEN, OVERDUE, COMPLETED, CLOSED
+        OPEN, OVERDUE, COMPLETE 
     }
 
     Status myStatus;
@@ -29,12 +29,12 @@ public class Utterance {
 
     protected ArrayList<ACLMessage> Answers;
     protected ACLMessage Starter;
-    protected boolean closed;
+    protected boolean alive, completed;
 
     public Utterance() {
         Receivers = new ArrayList();
         Answers = new ArrayList();
-        closed = false;
+        alive = true;
         myStatus = Status.OPEN;
     }
 
@@ -42,6 +42,7 @@ public class Utterance {
         Receivers = new ArrayList();
         Answers = new ArrayList();
         Owner = AgentName;
+        alive = true;
         start(msg);
     }
 
@@ -93,16 +94,8 @@ public class Utterance {
         return Receivers.size();
     }
 
-//    public Utterance abandon() {
-//        Receivers.clear();
-//        return this;
-//    }
-//    
     public Utterance close() {
-//        abandon();
-//        System.out.println("UTT>>>>>>>>>>> Closing "+this.Content);
-        myStatus = Status.CLOSED;
-        closed = true;
+        alive=false;
         return this;
     }
 
@@ -128,30 +121,34 @@ public class Utterance {
         ConversationID = (msg.getConversationId() == null ? "" : msg.getConversationId());
         ReplyWith = (msg.getReplyWith() == null ? "" : msg.getReplyWith());
         Content = (msg.getContent()== null ? "" : msg.getContent());
-        closed = false;
         myStatus = Status.OPEN;
         return this;
 
     }
 
     public boolean isOverDue() {
-        return (!this.isOnTime() && !isCompleted());
+        return (!this.isOnTime() && !isReady());
     }
 
-    public boolean isClosed() {
-        return closed;
+    public boolean isAlive() {
+        return alive;
     }
+
+//    public boolean isCompleted() {
+//        return myStatus==Status.COMPLETED;
+//    }
 
     public boolean isOpen() {
         return pendingReceptions() > 0 && isOnTime();
     }
 
-    public boolean isCompleted() {
-        return pendingReceptions() == 0 && isOnTime();
+    public boolean isReady() {
+        return pendingReceptions() == 0;
     }
 
     public boolean fits(ACLMessage answer) {
-        return answer.getConversationId() == this.ConversationID && answer.getInReplyTo() == this.ReplyWith
+        return answer.getConversationId().equals(this.ConversationID) && 
+                answer.getInReplyTo().equals(this.ReplyWith)
                 && Receivers.contains(answer.getSender().getLocalName());
     }
 
@@ -164,8 +161,8 @@ public class Utterance {
         return this;
     }
 
-    public ACLMessage[] getAllAnswers() {
-        return Answers.toArray(new ACLMessage[Answers.size()]);
+    public ArrayList<ACLMessage> getAllAnswers() {
+        return new ArrayList(Answers);
     }
 
     public boolean isOnTime() {
@@ -184,13 +181,18 @@ public class Utterance {
 
     public Utterance check() {
         if (myStatus == Status.OPEN) {
-            if (isOverDue()) {
-                myStatus = Status.OVERDUE;
-            } else if (isCompleted()) {
-                myStatus = Status.COMPLETED;        
-            }
+            if (isOverDue() ){
+                myStatus = Status.OVERDUE;        
+            }else if (isReady())
+                myStatus=Status.COMPLETE;
         }
         return this;
+    }
+
+    public String minimalToString() {
+        return ACLMessageTools.fancyWriteACLM(this.getStarter(), false) +
+                "||ANSW " + this.getAllAnswers().size() + "/" + this.Receivers.size()+
+                "||" + myStatus.name()+ " "+(alive?"(+)":"(-)")+"||";
     }
 
     public static String shorten(ACLMessage msg) {
@@ -204,6 +206,7 @@ public class Utterance {
     @Override
     public String toString() {
         String res = "";
+        res +=(alive?"(+)":"(-)");
         res += "Message <" + this.getStarter().getContent() + ">"
                 + (Initiator.equals(Owner)
                 ? " sent to " + ACLMessageTools.getAllReceivers(getStarter())
@@ -213,7 +216,7 @@ public class Utterance {
                 + " IRT: "
                 + getStarter().getInReplyTo()
                 + " BY " + this.getDeadline() + " ";
-        res += "\tReceived answers " + this.getAllAnswers().length + "/" + this.Receivers.size();
+        res += "\tReceived answers " + this.getAllAnswers().size() + "/" + this.Receivers.size();
         res += "\t" + myStatus.name();
         return res;
     }

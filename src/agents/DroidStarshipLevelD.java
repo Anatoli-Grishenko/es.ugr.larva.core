@@ -131,7 +131,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     @Override
     public void Execute() {
-        if (this.LARVAqueryUnexpectedRequests().length>0) {
+        if (this.getExtRequests().size()>0) {
         }
         switch (myStatus) {
             case START:

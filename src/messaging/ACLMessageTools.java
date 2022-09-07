@@ -10,8 +10,11 @@ import com.eclipsesource.json.JsonObject;
 import static disk.Logger.trimString;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import tools.TimeHandler;
 
 /**
@@ -20,10 +23,32 @@ import tools.TimeHandler;
  */
 public class ACLMessageTools {
 
-    static final int Initiators[] = {ACLMessage.REQUEST, ACLMessage.QUERY_IF, ACLMessage.QUERY_REF, ACLMessage.SUBSCRIBE, ACLMessage.CFP},
-            Continuers[] = {ACLMessage.AGREE, ACLMessage.PROPOSE, ACLMessage.ACCEPT_PROPOSAL},
-            Closers[] = {ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM, ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL, ACLMessage.NOT_UNDERSTOOD};
+    public static final ArrayList<Integer> INITIATORS = new ArrayList(Stream.of(ACLMessage.REQUEST, ACLMessage.QUERY_IF,
+            ACLMessage.QUERY_REF, ACLMessage.SUBSCRIBE, ACLMessage.CFP, ACLMessage.INFORM_REF,
+            ACLMessage.CANCEL, ACLMessage.ACCEPT_PROPOSAL).collect(Collectors.toList()));
 
+    public static final ArrayList<Integer> ERRORS = new ArrayList(Stream.of(ACLMessage.REFUSE, ACLMessage.FAILURE).collect(Collectors.toList()));
+
+    public static final ArrayList<Integer> CONTINUERS = new ArrayList(Stream.of(ACLMessage.AGREE, ACLMessage.PROPOSE).collect(Collectors.toList()));
+    public static final ArrayList<Integer> CLOSERS = new ArrayList(Stream.of(ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM,
+            ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL,
+            ACLMessage.NOT_UNDERSTOOD).collect(Collectors.toList()));
+
+//static final ArrayList<Integer> ERRORS = new ArrayList(Stream.of().collect(Collectors.toList()));
+//            CONTINUERS[] = {ACLMessage.AGREE, ACLMessage.PROPOSE},
+//            CLOSERS[] = {ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM, 
+//                ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL,
+//                ACLMessage.NOT_UNDERSTOOD},
+//            ERRORS [] = {ACLMessage.REFUSE, ACLMessage.FAILURE};
+//    static final int INITIATORS[] = {ACLMessage.REQUEST, ACLMessage.QUERY_IF, 
+//        ACLMessage.QUERY_REF, ACLMessage.SUBSCRIBE, ACLMessage.CFP, ACLMessage.INFORM_REF, 
+//        ACLMessage.CANCEL, 
+//                ACLMessage.ACCEPT_PROPOSAL},
+//            CONTINUERS[] = {ACLMessage.AGREE, ACLMessage.PROPOSE},
+//            CLOSERS[] = {ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM, 
+//                ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL,
+//                ACLMessage.NOT_UNDERSTOOD},
+//            ERRORS [] = {ACLMessage.REFUSE, ACLMessage.FAILURE};
     public static enum ACLMEncoding {
         NONE, JSON
     }
@@ -111,25 +136,31 @@ public class ACLMessageTools {
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) + "||";
+        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) ;
         if (!simple) {
-            it = msg.getAllReplyTo();
             res = "||PFM" + sep + ACLMessage.getPerformative(msg.getPerformative()) + res;
-            res += "RPT" + sep;
-            while (it.hasNext()) {
-                res += ((AID) it.next()).getLocalName() + " ";
+            it = msg.getAllReplyTo();
+            if (it.hasNext()) {
+                res += "||RPT" + sep;
+                while (it.hasNext()) {
+                    res += ((AID) it.next()).getLocalName() + " ";
+                }
             }
-            res += (msg.getProtocol() == null ? _NULLVAL : "||PRT" + sep + msg.getProtocol())
-                    + (msg.getConversationId() == null ? _NULLVAL : "||CID" + sep + msg.getConversationId())
-                    + (msg.getEncoding() == null ? _NULLVAL : "||ENC" + sep + msg.getEncoding())
-                    + (msg.getReplyWith() == null ? _NULLVAL : "||RPW" + sep + msg.getReplyWith())
-                    + (msg.getInReplyTo() == null ? _NULLVAL : "||IRT" + sep + msg.getInReplyTo())
+            res += (isNull(msg.getProtocol()) ? _NULLVAL : "||PRT" + sep + msg.getProtocol())
+                    + (isNull(msg.getConversationId()) ? _NULLVAL : "||CID" + sep + msg.getConversationId())
+                    + (isNull(msg.getEncoding()) ? _NULLVAL : "||ENC" + sep + msg.getEncoding())
+                    + (isNull(msg.getReplyWith()) ? _NULLVAL : "||RPW" + sep + msg.getReplyWith())
+                    + (isNull(msg.getInReplyTo()) ? _NULLVAL : "||IRT" + sep + msg.getInReplyTo())
                     + (msg.getReplyByDate() == null ? _NULLVAL : "||RPB" + sep + new TimeHandler().fromDate(msg.getReplyByDate()).toString())
-                    + (msg.getLanguage() == null ? _NULLVAL : "||LAN" + sep + trimString(msg.getLanguage(), 10))
-                    + (msg.getOntology() == null ? _NULLVAL : "||ONT" + sep + msg.getOntology());
+                    + (isNull(msg.getLanguage()) ? _NULLVAL : "||LAN" + sep + trimString(msg.getLanguage(), 10))
+                    + (isNull(msg.getOntology()) ? _NULLVAL : "||ONT" + sep + msg.getOntology());
             res += "||";
         }
         return res;
+    }
+
+    protected static boolean isNull(String s) {
+        return s == null || s.length() == 0;
     }
 
     public static String fancyWriteACLM(ACLMessage original) {
@@ -168,7 +199,7 @@ public class ACLMessageTools {
     public static boolean isAnswerTo(ACLMessage incoming, ACLMessage sent) {
         try {
             return incoming.getConversationId().equals(sent.getConversationId())
-                    && incoming.getProtocol().equals(sent.getProtocol())
+                    //                    && incoming.getProtocol().equals(sent.getProtocol())
                     && incoming.getInReplyTo().equals(sent.getReplyWith());
         } catch (Exception Ex) {
             return false;
@@ -181,6 +212,9 @@ public class ACLMessageTools {
     }
 
     public static ACLMessage secureACLM(ACLMessage incoming) {
+        if (incoming == null) {
+            return null;
+        }
         incoming.setContent((incoming.getContent() == null ? _NULLVAL : incoming.getContent()));
         incoming.setLanguage(incoming.getLanguage() == null ? _NULLVAL : incoming.getLanguage());
         incoming.setConversationId((incoming.getConversationId() == null ? _NULLVAL : incoming.getConversationId()));
@@ -228,26 +262,28 @@ public class ACLMessageTools {
 
     public static boolean isInitiator(ACLMessage msg) {
 //        return msg.getInReplyTo().length()==0;
-        for (int i : Initiators) {
-            if (i == msg.getPerformative()) {
-                return true;
-            }
-        }
-        return false;
+        return INITIATORS.contains(msg.getPerformative());
+//        for (int i : INITIATORS) {
+//            if (i == msg.getPerformative()) {
+//                return true;
+//            }
+//        }
+//        return false;
     }
 
     public static boolean isInitiator(int performative) {
-//        return msg.getInReplyTo().length()==0;
-        for (int i : Initiators) {
-            if (i == performative) {
-                return true;
-            }
-        }
-        return false;
+        return INITIATORS.contains(performative);
+////        return msg.getInReplyTo().length()==0;
+//        for (int i : INITIATORS) {
+//            if (i == performative) {
+//                return true;
+//            }
+//        }
+//        return false;
     }
 
     public static boolean isContinuer(ACLMessage msg) {
-        for (int i : Continuers) {
+        for (int i : CONTINUERS) {
             if (i == msg.getPerformative()) {
                 return true;
             }
@@ -256,7 +292,7 @@ public class ACLMessageTools {
     }
 
     public static boolean isCloser(ACLMessage msg) {
-        for (int i : Closers) {
+        for (int i : CLOSERS) {
             if (i == msg.getPerformative()) {
                 return true;
             }

@@ -121,8 +121,9 @@ public class SequenceDiagram {
     public String fillField(String fill, int ncolumns) {
         String res = "";
         int tope = width * ncolumns;
-        for (; res.length() < tope - 1;) {
-            res += fill;
+        int i=0;
+        for (; res.length() < tope - 1;i=i+1) {
+            res += fill.charAt(i%fill.length());
         }
         return res;
     }
@@ -204,6 +205,7 @@ public class SequenceDiagram {
         }
         if (sfield != null) {
             int isender = this.indexPlayer(s.sender);
+            sfield = sfield.substring(0, (int) (Math.min(sfield.length(), width - field.length() - 3)));
             return this.printAllEmptyPlayers(0, isender)
                     + printStatus(isender) + StringTools.pasteBegin(this.fillField(" ", 1), "│" + field + ":" + sfield)
                     + this.printAllEmptyPlayers(isender + 1, players.size());
@@ -224,13 +226,17 @@ public class SequenceDiagram {
             to = Math.max(ifrom, ito);
             if (style.equals("CONVERSATION")) {
                 if (isInitiator(s.performative)) {
-                    horiz = horizInit;
+                    if (s.inreplyto.length() == 0) {
+                        horiz = horizInit + horizInit;
+                    } else {
+                        horiz = horizInit + horizCont;
+                    }
                 } else {
-                    horiz = horizCont;
+                    horiz = horizCont + horizCont;
 //                    arrow = StringTools.pasteBegin(this.fillField(horizCont, to - from), vert);
                 }
             } else {
-                horiz = horizCont;
+                horiz = horizCont+horizCont;
             }
             arrow = this.fillField(horiz, to - from);
             if (ifrom < ito) {
@@ -254,7 +260,7 @@ public class SequenceDiagram {
                 res += this.printAllEmptyPlayers(0, from)
                         + printStatus(from)
                         + arrow
-                        + StringTools.pasteBegin(this.printAllEmptyPlayers(to, players.size()), horiz + "┤") + "\n";
+                        + StringTools.pasteBegin(this.printAllEmptyPlayers(to, players.size()), horiz.charAt(0) + "┤") + "\n";
             }
         }
         return res;

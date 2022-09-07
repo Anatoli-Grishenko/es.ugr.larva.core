@@ -105,7 +105,9 @@ public class emojis {
             LINEUP="🏁",
             ACTIVATE="▶️",
             DEACTIVATE="⏹️",            
-            JOIN="👏";
+            JOIN="👏",
+            PARTY="😎",
+            MISTAKE="😱";
     public static final String AGENT = PASSPORT,
             DEAD = REDCIRCLE,
             ALIVE = GREENCIRCLE,

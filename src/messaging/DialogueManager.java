@@ -11,20 +11,25 @@ import java.util.HashMap;
 import javax.net.ssl.SSLEngineResult;
 import static messaging.ACLMessageTools.isInitiator;
 import static messaging.ACLMessageTools.secureACLM;
+import static messaging.MessageBox.ACLMID;
 import tools.TimeHandler;
 
 /**
  *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+ * @author7 Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class DialogueManager extends HashMap<String, HashMap<String, Utterance>> {
 
     protected String AgentOwner;
-    protected ArrayList<ACLMessage> fullQueue;
+    protected ArrayList<ACLMessage> fullQueue, ignoredQueue, amsQueue;
+    protected HashMap<String, Utterance> belongsTo;
 
     public DialogueManager(String agentName) {
         super();
         fullQueue = new ArrayList();
+        ignoredQueue = new ArrayList();
+        amsQueue = new ArrayList();
+        belongsTo = new HashMap();
         this.setAgentOwner(agentName);
     }
 
@@ -68,9 +73,14 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 //    }
     public boolean addUtterance(ACLMessage msg) {
         boolean result = false;
+        String mID = msg.getUserDefinedParameter(ACLMID);
+
         Utterance previous, current;
-        this.checkDialogue();
+        this.checkAllUtterances();
 //        System.out.println(this.AgentOwner + ">>>>>> Start processing " + ACLMessageTools.fancyWriteACLM(msg) + "\n" + this.toString());
+        if (msg.getSender().getLocalName().equals("ams")) {
+            return false;
+        }
         previous = this.getPrevUtterance(msg);
         if (isInitiator(msg)) {
             if (previous == null) {
@@ -82,14 +92,20 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 current = new Utterance(AgentOwner, msg);
                 current.setParent(previous);
                 get(msg.getConversationId()).put(msg.getReplyWith(), current);
+                belongsTo.put(mID, current);
                 result = true;
             } else {
                 result = false;
             }
         }
         if (!isInitiator(msg) || (result && previous != null)) {
-            if (previous.getMyStatus() == Utterance.Status.OPEN) {
-                getPrevUtterance(msg).process(msg);
+            if (previous == null) {
+                result = false;
+            } else if (previous.getMyStatus() == Utterance.Status.OPEN) {
+                previous.process(msg);
+                if (belongsTo.get(mID) == null) {
+                    belongsTo.put(mID, previous);
+                }
                 result = true;
             } else {
                 if (msg.getPerformative() == ACLMessage.NOT_UNDERSTOOD) {
@@ -97,20 +113,22 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 }
             }
         }
-        this.checkDialogue();
+        this.checkAllUtterances();
         if (!msg.getSender().getLocalName().equals(this.AgentOwner)
                 || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
             fullQueue.add(msg);
         }
-        if (previous != null && (previous.getMyStatus() == Utterance.Status.COMPLETED
-                || previous.getMyStatus() == Utterance.Status.OVERDUE)) {
-            previous.close();
-        }
+//        if (previous != null && previous.isAlive()) {
+//            previous.close();
+//        }
 //        System.out.println(this.AgentOwner + "<<<<<<< End processing " + ACLMessageTools.fancyWriteACLM(msg) + "\n" + this.toString());
 //        if (!msg.getSender().getLocalName().equals(this.AgentOwner)) {
 //            fullQueue.add(msg);
 //        }
 //        System.out.println("DIALOGUE STATUS:" + this.getOpenConversations().length + " pending answers\n" + toString());
+        if (!result) {
+            this.ignoredQueue.add(msg);
+        }
         return result;
     }
 
@@ -120,39 +138,24 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         } else {
             return null;
         }
-//        try {
-//            if (isInitiator(answer)) {
-//                return get(answer.getConversationId()).get(answer.getReplyWith());
-//            } else {
-//                return null;
-//            }
-//        } catch (Exception ex) {
-//            return null;
-//        }
+    }
+
+    public Utterance getRawUtterance(ACLMessage answer) {
+        if (answer == null) {
+            return null;
+        }
+        return belongsTo.get(answer.getUserDefinedParameter(ACLMID));
     }
 
     public Utterance getPrevUtterance(ACLMessage answer) {
-        if (get(answer.getConversationId()) != null) {
+        if (answer != null && get(answer.getConversationId()) != null) {
             return get(answer.getConversationId()).get(answer.getInReplyTo());
         } else {
             return null;
         }
-//        try {
-//            if (isInitiator(answer)) {
-//                if (answer.getInReplyTo().length() == 0) {
-//                    return null;
-//                } else {
-//                    return get(answer.getConversationId()).get(answer.getInReplyTo());
-//                }
-//            } else {
-//                return get(answer.getConversationId()).get(answer.getInReplyTo());
-//            }
-//        } catch (Exception ex) {
-//            return null;
-//        }
     }
 
-    public DialogueManager checkDialogue() {
+    public DialogueManager checkAllUtterances() {
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 this.get(cid).get(rw).check();
@@ -161,80 +164,112 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return this;
     }
 
-//    public ACLMessage[] getNewAnswers() {
-//        ArrayList<ACLMessage> pending = new ArrayList();
-//        for (ACLMessage msg : fullQueue) {
-//            if (!msg.getSender().getLocalName().equals(this.AgentOwner)
-//                    || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
-//                pending.add(msg);
-//            }
-//        }
-//        return pending.toArray(new ACLMessage[pending.pendingReceptions()]);
-//    }
-//
-//    public int sizeNewAnswers() {
-//        int res = 0;
-//        for (ACLMessage msg : fullQueue) {
-//            if (!msg.getSender().getLocalName().equals(this.AgentOwner)
-//                    || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
-//                res++;
-//            }
-//        }
-//        return res;
-//    }
-    public ACLMessage[] getUnexpectedRequests() {
-        this.checkDialogue();
+    public ArrayList<ACLMessage> getAllOpenUtterances() {
+        this.checkAllUtterances();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        for (String cid : this.keySet()) {
+            for (String rw : this.get(cid).keySet()) {
+                if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
+                    pending.add(get(cid).get(rw).getStarter());
+                }
+            }
+        }
+        return pending;
+    }
+
+    public ArrayList<ACLMessage> getExtOpenUtterances() {
+        this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
-                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
+                    if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
                         pending.add(get(cid).get(rw).getStarter());
                     }
                 }
             }
         }
-        return pending.toArray(new ACLMessage[pending.size()]);
+        return pending;
     }
 
-    public ACLMessage[] getMyPendingRequests() {
-        this.checkDialogue();
+    public ArrayList<ACLMessage> getMyOpenUtterances() {
+        this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
-                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
+                    if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
                         pending.add(get(cid).get(rw).getStarter());
                     }
                 }
             }
         }
-        return pending.toArray(new ACLMessage[pending.size()]);
+        return pending;
     }
 
-    public ACLMessage[] getOpenDialogues() {
-        this.checkDialogue();
+    public ArrayList<ACLMessage> queryAllDueUtterances() {
+        this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
-                if (get(cid).get(rw).getMyStatus() != Utterance.Status.CLOSED) {
+                if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
+                        && get(cid).get(rw).isAlive()) {
                     pending.add(get(cid).get(rw).getStarter());
                 }
-
             }
         }
-        return pending.toArray(new ACLMessage[pending.size()]);
+        return pending;
     }
 
-    public ACLMessage[] getAllAnswersTo(ACLMessage msg) {
-        this.checkDialogue();
-        ArrayList<ACLMessage> pending = new ArrayList();
-        Utterance u = this.getPrevUtterance(msg);
-        if (u != null) {
-            return u.getAllAnswers();
-        } else {
-            return new ACLMessage[0];
+//    public ArrayList<ACLMessage> getAllDueUtterances() {
+//        this.checkAllUtterances();
+//        ArrayList<ACLMessage> pending = new ArrayList();
+//        for (String cid : this.keySet()) {
+//            for (String rw : this.get(cid).keySet()) {
+//                if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
+//                        && get(cid).get(rw).isAlive()) {
+//                    pending.add(get(cid).get(rw).getStarter());
+//                }
+//            }
+//        }
+//        return pending;
+//    }
+//
+    private ArrayList<ACLMessage> queryAllAnswersTo(ACLMessage msg) {
+        ArrayList<ACLMessage> res = new ArrayList();
+        if (msg == null) {
+            return res;
         }
+        this.checkAllUtterances();
+        Utterance u = this.getMyUtterance(msg);
+        if (u != null && !u.isOpen()) {
+            res = u.getAllAnswers();
+        }
+        return res;
+    }
+
+    public ArrayList<ACLMessage> getAllAnswersTo(ACLMessage msg) {
+        return this.queryAllAnswersTo(msg);
+//        ArrayList<ACLMessage> res = new ArrayList();
+//        if (msg == null) {
+//            return res;
+//        }
+//        this.checkAllUtterances();
+//        Utterance u = this.getMyUtterance(msg);
+//        if (u != null && !u.isOpen() && u.isAlive()) {
+//            res = u.getAllAnswers();
+////            u.close();
+//        }
+//        return res;
+    }
+
+    public ArrayList<ACLMessage> queryIgnoredMessages() {
+        this.checkAllUtterances();
+        return this.ignoredQueue;
+    }
+
+    public void clearIgnoredMessages() {
+        ignoredQueue.clear();
     }
 
 //    public void dismissACLMessage(ACLMessage msg) {
@@ -255,7 +290,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         Utterance u;
         String res = "CONVERSATIONS\n";
         for (String cid : this.keySet()) {
-            res += "|-- CID:" + cid + "\n";
+            res += "├─── CID:" + cid + "\n";
             for (String rw : this.get(cid).keySet()) {
                 u = get(cid).get(rw);
                 if (u.getParent() == null) {
@@ -264,9 +299,9 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             }
         }
         res += "\n-------------------------------\n";
-        res += "OPEN CONVERSATIONS: " + this.getOpenDialogues().length + "\n";
-        res += "\tUnexpected: " + this.getUnexpectedRequests().length + "\n";
-        res += "\tAnswers: " + this.getMyPendingRequests().length + "\n";
+        res += "OPEN CONVERSATIONS: " + this.getAllOpenUtterances().size() + "\n";
+        res += "\tMine: " + this.getMyOpenUtterances().size() + "\n";
+        res += "DUE CONVERSATIONS: " + this.queryAllDueUtterances().size() + "\n";
         return res;
 
     }
@@ -276,8 +311,8 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 //        if (nest == 0) {
 //            res += "|-- CID:" + u.ConversationID + "\n";
 //        }
-        res += "|" + nesting(nest + 1);
-        res += "|--RW:" + u.ReplyWith + " " + u.toString() + "\n";
+        res += "│" + nesting(nest);
+        res += "├───> "+u.minimalToString() + "\n";
         if (u.getChildren() != null) {
             for (Utterance child : u.getChildren()) {
                 res += toString(child, nest + 1);
@@ -285,17 +320,37 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         } else {
             if (u.Answers != null) {
                 for (ACLMessage m : u.Answers) {
-                    res += nesting(nest + 2) + "|---" + Utterance.shorten(m) + "\n";
+                    res += "│" +nesting(nest + 1) + "├···>" + ACLMessageTools.fancyWriteACLM(m,false) + "\n";
                 }
             }
         }
         return res;
     }
+//    public String toString(Utterance u, int nest) {
+//        String res = "";
+////        if (nest == 0) {
+////            res += "|-- CID:" + u.ConversationID + "\n";
+////        }
+//        res += "│" + nesting(nest);
+//        res += "├───> RW:" + u.ReplyWith + " " + u.minimalToString(u) + "\n";
+//        if (u.getChildren() != null) {
+//            for (Utterance child : u.getChildren()) {
+//                res += toString(child, nest + 1);
+//            }
+//        } else {
+//            if (u.Answers != null) {
+//                for (ACLMessage m : u.Answers) {
+//                    res += "│" +nesting(nest + 1) + "├···>" + ACLMessageTools.fancyWriteACLM(m,true) + "\n";
+//                }
+//            }
+//        }
+//        return res;
+//    }
 
     protected String nesting(int n) {
         String res = "";
         for (int i = 0; i < n + 1; i++) {
-            res += "   ";
+            res += "     ";
         }
         return res;
     }

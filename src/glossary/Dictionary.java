@@ -21,7 +21,8 @@ public class Dictionary {
     public static final int ALL = Integer.MAX_VALUE;
     protected HashMap<String, Dictionary> lexicon;
     protected final String delim = ".";
-    protected String root;
+    protected String root, name;
+    protected long nWords=0;
 
     public Dictionary() {
         lexicon = new HashMap();
@@ -33,13 +34,31 @@ public class Dictionary {
         this.root = root.toUpperCase();
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public long getnWords() {
+        return nWords;
+    }
+
+    public void setnWords(long nWords) {
+        this.nWords = nWords;
+    }
+
     public void load(String filename) {
         try {
+            name=filename;
             Scanner s = new Scanner(new File(filename));
             String line;
             while (s.hasNext()) {
                 line = s.nextLine();
                 this.addWord(line);
+                nWords++;
             }
         } catch (Exception ex) {
 
@@ -58,17 +77,24 @@ public class Dictionary {
 
     public String findNextWord(String word) {
         ArrayList<String> words;
-        int n = 3;
+        String next;
+        int n = word.length();
         do {
             try {
                 words = completeWord(word.substring(word.length() - n), 10);
-                if (words.size() > 0) {
-                    return words.get((int) (Math.random() * words.size()));
+                if (words.size() > 1) {
+                    do {
+                        next = words.get((int) (Math.random() * words.size()));
+                    } while (next.equals(word));
+                    return next;
                 }
             } catch (Exception ex) {
 
             }
             n--;
+            if (n == 0) {
+                return null;
+            }
         } while (true);
     }
 

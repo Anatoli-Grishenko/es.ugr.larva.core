@@ -30,6 +30,7 @@ public class TextFactory {
     String sText, sFontName;
 
     Graphics2D g;
+    Color cForeground, cShadow;
     FontMetrics fm;
     Font newFont, oldFont;
     Rectangle bounds;
@@ -104,19 +105,20 @@ public class TextFactory {
         if (bounds == null) {
             validate();
         }
+        Color p = g.getColor();
         if (this.isOutline()) {
-            Color p = g.getColor();
-            int s=this.getFontSize();
-            g.setColor(Color.BLACK);
-            this.setTextStyle(Font.BOLD).setFontSize(s+2);
+            g.setColor(cShadow);
+            int s = this.getFontSize();
+            this.setTextStyle(Font.BOLD).setFontSize(s + 2);
             g.setFont(newFont);
             g.drawString(sText, x - 1, y - 1);
-            g.setColor(p);
             this.setTextStyle(Font.PLAIN).setFontSize(s);
         }
+        g.setColor(this.cForeground);
         g.setFont(newFont);
         g.drawString(sText, x, y);
         g.setFont(this.oldFont);
+        g.setColor(p);
     }
 
     protected Rectangle getStringBounds(Graphics2D g2, String str,
@@ -269,6 +271,16 @@ public class TextFactory {
 
     public TextFactory setOutline(boolean outline) {
         this.outline = outline;
+        return this;
+    }
+
+    public TextFactory setForeGround(Color c) {
+        this.cForeground = c;
+        return this;
+    }
+
+    public TextFactory setShadow(Color c) {
+        this.cShadow = c;
         return this;
     }
 

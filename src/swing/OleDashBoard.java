@@ -49,9 +49,11 @@ import world.SensorDecoder;
  */
 public class OleDashBoard extends OleDrawPane implements MouseListener {
 
-    public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0), cDial = SwingTools.doDarker(Color.WHITE), cBad = new Color(50, 0, 0),
-            cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN), cGround = new Color(51, 25, 0),
-            cGoal = Color.YELLOW, cTrack = Color.GREEN, cCompass = Color.WHITE, cLabels = SwingTools.doDarker(Color.WHITE),
+    public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0), 
+            cDial = SwingTools.doDarker(Color.WHITE), cBad = new Color(50, 0, 0),
+            cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN),
+            cGround = new Color(51, 25, 0),
+            cGoal = Color.YELLOW, cTrack = new Color(0,153,0), cCompass = Color.WHITE, cLabels = SwingTools.doDarker(Color.WHITE),
             cSea = new Color(0, 0, 41);
 
     public HashMap<String, OleSensor> mySensorsVisual, myExternalSensor;

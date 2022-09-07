@@ -5,12 +5,15 @@
  */
 package swing;
 
+import com.eclipsesource.json.JsonObject;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import data.OleConfig;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
+import jade.lang.acl.ACLMessage;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -259,7 +262,7 @@ public class SwingTools {
                 os = new PrintStream(new File(res));
                 os.print(Arrays.toString(hashmap.get(sname).readAllBytes()));
                 os.close();
-                return  res;
+                return res;
             } catch (FileNotFoundException ex) {
                 return "";
             } finally {
@@ -328,4 +331,56 @@ public class SwingTools {
         }
     }
 
+    public String getMyName(String image) {
+        String res = "";
+        OleDialog odg = new OleDialog(null, "Identification");
+        OleConfig ocfg = new OleConfig();
+        String banner = getClass().getResource("/resources/").toString() + "/images/" + image;
+        ocfg.loadFile("/resources/config/Dialog_Banner_ID.conf");
+        ocfg.get("options").asObject().get("Individuals").asObject().
+                set("banner", banner);
+        if (odg.run(ocfg)) {
+            ocfg = odg.getResult();
+            res = ocfg.get("options").asObject().get("Individuals").asObject().
+                    getString("Your Name", "");
+        }
+        return res;
+    }
+
+    public String[] selectRivals(String[] names) {
+        String res [];
+        OleDialog odg = new OleDialog(null, "Select rivals");
+        OleConfig ocfg = new OleConfig();
+        String icon, prename;
+        ArrayList <String> rivals=new ArrayList();
+        ocfg.loadFile("/resources/config/MarioBrawl.conf");
+//        for (String s : names) {
+//            prename = s.toLowerCase().split(" ")[0];
+//            icon = getClass().getResource("/resources/").toString() + "/images/" + prename + ".png";
+//            ocfg.get("options").asObject().get("Players").asObject().
+//                    set("P"+prename, icon).set(prename,false);
+//            ocfg.get("properties").asObject().
+//                    set("P"+prename, new JsonObject().add("type", "icon").add("height", 100));
+//        }
+        if (odg.run(ocfg)) {
+            ocfg = odg.getResult();
+            for (String s : names) {
+                prename = s.toLowerCase().split(" ")[0];
+                if (ocfg.get("Players").asObject().getBoolean(prename, false)) {
+                    rivals.add(s);
+                }
+            }
+        }
+        return rivals.toArray(new String[rivals.size()]);
+    }
+    public String selectNextWord(String toWhom, ACLMessage msg, String[]hints) {
+//        String res [], simplename="mario"; //toWhom.toLowerCase().split(" ")[0];
+//        OleDialog odg = new OleDialog(null, "Select rivals");
+//        OleConfig ocfg = new OleConfig();
+//        ocfg.loadFile("/resources/config/Ask"+simplename+".conf");
+//        if (odg.run(ocfg)) {
+//            ocfg = odg.getResult();
+//        }
+        return "";
+    }
 }

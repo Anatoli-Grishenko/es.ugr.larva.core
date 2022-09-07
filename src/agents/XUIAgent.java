@@ -50,8 +50,9 @@ public class XUIAgent extends LARVAFirstAgent {
         logger = new Logger();
         logger.offEcho();
 //        logger.onEcho();
-//        logger.onOverwrite();
-//        logger.onTabular();
+//        this.activateSequenceDiagrams();
+        logger.onOverwrite();
+        logger.onTabular();
 //        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
@@ -66,7 +67,6 @@ public class XUIAgent extends LARVAFirstAgent {
             myDashBoard.setTrailSize(trailSize);
             myDashBoard.setShowTrail(showTrail);
         }
-        Info("Setting Death Star up");
         this.doNotExit();
         this.showConsole = false;
         this.frameDelay = 0;
@@ -83,6 +83,7 @@ public class XUIAgent extends LARVAFirstAgent {
                 + "Distance" + Mission.sepMissions
                 + "Targets" + Mission.sepMissions
         );
+        this.ignoreExceptions=true;
     }
 
     @Override
@@ -134,7 +135,7 @@ public class XUIAgent extends LARVAFirstAgent {
         String buffer[];
         boolean zip = false;
         inbox = this.LARVAblockingReceive();
-//        System.out.println(">>>>>>>>>>>>>>>"+inbox.getContent());
+        Info(">>>>>>>>>>>>>>>>"+inbox.getContent().substring(0, 10));
         if (inbox.getContent().startsWith("ZIPDATA")) {
             buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
             zip = true;

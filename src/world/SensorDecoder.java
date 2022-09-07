@@ -42,7 +42,7 @@ public class SensorDecoder {
     protected HashMap<Sensors, JsonArray> indexperception;
     protected Map2DColor hMap;
     protected ArrayList<SimpleVector3D> TraceGPS;
-    protected int stuck;
+    protected int stuck, energyBase=50;
     protected Mission currentMission;
     protected String cachedCurrentCity = "", cachedDestinationCity = "";
     protected TimeHandler lastRead;
@@ -1466,7 +1466,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 6);
                 encodeSensor(Sensors.RANGE, 11);
-                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.AUTONOMY, 60*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
                 encodeSensor(Sensors.BURNRATEREAD, 1);
@@ -1485,7 +1485,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXCARGO, 25);
-                encodeSensor(Sensors.AUTONOMY, 1600);
+                encodeSensor(Sensors.AUTONOMY, 160*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
@@ -1507,7 +1507,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXCARGO, 0);
-                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.AUTONOMY, 360*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
@@ -1529,7 +1529,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXCARGO, 250);
-                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.AUTONOMY, 360*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
@@ -1551,7 +1551,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXCARGO, 250);
-                encodeSensor(Sensors.AUTONOMY, 3600);
+                encodeSensor(Sensors.AUTONOMY, 360*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 11);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
@@ -1593,7 +1593,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 5);
-                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.AUTONOMY, 60*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1613,7 +1613,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 15);
                 encodeSensor(Sensors.MAXCARGO, 20);
-                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.AUTONOMY, 60*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 2);
@@ -1633,7 +1633,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 1);
-                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.AUTONOMY, 60*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1655,7 +1655,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 5);
-                encodeSensor(Sensors.AUTONOMY, 500);
+                encodeSensor(Sensors.AUTONOMY, 50*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1677,7 +1677,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 30);
-                encodeSensor(Sensors.AUTONOMY, 500);
+                encodeSensor(Sensors.AUTONOMY, 50*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 2);
@@ -1699,7 +1699,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 20);
                 encodeSensor(Sensors.MAXCARGO, 40);
-                encodeSensor(Sensors.AUTONOMY, 600);
+                encodeSensor(Sensors.AUTONOMY, 60*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 2);
@@ -1719,7 +1719,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 6);
-                encodeSensor(Sensors.AUTONOMY, 800);
+                encodeSensor(Sensors.AUTONOMY, 80*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1741,7 +1741,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 20);
-                encodeSensor(Sensors.AUTONOMY, 1000);
+                encodeSensor(Sensors.AUTONOMY, 100*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 2);
@@ -1763,7 +1763,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 20);
-                encodeSensor(Sensors.AUTONOMY, 700);
+                encodeSensor(Sensors.AUTONOMY, 70*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1785,7 +1785,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, getSensor(Sensors.MAXLEVEL).get(0).asInt());
                 encodeSensor(Sensors.MAXCARGO, 140);
-                encodeSensor(Sensors.AUTONOMY, 2000);
+                encodeSensor(Sensors.AUTONOMY, 200*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 51);
                 encodeSensor(Sensors.BURNRATEMOVE, 5);
@@ -1807,7 +1807,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL + 10);
                 encodeSensor(Sensors.MAXSLOPE, 0);
                 encodeSensor(Sensors.MAXCARGO, 15);
-                encodeSensor(Sensors.AUTONOMY, 1000);
+                encodeSensor(Sensors.AUTONOMY, 100*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1827,7 +1827,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MINLEVEL + 10);
                 encodeSensor(Sensors.MAXSLOPE, 0);
                 encodeSensor(Sensors.MAXCARGO, 250);
-                encodeSensor(Sensors.AUTONOMY, 3000);
+                encodeSensor(Sensors.AUTONOMY, 300*energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 31);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);

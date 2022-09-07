@@ -560,7 +560,9 @@ public class OleDialog extends JDialog implements ActionListener {
                 continue;
             }
             select = fieldproperties.getArray("select");
-            if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())) {
+            if (currentTab.getFieldType(sfield).equals(oletype.STRING.name()) && 
+                    fieldproperties.getString("type", "").equals("icon")) {
+            } else if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())) {
                 if (select == null) {
                     text = (JTextField) components.get(sfield);
                     currentTab.setField(sfield, text.getText());

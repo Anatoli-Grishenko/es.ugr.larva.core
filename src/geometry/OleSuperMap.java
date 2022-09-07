@@ -70,6 +70,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     protected OleConfig displayCfg;
     protected Map2DColor mapView;
     protected Palette palette;
+    protected Color cText, cOutline;
 
     public OleSuperMap(OleDrawPane parent, String name) {
         super(parent, name);
@@ -88,7 +89,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 //        } catch (IOException ex) {
 //        }
         hasGrid = false;
-        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true,   \"Trail\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Curves\", \"None\"]}}\n"
+        String doptions = "{\"options\": {    \"Objects\": {        \"Objects to display\": {            \"Myself\": true,            \"Cities\": true,            \"Other agents\": true,   \"Trail\": true        }    },    \"Focus\": {        \"Keep focus on\": \"None\"    },    \"Type of map\" :{    		\"Display map\":\"None\"    }},\"properties\": {    \"Keep focus on\": {        \"select\": [\"Myself\", \"None\"]    },    \"Display map\":{\"select\":[\"Heightmap\",\"Real view\",\"Flat\", \"Satellite\"]}}\n"
                 + "}";
         displayCfg = new OleConfig();
         displayCfg.set(doptions);
@@ -376,19 +377,25 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                     tf = new TextFactory(g);
                     tf.setsText(name)
                             .setX(osPane.getPaneX(t.getPosition().getXInt())).setY(osPane.getPaneY(t.getPosition().getYInt()) - 10)
-                            .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
+                            .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER)
+                            .setForeGround(cText).setShadow(cOutline).setOutline(true)
                             .setFontSize(10).validate();
                     tf.draw();
+//                    tf = new TextFactory(g);
+//                    tf.setsText(".")
+//                            .setX(osPane.getPaneX(t.getPosition().getXInt())).setY(osPane.getPaneY(t.getPosition().getYInt())-5)
+//                            .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER)
+//                            .setForeGround(cText).setShadow(cOutline).setOutline(true)
+//                            .setFontSize(10).validate();
+//                    tf.draw();
                 }
+                g.setColor(cText);
                 g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
 //                if (!t.isHasAirport() && !t.isHasPort()) {
 //                    g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 4, 2));
 //                } else {
 //                    if (t.isHasAirport()) {
 //                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 3, 5));
-//                    }
-//                    if (t.isHasPort()) {
-//                        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(t.getPosition(), Compass.NORTH), 10, 5));
 //                    }
 //                }
 
@@ -420,18 +427,18 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         g.draw(this.TraceRegularStar(p, 4, diam1, diam2));
     }
 
-    protected void paintCity(Graphics2D g, Thing t) {
-        Point3D p3d = t.getPosition();
-        g.setColor(OleDashBoard.cAngle);
-        g.setStroke(new BasicStroke(1));
-        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, myDash.getMyDecoder().getCompass() / 45), 6, 3));
-        tf = new TextFactory(g);
-        tf.setsText(t.getName());
-        tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
-                .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
-                .setFontSize(12).validate();
-        tf.draw();
-    }
+//    protected void paintCity(Graphics2D g, Thing t) {
+//        Point3D p3d = t.getPosition();
+//        g.setColor(OleDashBoard.cAngle);
+//        g.setStroke(new BasicStroke(1));
+//        g.drawPolygon(this.TraceRegularPolygon(new SimpleVector3D(p3d, myDash.getMyDecoder().getCompass() / 45), 6, 3));
+//        tf = new TextFactory(g);
+//        tf.setsText(t.getName());
+//        tf.setX(p3d.getXInt()).setY(p3d.getYInt() - 10)
+//                .setHalign(SwingConstants.CENTER).setValign(SwingConstants.CENTER).setOutline(true)
+//                .setFontSize(12).validate();
+//        tf.draw();
+//    }
 
     protected void paintPeople(Graphics2D g, Thing t) {
         Point3D p3d = t.getPosition();
@@ -605,6 +612,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         mapView.setColor(x, y, map.getColor(x, y));
                     }
                 }
+                cText=OleDashBoard.cTrack;
+                cOutline=cText;
                 break;
             case "Real view":
                 mapView = new Map2DColor(map.getWidth(), map.getHeight());
@@ -613,8 +622,10 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         mapView.setColor(x, y, palette.getColor(map.getStepLevel(x, y)));
                     }
                 }
+                cText=OleDashBoard.cCompass;
+                cOutline=Color.BLACK;
                 break;
-            case "None":
+            case "Satellite":
                 mapView = new Map2DColor(map.getWidth(), map.getHeight());
                 for (int x = 0; x < map.getWidth(); x++) {
                     for (int y = 0; y < map.getHeight(); y++) {
@@ -625,9 +636,22 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         }
                     }
                 }
+                cText=Color.GREEN;
+                cOutline=Color.BLACK;
                 break;
-            case "Curves":
-                mapView = map.toLevelCurve(50);
+            case "Flat":
+                mapView = new Map2DColor(map.getWidth(), map.getHeight());
+                for (int x = 0; x < map.getWidth(); x++) {
+                    for (int y = 0; y < map.getHeight(); y++) {
+                        if (map.getStepLevel(x, y) < 5) {
+                            mapView.setColor(x, y, new Color(204,229,255));
+                        } else {
+                            mapView.setColor(x, y, Color.WHITE);
+                        }
+                    }
+                }
+                cText=Color.BLACK;
+                cOutline=Color.WHITE;
                 break;
 
         }
