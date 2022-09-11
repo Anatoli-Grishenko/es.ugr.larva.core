@@ -442,7 +442,7 @@ public abstract class OleApplication extends OleFrame {
     }
 
     public String inputSelect(String message, String[] options, String value) {
-        String res = (String) JOptionPane.showInputDialog(null, message, "Select", JOptionPane.QUESTION_MESSAGE, null, options, value);
+        String res = (String) JOptionPane.showInputDialog(this, message, "Select", JOptionPane.QUESTION_MESSAGE, null, options, value);
         return res;
     }
 

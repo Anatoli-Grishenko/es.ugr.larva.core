@@ -16,8 +16,6 @@ import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.fancyWriteACLM;
 import static messaging.ACLMessageTools.isInitiator;
 import messaging.DialogueManager;
-import messaging.MessageBox;
-import messaging.MessageBox.BoxQueue;
 import messaging.Utterance;
 import static messaging.Utterance.Status.OPEN;
 import tools.TimeHandler;
@@ -320,7 +318,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
                 checkin = inBoxes.get(0);
-                addRunStep("MILES20");
+                addMilestone("MILES20");
                 checkout = checkin.createReply();
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;

@@ -5,6 +5,7 @@
  */
 package agents;
 
+import crypto.Keygen;
 import data.OleFile;
 import data.OlePassport;
 import data.Transform;
@@ -25,6 +26,11 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import messaging.ACLMessageTools;
+import static messaging.ACLMessageTools.ACLMID;
+import tools.TimeHandler;
+import static messaging.ACLMessageTools.ACLMRCVDATE;
+import static messaging.ACLMessageTools.ACLMSNDDATE;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -51,11 +57,11 @@ import java.util.Scanner;
  * <li> Support for reading, writing and transmission of any file, of any type
  * and size.
  * <li> Provides a basic behaviour, which has to be acvivated nevertheless, in
- order to start working without any background on Jade behaviours. This is a
- repeatable behaviour (Execute()) which acts as the main body of most agents
- and an associated boolean variable to control the LARVAexit and, therefore, the
- death of the agent.
- </ul>
+ * order to start working without any background on Jade behaviours. This is a
+ * repeatable behaviour (Execute()) which acts as the main body of most agents
+ * and an associated boolean variable to control the LARVAexit and, therefore,
+ * the death of the agent.
+ * </ul>
  *
  */
 public class LARVABaseAgent extends Agent {
@@ -77,8 +83,8 @@ public class LARVABaseAgent extends Agent {
     protected Logger logger;
 
     /**
-     * It controls the LARVAexit of the default behaviour and the consequent death of
- the agent
+     * It controls the LARVAexit of the default behaviour and the consequent
+     * death of the agent
      */
     protected boolean LARVAexit;
 
@@ -101,7 +107,6 @@ public class LARVABaseAgent extends Agent {
      */
     protected long ncycles;
 
-  
     /**
      * Main constructor
      */
@@ -141,9 +146,40 @@ public class LARVABaseAgent extends Agent {
 
     }
 
-    public void preExecute() { }
+    public void preExecute() {
+    }
 
-    public void postExecute() { }
+    public void postExecute() {
+    }
+
+    //
+    // Messaging
+    //
+    protected ACLMessage LARVAprocessAnyMessage(ACLMessage msg) {
+        if (msg.getUserDefinedParameter(ACLMID) == null) {
+            msg.addUserDefinedParameter(ACLMID, Keygen.getHexaKey(20));
+        }
+        msg = ACLMessageTools.secureACLM(msg);
+        return msg;
+    }
+
+    protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
+        if (msg.getUserDefinedParameter(ACLMSNDDATE) == null) {
+            msg.addUserDefinedParameter(ACLMSNDDATE, "" + new TimeHandler().elapsedTimeSecs());
+        }
+        msg = ACLMessageTools.secureACLM(msg);
+        if (msg.getSender() == null) {
+            msg.setSender(getAID());
+        }
+        return this.LARVAprocessAnyMessage(msg);
+    }
+
+    protected ACLMessage LARVAprocessReceiveMessage(ACLMessage msg) {
+        if (msg.getUserDefinedParameter(ACLMRCVDATE) == null) {
+            msg.addUserDefinedParameter(ACLMRCVDATE, "" + new TimeHandler().elapsedTimeSecs());
+        }
+        return this.LARVAprocessAnyMessage(msg);
+    }
 
     //
     // DF+
@@ -251,16 +287,16 @@ public class LARVABaseAgent extends Agent {
     }
 
     public boolean DFAddMyServices(String[] services) {
-        ArrayList <String> prevServices;
-        Info("Adding services "+new ArrayList(Transform.toArrayList(services)));
+        ArrayList<String> prevServices;
+        Info("Adding services " + new ArrayList(Transform.toArrayList(services)));
         prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
         prevServices.addAll(new ArrayList(Transform.toArrayList(services)));
         return DFSetMyServices(Transform.toArrayString(prevServices));
     }
 
     public boolean DFRemoveMyServices(String[] services) {
-        ArrayList <String> prevServices;
-        Info("Removing services "+new ArrayList(Transform.toArrayList(services)));
+        ArrayList<String> prevServices;
+        Info("Removing services " + new ArrayList(Transform.toArrayList(services)));
         prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
         prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
         return DFSetMyServices(Transform.toArrayString(prevServices));
@@ -458,7 +494,6 @@ public class LARVABaseAgent extends Agent {
         logger.logException(ex);
     }
 
-  
     protected void BehaviourDefaultSetup() {
         defaultBehaviour = new Behaviour() {
             @Override
@@ -491,6 +526,7 @@ public class LARVABaseAgent extends Agent {
 
     /**
      * It gives the number of consecutive executions of the method Execute()
+     *
      * @return The number of iterations of the agent
      */
     public long getNCycles() {

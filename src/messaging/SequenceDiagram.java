@@ -324,7 +324,7 @@ public class SequenceDiagram {
 
     public synchronized void addSequence(ACLMessage msg, String agentName) {
         if (msg != null) {
-            msg = ACLMessageTools.secureACLM(msg);
+//            msg = ACLMessageTools.secureACLM(msg);
             if (initiator.length() == 0) {
                 if (msg.getConversationId().length() == 0) {
                     this.defineStyle("SIMPLE");

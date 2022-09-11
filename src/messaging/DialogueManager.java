@@ -9,9 +9,11 @@ import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.net.ssl.SSLEngineResult;
+import static messaging.ACLMessageTools.ACLMID;
+import static messaging.ACLMessageTools.ACLMRCVDATE;
+import static messaging.ACLMessageTools.ACLMSNDDATE;
 import static messaging.ACLMessageTools.isInitiator;
 import static messaging.ACLMessageTools.secureACLM;
-import static messaging.MessageBox.ACLMID;
 import tools.TimeHandler;
 
 /**
@@ -170,7 +172,8 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         for (String cid : this.keySet()) {
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
-                    pending.add(get(cid).get(rw).getStarter());
+//                    pending.add(get(cid).get(rw).getStarter());
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
                 }
             }
         }
@@ -184,7 +187,8 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             for (String rw : this.get(cid).keySet()) {
                 if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
                     if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
-                        pending.add(get(cid).get(rw).getStarter());
+//                        pending.add(get(cid).get(rw).getStarter());
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
                     }
                 }
             }
@@ -199,7 +203,8 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
                     if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
-                        pending.add(get(cid).get(rw).getStarter());
+//                        pending.add(get(cid).get(rw).getStarter());
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
                     }
                 }
             }
@@ -214,7 +219,9 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
                         && get(cid).get(rw).isAlive()) {
-                    pending.add(get(cid).get(rw).getStarter());
+                    
+//                    pending.add(get(cid).get(rw).getStarter());
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
                 }
             }
         }
@@ -312,7 +319,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 //            res += "|-- CID:" + u.ConversationID + "\n";
 //        }
         res += "│" + nesting(nest);
-        res += "├───> "+u.minimalToString() + "\n";
+        res += "├───> " + u.minimalToString() + "\n";
         if (u.getChildren() != null) {
             for (Utterance child : u.getChildren()) {
                 res += toString(child, nest + 1);
@@ -320,7 +327,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         } else {
             if (u.Answers != null) {
                 for (ACLMessage m : u.Answers) {
-                    res += "│" +nesting(nest + 1) + "├···>" + ACLMessageTools.fancyWriteACLM(m,false) + "\n";
+                    res += "│" + nesting(nest + 1) + "├···>" + ACLMessageTools.fancyWriteACLM(m, false) + "\n";
                 }
             }
         }
@@ -353,5 +360,30 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             res += "     ";
         }
         return res;
+    }
+
+    protected void pushBack(ArrayList<ACLMessage> list, ACLMessage msg) {
+        int i;
+        i = 0;
+        while (i < list.size() && ltACLMessage(list.get(i), msg)) {
+            i++;
+        }
+        list.add(i, msg);
+    }
+
+    protected boolean ltACLMessage(ACLMessage A, ACLMessage B) {
+        long lA, lB;
+        try {
+            if (A.getUserDefinedParameter(ACLMRCVDATE) != null) {
+                lA = Long.parseLong(A.getUserDefinedParameter(ACLMRCVDATE));
+                lB = Long.parseLong(B.getUserDefinedParameter(ACLMRCVDATE));
+            } else {
+                lA = Long.parseLong(A.getUserDefinedParameter(ACLMSNDDATE));
+                lB = Long.parseLong(B.getUserDefinedParameter(ACLMSNDDATE));
+            }
+            return lA<lB;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 }

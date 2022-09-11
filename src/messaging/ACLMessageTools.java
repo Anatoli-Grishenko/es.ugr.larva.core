@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import tools.TimeHandler;
+import tools.emojis;
 
 /**
  *
@@ -33,6 +34,10 @@ public class ACLMessageTools {
     public static final ArrayList<Integer> CLOSERS = new ArrayList(Stream.of(ACLMessage.REFUSE, ACLMessage.FAILURE, ACLMessage.INFORM,
             ACLMessage.CONFIRM, ACLMessage.DISCONFIRM, ACLMessage.REJECT_PROPOSAL,
             ACLMessage.NOT_UNDERSTOOD).collect(Collectors.toList()));
+
+    // External fields
+    public static final String ACLMID = "ACLMID", ACLMRCVDATE = "RECEIVEDDATE", ACLMSNDDATE = "SENDDATE",
+            ACLMADMIN = "LARVAADMIN", ACLMROLE = "LARVAROLE";
 
 //static final ArrayList<Integer> ERRORS = new ArrayList(Stream.of().collect(Collectors.toList()));
 //            CONTINUERS[] = {ACLMessage.AGREE, ACLMessage.PROPOSE},
@@ -128,6 +133,9 @@ public class ACLMessageTools {
 
     public static String fancyWriteACLM(ACLMessage original, boolean simple) {
         String res = "", sep = "|";
+        if (original == null) {
+            return emojis.WARNING + "NULL MESSAGE";
+        }
         ACLMessage msg = (ACLMessage) original.clone();
         res += (msg.getSender() == null ? _NULLVAL : "||SND" + sep + msg.getSender().getLocalName());
         Iterator it;
@@ -136,7 +144,7 @@ public class ACLMessageTools {
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent()) ;
+        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent());
         if (!simple) {
             res = "||PFM" + sep + ACLMessage.getPerformative(msg.getPerformative()) + res;
             it = msg.getAllReplyTo();
@@ -299,4 +307,5 @@ public class ACLMessageTools {
         }
         return false;
     }
+        
 }

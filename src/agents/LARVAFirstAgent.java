@@ -53,6 +53,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import messaging.ACLMessageTools;
+import static messaging.ACLMessageTools.ACLMID;
 import messaging.SequenceDiagram;
 import swing.OleAgentTile;
 import swing.OleApplication;
@@ -60,7 +61,11 @@ import swing.OleButton;
 import swing.OleToolBar;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
+import tools.TimeHandler;
 import tools.emojis;
+import static messaging.ACLMessageTools.ACLMRCVDATE;
+import static messaging.ACLMessageTools.ACLMROLE;
+import static messaging.ACLMessageTools.ACLMSNDDATE;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -114,7 +119,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected String title, mySessionmanager = "", problemName;
 
     protected OleSet stepsDone, stepsSent;
-    protected boolean traceRunSteps = false;
+    protected boolean DeepMonitor = false;
     protected OleConfig oleConfig;
     protected AgentReport myReport;
     protected LARVAPayload payload;
@@ -139,11 +144,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean securedMessages;
     protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "";
     protected int nlastSentMsg = 0, nlastSentACLMID = 0, nlastRecMsg = 0, nrecErrors = 0;
-    protected final String ACLMTAG = "ACLMID";
     protected List<String> errortags = Stream.of("FAILURE", "REFUSE", "NOT-UNDERSTOOD", "BAD ", "ERROR").collect(Collectors.toList());
     protected BaseFactoryAgent baseFactory;
-    protected boolean allowExceptionShield = true, allowSequenceDiagrams = false,
-            ignoreExceptions = false;
+    protected boolean allowExceptionShield = true, allowSequenceDiagrams = true,
+            continuousSequence = true,
+            ignoreExceptions = false, allowEaryWarning = true;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -216,8 +221,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 sd.clear();
             }
         }
-        addRunStep("MILES00");
-        addRunStep("MILES01");
+        addMilestone("MILES00");
+        addMilestone("MILES01");
         this.logger.setEcho(true);
         // create a new frame to store text field and button
         if (this.getArguments() != null && this.getArguments().length > 0) {
@@ -257,6 +262,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         this.setSecuredMessages(true);
         this.activateSequenceDiagrams();
+        this.setContinuousSequenceDiagram(true);
         doNotExit();
     }
 
@@ -410,7 +416,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * therefore, it must be used only upon teacher instruction.
      */
     protected void enableDeepLARVAMonitoring() {
-        this.traceRunSteps = true;
+        this.DeepMonitor = true;
     }
 
     /**
@@ -435,13 +441,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     public void takeDown() {
-        addRunStep("MILES03");
+        addMilestone("MILES03");
         if (remote) {
             closeRemote();
         }
-        if (this.isactiveSequenceDiagrams()) {
+        if (this.isActiveSequenceDiagrams()) {
             this.addSequenceDiagram(null);
             this.saveSequenceDiagram(getName() + ".seqd");
+            this.drawSequenceDiagram();
         }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
@@ -463,7 +470,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     protected void Error(String message) {
-        addRunStep("MILES02");
+        addMilestone("MILES02");
         logger.logError(message);
         if (isSwing()) {
             if (myText != null) {
@@ -482,7 +489,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     protected void Info(String message) {
-        addRunStep("MILES02");
+        addMilestone("MILES02");
         logger.logMessage(message);
         try {
             if (isSwing() && logger.isEcho()) {
@@ -521,7 +528,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             FileReader fmypassport = new FileReader(passportFileName);
             mypassport = new Scanner(fmypassport).useDelimiter("\\Z").next();
-            addRunStep("MILES20");
+            addMilestone("MILES20");
             return true;
         } catch (Exception ex) {
             Error("Unable to load passport file " + passportFileName);
@@ -579,7 +586,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             if (checkin == null) {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
-                addRunStep("MILES20");
+                addMilestone("MILES20");
                 checkout = checkin.createReply();
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
@@ -627,6 +634,65 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return false;
     }
 
+//    @Override
+//    protected ACLMessage LARVAprocessAnyMessage(ACLMessage msg) {
+//        return super.LARVAprocessAnyMessage(msg);
+//    }
+    protected void checkDeepMilestones(ACLMessage msg) {
+        if (this.DeepMonitor && msg != null) {
+            if (mySessionmanager == null) {
+                if (msg.getUserDefinedParameter(ACLMROLE) != null
+                        && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+                    this.mySessionmanager = msg.getSender().getLocalName();
+                }
+            }
+            if (!this.hasMilestone("MILES24")) {
+                if (msg.getUserDefinedParameter(ACLMROLE) != null
+                        && msg.getUserDefinedParameter(ACLMROLE).equals("IDENTITY")) {
+                    this.addMilestone("MILES24");
+                }
+            }
+            if (msg.getContent().startsWith("Agree to open")) {
+                addMilestone("MILES24");
+            }
+            if (msg.getContent().startsWith("Confirm check-in")) {
+                addMilestone("MILES22");
+            }
+            if (msg.getContent().startsWith("Confirm check-out")) {
+                addMilestone("MILES23");
+            }
+            if (msg.getContent().contains("has been closed")) {
+                addMilestone("MILES25");
+            }
+        }
+    }
+
+    @Override
+    protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
+        msg = super.LARVAprocessSendMessage(msg);
+        if (this.isSecuredMessages()) {
+            this.secureSend(msg);
+        }
+//        myReport.setOutBox(myReport.getOutBox() + 1);
+        this.addSequenceDiagram(msg);
+        checkDeepMilestones(msg);
+        return msg;
+    }
+
+    @Override
+    protected ACLMessage LARVAprocessReceiveMessage(ACLMessage msg) {
+        msg = super.LARVAprocessReceiveMessage(msg);
+        checkDeepMilestones(msg);
+        if (this.allowEaryWarning && this.isErrorMessage(msg)) {
+            Alert(emojis.WARNING + "EARLY WARNING SYSTEM\n" + "Error found " + msg.getContent());
+        }
+        if (this.isSecuredMessages()) {
+            this.secureReceive(msg);
+        }
+        this.addSequenceDiagram(msg);
+        return msg;
+    }
+
     /**
      * It is a substitute of Agent.send() taht encapsulates two extra
      * behaviours. On the one hand, it is linked with DeepLARVAMonitoring and
@@ -638,22 +704,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @param msg The ACL message to be sent
      */
     protected void LARVAsend(ACLMessage msg) {
-        if (msg.getUserDefinedParameter(ACLMTAG) == null) {
-            msg.addUserDefinedParameter(ACLMTAG, Keygen.getHexaKey(20));
-        }
-        msg = ACLMessageTools.secureACLM(msg);
-        if (this.isSecuredMessages()) {
-            this.secureSend(msg);
-        }
-        if (!ACLMessageTools.getMainReceiver(msg).equals(this.IdentityManager)) {
-            addRunStep("MILES10");
-        }
+        this.LARVAprocessSendMessage(msg);
         this.send(msg);
         InfoACLM("⭕> Sending ACLM ", msg);
-        myReport.setOutBox(myReport.getOutBox() + 1);
-        if (this.isactiveSequenceDiagrams()) {
-            this.addSequenceDiagram(msg);
-        }
     }
 
     /**
@@ -665,147 +718,57 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return
      */
     protected ACLMessage LARVAreceive() {
-        ACLMessage res;
-        res = receive();
-        if (res != null) {
-            this.checkReceivedMessage(res);
-            if (!res.getSender().getLocalName().equals("ams")) {
-                InfoACLM("⭕< Received ACLM ", res);
-                if (this.isactiveSequenceDiagrams()) {
-                    this.addSequenceDiagram(res);
-                }
-                myReport.setInBox(myReport.getInBox() + 1);
-                if (this.isSecuredMessages()) {
-                    this.secureReceive(res);
-                }
-//                if (this.isErrorMessage(res)) {
-//                    Alert("Error found " + res.getContent());
-//                }
-            }
+        ACLMessage msg;
+        msg = receive();
+        if (msg != null && !msg.getSender().getLocalName().equals("ams")) {
+            InfoACLM("⭕< Received ACLM ", msg);
+            msg = this.LARVAprocessReceiveMessage(msg);
         }
-        return res;
+        return msg;
     }
 
     protected ACLMessage LARVAblockingReceive() {
-        ACLMessage res;
+        ACLMessage msg;
         boolean repeat;
-        do {
-            repeat = false;
-            res = blockingReceive();
-        } while (repeat);
-        this.checkReceivedMessage(res);
-        if (res != null) {
-            InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                this.addSequenceDiagram(res);
-            }
-            myReport.setInBox(myReport.getInBox() + 1);
+        msg = blockingReceive();
+        if (msg != null) {
+            InfoACLM("⭕< Received ACLM ", msg);
+            msg = this.LARVAprocessReceiveMessage(msg);
         }
-        if (this.isSecuredMessages()) {
-            this.secureReceive(res);
-        }
-//        if (this.isErrorMessage(res)) {
-//            Alert("Error found " + res.getContent());
-//        }
-        return res;
+        return msg;
     }
 
     protected ACLMessage LARVAblockingReceive(long milis) {
-        ACLMessage res;
+        ACLMessage msg;
         boolean repeat = false;
-        addRunStep("MILES13");
-        do {
-            repeat = false;
-            res = blockingReceive(milis);
-        } while (repeat);
-        this.checkReceivedMessage(res);
-        if (res != null) {
-            InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                this.addSequenceDiagram(res);
-            }
-            myReport.setInBox(myReport.getInBox() + 1);
+        msg = blockingReceive(milis);
+        if (msg != null) {
+            InfoACLM("⭕< Received ACLM ", msg);
+            msg = this.LARVAprocessReceiveMessage(msg);
         }
-        if (this.isSecuredMessages()) {
-            this.secureReceive(res);
-        }
-        return res;
+        return msg;
     }
 
     public ACLMessage LARVAblockingReceive(MessageTemplate t) {
-        ACLMessage res;
+        ACLMessage msg;
         boolean repeat = false;
-        addRunStep("MILES13");
-        do {
-            repeat = false;
-            res = blockingReceive(t);
-        } while (repeat);
-        this.checkReceivedMessage(res);
-        if (res != null) {
-            InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                this.addSequenceDiagram(res);
-            }
-            myReport.setInBox(myReport.getInBox() + 1);
+        msg = blockingReceive(t);
+        if (msg != null) {
+            InfoACLM("⭕< Received ACLM ", msg);
+            msg = this.LARVAprocessReceiveMessage(msg);
         }
-        if (this.isSecuredMessages()) {
-            this.secureReceive(res);
-        }
-        return res;
+        return msg;
     }
 
     protected ACLMessage LARVAblockingReceive(MessageTemplate t, long milis) {
-        ACLMessage res;
+        ACLMessage msg;
         boolean repeat = false;
-        addRunStep("MILES13");
-        do {
-            repeat = false;
-            res = blockingReceive(t, milis);
-        } while (repeat);
-        this.checkReceivedMessage(res);
-        if (res != null) {
-            InfoACLM("⭕< Received ACLM ", res);
-            if (this.isactiveSequenceDiagrams()) {
-                this.addSequenceDiagram(res);
-            }
-            myReport.setInBox(myReport.getInBox() + 1);
+        msg = blockingReceive(t, milis);
+        if (msg != null) {
+            InfoACLM("⭕< Received ACLM ", msg);
+            msg = this.LARVAprocessReceiveMessage(msg);
         }
-        if (this.isSecuredMessages()) {
-            this.secureReceive(res);
-        }
-        return res;
-    }
-
-    /**
-     * Internal to DeepLarvaMonitoring to check the achievement of several
-     * internal milestones
-     *
-     * @param res The message received by the agent which is monitored to detect
-     * several milestones
-     */
-    private void checkReceivedMessage(ACLMessage res) {
-        if (traceRunSteps) {
-            addRunStep("MILES13");
-            if (res != null) {
-                if (res.getContent().startsWith("Hello, my name is")) {
-                    this.mySessionmanager = res.getSender().getLocalName();
-                }
-                if (res.getContent().startsWith("Agree to open")) {
-                    addRunStep("MILES24");
-                }
-                if (res.getContent().startsWith("Confirm check-in")) {
-                    addRunStep("MILES22");
-                }
-                if (res.getContent().startsWith("Confirm check-out")) {
-                    addRunStep("MILES23");
-                }
-                if (res.getContent().contains("has been closed")) {
-                    addRunStep("MILES25");
-                }
-
-            }
-        }
-
+        return msg;
     }
 
     /**
@@ -852,8 +815,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void Message(String message) {
         if (isSwing()) {
-            JOptionPane.showMessageDialog(null,
+            OleApplication app = payload.getParent();
+            JOptionPane.showMessageDialog(app,
                     message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
+//            Info(message);
         } else {
             Info(message);
         }
@@ -868,6 +833,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     protected String inputLine(String message) {
         if (isSwing()) {
+            OleApplication app = payload.getParent();
             String res = myApp.inputLine(message);
             return res;
         } else {
@@ -944,7 +910,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetProviderList() {
-        addRunStep("MILES21");
+        addMilestone("MILES21");
         return super.DFGetProviderList();
     }
 
@@ -956,7 +922,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetServiceList() {
-        addRunStep("MILES21");
+        addMilestone("MILES21");
         return super.DFGetServiceList();
     }
 
@@ -969,7 +935,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllProvidersOf(String service) {
-        addRunStep("MILES21");
+        addMilestone("MILES21");
         return super.DFGetAllProvidersOf(service);
     }
 
@@ -981,7 +947,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
-        addRunStep("MILES21");
+        addMilestone("MILES21");
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
@@ -994,12 +960,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public boolean DFHasService(String agentName, String service) {
-        addRunStep("MILES21");
+        addMilestone("MILES21");
         return super.DFHasService(agentName, service);
     }
 
-    protected void addRunStep(String step) {
-        if (!traceRunSteps) {
+    protected void addMilestone(String step) {
+        if (!DeepMonitor) {
             return;
         }
         if (stepsSent.size() == 0 && stepsDone.findItem(step)) {
@@ -1017,26 +983,45 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
     }
 
+    protected boolean hasMilestone(String milestone) {
+        return stepsDone.findItem(milestone);
+    }
+
     public void addSequenceDiagram(ACLMessage msg) {
-        sd.addSequence(msg, getLocalName());
-        this.getSequenceDiagram();
+        if (this.isActiveSequenceDiagrams()) {
+            sd.addSequence(msg, getLocalName());
+            this.getSequenceDiagram();
+        }
     }
 
     public String getSequenceDiagram() {
         String res = "";
-        if (sd.getOwner().equals(this.getLocalName())) {
+        if (sd.getOwner().equals(this.getLocalName()) && this.isActiveSequenceDiagrams()) {
             try {
                 res = sd.printSequenceDiagram();
-                if (this.isactiveSequenceDiagrams()) {
-                    if (this.payload != null) {
-                        JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
-                        if (taSeq != null) {
+                if (this.isContinuousSequenceDiagrams()) {
+                    this.drawSequenceDiagram();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return res;
+    }
+
+    public String drawSequenceDiagram() {
+        String res = "";
+        if (sd.getOwner().equals(this.getLocalName()) && this.isActiveSequenceDiagrams()) {
+            try {
+                res = sd.printSequenceDiagram();
+                if (this.payload != null) {
+                    JTextArea taSeq = (JTextArea) this.payload.getGuiComponents().get("Sequence");
+                    if (taSeq != null) {
 //                    taSeq.append(filename);
 //                    taSeq.setText(getLocalName());
-                            taSeq.setText(res);
+                        taSeq.setText(res);
 //                    taSeq.append(res);
-                            taSeq.validate();
-                        }
+                        taSeq.validate();
                     }
                 }
             } catch (Exception ex) {
@@ -1047,11 +1032,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void saveSequenceDiagram(String filename) {
-        try {
-            PrintStream out = new PrintStream(new File(filename));
-            out.println(getSequenceDiagram());
-        } catch (FileNotFoundException ex) {
-            Error("Unable to save Sequence Diagram into file " + filename);
+        if (this.isActiveSequenceDiagrams()) {
+            try {
+                PrintStream out = new PrintStream(new File(filename));
+                out.println(getSequenceDiagram());
+            } catch (FileNotFoundException ex) {
+                Error("Unable to save Sequence Diagram into file " + filename);
+            }
         }
     }
 
@@ -1292,14 +1279,17 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void secureExit(String why) {
-        this.Alert("Secure messaging has stopped agent " + getLocalName() + " due to " + why);
+        this.Alert(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Secure messaging has stopped agent " + getLocalName() + " due to " + why);
         this.doExit();
     }
 
     public void secureReceive(ACLMessage msg) {
-//        if (dupReceive(msg)) {
-//            secureExit("Too many messages received");
-//        }
+        if (msg.getUserDefinedParameter(ACLMID) == null) {
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Irregular message received. Not a LARVA secure message");
+        }
+        if (dupReceive(msg)) {
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many messages received");
+        }
         if (msg == null) {
             return;
         }
@@ -1309,19 +1299,22 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             nrecErrors = 0;
         }
         if (nrecErrors > 5) {
-            this.secureExit("Too many consecutive errors");
+            this.secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive errors");
         }
     }
 
     public void secureSend(ACLMessage msg) {
+        if (msg.getUserDefinedParameter(ACLMID) == null) {
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Irregular message sent. Not a LARVA secure message");
+        }
         if (dupSend(msg)) {
-            secureExit("Too many consecutive messages sent");
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive messages sent");
         }
         if (msg.getContent() == null) {
-            secureExit("You are sending a message with an empty content. Please use .setContent() properly");
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "You are sending a message with an empty content. Please use .setContent() properly");
         }
         if (ACLMessageTools.getAllReceivers(msg) == null || ACLMessageTools.getAllReceivers(msg).length() == 0) {
-            secureExit("You are sending a message with an empty receiver. Please use .addReceiver() properly");
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "You are sending a message with an empty receiver. Please use .addReceiver() properly");
         }
     }
 
@@ -1335,13 +1328,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            nlastSentMsg = 0;
 //            lastSentMsg = msg.getContent();
 //        }
-        if (msg.getUserDefinedParameter(ACLMTAG).equals(this.lastSentACLMID)) {
+        if (msg.getUserDefinedParameter(ACLMID).equals(this.lastSentACLMID)) {
             nlastSentACLMID++;
             if (nlastSentACLMID > 1) {
                 return true;
             }
         } else {
-            lastSentACLMID = msg.getUserDefinedParameter(ACLMTAG);
+            lastSentACLMID = msg.getUserDefinedParameter(ACLMID);
             nlastSentACLMID = 0;
         }
         return false;
@@ -1364,8 +1357,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (this.errortags.contains(msg.getContent().split(" ")[0].toUpperCase())) {
             return true;
         }
-        if (ACLMessageTools.ERRORS.contains(msg.getPerformative()))
+        if (ACLMessageTools.ERRORS.contains(msg.getPerformative())) {
             return true;
+        }
         String c = msg.getContent().toUpperCase();
         for (String s : errortags) {
             if (c.startsWith(s)) {
@@ -1426,8 +1420,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.allowSequenceDiagrams = false;
     }
 
-    public boolean isactiveSequenceDiagrams() {
+    public boolean isActiveSequenceDiagrams() {
         return this.allowSequenceDiagrams;
     }
 
+    public boolean isContinuousSequenceDiagrams() {
+        return this.continuousSequence;
+    }
+
+    public void setContinuousSequenceDiagram(Boolean t) {
+        this.continuousSequence = t;
+    }
 }

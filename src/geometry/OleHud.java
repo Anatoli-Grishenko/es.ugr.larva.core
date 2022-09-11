@@ -110,7 +110,7 @@ public class OleHud extends OleSensor {
 
     @Override
     public void setCurrentValue(double d) {
-        if (hudView != null && myDash.getMyDecoder().getPolarVisual() != null) {
+        if (hudView != null && myDash.getMyDecoder() != null) {
             if (tx == 0 || (myDash.getMyDecoder().getGPSMemorySize() > 1 && myDash.getMyDecoder().getGPSMemory(1).planeDistanceTo(myDash.getMyDecoder().getGPS()) > 0)) {
                 this.addTerrain(1, (int) (myDash.getMyDecoder().getAltitude() - myDash.getMyDecoder().getGround()), (int) myDash.getMyDecoder().getAltitude(), myDash.getMyDecoder().getMaxlevel());
             } else {

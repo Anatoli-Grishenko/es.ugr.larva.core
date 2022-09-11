@@ -49,11 +49,11 @@ import world.SensorDecoder;
  */
 public class OleDashBoard extends OleDrawPane implements MouseListener {
 
-    public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0), 
+    public static Color cDeck = Color.GRAY, cFrame = Color.DARK_GRAY, cGauge = new Color(0, 0, 0),
             cDial = SwingTools.doDarker(Color.WHITE), cBad = new Color(50, 0, 0),
             cDistance = SwingTools.doDarker(Color.MAGENTA), cAngle = SwingTools.doDarker(Color.CYAN),
             cGround = new Color(51, 25, 0),
-            cGoal = Color.YELLOW, cTrack = new Color(0,153,0), cCompass = Color.WHITE, cLabels = SwingTools.doDarker(Color.WHITE),
+            cGoal = Color.YELLOW, cTrack = new Color(0, 153, 0), cCompass = Color.WHITE, cLabels = SwingTools.doDarker(Color.WHITE),
             cSea = new Color(0, 0, 41);
 
     public HashMap<String, OleSensor> mySensorsVisual, myExternalSensor;
@@ -61,7 +61,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     public String agentOwner;
 
     protected Component myParent;
-    public  HashMap<String, Environment> decoderSet;
+    public HashMap<String, Environment> decoderSet;
     OleSemiDial osAltitude, osBattery;
     OleSensor osGround;
     OleRotatory orCompass1;
@@ -78,7 +78,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     int iVisual[][], iLidar[][], iThermal[][];
     String lastPerception = "";
     TimeHandler tstart;
-    boolean showTrail, availableDashBoard;
+    public boolean showTrail, availableDashBoard, verbose = false;
     int trailSize;
     OleFrame of;
     int ndash, nprepr;
@@ -110,7 +110,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //            decoderSet.remove(s);
 //        }
 //    }
-
     public Environment getMyDecoder() {
         return decoderSet.get(agentOwner);
     }
@@ -419,17 +418,21 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             ndash = 0;
             this.nprepr = 0;
             res = true;
-//            System.out.println(agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
+            if (verbose) {
+                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n"+"Dashboard::" + agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
+            }
         } else if (content.contains("perceptions")) {
-//            System.out.println("DashBoard perceptions");
+            if (verbose) {
+                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n"+"Dashboard::" + "DashBoard perceptions");
+            }
             availableDashBoard = true;
 //            System.out.println("ndash "+ndash++);
             this.feedPerception(content);
             res = false;
         } else if (content.contains("city")) {
-            try{
-            getMyDecoder().setExternalObjects(content);
-            } catch(Exception ex) {
+            try {
+                getMyDecoder().setExternalObjects(content);
+            } catch (Exception ex) {
                 System.out.println("");
             }
         } else if (content.contains("people")) {
@@ -453,7 +456,9 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             }
             if (decoderSet.get(agentName) == null) {
                 decoderSet.put(agentName, new Environment());
+                decoderSet.get(agentName).verbose = this.verbose;
             }
+
             decoderSet.get(agentName).feedPerception(jsoperception);
             osMap.addTrail(agentName, decoderSet.get(agentName).getGPSVector());
             if (!agentName.equals(agentOwner)) {

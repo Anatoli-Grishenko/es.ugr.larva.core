@@ -26,7 +26,7 @@ import javax.swing.JScrollPane;
  */
 public class OleScrollPane extends JScrollPane {
 
-    public double DragSpeed = 0.05;
+    public double DragSpeed = 0.05, ZoomSpeed=0.05;
     OleDrawPane odPane;
     double zoom;
     int x1, x2, y1, y2;
@@ -140,11 +140,11 @@ public class OleScrollPane extends JScrollPane {
     }
 
     public void zoomIn() {
-        setZoom(getZoom() + .1);
+        setZoom(getZoom() + ZoomSpeed);
     }
 
     public void zoomOut() {
-        setZoom(getZoom() - 0.1);
+        setZoom(getZoom() - ZoomSpeed);
     }
 
     protected void Drag(MouseEvent e) {

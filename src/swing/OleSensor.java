@@ -328,7 +328,7 @@ public abstract class OleSensor extends JComponent {
         int mark = 5;
 
         if (this.isHasGrid()) {
-            g.setColor(Color.BLACK);
+            g.setColor(this.getForeground());
             for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue2; alpha += stepValue2) {
                 p1 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y);
                 p2 = new Point3D(shiftx + vPort.x + alpha * scale, vPort.y + mark);
@@ -348,7 +348,7 @@ public abstract class OleSensor extends JComponent {
                 oDrawLine(g, p2, p4);
             }
         }
-        g.setColor(Color.WHITE);
+        g.setColor(this.getForeground());
 //        p1 = new Point3D(vPort.x, vPort.y);
 //        p2 = new Point3D(vPort.x + vPort.width, vPort.y);
 //        p3 = new Point3D(vPort.x, vPort.y + vPort.height);
@@ -382,6 +382,7 @@ public abstract class OleSensor extends JComponent {
 //        p4 = new Point3D(vPort.x + vPort.width, vPort.y + vPort.height);
 //        this.oDrawLine(g, p1, p2);
 //        this.oDrawLine(g, p3, p4);
+        g.setColor(this.getForeground());
         for (double alpha = getMinValue(); alpha < getMaxValue() + stepValue; alpha += stepValue) {
             p1 = new Point3D(vPort.x, shifty + vPort.y + alpha * scale);
             p2 = new Point3D(vPort.x + mark, shifty + vPort.y + alpha * scale);
@@ -1054,7 +1055,7 @@ public abstract class OleSensor extends JComponent {
     }
 
     public void paintPalette(Graphics2D g, Palette palette, Rectangle bounds) {
-        Rectangle r = new Rectangle(1, 40, bounds.width/3, bounds.height - 50),
+        Rectangle r = new Rectangle(1, 40, bounds.width / 3, bounds.height - 50),
                 r2 = new Rectangle(0, 0, bounds.width, bounds.height);
         int x, y, level;
         x = pux;

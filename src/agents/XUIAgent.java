@@ -38,7 +38,7 @@ public class XUIAgent extends LARVAFirstAgent {
     protected boolean showTrail = false;
     protected int trailSize = 0;
     JPanel _XUI, _Server;
-    boolean profiler = false;
+    boolean profiler = false, verbose = false;
     int nmessages = 0, miliswait, milisnext, sizeraw, sizezip, nagents = 0,
             totaldistance = 0, totaltargets = 0, runSecs = 60;
     long Milis = 0;
@@ -48,17 +48,21 @@ public class XUIAgent extends LARVAFirstAgent {
     public void setup() {
         super.setup();
         logger = new Logger();
-        logger.offEcho();
-//        logger.onEcho();
-//        this.activateSequenceDiagrams();
-        logger.onOverwrite();
-        logger.onTabular();
+        if (verbose) {
+            logger.onEcho();
+            this.deactivateSequenceDiagrams();
+            logger.onOverwrite();
+            logger.onTabular();
+        } else {
+            logger.offEcho();
+        }
 //        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
         myDashBoard = new OleDashBoard(_XUI, "XUI");
         myDashBoard.setMyXUIAgent(this);
         myDashBoard.setPreferredSize(new Dimension(1600, 800));
+        myDashBoard.verbose=verbose;
         _XUI.add(myDashBoard, BorderLayout.WEST);
         _XUI.validate();
         if (oleConfig != null) {
@@ -83,7 +87,8 @@ public class XUIAgent extends LARVAFirstAgent {
                 + "Distance" + Mission.sepMissions
                 + "Targets" + Mission.sepMissions
         );
-        this.ignoreExceptions=true;
+        this.ignoreExceptions = true;
+        this.allowEaryWarning = false;
     }
 
     @Override
@@ -135,7 +140,7 @@ public class XUIAgent extends LARVAFirstAgent {
         String buffer[];
         boolean zip = false;
         inbox = this.LARVAblockingReceive();
-        Info(">>>>>>>>>>>>>>>>"+inbox.getContent().substring(0, 10));
+        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
         if (inbox.getContent().startsWith("ZIPDATA")) {
             buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
             zip = true;
@@ -167,13 +172,19 @@ public class XUIAgent extends LARVAFirstAgent {
                 this.sessionKey = inbox.getConversationId();
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("perceptions")) {
-//                System.out.println("Perceptions received");
+                if (verbose) {
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"Perceptions received");
+                }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("city")) {
-//                System.out.println("Cities received");
+                if (verbose) {
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"Cities received");
+                }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("people")) {
-//                System.out.println("People received");
+                if (verbose) {
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"People received");
+                }
                 myDashBoard.preProcessACLM(content);
             }
             _XUI.repaint();
