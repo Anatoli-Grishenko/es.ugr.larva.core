@@ -104,32 +104,84 @@ public class SwingTools {
 
     public static void Info(String message) {
         JOptionPane.showMessageDialog(null,
-                message, "LARVA Boot", JOptionPane.INFORMATION_MESSAGE);
+                message, "Message", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void Error(String message) {
         JOptionPane.showMessageDialog(null,
-                message, "LARVA Boot", JOptionPane.ERROR_MESSAGE);
+                message, "Message", JOptionPane.ERROR_MESSAGE);
     }
 
     public static void Warning(String message) {
         JOptionPane.showMessageDialog(null,
-                message, "LARVA Boot", JOptionPane.WARNING_MESSAGE);
+                message, "Message", JOptionPane.WARNING_MESSAGE);
     }
 
     public static String inputLine(String message) {
-        String sResult = JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE);
+        String sResult = JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE);
         return sResult;
     }
 
+
+    public static void Message(String message) {
+        Info(message);
+    }
+
+    public static String input_String(String message) {
+        return inputLine(message);
+    }
+
+    public static int input_int(String message) {
+        String sResult;
+        boolean exit = false;
+        int iRes=Integer.MIN_VALUE;
+        while (!exit) {
+            sResult = JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE);
+            try {
+                iRes = Integer.parseInt(sResult);
+                exit=true;
+            } catch (Exception ex) {
+                Error("El dato introducido: " + sResult + " no parece ser un número entero");
+            }
+        }
+        return iRes;
+    }
+
+    public static double input_double(String message) {
+        String sResult;
+        boolean exit = false;
+        double iRes=Integer.MIN_VALUE;
+        while (!exit) {
+            sResult = JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE);
+            try {
+                iRes = Double.parseDouble(sResult);
+                exit=true;
+            } catch (Exception ex) {
+                Error("El dato introducido: " + sResult + " no parece ser un número real");
+            }
+        }
+        return iRes;
+    }
+
+    public static boolean input_boolean(String message) {
+        String sResult;
+        boolean exit = false;
+        double iRes=Integer.MIN_VALUE;
+            sResult = inputSelect("Introduce un valor lógico", new String[]{"true", "false"}, "");
+            if (sResult!=null)
+                return sResult.equals("true");
+            else
+                return false;
+    }
+
     public static String inputSelect(String message, String[] options, String value) {
-        String res = (String) JOptionPane.showInputDialog(null, message, "LARVA Boot", JOptionPane.QUESTION_MESSAGE, null, options, value);
+        String res = (String) JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE, null, options, value);
         return res;
     }
 
     public static boolean Confirm(String message) {
         boolean bResult = JOptionPane.showConfirmDialog(null,
-                message, "LARVA Boot", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+                message, "Message", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
         return bResult;
     }
 
@@ -348,11 +400,11 @@ public class SwingTools {
     }
 
     public String[] selectRivals(String[] names) {
-        String res [];
+        String res[];
         OleDialog odg = new OleDialog(null, "Select rivals");
         OleConfig ocfg = new OleConfig();
         String icon, prename;
-        ArrayList <String> rivals=new ArrayList();
+        ArrayList<String> rivals = new ArrayList();
         ocfg.loadFile("/resources/config/MarioBrawl.conf");
 //        for (String s : names) {
 //            prename = s.toLowerCase().split(" ")[0];
@@ -373,7 +425,8 @@ public class SwingTools {
         }
         return rivals.toArray(new String[rivals.size()]);
     }
-    public String selectNextWord(String toWhom, ACLMessage msg, String[]hints) {
+
+    public String selectNextWord(String toWhom, ACLMessage msg, String[] hints) {
 //        String res [], simplename="mario"; //toWhom.toLowerCase().split(" ")[0];
 //        OleDialog odg = new OleDialog(null, "Select rivals");
 //        OleConfig ocfg = new OleConfig();
