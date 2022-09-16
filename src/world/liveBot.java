@@ -38,7 +38,7 @@ public class liveBot extends Thing {
 //    JsonObject lastPerceptions;
     Color colorcode;
     public String relpywith;
-    int initialDistance = -1, currentDistance, order, slope;
+    int initialDistance = -1, currentDistance, mindistance, order, slope;
     int energyBurnt = -1, timeSecs = 0, userID;
     String myCommitment = "";
 
@@ -102,6 +102,7 @@ public class liveBot extends Thing {
 
     public void setInitialDistance(int initialDistance) {
         this.initialDistance = initialDistance;
+        this.setMindistance(initialDistance);
     }
 
     public int getCurrentDistance() {
@@ -110,6 +111,8 @@ public class liveBot extends Thing {
 
     public void setCurrentDistance(int currentDistance) {
         this.currentDistance = currentDistance;
+        if (this.getCurrentDistance()<this.getMindistance())
+            this.setMindistance(currentDistance);
     }
 
     public int getOrder() {
@@ -328,6 +331,14 @@ public class liveBot extends Thing {
 
     public void setDestinationCity(String destinationCity) {
         this.destinationCity = destinationCity;
+    }
+
+    public int getMindistance() {
+        return mindistance;
+    }
+
+    public void setMindistance(int mindistance) {
+        this.mindistance = mindistance;
     }
 
 }

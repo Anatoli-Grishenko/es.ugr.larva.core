@@ -30,6 +30,7 @@ import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.ACLMID;
 import tools.TimeHandler;
 import static messaging.ACLMessageTools.ACLMRCVDATE;
+import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
 
 /**
@@ -100,7 +101,9 @@ public class LARVABaseAgent extends Agent {
     /**
      * To store the personal passport
      */
-    protected String mypassport;
+    protected String mypassport,
+            // Remember the name of the Session Manager
+            mySessionmanager = "";
 
     /**
      * Counter of cycles of the method Execute()
@@ -177,6 +180,9 @@ public class LARVABaseAgent extends Agent {
     protected ACLMessage LARVAprocessReceiveMessage(ACLMessage msg) {
         if (msg.getUserDefinedParameter(ACLMRCVDATE) == null) {
             msg.addUserDefinedParameter(ACLMRCVDATE, "" + new TimeHandler().elapsedTimeSecs());
+        }
+        if (msg.getUserDefinedParameter(ACLMROLE) != null && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+            this.mySessionmanager=msg.getSender().getLocalName();
         }
         return this.LARVAprocessAnyMessage(msg);
     }

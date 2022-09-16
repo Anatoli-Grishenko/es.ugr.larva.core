@@ -29,6 +29,8 @@ import glossary.Signals;
 import jade.core.AID;
 import jade.core.MicroRuntime;
 import jade.core.behaviours.Behaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.AgentController;
@@ -116,7 +118,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     // Its known sequence diagram
     protected static SequenceDiagram sd;
     //
-    protected String title, mySessionmanager = "", problemName;
+    protected String title, problemName;
 
     protected OleSet stepsDone, stepsSent;
     protected boolean DeepMonitor = false;
@@ -528,7 +530,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         try {
             FileReader fmypassport = new FileReader(passportFileName);
             mypassport = new Scanner(fmypassport).useDelimiter("\\Z").next();
-            addMilestone("MILES20");
+            addMilestone("MILES16");
             return true;
         } catch (Exception ex) {
             Error("Unable to load passport file " + passportFileName);
@@ -572,6 +574,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 this.Error("Please load the passport first");
                 return false;
             }
+            this.addMilestone("MILES16");
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
             IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
             Info("Found agent " + IdentityManager + " as Identity Manager");
@@ -586,7 +589,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             if (checkin == null) {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
-                addMilestone("MILES20");
+                addMilestone("MILES17");
                 checkout = checkin.createReply();
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
@@ -640,29 +643,36 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //    }
     protected void checkDeepMilestones(ACLMessage msg) {
         if (this.DeepMonitor && msg != null) {
-            if (mySessionmanager == null) {
-                if (msg.getUserDefinedParameter(ACLMROLE) != null
-                        && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+            if (msg.getUserDefinedParameter(ACLMROLE) != null
+                    && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+                if (mySessionmanager == null || mySessionmanager.length() == 0) {
                     this.mySessionmanager = msg.getSender().getLocalName();
                 }
+                this.addMilestone("MILES24");
             }
-            if (!this.hasMilestone("MILES24")) {
+            if (!this.hasMilestone("MILES22")) {
                 if (msg.getUserDefinedParameter(ACLMROLE) != null
                         && msg.getUserDefinedParameter(ACLMROLE).equals("IDENTITY")) {
-                    this.addMilestone("MILES24");
+                    this.addMilestone("MILES22");
+                }
+            }
+            if (!this.hasMilestone("MILES23")) {
+                if (msg.getUserDefinedParameter(ACLMROLE) != null
+                        && msg.getUserDefinedParameter(ACLMROLE).equals("PMANAGER")) {
+                    this.addMilestone("MILES23");
                 }
             }
             if (msg.getContent().startsWith("Agree to open")) {
-                addMilestone("MILES24");
+                addMilestone("MILES19");
             }
             if (msg.getContent().startsWith("Confirm check-in")) {
-                addMilestone("MILES22");
+                addMilestone("MILES17");
             }
             if (msg.getContent().startsWith("Confirm check-out")) {
-                addMilestone("MILES23");
+                addMilestone("MILES18");
             }
             if (msg.getContent().contains("has been closed")) {
-                addMilestone("MILES25");
+                addMilestone("MILES20");
             }
         }
     }
@@ -670,6 +680,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
         msg = super.LARVAprocessSendMessage(msg);
+        this.addMilestone("MILES04");
         if (this.isSecuredMessages()) {
             this.secureSend(msg);
         }
@@ -683,6 +694,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected ACLMessage LARVAprocessReceiveMessage(ACLMessage msg) {
         msg = super.LARVAprocessReceiveMessage(msg);
         checkDeepMilestones(msg);
+        this.addMilestone("MILES07");
         if (this.allowEaryWarning && this.isErrorMessage(msg)) {
             Alert(emojis.WARNING + "EARLY WARNING SYSTEM\n" + "Error found " + msg.getContent());
         }
@@ -910,7 +922,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetProviderList() {
-        addMilestone("MILES21");
+        addMilestone("MILES25");
         return super.DFGetProviderList();
     }
 
@@ -922,7 +934,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetServiceList() {
-        addMilestone("MILES21");
+        addMilestone("MILES25");
         return super.DFGetServiceList();
     }
 
@@ -935,7 +947,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllProvidersOf(String service) {
-        addMilestone("MILES21");
+        addMilestone("MILES25");
         return super.DFGetAllProvidersOf(service);
     }
 
@@ -947,7 +959,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
-        addMilestone("MILES21");
+        addMilestone("MILES25");
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
@@ -960,8 +972,35 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public boolean DFHasService(String agentName, String service) {
-        addMilestone("MILES21");
+        addMilestone("MILES25");
         return super.DFHasService(agentName, service);
+    }
+
+    @Override
+    public boolean DFSetMyServices(String[] services) {
+        addMilestone("MILES26");
+        return super.DFSetMyServices(services);
+    }
+
+    @Override
+    public boolean DFAddMyServices(String[] services) {
+        addMilestone("MILES26");
+        return super.DFAddMyServices(services);
+    }
+
+    @Override
+    public boolean DFRemoveMyServices(String[] services) {
+        addMilestone("MILES26");
+        return super.DFRemoveMyServices(services);
+    }
+
+    /**
+     * It allows the de-registration of all services.
+     */
+    @Override
+    public void DFRemoveAllMyServices() {
+        addMilestone("MILES26");
+        super.DFRemoveAllMyServices();
     }
 
     protected void addMilestone(String step) {
@@ -978,7 +1017,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             outgoing.setSender(getAID());
             outgoing.addReceiver(new AID(mySessionmanager, AID.ISLOCALNAME));
             outgoing.setContent(stepsSent.prettyprint());
-            this.send(outgoing);
+            this.send(outgoing); // send it hidden
             stepsSent = new OleSet();
         }
     }
@@ -1354,9 +1393,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public boolean isErrorMessage(ACLMessage msg) {
-        if (this.errortags.contains(msg.getContent().split(" ")[0].toUpperCase())) {
-            return true;
-        }
+//        if (this.errortags.contains(msg.getContent().split(" ")[0].toUpperCase())) {
+//            return true;
+//        }
         if (ACLMessageTools.ERRORS.contains(msg.getPerformative())) {
             return true;
         }

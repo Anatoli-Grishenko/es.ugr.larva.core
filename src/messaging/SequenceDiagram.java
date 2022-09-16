@@ -246,7 +246,7 @@ public class SequenceDiagram {
                 arrow = StringTools.pasteEnd(arrow, right);
                 res += this.printAllEmptyPlayers(0, from)
                         + printStatus(from)
-                        + arrow
+                        + StringTools.pasteBegin(arrow,"├")
                         + this.printAllEmptyPlayers(to, players.size()) + "\n";
 //                arrowl = "├";
 //                arrowr = "";

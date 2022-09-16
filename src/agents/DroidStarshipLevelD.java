@@ -612,6 +612,48 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         }
     }
 
+    protected boolean isUnexpected(ACLMessage msg) {
+        return !msg.getSender().getLocalName().equals(sessionManager);
+    }
+
+    @Override
+    protected void LARVAsend(ACLMessage msg) {
+        rw = getHexaKey(16);
+        msg.setReplyWith(rw);
+        super.LARVAsend(msg);
+    }
+
+    @Override
+    protected ACLMessage LARVAblockingReceive() {
+        ACLMessage res;
+        while (true) {
+            res = super.LARVAblockingReceive();
+            if (isUnexpected(res)) {
+                this.processUnexpectedMessage(res);
+            } else {
+                return res;
+            }
+        }
+    }
+
+    @Override
+    protected ACLMessage LARVAblockingReceive(long milis) {
+        ACLMessage res;
+        TimeHandler tini = new TimeHandler(), tend = tini;
+        while (tini.elapsedTimeMilisecsUntil(tend) < milis) {
+            res = super.LARVAblockingReceive(milis);
+            if (res != null) {
+                if (isUnexpected(res)) {
+                    this.processUnexpectedMessage(res);
+                } else {
+                    return res;
+                }
+            }
+            tend = new TimeHandler();
+        }
+        return null;
+    }
+
     protected void processUnexpectedMessage(ACLMessage msg) {
         logger.onEcho();
         String tokens[] = msg.getContent().split(",")[0].split(" ");
