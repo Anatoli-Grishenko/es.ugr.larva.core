@@ -39,7 +39,8 @@ public class JADEBoot {
     protected HashMap<String, AgentController> _controllers;
     protected ArrayList<String> _agentNames;
     protected String _host, _virtualhost, _containerName, _platformId, _username, _password;
-    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock";
+    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", 
+            _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock";
     protected FileWriter _lockCloseSession, _lockReboot;
     protected int _port;
     protected double _progress;

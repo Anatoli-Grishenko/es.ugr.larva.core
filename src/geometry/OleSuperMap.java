@@ -545,9 +545,9 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         this.oDrawLine(g, viewP(sv.getSource()), pLabel);
         g.setStroke(new BasicStroke(1));
         String goal;
-        if (myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL) != null
-                && myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).isString()) {
-            goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
+
+        if (myDash.getDecoderOf(name).getCurrentGoal() != null) {
+            goal = myDash.getDecoderOf(name).getCurrentGoal();
         } else {
             goal = " XXX";
         }

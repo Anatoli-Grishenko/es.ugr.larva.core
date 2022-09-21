@@ -409,7 +409,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             int maxlevel = ocontent.getInt("maxflight");
             this.clear();
             decoderSet.clear();
-            decoderSet.put(agentName, new Environment());
+            decoderSet.put(agentName, new Environment(this.myXUIAgent));
             decoderSet.get(agentName).setWorldMap(ofile.toString(), maxlevel);
             osMap.setMap(decoderSet.get(agentName).getWorldMap());
             this.osAltitude.setAlertLimitAbove(maxlevel);
@@ -455,7 +455,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 return;
             }
             if (decoderSet.get(agentName) == null) {
-                decoderSet.put(agentName, new Environment());
+                decoderSet.put(agentName, new Environment(this.myXUIAgent));
                 decoderSet.get(agentName).verbose = this.verbose;
             }
 

@@ -1,7 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @file Environment.java
  */
 package Environment;
 
@@ -37,16 +35,25 @@ public class Environment extends SensorDecoder {
 
     // Inner execution
     protected World World;
-    liveBot live;
+    protected liveBot live;
     // Remote execution
     protected int[][] visualData, lidarData, thermalData;
     protected int[] shortPolar;
     protected ThingSet cadastre;
     protected ThingSet census;
     protected int slope;
+    protected LARVAFirstAgent ownerHook;
 
-    public Environment() {
+//    public Environment() {
+//        super();
+////        shortPolar = new int[5];
+////        World = new World("innerworld");
+//        cadastre = new ThingSet();
+//        census = new ThingSet();
+//    }
+    public Environment(LARVAFirstAgent owner) {
         super();
+        ownerHook = owner;
 //        shortPolar = new int[5];
 //        World = new World("innerworld");
         cadastre = new ThingSet();
@@ -78,6 +85,15 @@ public class Environment extends SensorDecoder {
         return true;
     }
 
+    /**
+     * This method allows the integration of the perceptions coming from the
+     * server into the Environment and its further reading through specific
+     * methods
+     *
+     * @param perceptions A String which is the content of the message received
+     * anfter reading the perceptoins
+     * @return A copy of the same instance (to chain methods calls)
+     */
     public Environment setExternalPerceptions(String perceptions) {
         try {
             feedPerception(perceptions);
@@ -145,7 +161,7 @@ public class Environment extends SensorDecoder {
     }
 
     public Environment clone() {
-        Environment res = new Environment();
+        Environment res = new Environment(ownerHook);
         for (Sensors sname : this.indexperception.keySet()) {
             if (getSensor(sname) != null) {
                 res.encodeSensor(sname, Json.parse(getSensor(sname).toString()).asArray());
@@ -155,6 +171,13 @@ public class Environment extends SensorDecoder {
         return res;
     }
 
+    /**
+     * This is a powerful method and it is able to simmulate the execution of an
+     * action, given as a CHoice, into tht current instance of Environment
+     *
+     * @param a The action to execute
+     * @return A copy of the instance
+     */
     public Environment simmulate(Choice a) {
         double y, x, dincrx, dincry;
         String action = a.getName();
@@ -374,10 +397,19 @@ public class Environment extends SensorDecoder {
                 (int) Compass.SHIFT[Compass.Right(Compass.Right(this.getCompass())) / 45].moduloY(), Perceptor.NULLREAD);
     }
 
+    /**
+     * It returns the value of the ldiar in front of the agent
+     *
+     * @return
+     */
     public int getLidarFront() {
         return getFrontGeneral(lidarData);
     }
 
+    /**
+     *
+     * @return
+     */
     public int getLidarLeft() {
         return getLeftGeneral(lidarData);
     }
@@ -459,13 +491,102 @@ public class Environment extends SensorDecoder {
         return this.getEnergy() < 0;
     }
 
+    /**
+     * It checks that the cell just in front of the agent is available to move,
+     * that is the slope is valid (taking into account maxSlope()) and the
+     * height is valid too (taking into account minLevel() and maxLevel()
+     *
+     * @return true if the agent can move forwards, false otherwise
+     */
     public boolean isFreeFront() {
         return this.getLidarFront() >= -getMaxslope() && getLidarFront() <= getMaxslope()
                 && getVisualFront() >= this.getMinlevel()
                 && getVisualFront() <= this.getMaxlevel();
-//        return this.getLidarFront() >= 0;
     }
 
+//    public boolean isFreeFront() {
+//        int slopeFront, visualFront, visualHere;
+//
+//        // Polar sensors
+//        //visualHere= this.getPolarVisual()[0][0];   
+//        
+//        // Check the height in front of me
+//        visualFront = this.getPolarVisual()[2][1];
+//        
+//        // Check the slope in front of me
+//        slopeFront = this.getPolarLidar()[2][1];
+//        
+//        return slopeFront >= -getMaxslope() && slopeFront <= getMaxslope()
+//                && visualFront >= this.getMinlevel()
+//                && visualFront <= this.getMaxlevel();
+//    }
+//
+//    public boolean isFreeFront() {
+//        int slopeFront, visualFront, visualHere;
+//
+//        // Polar sensors
+//        visualHere= this.getPolarVisual()[0][0];   
+//        
+//        // Check the height in front of me
+//        visualFront = this.getPolarVisual()[2][1];
+//        
+//        // Check the slope in front of me
+//        slopeFront = visualHere-visualFront;
+//        
+//        return slopeFront >= -getMaxslope() && slopeFront <= getMaxslope()
+//                && visualFront >= this.getMinlevel()
+//                && visualFront <= this.getMaxlevel();
+//    }
+//
+//    public boolean isFreeFront() {
+//        int slopeFront, visualFront, visualHere;
+//
+//        // Relative sensors
+//        visualHere= this.getRelativeVisual()[getRange() / 2][getRange() / 2];   
+//        
+//        // Check the height in front of me
+//        visualFront = this.getRelativeVisual()[getRange() / 2][getRange() / 2 - 1];
+//        
+//        // Check the slope in front of me
+//        slopeFront = visualHere-visualFront;
+//        
+//        return slopeFront >= -getMaxslope() && slopeFront <= getMaxslope()
+//                && visualFront >= this.getMinlevel()
+//                && visualFront <= this.getMaxlevel();
+//    }
+//
+//    public boolean isFreeFront() {
+//        int lidarFront, visualFront, visualHere;
+//
+//        // Simplest
+//        visualHere= this.getAbsoluteVisual()[getRange() / 2][getRange() / 2];   // Percepción absoluta
+////        visualHere= this.getRelativeVisual()[getRange() / 2][getRange() / 2];   // Percepción relativa
+////        visualHere= this.getPolarVisual()[0][0];                                // Percepción polar
+//        
+//        // Check the height in front of me
+//        visualFront = this.getRelativeVisual()[getRange() / 2][getRange() / 2 - 1];
+////        visualFront = this.getPolarVisual()[1][2];
+//        
+//        // Check the slope in front of me
+//        lidarFront = visualFront-visualHere;
+////        lidarFront = this.getRelativeLidar()[getRange() / 2][getRange() / 2 - 1];
+////        lidarFront = this.getPolarLidar()[1][2];
+//
+//        // Use macros
+////        lidarFront = this.getLidarFront();
+////        visualFront = this.getVisualFront();
+//
+//        return lidarFront >= -getMaxslope() && lidarFront <= getMaxslope()
+//                && visualFront >= this.getMinlevel()
+//                && visualFront <= this.getMaxlevel();
+//    }
+//
+    //        return this.getPolarLidar()[1][2] >= -getMaxslope() && this.getPolarLidar()[1][2] <= getMaxslope()
+//                && this.getPolarVisual()[1][2] >= this.getMinlevel()
+//                && this.getPolarVisual()[1][2] <= this.getMaxlevel();
+//        return this.getLidarFront() >= -getMaxslope() && getLidarFront() <= getMaxslope()
+//                && getVisualFront() >= this.getMinlevel()
+//                && getVisualFront() <= this.getMaxlevel();
     public boolean isFreeFrontLeft() {
         return this.getLidarLeft() >= -getMaxslope() && getLidarLeft() <= getMaxslope()
                 && getVisualLeft() >= this.getMinlevel()
@@ -606,6 +727,46 @@ public class Environment extends SensorDecoder {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public Mission getCurrentMission() {
+        return super.getCurrentMission();
+    }
+
+    @Override
+    public void setCurrentMission(String mission) {
+        super.setCurrentMission(mission);
+        this.ownerHook.sendStealthTransponder();
+    }
+
+    @Override
+    public void setCurrentMission(String missionName, String goals[]) {
+        super.setCurrentMission(missionName, goals);
+        this.ownerHook.sendStealthTransponder();
+    }
+
+    ///////////////////// GOALS
+    @Override
+    public String getCurrentGoal() {
+        return super.getCurrentGoal();
+    }
+
+    @Override
+    public String setNextGoal() {
+        String res = super.setNextGoal();
+        this.ownerHook.sendStealthTransponder();
+        return res;
+    }
+
+    @Override
+    public String getCurrentCity() {
+        String res = super.getCurrentCity();
+        return res;
+    }
+
+    public String getDestinationCity() {
+        return super.getDestinationCity();
     }
 
 }

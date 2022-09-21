@@ -192,7 +192,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean Ve(Environment E) {
-        if (E == null || E.isCrahsed() || E.getStuck() > 3) {
+        if (E == null || E.isCrahsed() ) {
             return false;
         }
         return true;
@@ -258,7 +258,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             myReport = new AgentReport(getName(), this.getClass(), 100);
         }
         SWaitButtons = new Semaphore(0);
-        E = new Environment();
+        E = new Environment(this);
         if (showRemote) {
             openRemote();
         }
@@ -419,6 +419,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     protected void enableDeepLARVAMonitoring() {
         this.DeepMonitor = true;
+    }
+
+    /**
+     * It allows a deep analysis of the changes of state of the agents that
+     * inherit from this class. It produces a hihgh traffic of messages,
+     * therefore, it must be used only upon teacher instruction.
+     */
+    protected void disableDeepLARVAMonitoring() {
+        this.DeepMonitor = false;
     }
 
     /**
@@ -963,6 +972,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
+
+    public ArrayList<String> DFGetAllMyServices() {
+        addMilestone("MILES25");
+        return super.DFGetAllServicesProvidedBy(getLocalName());
+    }
+
     /**
      * It simply checks whether or not this agent provides this service
      *
@@ -1108,7 +1123,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected void setupEnvironment() {
-        E = new Environment();
+        E = new Environment(this);
     }
 
     protected Environment getEnvironment() {
@@ -1278,17 +1293,16 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     //////////////////////
     protected String Transponder() {
         String goal = "";
-        String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
+        String sep = ",", answer = "TRANSPONDER" + sep;
 
-        goal = "GOAL " + E.getCurrentGoal();
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
-            answer += sep + "ONAIR";
+            answer += sep + "STATUS MOVING";
         } else {
-            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
+            answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
         answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
-        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + goal;
+        answer +=  sep + "GOAL " + E.getCurrentGoal()+sep + "MISSION " + E.getCurrentMission();
         return answer;
 //    String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
 //        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
@@ -1302,11 +1316,40 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //        return answer;
     }
 
+    public String getTransponderField(String transponder, String field) {
+        String fields[] = transponder.split(",");
+        for (int i=0; i<fields.length; i++)  {
+            if (fields[i].startsWith(field))
+                return fields[i];
+        }
+        return "";
+    }
+    
     public void replyTransponder(ACLMessage request) {
         outbox = request.createReply();
         outbox.setPerformative(ACLMessage.INFORM);
         outbox.setContent("INFORM" + Mission.sepMissions + Transponder());
         this.LARVAsend(outbox);
+    }
+
+    public void sendStealthTransponder() {
+//        String aux;
+//        for (String service: this.DFGetAllMyServices()) {
+//            if (service.startsWith("MISSION")) {
+//                this.DFRemoveMyServices(new String[]{service});
+//            }
+//            if (service.startsWith("GOAL")) {
+//                this.DFRemoveMyServices(new String[]{service});
+//            }            
+//        }
+//        this.DFAddMyServices(new String[]{"MISSION "+E.getCurrentMission(), 
+//            "GOAL "+E.getCurrentGoal()});
+
+        ACLMessage out = new ACLMessage(ACLMessage.INFORM_REF);
+        out.setSender(getAID());
+        out.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+        out.setContent(Transponder());
+        send(out);
     }
 
     public boolean isSecuredMessages() {

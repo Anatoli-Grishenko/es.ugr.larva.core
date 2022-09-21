@@ -83,7 +83,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         } else {
             answer += sep + "GROUND " + getEnvironment().getCurrentCity();
         }
-        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep 
+        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep
                 + "PAYLOAD " + E.getPayload();
         answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + goal;
         return answer;
@@ -92,11 +92,13 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     @Override
     public void setup() {
         this.allowExceptionShield = false;
-        this.setSecuredMessages(true);
         super.setup();
         logger.offEcho();
+        this.deactivateSequenceDiagrams();
         this.setFrameDelay(0);
         showPerceptions = false;
+//        this.openRemote();
+        this.closeRemote();
         this.setupEnvironment();
         A = new DecisionSet();
         A.
@@ -116,13 +118,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Found problem manager " + problemManager);
         myStatus = Status.START;
         myText = null;
-        this.securedMessages = true;
-        this.deactivateSequenceDiagrams();
-        this.logger.offEcho();
         onMission = false;
-//        this.openRemote();
-        this.closeRemote();
-        this.showPerceptions=false;
         allowCFP = true;
         allowREQUEST = true;
         allowParking = false;
@@ -131,8 +127,6 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     @Override
     public void Execute() {
-        if (this.getExtRequests().size()>0) {
-        }
         switch (myStatus) {
             case START:
                 myStatus = Status.CHECKIN;
@@ -184,9 +178,6 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         String fakepassport = "TlBDIEFnZW50cw== ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pVHpJNWRXNWlOblZxVTNCbVp6TlVSaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEEyTFRJeUlERTFPalE1T2pNMU9qVXlNeUlzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJaMlZ1ZEhNaWZRPT0=",
                 realpassport = mypassport;
 
-//////////////        if (this.doLARVACheckin()) {
-//////////////            doLARVACheckout();
-//////////////        }
         OlePassport op = new OlePassport();
         op.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
         sessionAlias = trimFullString(op.getName());
@@ -197,23 +188,17 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         outbox.setSender(getAID());
         outbox.addReceiver(IM);
         outbox.setContent(fakepassport);
-        this.LARVAsend(outbox);
-        checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
-        if (checkin == null) {
-            Alert("Agent " + IdentityManager + " does not answer. Not checked in");
+        checkin = this.blockingDialogue(outbox).get(0);
+        if (checkin.getPerformative() == ACLMessage.CONFIRM) {
+            checkedin = true;
+            Info(checkin.getContent());
+            checkout = checkin.createReply();
+        } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
+            Alert("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
             return Status.EXIT;
         } else {
-            checkout = checkin.createReply();
-            if (checkin.getPerformative() == ACLMessage.CONFIRM) {
-                checkedin = true;
-                Info(checkin.getContent());
-            } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
-                Alert("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
-                return Status.EXIT;
-            } else {
-                Alert("Could not checkin at LARVA.\nDetails: " + checkin.getContent());
-                return Status.EXIT;
-            }
+            Alert("Could not checkin at LARVA.\nDetails: " + checkin.getContent());
+            return Status.EXIT;
         }
         return Status.JOINSESSION;
     }
@@ -230,8 +215,8 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     }
 
     public String mySelectNextCity() {
-        String city, around []=E.getCitiesAround(200);
-        
+        String city, around[] = E.getCitiesAround(200);
+
         city = around[(int) (Math.random() * around.length)];
         return city;
     }
@@ -286,9 +271,8 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Executing action " + action);
         outbox = session.createReply();
         outbox.setContent("Request execute " + action + " session " + sessionKey);
-        LARVAsend(outbox);
         this.myEnergy++;
-        session = LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         if (session.getContent().toUpperCase().startsWith("INFORM")) {
             return true;
         } else {
@@ -375,7 +359,6 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
                         return Status.SOLVEMISSION;
                     }
                     if (!this.doFindCourseIn(targetCity)) {
-////                            Alert("Sorry, I cannot find a route in " + goal[0]);
                         this.LARVAwait(1000);
                         E.getCurrentMission().nextGoal();
                         return Status.EXIT;
@@ -392,6 +375,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         }
     }
 
+
     public boolean doFindCourseIn(String destination) {
         if (E.getDestinationCity().equals(destination)) {
             return true;
@@ -401,19 +385,8 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
             return true;
         }
         Info("Searching a route in " + destination);
-        outbox = session.createReply();
-        outbox.setContent("Request course in " + destination + " Session " + sessionKey);
-        Info("Request course in " + destination + " Session " + sessionKey);
-        this.LARVAsend(outbox);
-        session = this.LARVAblockingReceive();
-        if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
-            E.setExternalPerceptions(session.getContent());
-            Info("Successfully found a route in " + destination);
-            return true;
-        } else {
-            Info("Failed to find a route to " + destination);
-            return false;
-        }
+        Point3D p = E.getCityPosition(destination);
+        return doFindCourseTo(p.getXInt(), p.getYInt());
     }
 
     public boolean doFindCourseTo(int x, int y) {
@@ -421,8 +394,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         outbox = session.createReply();
         outbox.setContent("Request course to " + x + " " + y + " Session " + sessionKey);
         Info("Request course to " + x + " " + y + " Session " + sessionKey);
-        this.LARVAsend(outbox);
-        session = this.LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
             E.setExternalPerceptions(session.getContent());
             Info("Successfully found a route");
@@ -470,8 +442,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Joining session with base in  " + baseCity);
         outbox = session.createReply();
         outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
-        LARVAsend(outbox);
-        session = LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         if (!session.getContent().toUpperCase().startsWith("CONFIRM")) {
             Error("Could not join session " + sessionKey + " due to " + session.getContent());
             return Status.CHECKOUT;
@@ -485,12 +456,11 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     boolean doQueryCities() {
         Info("Querying CITIES");
-        outbox = new ACLMessage();
+        outbox = new ACLMessage(ACLMessage.QUERY_REF);
         outbox.setSender(this.getAID());;
         outbox.addReceiver(new AID(sessionManager, AID.ISLOCALNAME));
         outbox.setContent("Query CITIES session " + sessionKey);
-        LARVAsend(outbox);
-        session = LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         if (session.getContent().toUpperCase().startsWith("FAILURE")) {
             return false;
         } else {
@@ -501,12 +471,11 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     protected Status doQueryMissions() {
         Info("Querying MISSIONS");
-        outbox = new ACLMessage();
+        outbox = new ACLMessage(ACLMessage.QUERY_REF);
         outbox.setSender(this.getAID());;
         outbox.addReceiver(new AID(sessionManager, AID.ISLOCALNAME));
         outbox.setContent("Query MISSIONS session " + sessionKey);
-        this.LARVAsend(outbox);
-        session = LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         E.setExternalPerceptions(session.getContent());
         return myStatus;
     }
@@ -610,48 +579,6 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         } else {
             return goAhead(E, a);
         }
-    }
-
-    protected boolean isUnexpected(ACLMessage msg) {
-        return !msg.getSender().getLocalName().equals(sessionManager);
-    }
-
-    @Override
-    protected void LARVAsend(ACLMessage msg) {
-        rw = getHexaKey(16);
-        msg.setReplyWith(rw);
-        super.LARVAsend(msg);
-    }
-
-    @Override
-    protected ACLMessage LARVAblockingReceive() {
-        ACLMessage res;
-        while (true) {
-            res = super.LARVAblockingReceive();
-            if (isUnexpected(res)) {
-                this.processUnexpectedMessage(res);
-            } else {
-                return res;
-            }
-        }
-    }
-
-    @Override
-    protected ACLMessage LARVAblockingReceive(long milis) {
-        ACLMessage res;
-        TimeHandler tini = new TimeHandler(), tend = tini;
-        while (tini.elapsedTimeMilisecsUntil(tend) < milis) {
-            res = super.LARVAblockingReceive(milis);
-            if (res != null) {
-                if (isUnexpected(res)) {
-                    this.processUnexpectedMessage(res);
-                } else {
-                    return res;
-                }
-            }
-            tend = new TimeHandler();
-        }
-        return null;
     }
 
     protected void processUnexpectedMessage(ACLMessage msg) {

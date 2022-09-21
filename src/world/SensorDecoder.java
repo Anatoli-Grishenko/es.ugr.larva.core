@@ -46,7 +46,7 @@ public class SensorDecoder {
     protected Mission currentMission;
     protected String cachedCurrentCity = "", cachedDestinationCity = "";
     protected TimeHandler lastRead;
-    public boolean verbose = false;
+    public boolean verbose = true;
 
     // SensorsDISTANCE,
     // Memory
@@ -222,14 +222,29 @@ public class SensorDecoder {
         encodeSensor(Sensors.CITYBASE, encodeValues(Name));
     }
 
+    /**
+     * Internal use only
+     *
+     * @return
+     */
     public String getCityDestination() {
         return this.getSensor(Sensors.CITYDESTINATION).get(0).asString();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Name
+     */
     public void setCityDestination(String Name) {
         encodeSensor(Sensors.CITYDESTINATION, encodeValues(Name));
     }
 
+    /**
+     * It returns the name of the agent who owns this environment
+     *
+     * @return An agent's name
+     */
     public String getName() {
         if (this.getSensor(Sensors.NAME) != null) {
             return this.getSensor(Sensors.NAME).get(0).asString();
@@ -238,34 +253,66 @@ public class SensorDecoder {
         }
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Name
+     */
     public void setName(String Name) {
         encodeSensor(Sensors.NAME, encodeValues(Name));
     }
 
+    /**
+     * It returns the type used by the agent to register in the DF
+     *
+     * @param type The type
+     */
     public void setType(String type) {
         encodeSensor(Sensors.NAME, encodeValues(type));
     }
+//
+//    public String getTeam() {
+//        return this.getSensor(Sensors.TEAM).get(0).asString();
+//    }
+//
+//    public void setTeam(String Team) {
+//        encodeSensor(Sensors.TEAM, encodeValues(Team));
+//    }
+//
 
-    public String getTeam() {
-        return this.getSensor(Sensors.TEAM).get(0).asString();
-    }
-
-    public void setTeam(String Team) {
-        encodeSensor(Sensors.TEAM, encodeValues(Team));
-    }
-
+    /**
+     * It returns a description of the general Status of the agent.
+     *
+     * @return A string that describes the status. If empty, then everything is
+     * ok. Otherwise, it shows the error or erros commited
+     */
     public String getStatus() {
         return this.getSensor(Sensors.STATUS).get(0).asString();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Status
+     */
     public void setStatus(String Status) {
         encodeSensor(Sensors.STATUS, encodeValues(Status));
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Status
+     */
     public void addStatus(String Status) {
         encodeSensor(Sensors.STATUS, encodeValues(getStatus() + "\n" + Status));
     }
 
+    /**
+     * It returns the sessionID within which the last perceptions were receibed
+     *
+     * @return
+     */
     public String getSessionid() {
         if (this.getSensor(Sensors.SESSIONID) != null) {
             return this.getSensor(Sensors.SESSIONID).get(0).asString();
@@ -274,18 +321,31 @@ public class SensorDecoder {
         }
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Sessionid
+     */
     public void setSessionid(String Sessionid) {
         encodeSensor(Sensors.SESSIONID, encodeValues(Sessionid));
     }
 
+    @Deprecated
     public String getCommitment() {
         return this.getSensor(Sensors.COMMITMENT).get(0).asString();
     }
 
+    @Deprecated
     public void setCommitment(String Commitment) {
         encodeSensor(Sensors.COMMITMENT, encodeValues(Commitment));
     }
 
+    /**
+     * It returns the reading of the compass as an angle staring in North=0 and
+     * continuing couterclockwise every 45 degrees
+     *
+     * @return The angle of orientation of the agent
+     */
     public int getCompass() {
 //        return (int) this.getSensor(Sensors.COMPASS).get(0).asDouble();
         int v = (int) getSensor(Sensors.COMPASS).get(0).asDouble();
@@ -294,128 +354,287 @@ public class SensorDecoder {
         return v;
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Compass
+     */
     public void setCompass(int Compass) {
         encodeSensor(Sensors.COMPASS, encodeValues(Compass));
     }
 
+    /**
+     * It gives the reading of the ground sensor. That is the height over the
+     * ground. When ground == 0 the agent is exactly on the surface.
+     *
+     * @return Thje height over the ground level
+     */
     public int getGround() {
         return this.getSensor(Sensors.GROUND).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Ground
+     */
     public void setGround(int Ground) {
         encodeSensor(Sensors.GROUND, encodeValues(Ground));
     }
 
+    /**
+     * It gives the current level of energy
+     *
+     * @return The level of energy right now
+     */
     public int getEnergy() {
         return this.getSensor(Sensors.ENERGY).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Energy
+     */
     public void setEnergy(int Energy) {
         encodeSensor(Sensors.ENERGY, encodeValues(Energy));
     }
 
+    /**
+     * It gives the number of objects in the cargo compartment of the agent
+     *
+     * @return The number of object in the cargo
+     */
     public int getPayload() {
         //return this.getSensor(Sensors.PAYLOAD).get(0).asInt();
         return this.getCargo().length;
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Payload
+     */
     public void setPayload(int Payload) {
         encodeSensor(Sensors.PAYLOAD, encodeValues(Payload));
     }
 
+    /**
+     * It returns the number of actions execcuted so far
+     *
+     * @return
+     */
     public int getNumsteps() {
         return this.getSensor(Sensors.NUMSTEPS).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Numsteps
+     */
     public void setNumsteps(int Numsteps) {
         encodeSensor(Sensors.NUMSTEPS, encodeValues(Numsteps));
     }
 
+    /**
+     * It returns the width of the matrix sensors, that is, if the matrix sensor
+     * is NxN it returns N
+     *
+     * @return
+     */
     public int getRange() {
         return this.getSensor(Sensors.RANGE).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Range
+     */
     public void setRange(int Range) {
         encodeSensor(Sensors.RANGE, encodeValues(Range));
     }
 
+    /**
+     * The amount of energy burnt so far
+     *
+     * @return
+     */
     public int getEnergyburnt() {
         return this.getSensor(Sensors.ENERGYBURNT).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Energyburnt
+     */
     public void setEnergyburnt(int Energyburnt) {
         encodeSensor(Sensors.ENERGYBURNT, encodeValues(Energyburnt));
     }
 
+    /**
+     * It returns the running time in seconds since the begining of the problem
+     *
+     * @return
+     */
     public int getTime() {
         return this.getSensor(Sensors.TIME).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Time
+     */
     public void setTime(int Time) {
         encodeSensor(Sensors.TIME, encodeValues(Time));
     }
 
+    /**
+     * It returns the maximum level (height or Z-coordinate) supported by the
+     * agent
+     *
+     * @return
+     */
     public int getMaxlevel() {
         return this.getSensor(Sensors.MAXLEVEL).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Maxlevel
+     */
     public void setMaxlevel(int Maxlevel) {
         encodeSensor(Sensors.MAXLEVEL, encodeValues(Maxlevel));
     }
 
+    /**
+     * It returns the minimul leve (height or Z-coordinate) supported by the
+     * agent
+     *
+     * @return
+     */
     public int getMinlevel() {
         return this.getSensor(Sensors.MINLEVEL).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Minlevel
+     */
     public void setMinlevel(int Minlevel) {
         encodeSensor(Sensors.MINLEVEL, encodeValues(Minlevel));
     }
 
+    /**
+     * It returns the maximum different
+     *
+     * @return
+     */
     public int getMaxslope() {
         return this.getSensor(Sensors.MAXSLOPE).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Maxslope
+     */
     public void setMaxslope(int Maxslope) {
         encodeSensor(Sensors.MAXSLOPE, encodeValues(Maxslope));
     }
 
+    /**
+     * IT returns the maximum number of objects that the agent can carry out
+     *
+     * @return
+     */
     public int getMaxcargo() {
         return this.getSensor(Sensors.MAXCARGO).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Maxcargo
+     */
     public void setMaxcargo(int Maxcargo) {
         encodeSensor(Sensors.MAXCARGO, encodeValues(Maxcargo));
     }
 
+    /**
+     * It returns the maximum amount of energy that the agent can have
+     *
+     * @return
+     */
     public int getAutonomy() {
         return this.getSensor(Sensors.AUTONOMY).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Autonomy
+     */
     public void setAutonomy(int Autonomy) {
         encodeSensor(Sensors.AUTONOMY, encodeValues(Autonomy));
     }
 
+    /**
+     * It returns how many energy units are burnt in every movement
+     *
+     * @return
+     */
     public int getBurnratemove() {
         return this.getSensor(Sensors.BURNRATEMOVE).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Burnratemove
+     */
     public void setBurnratemove(int Burnratemove) {
         encodeSensor(Sensors.BURNRATEMOVE, encodeValues(Burnratemove));
     }
 
+    /**
+     * It returns how many energy units are spent in every reading of sensors
+     *
+     * @return
+     */
     public int getBurnrateread() {
         return this.getSensor(Sensors.BURNRATEREAD).get(0).asInt();
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Burnrateread
+     */
     public void setBurnrateread(int Burnrateread) {
         encodeSensor(Sensors.BURNRATEREAD, encodeValues(Burnrateread));
     }
 
+    /**
+     * Returns true if the agent is exactly in the next waypoint of a course
+     *
+     * @return
+     */
     public boolean getOntarget() {
 //        return this.getSensor(Sensors.ONTARGET).get(0).asBoolean();
         return (this.getTarget() != null && getTarget().isEqualTo(getGPS()));
     }
 
+    /**
+     * It returns true when the agent is exactly at the end of a course
+     *
+     * @return
+     */
     public boolean getOnDestination() {
         if (getDestination() == null) {
             return false;
@@ -423,30 +642,57 @@ public class SensorDecoder {
         return getDestination().isEqualTo(getGPS());
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Ontarget
+     */
     public void setOntarget(boolean Ontarget) {
         encodeSensor(Sensors.ONTARGET, encodeValues(Ontarget));
     }
 
+    /**
+     * It returns true if the agent is atill alive
+     *
+     * @return
+     */
     public boolean getAlive() {
         return this.getSensor(Sensors.ALIVE).get(0).asBoolean();
     }
 
-    public boolean getStop() {
-        return this.getSensor(Sensors.STOP).get(0).asBoolean();
-    }
-
-    public void setStop(boolean stop) {
-        encodeSensor(Sensors.STOP, encodeValues(stop));
-    }
-
+//    public boolean getStop() {
+//        return this.getSensor(Sensors.STOP).get(0).asBoolean();
+//    }
+//
+//    public void setStop(boolean stop) {
+//        encodeSensor(Sensors.STOP, encodeValues(stop));
+//    }
+//
+    /**
+     * Internal use only
+     *
+     * @param Alive
+     */
     public void setAlive(boolean Alive) {
         encodeSensor(Sensors.ALIVE, encodeValues(Alive));
     }
 
+    /**
+     * It returns the names of the objects carried out by the agent
+     *
+     * @return
+     */
     public String[] getCargo() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CARGO))));
     }
 
+    /**
+     * It returns true if the parameter is a name of an object carried out by
+     * the agent
+     *
+     * @param what
+     * @return
+     */
     public int containsCargo(String what) {
         JsonArray res = getSensor(Sensors.CARGO);
         for (int i = 0; i < res.size(); i++) {
@@ -457,14 +703,29 @@ public class SensorDecoder {
         return -1;
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Cargo
+     */
     public void setCargo(String[] Cargo) {
         encodeSensor(Sensors.CARGO, encodeValues(Cargo));
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Value
+     */
     public void addCargo(String Value) {
         getSensor(Sensors.CARGO).add(Value);
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Value
+     */
     public void removeCargo(String Value) {
         int i = this.containsCargo(Value);
         if (i >= 0) {
@@ -474,18 +735,39 @@ public class SensorDecoder {
 
     }
 
+    /**
+     * It returns the whole sequence of actions succesfully executed by the
+     * agent
+     *
+     * @return
+     */
     public String[] getTrace() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.TRACE))));
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Trace
+     */
     public void setTrace(String[] Trace) {
         encodeSensor(Sensors.TRACE, encodeValues(Trace));
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Value
+     */
     public void addTrace(String Value) {
         getSensor(Sensors.TRACE).add(Value);
     }
 
+    /**
+     * Internal use only
+     *
+     * @param Value
+     */
     public void removeTrace(String Value) {
         JsonArray res = getSensor(Sensors.TRACE);
         for (int i = 0; i < res.size(); i++) {
@@ -496,6 +778,11 @@ public class SensorDecoder {
         }
     }
 
+    /**
+     * Get a list of all mission names in a certain world
+     *
+     * @return
+     */
     public String[] getAllMissions() {
         String res[] = new String[this.getSensor(Sensors.MISSIONSET).size()];
         int i = 0;
@@ -506,10 +793,22 @@ public class SensorDecoder {
         return res;
     }
 
+    /**
+     * Internal use only
+     *
+     * @param missionset
+     */
     public void setMissions(String[] missionset) {
         encodeSensor(Sensors.MISSIONSET, encodeValues(missionset));
     }
 
+    /**
+     * It returns the content of a certain mission, which is a sequence of goals
+     * separated with semicolons ;
+     *
+     * @param missionName The mission to query
+     * @return
+     */
     public String getMission(String missionName) {
         ArrayList<String> mission = new ArrayList(Transform.toArrayListString(this.getSensor(Sensors.MISSIONSET)));
         for (String sm : mission) {
@@ -520,6 +819,12 @@ public class SensorDecoder {
         return "";
     }
 
+    /**
+     * It returns an array of all the goals of a mission
+     *
+     * @param missionName
+     * @return
+     */
     public String[] getMissionGoals(String missionName) {
         for (String smission : getAllMissions()) {
             if (smission.startsWith(missionName)) {
@@ -1152,12 +1457,12 @@ public class SensorDecoder {
         if (this.getGPS() != null) {
             if (this.TraceGPS.size() == 0 || !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
                 this.TraceGPS.add(0, this.getGPSVector());
-//            } else {
-//                if (TraceGPS.size() > 2 && !this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
-//                    stuck++;
-//                } else {
-//                    stuck = 0;
-//                }
+            } else {
+                if (TraceGPS.size() > 2 && this.getGPS().isEqualTo(TraceGPS.get(0).getSource())) {
+                    stuck++;
+                } else {
+                    stuck = 0;
+                }
             }
 
         }
@@ -1861,7 +2166,7 @@ public class SensorDecoder {
 
     public void setCurrentMission(String mission) {
         String goals[] = getMissionGoals(mission);
-        this.setCurrentMission(mission, goals);
+        this.setCurrentMission(mission, goals);        
     }
 
     public void setCurrentMission(String missionName, String goals[]) {
@@ -1871,7 +2176,10 @@ public class SensorDecoder {
 
     ///////////////////// GOALS
     public String getCurrentGoal() {
-        return getCurrentMission().getCurrentGoal();
+        if (getCurrentMission() != null) {
+            return getCurrentMission().getCurrentGoal();
+        }
+        return null;
     }
 
     public String setNextGoal() {
