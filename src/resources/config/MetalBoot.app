@@ -17,7 +17,6 @@
             "type":"icon"
         },
         "Header":{
-            "watermark":"resource:/resources/images/metalbanner.png",
             "background":"BLACK"
         }
     }

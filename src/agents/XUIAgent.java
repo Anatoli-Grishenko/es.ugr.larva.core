@@ -38,7 +38,7 @@ public class XUIAgent extends LARVAFirstAgent {
     protected boolean showTrail = false;
     protected int trailSize = 0;
     JPanel _XUI, _Server;
-    boolean profiler = false, verbose = true;
+    boolean profiler = false, verbose = false;
     int nmessages = 0, miliswait, milisnext, sizeraw, sizezip, nagents = 0,
             totaldistance = 0, totaltargets = 0, runSecs = 60;
     long Milis = 0;

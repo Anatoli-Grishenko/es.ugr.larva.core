@@ -46,7 +46,7 @@ public class SensorDecoder {
     protected Mission currentMission;
     protected String cachedCurrentCity = "", cachedDestinationCity = "";
     protected TimeHandler lastRead;
-    public boolean verbose = true;
+    public boolean verbose = false;
 
     // SensorsDISTANCE,
     // Memory
@@ -1426,7 +1426,8 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             if (verbose) {
-                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "SensorDecoder::Found sensor " + name);
+                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "SensorDecoder::Found sensor " + name
+                        +" >>>>>"+jsosensor.get("data").toString());
             }
             encodeSensor(name, jsosensor.get("data").asArray());
             if (name.toUpperCase().equals(Sensors.COURSE.name()) && getSensor(Sensors.CITIESPOSITIONS) != null) { // XUI
