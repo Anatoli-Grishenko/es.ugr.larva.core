@@ -658,7 +658,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected void checkDeepMilestones(ACLMessage msg) {
         if (this.DeepMonitor && msg != null) {
             if (msg.getUserDefinedParameter(ACLMROLE) != null
-                    && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+                    && (msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER"))) {
                 if (mySessionmanager == null || mySessionmanager.length() == 0) {
                     this.mySessionmanager = msg.getSender().getLocalName();
                 }
@@ -676,18 +676,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     this.addMilestone("MILES23");
                 }
             }
-            if (msg.getContent().startsWith("Agree to open")) {
-                addMilestone("MILES19");
-            }
-            if (msg.getContent().startsWith("Confirm check-in")) {
-                addMilestone("MILES17");
-            }
-            if (msg.getContent().startsWith("Confirm check-out")) {
-                addMilestone("MILES18");
-            }
-            if (msg.getContent().contains("has been closed")) {
-                addMilestone("MILES20");
-            }
+        }
+        if (msg.getContent().startsWith("Agree to open")) {
+            addMilestone("MILES19");
+        }
+        if (msg.getContent().startsWith("Confirm check-in")) {
+            addMilestone("MILES17");
+        }
+        if (msg.getContent().startsWith("Confirm check-out")) {
+            addMilestone("MILES18");
+        }
+        if (msg.getContent().contains("has been closed")) {
+            addMilestone("MILES20");
         }
     }
 
@@ -1453,12 +1453,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (ACLMessageTools.ERRORS.contains(msg.getPerformative())) {
             return true;
         }
-        String c = msg.getContent().toUpperCase();
-        for (String s : errortags) {
-            if (c.startsWith(s)) {
-                return true;
-            }
-        }
+//        String c = msg.getContent().toUpperCase();
+//        for (String s : errortags) {
+//            if (c.startsWith(s)) {
+//                return true;
+//            }
+//        }
         return false;
     }
 

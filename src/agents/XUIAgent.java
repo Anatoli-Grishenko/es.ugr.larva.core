@@ -150,7 +150,7 @@ public class XUIAgent extends LARVAFirstAgent {
         String buffer[];
         boolean zip = false;
         inbox = this.LARVAblockingReceive();
-        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
+//        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
         if (inbox.getInReplyTo().equals("BCKTLGRM")) {
             this.tgb.write(inbox.getContent());
             return myStatus;

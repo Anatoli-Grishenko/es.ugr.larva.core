@@ -44,9 +44,12 @@ public class TelegramBackdoor extends OleFrame {
         jtaBack = new JTextArea();
         jtaBack.setEditable(false);
         jtaBack.setWrapStyleWord(true);
+        jtaBack.setCaretPosition(Math.max(jtaBack.getText().lastIndexOf("\n"), 0));
+
         Font f = this.getFont();
         f = new Font(Font.MONOSPACED, Font.PLAIN, f.getSize());
         jtaBack.setFont(f);
+        jtaBack.setText("\n");
         JScrollPane jsPane = new JScrollPane(jtaBack);
         jsPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         jsPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -75,7 +78,7 @@ public class TelegramBackdoor extends OleFrame {
         this.getContentPane().validate();
         this.pack();
         this.repaint();
-
+        this.write("/help");
 //        this.add(obSend);
     }
 
@@ -111,5 +114,6 @@ public class TelegramBackdoor extends OleFrame {
 
     public void write(String msg) {
         jtaBack.append(msg + "\n");
+        jtaBack.setCaretPosition(Math.max(jtaBack.getText().lastIndexOf("\n"), 0));
     }
 }
