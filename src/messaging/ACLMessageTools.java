@@ -37,7 +37,7 @@ public class ACLMessageTools {
 
     // External fields
     public static final String ACLMID = "ACLMID", ACLMRCVDATE = "RECEIVEDDATE", ACLMSNDDATE = "SENDDATE",
-            ACLMADMIN = "LARVAADMIN", ACLMROLE = "LARVAROLE";
+            ACLMADMIN = "LARVAADMIN", ACLMROLE = "LARVAROLE",  ACLMSTEALTH="LARVASTEALTH";
 
 //static final ArrayList<Integer> ERRORS = new ArrayList(Stream.of().collect(Collectors.toList()));
 //            CONTINUERS[] = {ACLMessage.AGREE, ACLMessage.PROPOSE},

@@ -129,8 +129,9 @@ public class OleHud extends OleSensor {
         }
         g.setColor(Color.BLACK);
         g.fill(screenPort);
-        if (myDash.getMyDecoder()== null)
+        if (myDash.getMyDecoder() == null) {
             return this;
+        }
         if (myDash.getMyDecoder().getWorldMap() != null) {
             scale = viewPort.getWidth() / this.myDash.getMyDecoder().getWorldMap().getMap().getWidth();
         }
@@ -261,8 +262,9 @@ public class OleHud extends OleSensor {
         double radius1 = 0, radius2 = 0, alpha1, alpha2;
         Point3D p0, p1, p2, p3;
 
-        if (myDash.getMyDecoder()== null)
+        if (myDash.getMyDecoder() == null) {
             return this;
+        }
 
         g.setClip(viewPort);
         Color cTile, cBackground, cStroke;
@@ -497,13 +499,13 @@ public class OleHud extends OleSensor {
     }
 
     public void addTerrain(int t, int visual, int z, int maxlevel) {
-        int skip=25;
+        int skip = 25;
         Color c;
         tx = tx + t;
-        if (tx == terrain.getWidth()+baseTerrain) {
+        if (tx == terrain.getWidth() + baseTerrain) {
             terrain.shiftLeft(skip);
             baseTerrain += skip;
-            for (int i = tx; i < tx+skip; i++) {
+            for (int i = tx; i < tx + skip; i++) {
                 for (int j = 0; j < terrain.getHeight(); j++) {
                     if (j % 16 == 0 || i % 25 == 0) {
                         setTerrain(i, j, Color.DARK_GRAY);
@@ -539,39 +541,42 @@ public class OleHud extends OleSensor {
     }
 
     public void setTerrain(int x, int y, Color c) {
-        terrain.setColor(x-baseTerrain, y, c);
+        terrain.setColor(x - baseTerrain, y, c);
     }
 
     public void mouseClicked(MouseEvent e) {
         int lTile;
         String res = "";
-        if (odpPopUp == null) {
-            hudPoints = myDash.getMyDecoder().getPolarPoints();
-            for (int level = nLevels - 1; level >= 0; level--) {
-                nTiles = (level) * 4 + 1;
-                for (int tile = 0; tile < nTiles; tile++) {
-                    lTile = myDash.getMyDecoder().getPolarVisual()[tile][level];
-                    if (hudView[level][tile].contains(new Point(e.getX(), e.getY()))) {
-                        Point3D p = hudPoints[tile][level];
-                        this.setPopUpData(p.getXInt(), p.getYInt());
-                        odpPopUp = new OleDrawPane() {
-                            @Override
-                            public void OleDraw(Graphics2D g) {
-                                paintPalette(g, palette, this.getBounds());
-                            }
+        try {
+            if (odpPopUp == null) {
+                hudPoints = myDash.getMyDecoder().getPolarPoints();
+                for (int level = nLevels - 1; level >= 0; level--) {
+                    nTiles = (level) * 4 + 1;
+                    for (int tile = 0; tile < nTiles; tile++) {
+                        lTile = myDash.getMyDecoder().getPolarVisual()[tile][level];
+                        if (hudView[level][tile].contains(new Point(e.getX(), e.getY()))) {
+                            Point3D p = hudPoints[tile][level];
+                            this.setPopUpData(p.getXInt(), p.getYInt());
+                            odpPopUp = new OleDrawPane() {
+                                @Override
+                                public void OleDraw(Graphics2D g) {
+                                    paintPalette(g, palette, this.getBounds());
+                                }
 
-                        };
-                        odpPopUp.setBounds(this.getBounds().x, this.getBounds().y, 35, this.getBounds().height);
-                        myDash.add(odpPopUp);
-                        odpPopUp.setVisible(true);
-                        myDash.repaint();
+                            };
+                            odpPopUp.setBounds(this.getBounds().x, this.getBounds().y, 35, this.getBounds().height);
+                            myDash.add(odpPopUp);
+                            odpPopUp.setVisible(true);
+                            myDash.repaint();
+                        }
                     }
                 }
+            } else {
+                odpPopUp.setVisible(false);
+                myDash.remove(odpPopUp);
+                odpPopUp = null;
             }
-        } else {
-            odpPopUp.setVisible(false);
-            myDash.remove(odpPopUp);
-            odpPopUp = null;
+        } catch (Exception ex) {
         }
     }
 

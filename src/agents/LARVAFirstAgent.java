@@ -68,6 +68,7 @@ import tools.emojis;
 import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
+import static messaging.ACLMessageTools.ACLMSTEALTH;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -145,7 +146,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected boolean securedMessages;
     protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "";
+    protected static String sepTransponder = "/", sepGoals = ";";
     protected int nlastSentMsg = 0, nlastSentACLMID = 0, nlastRecMsg = 0, nrecErrors = 0;
+    private ACLMessage lastSend, lastReceive;
     protected List<String> errortags = Stream.of("FAILURE", "REFUSE", "NOT-UNDERSTOOD", "BAD ", "ERROR").collect(Collectors.toList());
     protected BaseFactoryAgent baseFactory;
     protected boolean allowExceptionShield = true, allowSequenceDiagrams = true,
@@ -192,7 +195,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected boolean Ve(Environment E) {
-        if (E == null || E.isCrahsed() ) {
+        if (E == null || E.isCrahsed()) {
             return false;
         }
         return true;
@@ -378,7 +381,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void postExecute() {
         myReport.tick();
         if (this.frameDelay > 0 && (!remote || cont)) {
-            LARVAwait(frameDelay);
+//            LARVAwait(frameDelay);
+            this.doWait(frameDelay);
+//            this.defaultBehaviour.block(frameDelay);
         }
     }
 
@@ -694,6 +699,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.secureSend(msg);
         }
 //        myReport.setOutBox(myReport.getOutBox() + 1);
+        if (msg.getContent().startsWith("REPORT;") && msg.getPerformative() == ACLMessage.NOT_UNDERSTOOD) {
+            msg.setPerformative(ACLMessage.INFORM_REF);
+            msg.setConversationId(this.mySessionID);
+            msg.setReplyWith("MyReport");
+        }
         this.addSequenceDiagram(msg);
         checkDeepMilestones(msg);
         return msg;
@@ -727,6 +737,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected void LARVAsend(ACLMessage msg) {
         this.LARVAprocessSendMessage(msg);
         this.send(msg);
+        lastSend = msg;
         InfoACLM("⭕> Sending ACLM ", msg);
     }
 
@@ -972,7 +983,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return super.DFGetAllServicesProvidedBy(agentName);
     }
 
-
     public ArrayList<String> DFGetAllMyServices() {
         addMilestone("MILES25");
         return super.DFGetAllServicesProvidedBy(getLocalName());
@@ -1028,6 +1038,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         stepsDone.addUniqueItem(step);
         stepsSent.addUniqueItem(step);
         if (mySessionmanager.length() > 0) {
+
             ACLMessage outgoing = new ACLMessage(ACLMessage.PROXY);
             outgoing.setSender(getAID());
             outgoing.addReceiver(new AID(mySessionmanager, AID.ISLOCALNAME));
@@ -1293,7 +1304,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     //////////////////////
     protected String Transponder() {
         String goal = "";
-        String sep = ",", answer = "TRANSPONDER" + sep;
+        String sep = this.sepTransponder, answer = "TRANSPONDER" + sep;
 
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
@@ -1302,7 +1313,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
         answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
-        answer +=  sep + "GOAL " + E.getCurrentGoal()+sep + "MISSION " + E.getCurrentMission();
+        answer += sep + "GOAL " + E.getCurrentGoal() + sep + "MISSION " + E.getCurrentMission();
         return answer;
 //    String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
 //        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
@@ -1317,38 +1328,28 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public String getTransponderField(String transponder, String field) {
-        String fields[] = transponder.split(",");
-        for (int i=0; i<fields.length; i++)  {
-            if (fields[i].startsWith(field))
+        String fields[] = transponder.split(this.sepTransponder);
+        for (int i = 0; i < fields.length; i++) {
+            if (fields[i].startsWith(field)) {
                 return fields[i];
+            }
         }
         return "";
     }
-    
-    public void replyTransponder(ACLMessage request) {
-        outbox = request.createReply();
-        outbox.setPerformative(ACLMessage.INFORM);
-        outbox.setContent("INFORM" + Mission.sepMissions + Transponder());
-        this.LARVAsend(outbox);
-    }
 
+//    public void replyTransponder(ACLMessage request) {
+//        outbox = request.createReply();
+//        outbox.setPerformative(ACLMessage.INFORM);
+//        outbox.setContent(Transponder());
+//        this.LARVAsend(outbox);
+//    }
+//
     public void sendStealthTransponder() {
-//        String aux;
-//        for (String service: this.DFGetAllMyServices()) {
-//            if (service.startsWith("MISSION")) {
-//                this.DFRemoveMyServices(new String[]{service});
-//            }
-//            if (service.startsWith("GOAL")) {
-//                this.DFRemoveMyServices(new String[]{service});
-//            }            
-//        }
-//        this.DFAddMyServices(new String[]{"MISSION "+E.getCurrentMission(), 
-//            "GOAL "+E.getCurrentGoal()});
-
         ACLMessage out = new ACLMessage(ACLMessage.INFORM_REF);
         out.setSender(getAID());
         out.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
         out.setContent(Transponder());
+        out.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
         send(out);
     }
 
@@ -1416,6 +1417,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 return true;
             }
         } else {
+            if (lastSend != null && msg.getConversationId().equals(lastSend.getConversationId())
+                    && msg.getContent().equals(lastSend.getContent())
+                    && msg.getInReplyTo().equals(lastSend.getInReplyTo())) {
+                return true;
+            }
             lastSentACLMID = msg.getUserDefinedParameter(ACLMID);
             nlastSentACLMID = 0;
         }
@@ -1429,6 +1435,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 return true;
             }
         } else {
+            if (lastReceive != null && msg.getConversationId().equals(lastReceive.getConversationId())
+                    && msg.getContent().equals(lastReceive.getContent())
+                    && msg.getReplyWith().equals(lastReceive.getReplyWith())) {
+                return true;
+            }
             nlastRecMsg = 0;
             lastRecMsg = msg.getContent();
         }
@@ -1460,9 +1471,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         Object _args[] = new Object[1];
         _args[0] = payload;
         if (oleConfig.getOptions().getOle("Connection").getString("boot", "").equals("microjade")) {
-            return baseFactory.fastMicroBirth(c.getName().substring(0, 1) + getHexaKey(3), c, _args);
+            return baseFactory.fastMicroBirth(c.getSimpleName().substring(0, 1) + getHexaKey(3), c, _args);
         } else {
-            return baseFactory.fastBirth(c.getName().substring(0, 1) + getHexaKey(3), c, _args);
+            return baseFactory.fastBirth(c.getSimpleName().substring(0, 1) + getHexaKey(3), c, _args);
         }
 
     }

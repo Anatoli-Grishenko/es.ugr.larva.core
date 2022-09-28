@@ -9,6 +9,7 @@ import ai.Mission;
 import data.Ole;
 import data.OleFile;
 import disk.Logger;
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -19,6 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import messaging.ACLMessageTools;
 import swing.OleDashBoard;
+import swing.TelegramBackdoor;
 import tools.TimeHandler;
 import static zip.ZipTools.unzipString;
 
@@ -34,7 +36,7 @@ public class XUIAgent extends LARVAFirstAgent {
     Status myStatus;
 
     protected OleDashBoard myDashBoard;
-    protected String sessionKey = "";
+    protected String sessionKey = "", telegramBot;
     protected boolean showTrail = false;
     protected int trailSize = 0;
     JPanel _XUI, _Server;
@@ -43,6 +45,7 @@ public class XUIAgent extends LARVAFirstAgent {
             totaldistance = 0, totaltargets = 0, runSecs = 60;
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
+    TelegramBackdoor tgb;
 
     @Override
     public void setup() {
@@ -62,7 +65,7 @@ public class XUIAgent extends LARVAFirstAgent {
         myDashBoard = new OleDashBoard(_XUI, "XUI");
         myDashBoard.setMyXUIAgent(this);
         myDashBoard.setPreferredSize(new Dimension(1600, 800));
-        myDashBoard.verbose=verbose;
+        myDashBoard.verbose = verbose;
         _XUI.add(myDashBoard, BorderLayout.WEST);
         _XUI.validate();
         if (oleConfig != null) {
@@ -89,6 +92,13 @@ public class XUIAgent extends LARVAFirstAgent {
         );
         this.ignoreExceptions = true;
         this.allowEaryWarning = false;
+        if (this.DFGetAllProvidersOf("STUDENTS").size() > 0) {
+            telegramBot = this.DFGetAllProvidersOf("STUDENTS").get(0);
+        } else {
+            telegramBot = "";
+        }
+        tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
+        tgb.setPreferredSize(new Dimension(100, 200));
     }
 
     @Override
@@ -141,7 +151,10 @@ public class XUIAgent extends LARVAFirstAgent {
         boolean zip = false;
         inbox = this.LARVAblockingReceive();
         Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
-        if (inbox.getContent().startsWith("ZIPDATA")) {
+        if (inbox.getInReplyTo().equals("BCKTLGRM")) {
+            this.tgb.write(inbox.getContent());
+            return myStatus;
+        } else if (inbox.getContent().startsWith("ZIPDATA")) {
             buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
             zip = true;
         } else {
@@ -173,17 +186,17 @@ public class XUIAgent extends LARVAFirstAgent {
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("perceptions")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"Perceptions received");
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "Perceptions received");
                 }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("city")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"Cities received");
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "Cities received");
                 }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("people")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent"+"People received");
+                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "People received");
                 }
                 myDashBoard.preProcessACLM(content);
             }
@@ -229,5 +242,21 @@ public class XUIAgent extends LARVAFirstAgent {
         miliswait = (int) premesg.elapsedTimeMilisecsUntil(postmesg);
         nmessages++;
         return res;
+    }
+
+    public void backSendTelegram(String what) {
+        if (telegramBot.length() > 0) {
+            outbox = new ACLMessage(ACLMessage.REQUEST);
+            outbox.setSender(getAID());
+            outbox.addReceiver(new AID(telegramBot, AID.ISLOCALNAME));
+            outbox.setContent(what);
+            outbox.setReplyWith("BCKTLGRM");
+            outbox.setProtocol("NOTIFICATION");
+            outbox.setEncoding(this.getMypassport());
+            this.LARVAsend(outbox);
+            this.tgb.write(what+"\n");
+        } else {
+            this.Alert("DBA Droid not found in DF services");
+        }
     }
 }

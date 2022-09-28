@@ -242,8 +242,8 @@ public class Environment extends SensorDecoder {
             result.slope = incrz;
             result.setGPS(new Point3D(this.getGPS().getX() + incrx, this.getGPS().getY() + incry, this.getGPS().getZ() + incrz));
             result.setEnergy(this.getEnergy() - this.getBurnratemove());
-            result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
-            result.encodeSensor(Sensors.THERMAL, Transform.Matrix2JsonArray(result.thermalData));
+//            result.thermalData = Transform.shift(this.thermalData, incrx, incry, Perceptor.NULLREAD);
+//            result.encodeSensor(Sensors.THERMAL, Transform.Matrix2JsonArray(result.thermalData));
             result.visualData = Transform.shift(this.visualData, incrx, incry, Perceptor.NULLREAD);
             result.encodeSensor(Sensors.VISUAL, Transform.Matrix2JsonArray(result.visualData));
             result.lidarData = Transform.shift(this.lidarData, incrx, incry, Perceptor.NULLREAD);
@@ -446,30 +446,29 @@ public class Environment extends SensorDecoder {
         return getRightmostGeneral(visualData);
     }
 
-    public int getThermalFront() {
-        return getFrontGeneral(thermalData);
-    }
-
-    public int getThermalLeft() {
-        return getLeftGeneral(thermalData);
-    }
-
-    public int getThermalLeftmost() {
-        return getLeftmostGeneral(thermalData);
-    }
-
-    public int getThermalRight() {
-        return getRightGeneral(thermalData);
-    }
-
-    public int getThermalRightmost() {
-        return getRightmostGeneral(thermalData);
-    }
-
-    public int getThermalHere() {
-        return getHereGeneral(thermalData);
-    }
-
+//    public int getThermalFront() {
+//        return getFrontGeneral(thermalData);
+//    }
+//
+//    public int getThermalLeft() {
+//        return getLeftGeneral(thermalData);
+//    }
+//
+//    public int getThermalLeftmost() {
+//        return getLeftmostGeneral(thermalData);
+//    }
+//
+//    public int getThermalRight() {
+//        return getRightGeneral(thermalData);
+//    }
+//
+//    public int getThermalRightmost() {
+//        return getRightmostGeneral(thermalData);
+//    }
+//
+//    public int getThermalHere() {
+//        return getHereGeneral(thermalData);
+//    }
     public int getVisualHere() {
         return getHereGeneral(visualData);
     }

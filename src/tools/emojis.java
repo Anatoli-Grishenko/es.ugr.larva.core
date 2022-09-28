@@ -34,6 +34,7 @@ public class emojis {
             MAN = "\ud83D\uDEB9",
             PASSPORT = "\ud83d\udec2",
             CHEQFLAG = "\ud83c\udfc1",
+            TRIFLAG="🚩",
             SPEAKER = "\ud83d\udce2",
             KEY = "\ud83d\udd11",
             DIRECTHIT = "\ud83c\udfaf",

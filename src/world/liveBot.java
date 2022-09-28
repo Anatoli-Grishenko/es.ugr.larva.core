@@ -41,9 +41,16 @@ public class liveBot extends Thing {
     int initialDistance = -1, currentDistance, mindistance, order, slope;
     int energyBurnt = -1, timeSecs = 0, userID;
     String myCommitment = "";
+    protected ArrayList<String> droidShips;
 
     public liveBot(String name) {
         super(name);
+        droidShips = new ArrayList();
+        droidShips.add(Roles.DEST.name());
+        droidShips.add(Roles.BB1F.name());
+        droidShips.add(Roles.MTT.name());
+        droidShips.add(Roles.VAAT.name());
+        droidShips.add(Roles.YV.name());
         capabilities = new ArrayList<>();
         attachments = new ArrayList<>();
         myPerceptions = new SensorDecoder();
@@ -53,6 +60,12 @@ public class liveBot extends Thing {
 
     public liveBot(String name, World w) {
         super(name, w);
+        droidShips = new ArrayList();
+        droidShips.add(Roles.DEST.name());
+        droidShips.add(Roles.BB1F.name());
+        droidShips.add(Roles.MTT.name());
+        droidShips.add(Roles.VAAT.name());
+        droidShips.add(Roles.YV.name());
         capabilities = new ArrayList<>();
         attachments = new ArrayList<>();
         myPerceptions = new SensorDecoder();
@@ -111,8 +124,9 @@ public class liveBot extends Thing {
 
     public void setCurrentDistance(int currentDistance) {
         this.currentDistance = currentDistance;
-        if (this.getCurrentDistance()<this.getMindistance())
+        if (this.getCurrentDistance() < this.getMindistance()) {
             this.setMindistance(currentDistance);
+        }
     }
 
     public int getOrder() {
@@ -241,7 +255,7 @@ public class liveBot extends Thing {
     protected void checkStatus() {
         boolean single = false, multiple = true, crashtotoher,
                 crashtoground, crashtolevel, crashtoenergy, crashtoborder, crashtoslope;
-        
+
         Raw().setStatus("");
         Raw().setEnergy((int) Math.max(Raw().getEnergy(), 0));
         crashtoenergy = Raw().getEnergy() < 1;
@@ -341,4 +355,7 @@ public class liveBot extends Thing {
         this.mindistance = mindistance;
     }
 
+    public boolean isDroidSHip() {
+        return this.droidShips.contains(this.getType());
+    }
 }

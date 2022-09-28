@@ -41,7 +41,7 @@ public class DEST extends DroidStarshipLevelA {
 
     @Override
     public Status MyParking() {
-        this.replyTransponder(session);
+        //this.replyTransponder(session);
 
         while (true) {
             inbox = LARVAblockingReceive(1000);
@@ -157,7 +157,7 @@ public class DEST extends DroidStarshipLevelA {
 //        this.setCurrentMission("FINAL", new String[]{"MOVEIN " + baseCity, "EXIT"});
 //        myMission = this.activateCurrentMission("FINAL");
 //        return Status.CHOOSEMISSION;
-        this.replyTransponder(session);
+        //this.replyTransponder(session);
         return Status.SOLVEMISSION;
     }
 

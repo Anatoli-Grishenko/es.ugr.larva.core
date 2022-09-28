@@ -64,36 +64,40 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     @Override
     protected String Transponder() {
         String goal = "";
-        String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
+        String sep = this.sepTransponder, answer = "TRANSPONDER" + sep;
 
-        if (myStatus == Status.PARKING) {
-            if (E.getType().equals("DEST")) {
-                goal = " WAITING REPORT";
-            } else {
-                if (this.allowParking) {
-                    goal = " PARKING " + (realParkingTime - tini.elapsedTimeSecsUntil(tend));
-                }
-            }
-        } else {
-            goal = "GOAL " + E.getCurrentGoal();
-        }
         answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
         if (E.getGround() > 0) {
-            answer += sep + "ONAIR";
+            answer += sep + "STATUS MOVING";
         } else {
-            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
+            answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
-        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep
-                + "PAYLOAD " + E.getPayload();
-        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + goal;
+        answer += sep + "GPS " + E.getGPS().toString()
+                + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()]
+                + sep + "PAYLOAD " + E.getPayload();
+//        if (myStatus == Status.PARKING) {
+//            if (E.getType().equals("DEST")) {
+////                goal = " WAITING REPORT";
+////            } else {
+////                if (this.allowParking) {
+////                    goal = " PARKING " + (realParkingTime - tini.elapsedTimeSecsUntil(tend));
+////                }
+////            }
+//        } else {
+//            goal = "GOAL " + E.getCurrentGoal();
+//        }
+        goal = "GOAL " + E.getCurrentGoal();
+        answer += sep + goal + sep + "MISSION " + E.getCurrentMission();
         return answer;
     }
 
     @Override
     public void setup() {
         this.allowExceptionShield = false;
+        this.disableDeepLARVAMonitoring();
         super.setup();
         logger.offEcho();
+        this.setSecuredMessages(true);
         this.deactivateSequenceDiagrams();
         this.setFrameDelay(0);
         showPerceptions = false;
@@ -122,7 +126,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         allowCFP = true;
         allowREQUEST = true;
         allowParking = false;
-
+        this.frameDelay=10;
     }
 
     @Override
@@ -175,7 +179,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     public Status MyCheckin() {
         boolean cin;
-        String fakepassport = "TlBDIEFnZW50cw== ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pVHpJNWRXNWlOblZxVTNCbVp6TlVSaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEEyTFRJeUlERTFPalE1T2pNMU9qVXlNeUlzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJaMlZ1ZEhNaWZRPT0=",
+        String fakepassport = "TlBDIEFHRU5U ZXlKUFRFVk5SVlJCSWpwN0ltbGtJam9pV0UxUk56SlBSVzVPWjBaS1VqSXpjaUlzSW5SNWNHVWlPaUpQVEVWUVFWTlRVRTlTVkNJc0ltWnBaV3hrY3lJNmV5SnlZWGRRWVhOemNHOXlkQ0k2SWlJc0luVnpaWEpKUkNJNklpSXNJbU5wWkNJNklpSXNJbUZzYVdGeklqb2lJaXdpWlcxaGFXd2lPaUlpTENKdVlXMWxJam9pSW4wc0ltUmhkR1VpT2lJeU1ESXlMVEE1TFRJeUlEQTNPakF5T2pJM09qTXdPQ0lzSW1SbGMyTnlhWEIwYVc5dUlqb2lTbE5QVGlCUFltcGxZM1FnVEdsdWEyVmtJR0Z1WkNCRmJXSmxaR1ZrSWl3aWIyeGxJanAwY25WbExDSmpjbmx3ZEc4aU9pSWlmU3dpZFhObGNrbEVJam94TURBd0xDSmphV1FpT2lJaUxDSmhiR2xoY3lJNklrbGpaVzFoYmlJc0ltVnRZV2xzSWpvaWJDNWpZWE4wYVd4c2IwQmtaV056WVdrdWRXZHlMbVZ6SWl3aWJtRnRaU0k2SWs1UVF5QkJSMFZPVkNKOQ==",
                 realpassport = mypassport;
 
         OlePassport op = new OlePassport();
@@ -233,7 +237,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     public Status MyChooseMission() {
         nextCity = this.mySelectNextCity();
         E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
-        this.replyTransponder(session);
+//        this.
         this.needCourse = true;
         return Status.SOLVEMISSION;
     }
@@ -243,33 +247,29 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     }
 
     public Status MyParking() {
-        realParkingTime = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
-        tini = new TimeHandler();
-        tend = new TimeHandler();
-        this.MyReadPerceptions();
-        if (getEnvironment().getGround() == 0) {
-            this.replyTransponder(session);
-        }
         if (!allowParking) {
             return Status.CHOOSEMISSION;
         }
-        boolean exit = false;
-        long remaining;
-        while (!exit) {
-            this.replyTransponder(session);
-            inbox = this.LARVAblockingReceive(500);
-            if (this.isOnMission()) {
-                return Status.SOLVEMISSION;
-            }
-            tend = new TimeHandler();
-            exit = tini.elapsedTimeSecsUntil(tend) >= realParkingTime;
+        if (tini == null) {
+            realParkingTime = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
+            tini = new TimeHandler();
         }
-        return Status.CHOOSEMISSION;
+        tend = new TimeHandler();
+        E.setCurrentMission("WAITING", new String[]{"WAITING " + (realParkingTime - (tini.elapsedTimeSecsUntil(tend)))});
+        this.defaultBehaviour.block(1000);
+        tend = new TimeHandler();
+//        this.sendStealthTransponder();
+        if (tini.elapsedTimeSecsUntil(tend) >= realParkingTime) {
+            tini = null;
+            return Status.CHOOSEMISSION;
+        }
+        return myStatus;
     }
 
     protected boolean MyExecuteAction(String action) {
         Info("Executing action " + action);
         outbox = session.createReply();
+        outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setContent("Request execute " + action + " session " + sessionKey);
         this.myEnergy++;
         session = this.blockingDialogue(outbox).get(0);
@@ -285,9 +285,9 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Reading perceptions");
         outbox = session.createReply();
         outbox.setContent("Query sensors session " + sessionKey);
-        LARVAsend(outbox);
+        outbox.setPerformative(ACLMessage.QUERY_REF);
         this.myEnergy++;
-        session = this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
+        session = this.blockingDialogue(outbox).get(0);
 //        session = this.fromSessionManager(); //this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
         if (session.getContent().toUpperCase().startsWith("FAILURE")) {
             Alert("Failed to read perceptions");
@@ -308,7 +308,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         // Analizar objetivo
         if (G(E)) {
             Info("Target reached");
-            E.getCurrentMission().nextGoal();
+            E.setNextGoal();
             needCourse = true;
             return Status.SOLVEMISSION;
         }
@@ -338,12 +338,14 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         }
         String goal[] = E.getCurrentGoal().split(" ");
         switch (goal[0]) {
+            case "PARKING":
+                return Status.PARKING;
             case "MOVETO":
                 if (E.getGPS().getX() == Integer.parseInt(goal[1])
                         && E.getGPS().getY() == Integer.parseInt(goal[2])
                         && E.getGround() == 0) {
-                    E.getCurrentMission().nextGoal();
-                    this.replyTransponder(session);
+                    E.setNextGoal();
+//                    this.
                     return Status.SOLVEMISSION;
                 } else if (this.doFindCourseTo(Integer.parseInt(goal[1]), Integer.parseInt(goal[2]))) {
                     return MyMoveProblem();
@@ -355,26 +357,25 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
                 String targetCity = getEnvironment().getCurrentGoal().replace("MOVEIN ", "");
                 if (needCourse) {
                     if (E.getCurrentCity().equals(targetCity)) {
-                        E.getCurrentMission().nextGoal();
+                        E.setNextGoal();
                         return Status.SOLVEMISSION;
                     }
                     if (!this.doFindCourseIn(targetCity)) {
                         this.LARVAwait(1000);
-                        E.getCurrentMission().nextGoal();
+                        E.setNextGoal();
                         return Status.EXIT;
                     }
                     needCourse = false;
                 }
                 return MyMoveProblem();
             case "EXIT":
-                this.replyTransponder(session);
+//                this.
                 return Status.EXIT;
             default:
                 Alert("Sorry I do not know how to reach goal " + E.getCurrentGoal());
                 return Status.CLOSEMISSION;
         }
     }
-
 
     public boolean doFindCourseIn(String destination) {
         if (E.getDestinationCity().equals(destination)) {
@@ -392,6 +393,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
     public boolean doFindCourseTo(int x, int y) {
         Info("Searching a route to " + x + " " + y);
         outbox = session.createReply();
+        outbox.setPerformative(ACLMessage.QUERY_REF);
         outbox.setContent("Request course to " + x + " " + y + " Session " + sessionKey);
         Info("Request course to " + x + " " + y + " Session " + sessionKey);
         session = this.blockingDialogue(outbox).get(0);
@@ -442,6 +444,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Joining session with base in  " + baseCity);
         outbox = session.createReply();
         outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
+        outbox.setPerformative(ACLMessage.REQUEST);
         session = this.blockingDialogue(outbox).get(0);
         if (!session.getContent().toUpperCase().startsWith("CONFIRM")) {
             Error("Could not join session " + sessionKey + " due to " + session.getContent());
@@ -587,10 +590,9 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         Info("Unexpected " + msg.getContent());
         if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
             outbox = msg.createReply();
-            String answer = "";
-            answer += "NAME " + getLocalName() + "TYPE, " + E.getType() + ",CITY " + getEnvironment().getCurrentCity();
-            answer += "GPS" + E.getGPS().toString() + ",COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + ", PAYLOAD " + E.getPayload();
-            LARVAsend(outbox);
+            outbox.setPerformative(ACLMessage.INFORM);
+            outbox.setContent(this.Transponder());
+            this.Dialogue(msg);
             return;
         }
         if (isOnMission()) {

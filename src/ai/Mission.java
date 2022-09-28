@@ -48,6 +48,7 @@ public class Mission extends ArrayList<String> {
         this.name = name.toUpperCase();
     }
 
+    @Override
     public String toString() {
         String res = getName() + sepMissions;
         for (String sm : this) {

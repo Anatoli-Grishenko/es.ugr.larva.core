@@ -7,6 +7,7 @@ package agents;
 
 import static agents.LARVAFirstAgent.sd;
 import crypto.Keygen;
+import static crypto.Keygen.getHexaKey;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
@@ -30,7 +31,7 @@ import static tools.TimeHandler.nextSecs;
 public class LARVADialogicalAgent extends LARVAFirstAgent {
 
     protected DialogueManager DM;
-    private ArrayList<ACLMessage> inBoxes;
+    protected ArrayList<ACLMessage> inBoxes;
 
     @Override
     public void setup() {
@@ -174,8 +175,9 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     protected void closeUtterance(ACLMessage msg) {
-        if (msg == null || DM.getMyUtterance(msg)== null)
+        if (msg == null || DM.getMyUtterance(msg) == null) {
             return;
+        }
         DM.getMyUtterance(msg).close();
         if (isInitiator(msg.getPerformative())) {
             if (DM.getPrevUtterance(msg) != null
@@ -186,24 +188,40 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         }
     }
 
+    private ACLMessage secureMessage(ACLMessage msg) {
+        msg = ACLMessageTools.secureACLM(msg);
+        if (msg.getConversationId() == null || msg.getConversationId().length() == 0) {
+            msg.setConversationId("CID" + getHexaKey(6));
+        }
+        if (msg.getReplyWith() == null || msg.getReplyWith().length() == 0) {
+            msg.setReplyWith("RW" + getHexaKey(6));
+        }
+        return msg;
+    }
+
     protected void Dialogue(ACLMessage msg) {
-        super.LARVAsend(msg);
+        super.LARVAsend(secureMessage(msg));
         DM.addUtterance(msg);
 //        this.checkOpenUtterances();
     }
 
     private void waitOpenUtterance(ACLMessage msg) {
-        ACLMessage received=null;
+        ACLMessage received = null;
         boolean still;
         Info("Sleeping until new open utterances");
 //        Info(toString());
-        still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
-        while (still) {
+        do{
             received = super.LARVAblockingReceive();
             DM.addUtterance(received);
             still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
-        }
-        Info("Wake up!. I have received "+fancyWriteACLM(received, true));
+        } while(still);
+//        still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
+//        while (still) {
+//            received = super.LARVAblockingReceive();
+//            DM.addUtterance(received);
+//            still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
+//        }
+        Info("Wake up!. I have received " + fancyWriteACLM(received, true));
         if (msg != null) {
             this.closeUtterance(msg);
         }
@@ -219,12 +237,12 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         Info("Opening uttterance ");
         this.Dialogue(msg);
         if (isInitiator(msg.getPerformative())) {
-            while (this.isOpenUtterance(msg)) {
+            while (this.isOpenUtterance(msg) || this.getAnswersTo(msg).size()==0) {
                 Info("Waiting to close utterance");
                 this.waitOpenUtterance(msg);
             }
-            this.closeUtterance(msg);
             res = this.getAnswersTo(msg);
+            this.closeUtterance(msg);
         }
         if (DM.getPrevUtterance(msg) != null) {
             DM.getPrevUtterance(msg).close();

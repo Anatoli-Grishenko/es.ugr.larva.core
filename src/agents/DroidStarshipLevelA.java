@@ -255,7 +255,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     public Status MyChooseMission() {
         nextCity = this.mySelectNextCity();
         E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
-        this.replyTransponder(session);
+        //this.replyTransponder(session);
         this.needCourse = true;
         return Status.SOLVEMISSION;
     }
@@ -270,7 +270,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         tend = new TimeHandler();
         this.MyReadPerceptions();
         if (getEnvironment().getGround() == 0) {
-            this.replyTransponder(session);
+            //this.replyTransponder(session);
         }
         if (!allowParking) {
             return Status.CHOOSEMISSION;
@@ -278,7 +278,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         boolean exit = false;
         long remaining;
         while (!exit) {
-            this.replyTransponder(session);
+            //this.replyTransponder(session);
             inbox = this.LARVAblockingReceive(500);
             if (this.isOnMission()) {
                 return Status.SOLVEMISSION;
@@ -366,7 +366,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                         && E.getGPS().getY() == Integer.parseInt(goal[2])
                         && E.getGround() == 0) {
                     E.getCurrentMission().nextGoal();
-                    this.replyTransponder(session);
+                    //this.replyTransponder(session);
                     return Status.SOLVEMISSION;
                 } else if (this.doFindCourseTo(Integer.parseInt(goal[1]), Integer.parseInt(goal[2]))) {
                     return MyMoveProblem();
@@ -391,7 +391,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 }
                 return MyMoveProblem();
             case "EXIT":
-                this.replyTransponder(session);
+                //this.replyTransponder(session);
                 return Status.EXIT;
             default:
                 Alert("Sorry I do not know how to reach goal " + E.getCurrentGoal());

@@ -103,7 +103,7 @@ public class LARVABaseAgent extends Agent {
      */
     protected String mypassport,
             // Remember the name of the Session Manager
-            mySessionmanager = "";
+            mySessionmanager = "", mySessionID="";
 
     /**
      * Counter of cycles of the method Execute()
@@ -183,6 +183,7 @@ public class LARVABaseAgent extends Agent {
         }
         if (msg.getUserDefinedParameter(ACLMROLE) != null && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
             this.mySessionmanager=msg.getSender().getLocalName();
+            this.mySessionID=msg.getConversationId();
         }
         return this.LARVAprocessAnyMessage(msg);
     }
