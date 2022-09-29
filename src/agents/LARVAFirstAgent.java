@@ -1413,18 +1413,20 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //        }
         if (msg.getUserDefinedParameter(ACLMID).equals(this.lastSentACLMID)) {
             nlastSentACLMID++;
-            if (nlastSentACLMID > 1) {
+            if (nlastSentACLMID > 2) {
+                return true;
+            }
+        } else if (lastSend != null && msg.getConversationId().equals(lastSend.getConversationId())
+                && msg.getContent().equals(lastSend.getContent())
+                && msg.getInReplyTo().equals(lastSend.getInReplyTo())) {
+            nlastSentACLMID++;
+            if (nlastSentACLMID > 2) {
                 return true;
             }
         } else {
-            if (lastSend != null && msg.getConversationId().equals(lastSend.getConversationId())
-                    && msg.getContent().equals(lastSend.getContent())
-                    && msg.getInReplyTo().equals(lastSend.getInReplyTo())) {
-                return true;
-            }
-            lastSentACLMID = msg.getUserDefinedParameter(ACLMID);
             nlastSentACLMID = 0;
         }
+        lastSentACLMID = msg.getUserDefinedParameter(ACLMID);
         return false;
     }
 
