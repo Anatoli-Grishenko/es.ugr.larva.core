@@ -599,7 +599,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             Info("Sending passport to " + IdentityManager);
             this.LARVAsend(outbox);
 //            checkin = this.blockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
-            checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
+//            checkin = this.LARVAblockingReceive(MessageTemplate.MatchSender(IM), WAITANSWERMS);
+            checkin = this.LARVAblockingReceive(); //MessageTemplate.MatchSender(IM), WAITANSWERMS);
             if (checkin == null) {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
