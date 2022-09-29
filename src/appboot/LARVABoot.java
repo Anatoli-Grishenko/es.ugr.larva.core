@@ -435,7 +435,7 @@ public class LARVABoot {
             appMain.Error("Error loading passport file " + oleConfig.getTab("Identity").getString("Pasport file", ""));
         } else {
             _xuiName = "XUI" + oPassport.getName();
-            _xuiName = _xuiName.substring(0, 10);
+//            _xuiName = _xuiName.substring(0, 10);
             for (String s : _tiles.keySet()) {
                 if (_tiles.get(s) != null) {
                     _tiles.get(s).getMyReport().setOwnerName(oPassport.getName());
