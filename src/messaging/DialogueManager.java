@@ -134,6 +134,21 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return result;
     }
 
+    public DialogueManager removeUtterance(ACLMessage answer) {
+        if (get(answer.getConversationId()) != null) {
+            Utterance ut = getMyUtterance(answer);
+//            if (ut.getParent() != null) {
+//                ut.getParent().Children.remove(ut);
+//                ut.setParent(null);
+//            }
+            get(answer.getConversationId()).remove(ut.getStarter().getReplyWith());
+//            if (get(answer.getConversationId()).get(answer.getReplyWith()) != null) {
+//                get(answer.getConversationId()).remove(answer.getReplyWith());
+//            }
+        }
+        return this;
+    }
+
     public Utterance getMyUtterance(ACLMessage answer) {
         if (get(answer.getConversationId()) != null) {
             return get(answer.getConversationId()).get(answer.getReplyWith());
@@ -188,7 +203,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
                     if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
 //                        pending.add(get(cid).get(rw).getStarter());
-                    this.pushBack(pending, get(cid).get(rw).getStarter());
+                        this.pushBack(pending, get(cid).get(rw).getStarter());
                     }
                 }
             }
@@ -204,7 +219,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
                     if (get(cid).get(rw).getMyStatus() == Utterance.Status.OPEN) {
 //                        pending.add(get(cid).get(rw).getStarter());
-                    this.pushBack(pending, get(cid).get(rw).getStarter());
+                        this.pushBack(pending, get(cid).get(rw).getStarter());
                     }
                 }
             }
@@ -219,7 +234,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             for (String rw : this.get(cid).keySet()) {
                 if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
                         && get(cid).get(rw).isAlive()) {
-                    
+
 //                    pending.add(get(cid).get(rw).getStarter());
                     this.pushBack(pending, get(cid).get(rw).getStarter());
                 }
@@ -357,7 +372,11 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
     protected String nesting(int n) {
         String res = "";
         for (int i = 0; i < n + 1; i++) {
-            res += "     ";
+            if (i == 0) {
+                res += "     ";
+            } else {
+                res += "│    ";
+            }
         }
         return res;
     }
@@ -381,7 +400,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 lA = Long.parseLong(A.getUserDefinedParameter(ACLMSNDDATE));
                 lB = Long.parseLong(B.getUserDefinedParameter(ACLMSNDDATE));
             }
-            return lA<lB;
+            return lA < lB;
         } catch (Exception ex) {
             return false;
         }

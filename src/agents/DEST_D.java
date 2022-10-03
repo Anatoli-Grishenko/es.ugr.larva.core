@@ -21,15 +21,59 @@ import static zip.ZipTools.unzipString;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class DEST_D extends DroidStarshipLevelD {
+public class DEST_D extends DroidShip {
 
     ThingSet population;
+    boolean waitReport = false;
 
     @Override
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE DEST"});
         this.allowParking = true;
+        logger.offEcho();
+    }
+
+    @Override
+    protected Status processAsynchronousMessages() {
+//        Info(this.DM.toString());
+        super.processAsynchronousMessages();
+        for (ACLMessage m : this.getExtRequests()) {
+            if (m.getContent().startsWith("REPORT") && m.getPerformative() == ACLMessage.INFORM_REF
+                    && myStatus == Status.PARKING) {
+           outbox = m.createReply();
+                String census = checkCensus(m);
+                if (census.length() == 0) {
+                    ACLMessage auxOutbox, auxInbox;
+//                    auxOutbox = session.createReply();
+                    auxOutbox = new ACLMessage(ACLMessage.REQUEST);
+                    auxOutbox.setSender(getAID());
+                    auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+                    auxOutbox.setConversationId(this.mySessionID);
+                    auxOutbox.setPerformative(ACLMessage.REQUEST);
+                    auxOutbox.setContent("Confirm");
+                    auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
+                    auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
+                    session = this.blockingDialogue(auxOutbox).get(0);
+//                    this.forgetUtterance(auxOutbox);
+                    outbox.setPerformative(ACLMessage.CONFIRM);
+                    outbox.setContent("Confirm");
+                    outbox.setReplyWith("Confirm");
+                    this.Dialogue(outbox);
+//                    this.closeUtterance(m);
+                    this.forgetUtterance(m);
+                    this.waitReport = false;
+                    return Status.CHOOSEMISSION;
+                } else {
+                    outbox.setPerformative(ACLMessage.DISCONFIRM);
+                    outbox.setContent("Disconfirm " + census);
+                    outbox.setReplyWith("Disconfirm");
+                    this.forgetUtterance(m);
+                    return myStatus;
+                }
+            }
+        }
+        return myStatus;
     }
 
     @Override
@@ -37,62 +81,12 @@ public class DEST_D extends DroidStarshipLevelD {
         if (!allowParking) {
             return Status.CHOOSEMISSION;
         }
-        if (tini == null) {
-//            realParkingTime = 30000;
-            tini = new TimeHandler();
+        if (!waitReport) {
+            E.setCurrentMission("WAITING", new String[]{"WAITING REPORT"});
+            waitReport = true;
         }
-        tend = new TimeHandler();
-        E.setCurrentMission("WAITING", new String[]{"WAITING REPORT"});
-        tend = new TimeHandler();
-        ACLMessage m = this.blockingDialogue().get(0);
-//        this.closeUtterance(m);
-        if (m.getContent().startsWith("REPORT")) {
-            outbox = m.createReply();
-            String census = checkCensus(m);
-            if (census.length() == 0) {
-                ACLMessage auxOutbox, auxInbox;
-                auxOutbox=session.createReply();
-//                auxOutbox = new ACLMessage(ACLMessage.REQUEST);
-//                auxOutbox.setSender(getAID());
-//                auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
-//                auxOutbox.setConversationId(this.mySessionID);
-                auxOutbox.setPerformative(ACLMessage.REQUEST);
-                auxOutbox.setContent("Confirm");
-                auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
-                auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
-                session = this.blockingDialogue(auxOutbox).get(0);
-                outbox.setPerformative(ACLMessage.CONFIRM);
-                outbox.setContent("Confirm");
-                this.Dialogue(outbox);
-                this.closeUtterance(outbox);
-                return Status.CHOOSEMISSION;
-            } else {
-                outbox.setPerformative(ACLMessage.DISCONFIRM);
-                outbox.setContent("Disconfirm " + census);
-                this.Dialogue(outbox);
-                this.closeUtterance(outbox);
-            }
-        }
-//        if (m.getPerformative() == ACLMessage.INFORM_REF) {
-//            if (m.getContent().startsWith("REPORT")) {
-//                outbox = session.createReply();
-//                outbox.setPerformative(ACLMessage.INFORM_REF);
-//                m.setReplyWith(m.getSender().getLocalName());
-//                outbox.setContent(m.getContent());
-//                inbox = this.blockingDialogue(outbox).get(0);
-//                outbox = m.createReply();
-//                if (inbox.getPerformative() == ACLMessage.CONFIRM) {
-//                    outbox.setPerformative(ACLMessage.CONFIRM);
-//                    outbox.setContent("Confirm");
-//                    tini = null;
-//                    return Status.CHOOSEMISSION;
-//                } else {
-//                    outbox.setPerformative(ACLMessage.DISCONFIRM);
-//                    outbox.setContent("Disconfirm");
-//                }
-//                this.Dialogue(m);
-//            }
-//        }
+        this.checkOpenUtterances();
+        this.LARVAwait(1000);
         return myStatus;
     }
 
@@ -114,8 +108,8 @@ public class DEST_D extends DroidStarshipLevelD {
                     stype = cityCensus[1];
                     snumber = Integer.parseInt(cityCensus[2]);
                     slives = 0;
-                     for (Thing t : population.getAllThings()) {
-                        if (t.getType().toUpperCase().equals(stype.toUpperCase()) 
+                    for (Thing t : population.getAllThings()) {
+                        if (t.getType().toUpperCase().equals(stype.toUpperCase())
                                 && t.getBelongsTo().toUpperCase().equals(scity.toUpperCase())) {
                             slives++;
                         }
@@ -177,38 +171,38 @@ public class DEST_D extends DroidStarshipLevelD {
             return Status.CHECKOUT;
         }
         this.doQueryPeople("people");
+        this.waitReport = false;
         nextCity = this.mySelectCityCourse();
-        this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity});
+        this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity+""});
         return Status.SOLVEMISSION;
     }
 
-    @Override
-    protected void processUnexpectedMessage(ACLMessage msg) {
-        String sep = ";";
-        String tokens[] = msg.getContent().split(LARVAFirstAgent.sepTransponder)[0].split(" ");
-        Info("Unexpected " + msg.getContent());
-        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
-            outbox = msg.createReply();
-            outbox.setContent(Transponder());
-            LARVAsend(outbox);
-            System.out.println(getLocalName() + " TRANSPONDER: " + Transponder());
-            return;
-        }
-        if (isOnMission()) {
-        } else {
-            if (tokens[0].toUpperCase().equals("REPORT")) {
-                if (checkReport(msg)) {
-                    Message("Received report " + inbox.getContent());
-                    onMission(msg, "THEEND", new String[]{"MOVETO 0 0", "EXIT"});
-                }
-            }
-        }
-        Info("Refuse " + msg.getContent());
-        outbox = msg.createReply();
-        outbox.setContent("Refuse");
-        this.LARVAsend(outbox);
-    }
-
+//    @Override
+//    protected void processAsynchronousMessages(ACLMessage msg) {
+//        String sep = ";";
+//        String tokens[] = msg.getContent().split(LARVAFirstAgent.sepTransponder)[0].split(" ");
+//        Info("Unexpected " + msg.getContent());
+//        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
+//            outbox = msg.createReply();
+//            outbox.setContent(Transponder());
+//            LARVAsend(outbox);
+//            System.out.println(getLocalName() + " TRANSPONDER: " + Transponder());
+//            return;
+//        }
+//        if (isOnMission()) {
+//        } else {
+//            if (tokens[0].toUpperCase().equals("REPORT")) {
+//                if (checkReport(msg)) {
+//                    Message("Received report " + inbox.getContent());
+//                    onMission(msg, "THEEND", new String[]{"MOVETO 0 0", "EXIT"});
+//                }
+//            }
+//        }
+//        Info("Refuse " + msg.getContent());
+//        outbox = msg.createReply();
+//        outbox.setContent("Refuse");
+//        this.LARVAsend(outbox);
+//    }
     protected boolean checkReport(ACLMessage msg) {
         return true;
     }
@@ -220,7 +214,7 @@ public class DEST_D extends DroidStarshipLevelD {
         outbox.setPerformative(ACLMessage.QUERY_REF);
         session = this.blockingDialogue(outbox).get(0);
         population = new ThingSet();
-        String unzipedcontent = unzipString(session.getContent());
+        String unzipedcontent = unzipString(session.getContent().replace("ZIPDATA", ""));
 
         JsonObject jspeople = Json.parse(unzipedcontent).asObject().get("thingset").asObject();
 //        System.out.println("CENSUS:"+jspeople.toString(WriterConfig.PRETTY_PRINT));

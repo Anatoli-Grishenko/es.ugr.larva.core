@@ -153,7 +153,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected BaseFactoryAgent baseFactory;
     protected boolean allowExceptionShield = true, allowSequenceDiagrams = true,
             continuousSequence = true,
-            ignoreExceptions = false, allowEaryWarning = true;
+            ignoreExceptions = false, allowEaryWarning = true,
+            usePerformatives = false;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -595,6 +596,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
             outbox.setSender(getAID());
             outbox.addReceiver(IM);
+            if (usePerformatives) {
+                outbox.setConversationId("CHECKIN");
+                outbox.setReplyWith("CHECKIN");
+            }
             outbox.setContent(mypassport);
             Info("Sending passport to " + IdentityManager);
             this.LARVAsend(outbox);
@@ -847,14 +852,18 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public void Message(String message) {
-        if (isSwing()) {
-            OleApplication app = payload.getParent();
-            JOptionPane.showMessageDialog(app,
-                    message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null,
+                message, "Agent " + getLocalName()+" "+E.getType(), JOptionPane.INFORMATION_MESSAGE);
+        Info(message);
+
+//        if (isSwing()) {
+//            OleApplication app = payload.getParent();
+//            JOptionPane.showMessageDialog(app,
+//                    message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
+////            Info(message);
+//        } else {
 //            Info(message);
-        } else {
-            Info(message);
-        }
+//        }
     }
 
     /**
@@ -1332,7 +1341,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         String fields[] = transponder.split(this.sepTransponder);
         for (int i = 0; i < fields.length; i++) {
             if (fields[i].startsWith(field)) {
-                return fields[i];
+                return fields[i].replace(field+" ", "");
             }
         }
         return "";
@@ -1526,5 +1535,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     public void setContinuousSequenceDiagram(Boolean t) {
         this.continuousSequence = t;
+    }
+
+    protected String askTransponder(String toWhom) {
+        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+        outbox.setSender(getAID());
+        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+        outbox.setConversationId("TRANSPODER");
+        outbox.setReplyWith("TRANSPODER");
+        outbox.setContent("TRANSPODER");
+        this.LARVAsend(inbox);
+        inbox = LARVAblockingReceive();
+        if (inbox.getPerformative() == ACLMessage.INFORM) {
+            return inbox.getContent();
+        } else {
+            return "";
+        }
     }
 }

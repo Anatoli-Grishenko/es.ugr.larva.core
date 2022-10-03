@@ -21,13 +21,13 @@ public class AStarBehavioural extends Search {
     Plan plan;
     DecisionSet children;
     Choice currentNode = null, newchild, oldchild, start, end;
-    ACLMessage request;
+//    ACLMessage request;
     final int nIterations = 100;
     int iterations;
 
-    public AStarBehavioural(ACLMessage r, Map2DColor map, PathType path, int minlevel, int maxlevel, int maxslope, Choice from, Choice to) {
+    public AStarBehavioural(Map2DColor map, PathType path, int minlevel, int maxlevel, int maxslope, Choice from, Choice to) {
         super(map);
-        request = r;
+//        request = r;
         isInit = isSearch = isDone = false;
         setView(null);
         setApp(null);

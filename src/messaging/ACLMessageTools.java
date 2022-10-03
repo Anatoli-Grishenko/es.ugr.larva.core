@@ -144,7 +144,7 @@ public class ACLMessageTools {
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : msg.getContent());
+        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : (msg.getContent().startsWith("ZIPDATA") ? "ZIPDATA": msg.getContent()));
         if (!simple) {
             res = "||PFM" + sep + ACLMessage.getPerformative(msg.getPerformative()) + res;
             it = msg.getAllReplyTo();

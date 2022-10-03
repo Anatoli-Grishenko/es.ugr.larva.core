@@ -174,6 +174,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         return u.getInitiator();
     }
 
+    protected void forgetUtterance(ACLMessage msg) {
+        closeUtterance(msg);
+        DM.removeUtterance(msg);
+    }
+
     protected void closeUtterance(ACLMessage msg) {
         if (msg == null || DM.getMyUtterance(msg) == null) {
             return;
@@ -210,11 +215,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         boolean still;
         Info("Sleeping until new open utterances");
 //        Info(toString());
-        do{
+        do {
             received = super.LARVAblockingReceive();
             DM.addUtterance(received);
             still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
-        } while(still);
+        } while (still);
 //        still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
 //        while (still) {
 //            received = super.LARVAblockingReceive();
@@ -237,15 +242,17 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         Info("Opening uttterance ");
         this.Dialogue(msg);
         if (isInitiator(msg.getPerformative())) {
-            while (this.isOpenUtterance(msg) || this.getAnswersTo(msg).size()==0) {
+            while (this.isOpenUtterance(msg) || this.getAnswersTo(msg).size() == 0) {
                 Info("Waiting to close utterance");
                 this.waitOpenUtterance(msg);
             }
             res = this.getAnswersTo(msg);
-            this.closeUtterance(msg);
+//            this.closeUtterance(msg);
+            this.forgetUtterance(msg);
         }
         if (DM.getPrevUtterance(msg) != null) {
             DM.getPrevUtterance(msg).close();
+//            this.forgetUtterance(DM.getPrevUtterance(msg).getStarter());
         }
         return res;
 
@@ -378,6 +385,24 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
             }
         }
         return false;
+    }
+
+    @Override
+    protected String askTransponder(String toWhom) {
+        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+        outbox.setSender(getAID());
+        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+        outbox.setConversationId("TRANSPONDER");
+        outbox.setReplyWith("TRANSPONDER");
+        outbox.setContent("TRANSPONDER");
+        outbox.setReplyByDate(nextSecs(45).toDate());
+        inBoxes= blockingDialogue(outbox);
+        if (inBoxes.size()>0 && inBoxes.get(0).getPerformative()==ACLMessage.INFORM) {
+            return inBoxes.get(0).getContent();
+        }else{
+            Alert("No answer to Transponder of "+toWhom);
+            return "";
+        }
     }
 
     @Override

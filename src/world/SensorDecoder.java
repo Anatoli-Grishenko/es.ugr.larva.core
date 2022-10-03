@@ -1481,7 +1481,7 @@ public class SensorDecoder {
 //            jsoperception = Json.parse(content).asObject();
 //        }
 //        System.out.println(jsoperception.toString(WriterConfig.PRETTY_PRINT));
-        String unzipedcontent = unzipString(content);
+        String unzipedcontent = unzipString(content.replace("ZIPDATA", ""));
         jsoperception = Json.parse(unzipedcontent).asObject();
         feedPerception(jsoperception);
     }
@@ -1836,7 +1836,7 @@ public class SensorDecoder {
                     capability.DOWN.name().toUpperCase(),
                     capability.BOARD.name().toUpperCase(),
                     capability.DEBARK.name().toUpperCase(),
-                    capability.RECHARGE.name().toUpperCase(),
+                    capability.REFILL.name().toUpperCase(),
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
@@ -1930,7 +1930,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
                 encodeSensor(Sensors.MAXSLOPE, 30);
                 encodeSensor(Sensors.MAXCARGO, 5);
-                encodeSensor(Sensors.AUTONOMY, 60 * energyBase);
+                encodeSensor(Sensors.AUTONOMY, 20 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);
@@ -1992,7 +1992,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL - 35);
                 encodeSensor(Sensors.MAXSLOPE, 255);
                 encodeSensor(Sensors.MAXCARGO, 5);
-                encodeSensor(Sensors.AUTONOMY, 50 * energyBase);
+                encodeSensor(Sensors.AUTONOMY, 30 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
                 encodeSensor(Sensors.RANGE, 21);
                 encodeSensor(Sensors.BURNRATEMOVE, 1);

@@ -19,6 +19,7 @@ import geometry.SimpleVector3D;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import static messaging.ACLMessageTools.fancyWriteACLM;
 import tools.TimeHandler;
 import tools.emojis;
 import world.Perceptor;
@@ -27,10 +28,17 @@ import world.Perceptor;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class DroidStarshipLevelD extends LARVADialogicalAgent {
+public class DroidShip extends LARVADialogicalAgent {
+
+    protected static boolean debugDroid = false;
+
+    public static void Debug() {
+        debugDroid = true;
+    }
 
     protected enum Status {
-        START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION, SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING
+        START, CHECKIN, CHECKOUT, JOINSESSION, CHOOSEMISSION,
+        SOLVEMISSION, CLOSEMISSION, EXIT, WAIT, PARKING, REFILL, BACKUP, TRANSFERIN,
     }
     final int PARKINGTIME = 5, WAITIME = 1;
 
@@ -126,11 +134,13 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         allowCFP = true;
         allowREQUEST = true;
         allowParking = false;
-        this.frameDelay=10;
+        inNegotiation = false;
+        this.frameDelay = 10;
     }
 
     @Override
     public void Execute() {
+        myStatus = this.processAsynchronousMessages();
         switch (myStatus) {
             case START:
                 myStatus = Status.CHECKIN;
@@ -152,6 +162,15 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
                 break;
             case PARKING:
                 myStatus = MyParking();
+                break;
+            case REFILL:
+                myStatus = MyRefill();
+                break;
+            case BACKUP:
+                myStatus = MyBackup();
+                break;
+            case TRANSFERIN:
+                myStatus = MyTransferIn();
                 break;
             case CLOSEMISSION:
                 myStatus = MyCloseMission();
@@ -236,7 +255,8 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
 
     public Status MyChooseMission() {
         nextCity = this.mySelectNextCity();
-        E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
+        this.onMyMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
+//        E.setCurrentMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});pp
 //        this.
         this.needCourse = true;
         return Status.SOLVEMISSION;
@@ -246,7 +266,21 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         return Status.CHOOSEMISSION;
     }
 
+    public Status MyRefill() {
+        Message(E.getCurrentGoal());
+        return Status.CHOOSEMISSION;
+    }
+
+    public Status MyBackup() {
+        return Status.CHOOSEMISSION;
+    }
+
+    public Status MyTransferIn() {
+        return Status.CHOOSEMISSION;
+    }
+
     public Status MyParking() {
+        this.offMission();
         if (!allowParking) {
             return Status.CHOOSEMISSION;
         }
@@ -338,8 +372,6 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         }
         String goal[] = E.getCurrentGoal().split(" ");
         switch (goal[0]) {
-            case "PARKING":
-                return Status.PARKING;
             case "MOVETO":
                 if (E.getGPS().getX() == Integer.parseInt(goal[1])
                         && E.getGPS().getY() == Integer.parseInt(goal[2])
@@ -454,6 +486,7 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
             return Status.EXIT;
         }
         gpsBase = E.getGPS();
+        InfoMessage("I am joining session " + sessionKey);
         return Status.CHOOSEMISSION;
     }
 
@@ -501,11 +534,19 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         return onMission;
     }
 
+    public void onMyMission(String mission, String[] goals) {
+        this.needCourse = true;
+        E.setCurrentMission(mission, goals);
+        InfoMessage("On mission " + mission);
+    }
+
     public void onMission(ACLMessage msg, String mission, String[] goals) {
         onMission = true;
         changeMission = true;
         msgMission = msg;
+        this.needCourse = true;
         E.setCurrentMission(mission, goals);
+        InfoMessage("On mission " + mission);
     }
 
     public void offMission() {
@@ -584,79 +625,107 @@ public class DroidStarshipLevelD extends LARVADialogicalAgent {
         }
     }
 
-    protected void processUnexpectedMessage(ACLMessage msg) {
-        logger.onEcho();
-        String tokens[] = msg.getContent().split(",")[0].split(" ");
-        Info("Unexpected " + msg.getContent());
-        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
-            outbox = msg.createReply();
-            outbox.setPerformative(ACLMessage.INFORM);
-            outbox.setContent(this.Transponder());
-            this.Dialogue(msg);
-            return;
-        }
-        if (isOnMission()) {
-            if (tokens[0].toUpperCase().equals("CANCEL")) {
-                Info("Received CANCEL");
-                this.offMission();
-                logger.offEcho();
-                return;
-            }
-        } else {
-            if (!inNegotiation && allowCFP && tokens[0].toUpperCase().equals("CFP")) { // inNegotiation BYDISTANCE MOVEIN A,MOVEIN C,CAPTURE 5 JEDI,MOVEIN D, TRANSFERTO 5 JEDI TS_FULL
-                Info("Received CFP " + msg.getContent());
-                if (tokens[1].equals("BYDISTANCE")) {
-                    String city = tokens[3];
-                    Point3D citypos = E.getCityPosition(city), mypos = E.getGPS();
-                    outbox = msg.createReply();
-                    outbox.setContent("Propose " + citypos.planeDistanceTo(mypos));
-                    Info("City: " + city + "->" + citypos.planeDistanceTo(mypos));
-                    this.LARVAsend(outbox);
-                    inNegotiation = true;
-                    return;
-                } else if (tokens[1].toUpperCase().equals("BYCARGO")) {
-                    outbox = msg.createReply();
-                    outbox.setContent("Propose " + E.getMaxcargo());
-                    this.LARVAsend(outbox);
-                    inNegotiation = true;
-                    return;
-                }
-            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().toUpperCase().equals("ACCEPT")) {
-                Info("Received ACCEPT " + msg.getContent());
-                if (tokens[1].toUpperCase().equals("MOVEIN")) {
-                    outbox = msg.createReply();
-                    outbox.setContent("Agree");
-                    this.LARVAsend(outbox);
-                    Message("Contrated by " + msg.getContent());
-                    inNegotiation = false;
-                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
-                    Info("new task " + E.getCurrentGoal());
-                    reaction = Status.SOLVEMISSION;
-                    return;
-                }
-            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().equals("REJECT")) {
-                Info("Received REJECT");
-                inNegotiation = false;
-                return;
-            } else if (!inNegotiation && allowREQUEST && tokens[0].toUpperCase().equals("REQUEST")) {
-                Info("Received REQUEST " + msg.getContent());
-                if (tokens[2].toUpperCase().equals("MOVEIN")) {
-                    outbox = msg.createReply();
-                    outbox.setContent("Agree");
-                    this.LARVAsend(outbox);
-                    Message("Agree to " + msg.getContent());
-                    inNegotiation = false;
-                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
-                    reaction = Status.SOLVEMISSION;
-                    return;
-                }
+    protected Status processAsynchronousMessages() {
+        for (ACLMessage m : this.getExtRequests()) {
+//            String tokens[] = m.getContent().split(",")[0].split(" ");
+            if (m.getContent().toUpperCase().equals("TRANSPOND")
+                    && m.getPerformative() == ACLMessage.QUERY_REF) {
+                Info("DroidStarshipD:: Processing " + fancyWriteACLM(m));
+                outbox = m.createReply();
+                outbox.setPerformative(ACLMessage.INFORM);
+                outbox.setContent(this.Transponder());
+                this.Dialogue(m);
+//                this.closeUtterance(m);
             }
         }
-        Message("Refuse to " + msg.getContent());
-        Info("Refuse " + msg.getContent());
-        outbox = msg.createReply();
-        outbox.setContent("Refuse");
-        this.LARVAsend(outbox);
+        return myStatus;
     }
 
+    protected ACLMessage respondTo(ACLMessage incoming, int Performative, String what, String toWhom) {
+        ACLMessage res;
+        if (incoming == null) {
+            res = new ACLMessage(Performative);
+            res.setConversationId(this.sessionKey);
+            res.setReplyWith(getHexaKey(6));
+            res.setSender(getAID());
+            res.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+        } else {
+            res = incoming.createReply();
+            res.setPerformative(Performative);
+            res.setConversationId(this.sessionKey);
+            res.setReplyWith(getHexaKey(6));
+        }
+        res.setContent(what);
+        return res;
+    }
+
+    protected void InfoMessage(String what) {
+        Info(what);
+        if (debugDroid) {
+            Message(what);
+        }
+    }
 }
+
+//        if (isOnMission()) {
+//            if (tokens[0].toUpperCase().equals("CANCEL")) {
+//                Info("Received CANCEL");
+//                this.offMission();
+//                logger.offEcho();
+//                return;
+//            }
+//        } else {
+//            if (!inNegotiation && allowCFP && tokens[0].toUpperCase().equals("CFP")) { // inNegotiation BYDISTANCE MOVEIN A,MOVEIN C,CAPTURE 5 JEDI,MOVEIN D, TRANSFERTO 5 JEDI TS_FULL
+//                Info("Received CFP " + msg.getContent());
+//                if (tokens[1].equals("BYDISTANCE")) {
+//                    String city = tokens[3];
+//                    Point3D citypos = E.getCityPosition(city), mypos = E.getGPS();
+//                    outbox = msg.createReply();
+//                    outbox.setContent("Propose " + citypos.planeDistanceTo(mypos));
+//                    Info("City: " + city + "->" + citypos.planeDistanceTo(mypos));
+//                    this.LARVAsend(outbox);
+//                    inNegotiation = true;
+//                    return;
+//                } else if (tokens[1].toUpperCase().equals("BYCARGO")) {
+//                    outbox = msg.createReply();
+//                    outbox.setContent("Propose " + E.getMaxcargo());
+//                    this.LARVAsend(outbox);
+//                    inNegotiation = true;
+//                    return;
+//                }
+//            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().toUpperCase().equals("ACCEPT")) {
+//                Info("Received ACCEPT " + msg.getContent());
+//                if (tokens[1].toUpperCase().equals("MOVEIN")) {
+//                    outbox = msg.createReply();
+//                    outbox.setContent("Agree");
+//                    this.LARVAsend(outbox);
+//                    Message("Contrated by " + msg.getContent());
+//                    inNegotiation = false;
+//                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
+//                    Info("new task " + E.getCurrentGoal());
+//                    reaction = DroidShip.Status.SOLVEMISSION;
+//                    return;
+//                }
+//            } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().equals("REJECT")) {
+//                Info("Received REJECT");
+//                inNegotiation = false;
+//                return;
+//            } else if (!inNegotiation && allowREQUEST && tokens[0].toUpperCase().equals("REQUEST")) {
+//                Info("Received REQUEST " + msg.getContent());
+//                if (tokens[2].toUpperCase().equals("MOVEIN")) {
+//                    outbox = msg.createReply();
+//                    outbox.setContent("Agree");
+//                    this.LARVAsend(outbox);
+//                    Message("Agree to " + msg.getContent());
+//                    inNegotiation = false;
+//                    onMission(msg, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
+//                    reaction = DroidShip.Status.SOLVEMISSION;
+//                    return;
+//                }
+//            }
+//        }
+//        Message("Refuse to " + msg.getContent());
+//        Info("Refuse " + msg.getContent());
+//        outbox = msg.createReply();
+//        outbox.setContent("Refuse");
+//        this.LARVAsend(outbox);

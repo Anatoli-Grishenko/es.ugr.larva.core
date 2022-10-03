@@ -345,7 +345,7 @@ public class SequenceDiagram {
             ns.replywith = msg.getReplyWith();
             ns.inreplyto = msg.getInReplyTo();
             ns.receiver = ACLMessageTools.getAllReceivers(msg).trim();
-            ns.content = msg.getContent() == null ? "" : msg.getContent().trim();
+            ns.content = msg.getContent() == null ? "" : (msg.getContent().startsWith("ZIPDATA")? "ZIPDATA": msg.getContent().trim());
             ns.date = TimeHandler.Now();
             ns.performative = msg.getPerformative();
             if (msg.getReplyByDate() == null) {
