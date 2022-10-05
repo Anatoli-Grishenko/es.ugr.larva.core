@@ -933,8 +933,8 @@ public class World {
 //                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
                     res = true;
                     break;
-                case CAPTURE:
-                    String who = command.replace("CAPTURE ", "");
+                case CAPTURE:                    
+                    String who = command.replace("CAPTURE ", "").trim();
                     Point3D gps = agent.getPosition(),
                      guy = this.getThingByName(who).getPosition();
                     if (gps.planeDistanceTo(guy) < 15) {
@@ -968,6 +968,11 @@ public class World {
                     agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed. You must request BB1F");
                     res = true;
                     break;
+                case REFILL:
+                    if (parts.length > 1) {
+                        return true;
+                    }
+                    return false;
                 case RESCUE:
 //                    String whatname = isGoal(agent);
 //                    if (!whatname.equals((""))) {
@@ -1006,7 +1011,7 @@ public class World {
             return true;
         } else {
             if (agent.getCapabilities().indexOf(action) < 0) {
-                agent.Raw().addStatus("Action " + action + " not within its capabilities");
+                agent.Raw().addStatus("Sorry, but action " + action + " is not within agent " + agent.getName() + " capabilities");
             }
             if (!agent.Raw().getAlive()) {
                 agent.Raw().addStatus("Agent is dead");

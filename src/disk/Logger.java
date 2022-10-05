@@ -297,7 +297,6 @@ public class Logger {
         }
 //    return s;
     }
-
     public static String trimFullString(String original) {
         String s = "", ss[] = original.split(" ");
         for (int i = 0; i < ss.length; i++) {

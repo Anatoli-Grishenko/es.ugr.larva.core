@@ -9,7 +9,12 @@ import ai.Mission;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.WriterConfig;
+import geometry.Point3D;
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import static messaging.ACLMessageTools.ACLMSTEALTH;
+import static messaging.ACLMessageTools.fancyWriteACLM;
+import tools.TimeHandler;
 import world.Thing;
 import world.ThingSet;
 import static zip.ZipTools.unzipString;
@@ -18,55 +23,120 @@ import static zip.ZipTools.unzipString;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class DEST extends DroidStarshipLevelA {
+public class DEST extends DroidShip {
 
     ThingSet population;
+    boolean waitReport = false;
 
     @Override
     public void setup() {
         super.setup();
         this.DFAddMyServices(new String[]{"TYPE DEST"});
+        this.allowParking = true;
+//        logger.offEcho();
     }
 
     @Override
-    protected boolean isUnexpected(ACLMessage msg) {
-        if (msg.getContent().startsWith("TRANSPOND")) {
-            return true;
+    protected Status processAsynchronousMessages() {
+//        Info(this.DM.toString());
+        super.processAsynchronousMessages();
+        for (ACLMessage m : this.getExtRequests()) {
+            InfoMessage("DEST:: Processing request" + fancyWriteACLM(m));
+            if (m.getContent().startsWith("REPORT") && m.getPerformative() == ACLMessage.INFORM_REF
+                    && myStatus == Status.PARKING) {
+                outbox = m.createReply();
+                String census = checkCensus(m);
+                if (census.length() == 0) {
+                    ACLMessage auxOutbox, auxInbox;
+//                    auxOutbox = session.createReply();
+                    auxOutbox = new ACLMessage(ACLMessage.REQUEST);
+                    auxOutbox.setSender(getAID());
+                    auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+                    auxOutbox.setConversationId(this.mySessionID);
+                    auxOutbox.setPerformative(ACLMessage.REQUEST);
+                    auxOutbox.setContent("Confirm");
+                    auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
+                    auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
+                    session = this.blockingDialogue(auxOutbox).get(0);
+//                    this.forgetUtterance(auxOutbox);
+                    outbox.setPerformative(ACLMessage.CONFIRM);
+                    outbox.setContent("Confirm");
+                    outbox.setReplyWith("Confirm");
+                    this.Dialogue(outbox);
+//                    this.closeUtterance(m);
+                    this.forgetUtterance(m);
+                    this.waitReport = false;
+                    return Status.CHOOSEMISSION;
+                } else {
+                    outbox.setPerformative(ACLMessage.DISCONFIRM);
+                    outbox.setContent("Disconfirm " + census);
+                    outbox.setReplyWith("Disconfirm");
+                    this.forgetUtterance(m);
+                    return myStatus;
+                }
+            } else if (m.getContent().startsWith("TRANSFER")) {
+                String fromWho = m.getSender().getLocalName(), sTransponder;
+                Point3D target;
+                //logger.onEcho();
+                sTransponder = this.askTransponder(fromWho);
+                if (sTransponder.length() == 0) {
+                    this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", fromWho));
+                    return myStatus;
+                }
+                Info("Transponder " + sTransponder);
+                try {
+                    target = new Point3D(this.getTransponderField(sTransponder, "GPS"));
+                    if (target.isEqualTo(E.getGPS())) {
+                        String who = m.getContent().replace("TRANSFER ", "");
+                        if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
+                            outbox=m.createReply();
+                            outbox.setPerformative(ACLMessage.INFORM);
+                            outbox.setContent("DONE");
+                            this.Dialogue(outbox);
+                            logger.offEcho();
+                            return myStatus;
+                        } else {
+                            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, TRANSFER " + who + " from " + fromWho + " has failed", fromWho));
+                            logger.offEcho();
+                            return myStatus;
+                        }
+                    } else {
+                        this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
+                        logger.offEcho();
+                        return Status.CHOOSEMISSION;
+                    }
+                } catch (Exception ex) {
+                    this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
+                    logger.offEcho();
+                    return Status.CHOOSEMISSION;
+                }
+
+            }
+            //this.forgetUtterance(m);
         }
-        if (myStatus == Status.PARKING) {
-            return false;
-        }
-        return !msg.getSender().getLocalName().equals(sessionManager);
+        return myStatus;
     }
 
     @Override
     public Status MyParking() {
-        //this.replyTransponder(session);
-
-        while (true) {
-            inbox = LARVAblockingReceive(1000);
-            if (inbox != null) {
-                outbox = inbox.createReply();
-                Message("Received " + inbox.getContent());
-//                System.out.println(inbox.getContent());
-                if (checkCensus(inbox)) {
-                    outbox.setContent("Confirm");
-                    this.LARVAsend(outbox);
-                    nextCity = this.mySelectCityCourse();
-                    //cities[(int) (Math.random() * cities.length)];
-                    this.onMission(null, "EXIT", new String[]{"MOVEIN " + nextCity});
-                }
-            }
-            if (this.isOnMission()) {
-                return Status.SOLVEMISSION;
-            }
+        if (!allowParking) {
+            return Status.CHOOSEMISSION;
         }
+        if (!waitReport) {
+            tini = new TimeHandler();
+            waitReport = true;
+        }
+        tend=new TimeHandler();
+        E.setCurrentMission("WAITING", new String[]{"WAITING REPORT " +tini.elapsedTimeSecsUntil(tend)});
+        this.checkOpenUtterances();
+        this.LARVAwait(1000);
+        return myStatus;
     }
 
-    public boolean checkCensus(ACLMessage msg) {
+    public String checkCensus(ACLMessage msg) {
         String census[] = msg.getContent().split(Mission.sepMissions);
         if (census.length < 2) {
-            return false;
+            return "Error processing report. Please follow the instructions given by teachers";
         }
         for (int i = 1; i < census.length; i++) {
             String cityCensus[] = census[i].split(" "),
@@ -82,22 +152,23 @@ public class DEST extends DroidStarshipLevelA {
                     snumber = Integer.parseInt(cityCensus[2]);
                     slives = 0;
                     for (Thing t : population.getAllThings()) {
-                        if (t.getType().toUpperCase().equals(stype) && t.getBelongsTo().equals(scity)) {
+                        if (t.getType().toUpperCase().equals(stype.toUpperCase())
+                                && t.getBelongsTo().toUpperCase().equals(scity.toUpperCase())) {
                             slives++;
                         }
                     }
                     if (slives != snumber) {
-                        Message("Error counting people " + stype + " at " + scity
+                        return "Error counting people " + stype + " at " + scity
                                 + "\nThere should be " + slives + " " + stype + "\n"
-                                + "but " + snumber + "have been reported");
+                                + "but " + snumber + "have been reported";
                     }
                 } catch (Exception ex) {
-                    return false;
+                    return "Error processing report. Please follow the instructions given by teachers";
                 }
             }
 
         }
-        return true;
+        return "";
     }
 
     @Override
@@ -132,62 +203,62 @@ public class DEST extends DroidStarshipLevelA {
             return Status.CHECKOUT;
         }
         baseCity = this.mySelectCity();
-//                cities[(int) (Math.random() * cities.length)];
         currentCity = baseCity;
         Info("Joining session with base at 1 1");
         outbox = session.createReply();
+        outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
-        LARVAsend(outbox);
-//        currentCity = baseCity;
-//        Info("Joining session with base in  " + baseCity);
-//        outbox = session.createReply();
-//        outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
-//        LARVAsend(outbox);
-        session = LARVAblockingReceive();
+        session = this.blockingDialogue(outbox).get(0);
         if (!session.getContent().toUpperCase().startsWith("CONFIRM")) {
             Error("Could not join session " + sessionKey + " due to " + session.getContent());
             return Status.CHECKOUT;
         }
-//        if (!this.MyReadPerceptions()) {
-//            return Status.EXIT;
-//        }
         this.doQueryPeople("people");
+        this.waitReport = false;
         nextCity = this.mySelectCityCourse();
-        this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity});
-//        this.setCurrentMission("FINAL", new String[]{"MOVEIN " + baseCity, "EXIT"});
-//        myMission = this.activateCurrentMission("FINAL");
-//        return Status.CHOOSEMISSION;
-        //this.replyTransponder(session);
+        this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity + ""});
         return Status.SOLVEMISSION;
     }
-
+    
     @Override
-    protected void processUnexpectedMessage(ACLMessage msg) {
-        String sep = ";";
-        String tokens[] = msg.getContent().split(",")[0].split(" ");
-        Info("Unexpected " + msg.getContent());
-        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
-            outbox = msg.createReply();
-            outbox.setContent(Transponder());
-            LARVAsend(outbox);
-            System.out.println(getLocalName()+" TRANSPONDER: "+Transponder());
-            return;
-        }
-        if (isOnMission()) {
-        } else {
-            if (tokens[0].toUpperCase().equals("REPORT")) {
-                if (checkReport(msg)) {
-                    Message("Received report " + inbox.getContent());
-                    onMission(msg, "THEEND", new String[]{"MOVETO 0 0", "EXIT"});
-                }
-            }
-        }
-        Info("Refuse " + msg.getContent());
-        outbox = msg.createReply();
-        outbox.setContent("Refuse");
-        this.LARVAsend(outbox);
+    public String mySelectCityCourse() {
+        this.MyReadPerceptions();
+        return E.getCurrentCity();
+        
+//        String city;
+//        this.MyReadPerceptions();
+//        do {
+//            city = cities[(int) (Math.random() * cities.length)];
+//        } while (city.equals(E.getCurrentCity()) && !this.doFindCourseIn(city));
+//        return city;
     }
 
+//    @Override
+//    protected void processAsynchronousMessages(ACLMessage msg) {
+//        String sep = ";";
+//        String tokens[] = msg.getContent().split(LARVAFirstAgent.sepTransponder)[0].split(" ");
+//        Info("Unexpected " + msg.getContent());
+//        if (msg.getContent().toUpperCase().equals("TRANSPOND")) {
+//            outbox = msg.createReply();
+//            outbox.setContent(Transponder());
+//            LARVAsend(outbox);
+//            System.out.println(getLocalName() + " TRANSPONDER: " + Transponder());
+//            return;
+//        }
+//        if (isOnMission()) {
+//        } else {
+//            if (tokens[0].toUpperCase().equals("REPORT")) {
+//                if (checkReport(msg)) {
+//                    Message("Received report " + inbox.getContent());
+//                    onMission(msg, "THEEND", new String[]{"MOVETO 0 0", "EXIT"});
+//                }
+//            }
+//        }
+//        Info("Refuse " + msg.getContent());
+//        outbox = msg.createReply();
+//        outbox.setContent("Refuse");
+//        this.LARVAsend(outbox);
+//    }
     protected boolean checkReport(ACLMessage msg) {
         return true;
     }
@@ -196,10 +267,10 @@ public class DEST extends DroidStarshipLevelA {
         Info("Querying people " + type);
         outbox = session.createReply();
         outbox.setContent("Query " + type.toUpperCase() + " session " + sessionKey);
-        this.LARVAsend(outbox);
-        session = LARVAblockingReceive();
+        outbox.setPerformative(ACLMessage.QUERY_REF);
+        session = this.blockingDialogue(outbox).get(0);
         population = new ThingSet();
-        String unzipedcontent = unzipString(session.getContent());
+        String unzipedcontent = unzipString(session.getContent().replace("ZIPDATA", ""));
 
         JsonObject jspeople = Json.parse(unzipedcontent).asObject().get("thingset").asObject();
 //        System.out.println("CENSUS:"+jspeople.toString(WriterConfig.PRETTY_PRINT));

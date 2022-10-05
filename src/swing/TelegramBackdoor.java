@@ -76,9 +76,10 @@ public class TelegramBackdoor extends OleFrame {
         this.getContentPane().add(jtfInput);
         this.getContentPane().add(jtbSend);
         this.getContentPane().validate();
-        this.pack();
-        this.repaint();
-        this.write("/help");
+//        this.pack();
+//        this.repaint();
+//        this.setVisible(false);
+//        this.write("/help");
 //        this.add(obSend);
     }
 

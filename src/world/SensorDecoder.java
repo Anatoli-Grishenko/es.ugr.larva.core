@@ -1327,7 +1327,7 @@ public class SensorDecoder {
         JsonArray jsaReading = null, jsarow;
         jsaReading = getSensor(Sensors.COURSE);
         if (jsaReading == null) {
-            return null;
+            return new Point3D[0];
         }
         Point3D res[] = new Point3D[jsaReading.size()];
         for (int i = 0; i < jsaReading.size(); i++) {

@@ -141,7 +141,9 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 //                ut.getParent().Children.remove(ut);
 //                ut.setParent(null);
 //            }
-            get(answer.getConversationId()).remove(ut.getStarter().getReplyWith());
+            if (ut != null) {
+                get(answer.getConversationId()).remove(ut.getStarter().getReplyWith());
+            }
 //            if (get(answer.getConversationId()).get(answer.getReplyWith()) != null) {
 //                get(answer.getConversationId()).remove(answer.getReplyWith());
 //            }

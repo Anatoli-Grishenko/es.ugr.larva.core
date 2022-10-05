@@ -9,11 +9,21 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class VAAT extends DroidStarshipLevelA {
-    
+public class VAAT extends DroidShip {
+
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE VAAT"});        
+        this.DFAddMyServices(new String[]{
+            "TYPE VAAT",
+            "QUERY-IF <name>",
+            "QUERY-REF <name>",
+            "QUERY-REF <city>",
+            "REQUEST MOVETO <x> <y>",
+            "REQUEST MOVEIN <city>",
+            "REQUEST MOVEBY <agent>",
+            "REQUEST BOARD <name>",
+            "REQUEST DEBARK <name>"});
+        this.allowParking = true;
     }
 }

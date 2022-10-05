@@ -721,7 +721,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         checkDeepMilestones(msg);
         this.addMilestone("MILES07");
         if (this.allowEaryWarning && this.isErrorMessage(msg)) {
-            Alert(emojis.WARNING + "EARLY WARNING SYSTEM\n" + "Error found " + msg.getContent());
+            Alert(emojis.WARNING + "EARLY WARNING SYSTEM: ERROR NOTIFICATION HS JUST ARRIVED:\n"+ 
+                    emojis.AGENT+msg.getSender().getLocalName()+"\nSays: "
+                    + msg.getContent());
         }
         if (this.isSecuredMessages()) {
             this.secureReceive(msg);
@@ -1541,10 +1543,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         outbox = new ACLMessage(ACLMessage.QUERY_REF);
         outbox.setSender(getAID());
         outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
-        outbox.setConversationId("TRANSPODER");
-        outbox.setReplyWith("TRANSPODER");
-        outbox.setContent("TRANSPODER");
-        this.LARVAsend(inbox);
+        outbox.setConversationId("TRANSPONDER");
+        outbox.setReplyWith("TRANSPONDER");
+        outbox.setContent("TRANSPONDER");
+        this.LARVAsend(outbox);
         inbox = LARVAblockingReceive();
         if (inbox.getPerformative() == ACLMessage.INFORM) {
             return inbox.getContent();

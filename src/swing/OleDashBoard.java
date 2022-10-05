@@ -519,8 +519,9 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             }
 
             String newCargo[] = getMyDecoder().getCargo();
-            if (newCargo.length > olPayload.getBag().size()) {
-                for (int i = olPayload.getBagSize(); i < newCargo.length; i++) {
+            if (newCargo.length != olPayload.getBag().size()) {
+                olPayload.clear();
+                for (int i = 0; i < newCargo.length; i++) {
                     olPayload.addToBag(String.format("%03d ", this.mySensorsVisual.get("PAYLOAD").getBagSize()) + newCargo[i]);
                 }
             }

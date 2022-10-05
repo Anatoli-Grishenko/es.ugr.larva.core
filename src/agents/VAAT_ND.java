@@ -9,12 +9,11 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class VAAT_D extends DroidShip {
+public class VAAT_ND extends DroidStarshipLevelA {
     
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE VAAT"});     
-        this.allowParking=true;
+        this.DFAddMyServices(new String[]{"TYPE VAAT"});        
     }
 }

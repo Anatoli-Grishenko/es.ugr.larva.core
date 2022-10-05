@@ -9,7 +9,7 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class YV_D extends DroidShip {
+public class YV_ND extends DroidStarshipLevelA {
     
     @Override
     public void setup() {

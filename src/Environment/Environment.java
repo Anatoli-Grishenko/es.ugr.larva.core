@@ -60,7 +60,7 @@ public class Environment extends SensorDecoder {
         census = new ThingSet();
     }
 
-    public Environment(Environment other) {
+    protected Environment(Environment other) {
         super();
         String saux = other.toJson().toString();
         JsonObject jsaux = Json.parse(saux).asObject();
@@ -90,8 +90,8 @@ public class Environment extends SensorDecoder {
      * server into the Environment and its further reading through specific
      * methods
      *
-     * @param perceptions A String which is the content of the message received
-     * anfter reading the perceptoins
+     * @param perceptions A binary (zip'ed) String which is the content of the
+     * message received anfter reading the perceptoins
      * @return A copy of the same instance (to chain methods calls)
      */
     public Environment setExternalPerceptions(String perceptions) {
@@ -132,7 +132,7 @@ public class Environment extends SensorDecoder {
         return this;
     }
 
-    public Environment addThings(ArrayList<Thing> listT) {
+    protected Environment addThings(ArrayList<Thing> listT) {
         for (Thing t : listT) {
             if (t.getType().equals("city")) {
                 this.cadastre.addThing(t);
@@ -144,7 +144,7 @@ public class Environment extends SensorDecoder {
         return this;
     }
 
-    public Environment readInternalPerceptions() {
+    protected Environment readInternalPerceptions() {
 //        System.out.println(live.getPerceptions().toString());
         feedPerception(live.getPerceptions());
 //        feedPerception(live.Raw().toJson());
@@ -152,14 +152,15 @@ public class Environment extends SensorDecoder {
         return this;
     }
 
-    public boolean executeInternalAction(String action) {
+    protected boolean executeInternalAction(String action) {
         return World.execAgent(live, action);
     }
 
-    public boolean isEquivalentTo(Environment other) {
+    protected boolean isEquivalentTo(Environment other) {
         return (other.getGPS().getX() == this.getGPS().getX() && other.getGPS().getY() == this.getGPS().getY() && other.getGPS().getZ() == this.getGPS().getZ());
     }
 
+    @Override
     public Environment clone() {
         Environment res = new Environment(ownerHook);
         for (Sensors sname : this.indexperception.keySet()) {
@@ -264,7 +265,7 @@ public class Environment extends SensorDecoder {
         return result;
     }
 
-    public boolean willBeAlive() {
+    protected boolean willBeAlive() {
         if (getGPS().getZ() < getVisualHere()) {
             return false;
         }
@@ -398,7 +399,8 @@ public class Environment extends SensorDecoder {
     }
 
     /**
-     * It returns the value of the ldiar in front of the agent
+     * It returns the value of the lidar just in front of the agent. Coordenadas
+     * polares x=2, y=1;
      *
      * @return
      */
@@ -407,6 +409,8 @@ public class Environment extends SensorDecoder {
     }
 
     /**
+     * It returns the value of lidar in just at the left. Coordenadas polares
+     * x=1, y=1;
      *
      * @return
      */
@@ -414,33 +418,78 @@ public class Environment extends SensorDecoder {
         return getLeftGeneral(lidarData);
     }
 
+    /**
+     * It returns the value of lidar at thev very left. Coordenadas polares x=0,
+     * y=1;
+     *
+     * @return
+     */
     public int getLidarLeftmost() {
         return getLeftmostGeneral(lidarData);
     }
 
+    /**
+     * It returns the value of lidar at the right. Coordenadas polares x=3, y=1;
+     *
+     * @return
+     */
     public int getLidarRight() {
         return getRightGeneral(lidarData);
     }
 
+    
+    /**
+     * It returns the value of lidar at the very right. Coordenadas polares x=4, y=1;
+     *
+     * @return
+     */
     public int getLidarRightmost() {
         return getRightmostGeneral(lidarData);
     }
 
+    /**
+     * It returns the value of the visual just in front of the agent. Coordenadas
+     * polares x=2, y=1;
+     *
+     * @return
+     */
     public int getVisualFront() {
         return getFrontGeneral(visualData);
     }
 
+    /**
+     * It returns the value of visual in just at the left. Coordenadas polares
+     * x=1, y=1;
+     *
+     * @return
+     */  
     public int getVisualLeft() {
         return getLeftGeneral(visualData);
     }
 
+        /**
+     * It returns the value of visual at thev very left. Coordenadas polares x=0,
+     * y=1;
+     *
+     * @return
+     */
     public int getVisualLeftmost() {
         return getLeftmostGeneral(visualData);
     }
 
+    /**
+     * It returns the value of visual at the very right. Coordenadas polares x=4, y=1;
+     *
+     * @return
+     */
     public int getVisualRight() {
         return getRightGeneral(visualData);
     }
+    /**
+     * It returns the value of visual at the very right. Coordenadas polares x=4, y=1;
+     *
+     * @return
+     */
 
     public int getVisualRightmost() {
         return getRightmostGeneral(visualData);
@@ -469,23 +518,41 @@ public class Environment extends SensorDecoder {
 //    public int getThermalHere() {
 //        return getHereGeneral(thermalData);
 //    }
+    /**
+     * It returns the value of visual just in the position of the agent. Coordenadas polares x=0, y=0;
+     *
+     * @return
+     */
     public int getVisualHere() {
         return getHereGeneral(visualData);
     }
 
+    /**
+     * It returns the value of lidar just in the position of the agent. Coordenadas polares x=0, y=0;
+     *
+     * @return
+     */
     public int getLidarHere() {
         return getHereGeneral(lidarData);
     }
 
+    /**
+     * It returns true when the agent is not alive
+     * @return 
+     */
     public boolean isCrahsed() {
         return !this.getAlive();
     }
 
-    public int getSlope() {
+    protected int getSlope() {
         return slope;
 
     }
 
+    /**
+     * It returns true when energy == 0
+     * @return 
+     */
     public boolean isEnergyExhausted() {
         return this.getEnergy() < 0;
     }
@@ -655,43 +722,23 @@ public class Environment extends SensorDecoder {
 //        return getRelativeAngular() <= -45;
     }
 
-    public int isMemoryVector() {
+    protected int isMemoryVector() {
         return this.getGPSVectorMemory(this.getGPSVector());
     }
 
-    public int isMemoryGPS(Point3D current) {
+    protected int isMemoryGPS(Point3D current) {
         return this.getGPSMemory(current);
     }
 
-    public int isMemoryGPSVector(SimpleVector3D current) {
+    protected int isMemoryGPSVector(SimpleVector3D current) {
         return this.getGPSVectorMemory(current);
-    }
-
-    public void findCourseTo(Point3D dest) {
-        Choice root, destination;
-        root = new Choice("");
-        root.setPosition(this.getGPS());
-        destination = new Choice("");
-        destination.setPosition(dest);
-        AStar pathfinder = new AStar(this.getWorldMap());
-        pathfinder.setMaxSeconds(30);
-        pathfinder.setMaxDepth(300);
-        pathfinder.setMinlevel(this.getMinlevel());
-        pathfinder.setMaxlevel(this.getMaxlevel());
-        pathfinder.setType(Search.PathType.ROAD);
-        Plan p = pathfinder.SearchLowest(root, destination);
-        this.cleanCourse();
-        for (Choice c : p) {
-            this.addCourse(c.getPosition());
-        }
-        this.activateCourse();
     }
 
     public ThingSet getFullCadastre() {
         return cadastre;
     }
 
-    public ThingSet getCensus() {
+    protected  ThingSet getCensus() {
         return census;
     }
 
@@ -708,15 +755,26 @@ public class Environment extends SensorDecoder {
                     System.out.println("EX");
                 }
             }
-        } else
+        } else {
             return getCityList();
+        }
         return Transform.toArrayString(citiesaround);
     }
 
+    /**
+     * It returns an array of String which contains the full list of cities in the 
+     * world
+     * @return 
+     */
     public String[] getCityList() {
         return Transform.toArrayString(new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))));
     }
 
+    /**
+     * It returns the position of the city
+     * @param city The name of the city
+     * @return The positin of the city, null when the city does not exist
+     */
     public Point3D getCityPosition(String city) {
         if (new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIES))).contains(city)) {
             ArrayList<String> positions = new ArrayList(Transform.toArrayList(this.getSensor(Sensors.CITIESPOSITIONS)));
@@ -731,17 +789,30 @@ public class Environment extends SensorDecoder {
         }
     }
 
+    /**
+     * It returns the name of the current mission
+     * @return 
+     */
     @Override
     public Mission getCurrentMission() {
         return super.getCurrentMission();
     }
 
+    /**
+     * It activates the mission whose name is given. It also activates the first goal in that mission
+     * @param mission The name of the mission, amongst all possible names
+     */
     @Override
     public void setCurrentMission(String mission) {
         super.setCurrentMission(mission);
         this.ownerHook.sendStealthTransponder();
     }
 
+    /**
+     * Defines a customized mission
+     * @param missionName The name of the mission
+     * @param goals Each consecutive goal of the mission
+     */
     @Override
     public void setCurrentMission(String missionName, String goals[]) {
         super.setCurrentMission(missionName, goals);
@@ -749,11 +820,19 @@ public class Environment extends SensorDecoder {
     }
 
     ///////////////////// GOALS
+    /**
+     * It gives the current goal being solved
+     * @return 
+     */
     @Override
     public String getCurrentGoal() {
         return super.getCurrentGoal();
     }
 
+    /**
+     * It closes the current goal, and moves to the next goal in the missoin
+     * @return 
+     */
     @Override
     public String setNextGoal() {
         String res = super.setNextGoal();
@@ -761,12 +840,24 @@ public class Environment extends SensorDecoder {
         return res;
     }
 
+    /**
+     * Whe the agent is on the ground and exactly in the position of a city,
+     * it gives the name of that city: 
+     * @return The name of the city in which the agent is on the ground. Should the 
+     * agent be flying or outside of a city, it returns "MOVING"
+     */
     @Override
     public String getCurrentCity() {
         String res = super.getCurrentCity();
         return res;
     }
 
+    /**
+     * When a course is fixed towards a given city, it returns the name of that city. 
+     * Otherwise it returns "NONE"
+     * @return 
+     */
+    @Override
     public String getDestinationCity() {
         return super.getDestinationCity();
     }

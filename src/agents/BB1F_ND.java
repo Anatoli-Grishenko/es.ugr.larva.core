@@ -9,11 +9,13 @@ package agents;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class MTT_D extends DroidShip {
+public class BB1F_ND extends DroidStarshipLevelA {
     
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE MTT"});        
+        this.DFAddMyServices(new String[]{"TYPE BB1F"});                      
+
     }
 }
+

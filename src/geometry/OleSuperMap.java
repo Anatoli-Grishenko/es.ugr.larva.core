@@ -502,10 +502,11 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 g.setColor(Color.RED);
             } else if (myDash.getDecoderOf(name).getType().equals("MTT")) {
                 g.setColor(Color.CYAN);
-            } else if (myDash.getDecoderOf(name).getType().equals("VAAT")
-                    || myDash.getDecoderOf(name).getType().equals("BB1F")
-                    || myDash.getDecoderOf(name).getType().equals("YV")) {
+            } else if (myDash.getDecoderOf(name).getType().equals("BB1F")) {
                 g.setColor(Color.ORANGE);
+            } else if (myDash.getDecoderOf(name).getType().equals("VAAT")
+                    || myDash.getDecoderOf(name).getType().equals("YV")) {
+                g.setColor(Color.MAGENTA);
             } else {
                 g.setColor(cTrail);
             }
@@ -533,14 +534,15 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         s = String.format("%03d%s%s", (int) sv.getSource().getZInt(), climb, SimpleVector3D.Dir[sv.getsOrient()]);
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
+        tf.setPoint(pLabel).setsText(s).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
+        
         s = String.format("e.%03d%% pl.%02d", myDash.getDecoderOf(name).getEnergy() * 100 / myDash.getDecoderOf(name).getAutonomy(),
                 myDash.getDecoderOf(name).getPayload());
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
         g.setStroke(new BasicStroke());
@@ -555,7 +557,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         s = String.format("%s", goal);
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
-        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize)
+        tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
         tf.draw();
     }
