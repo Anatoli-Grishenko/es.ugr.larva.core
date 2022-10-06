@@ -118,6 +118,14 @@ public class DecisionSet extends ArrayList<Choice> {
 //        return getChoice(findChoice(c));
     }
 
+    public String[] getAllChoiceNames() {
+        String res[] = new String[this.size()];
+        for (int i=0; i<size(); i++) {
+            res[i] = get(i).getName();
+        }
+        return res;
+    }
+
     public DecisionSet removeChoice(int i) {
         Choice c = getChoice(i);
         if (c != null) {
