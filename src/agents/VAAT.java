@@ -24,6 +24,5 @@ public class VAAT extends DroidShip {
             "REQUEST MOVEBY <agent>",
             "REQUEST BOARD <name>",
             "REQUEST DEBARK <name>"});
-        this.allowParking = true;
     }
 }

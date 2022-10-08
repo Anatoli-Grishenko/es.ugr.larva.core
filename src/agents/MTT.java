@@ -33,11 +33,10 @@ public class MTT extends DroidShip {
     @Override
     protected Status processAsynchronousMessages() {
 //        Info(this.DM.toString());
-        String toWhom;
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getExtRequests()) {
             InfoMessage("MTT:: Processing request" + fancyWriteACLM(m));
-            String tokens[] = m.getContent().split(" ");
+            contentTokens = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
             if (isOnMission()) {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
@@ -49,69 +48,32 @@ public class MTT extends DroidShip {
                     this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, I am busy", null));
                 }
             } else {
-                if (!inNegotiation && allowCFP
-                        && m.getPerformative() == ACLMessage.CFP) { // inNegotiation BYDISTANCE MOVEIN A,MOVEIN C,CAPTURE 5 JEDI,MOVEIN D, TRANSFERTO 5 JEDI TS_FULL
-                    Info("Received CFP " + m.getContent());
-                    if (tokens[1].equals("BYDISTANCE")) {
-                        String city = tokens[3];
-                        Point3D citypos = E.getCityPosition(city), mypos = E.getGPS();
-                        outbox = m.createReply();
-                        outbox.setContent("Propose " + citypos.planeDistanceTo(mypos));
-                        Info("City: " + city + "->" + citypos.planeDistanceTo(mypos));
-                        this.LARVAsend(outbox);
-                        inNegotiation = true;
-                        return myStatus;
-                    } else if (tokens[1].toUpperCase().equals("BYCARGO")) {
-                        outbox = m.createReply();
-                        outbox.setContent("Propose " + E.getMaxcargo());
-                        this.LARVAsend(outbox);
-                        inNegotiation = true;
-                        return myStatus;
-                    }
-                } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().toUpperCase().equals("ACCEPT")) {
-                    Info("Received ACCEPT " + m.getContent());
-                    if (tokens[1].toUpperCase().equals("MOVEIN")) {
-                        outbox = m.createReply();
-                        outbox.setContent("Agree");
-                        this.LARVAsend(outbox);
-                        Message("Contrated by " + m.getContent());
-                        inNegotiation = false;
-                        onMission(m, "COMMITMENT", new String[]{tokens[2] + " " + tokens[3]});
-                        Info("new task " + E.getCurrentGoal());
-                        reaction = DroidShip.Status.SOLVEMISSION;
-                        return myStatus;
-                    }
-                } else if (inNegotiation && allowCFP && tokens[0].toUpperCase().equals("REJECT")) {
-                    Info("Received REJECT");
-                    inNegotiation = false;
-                    return myStatus;
-                } else if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
+                if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
                     if (m.getContent().equals("BACKUP")) {
-                        String sTransponder;
                         this.forgetUtterance(m);
+                        return this.onDemandBackup(m);
                         //logger.onEcho();
-                        InfoMessage("Received BACKUP from " + toWhom + " asking Transponder");
-                        sTransponder = this.askTransponder(toWhom);
-                        if (sTransponder.length() == 0) {
-//                            InfoMessage("Bad Transponder");
-                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-                            return myStatus;
-                        }
-//                        this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Going towards you ", null));
-                        InfoMessage("Transponder " + sTransponder);
-                        Point3D targetBackup;
-                        try {
-                            targetBackup = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-                            this.onMission(m, "BACKUP" + toWhom,
-                                    new String[]{"MOVETO " + targetBackup.getXInt() + " " + targetBackup.getYInt(),
-                                        "BACKUP " + toWhom});
-                            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
-                            return Status.SOLVEMISSION;
-                        } catch (Exception ex) {
-                            InfoMessage("Bad transponder");
-                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-                            return myStatus;
-                        }
+//                        InfoMessage("Received BACKUP from " + toWhom + " asking Transponder");
+//                        sTransponder = this.askTransponder(toWhom);
+//                        if (sTransponder.length() == 0) {
+////                            InfoMessage("Bad Transponder");
+//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
+//                            return myStatus;
+//                        }
+////                        this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Going towards you ", null));
+//                        InfoMessage("Transponder " + sTransponder);                        
+//                        try {
+//                            pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
+//                            this.onMission(m, "BACKUP" + toWhom,
+//                                    new String[]{"MOVETO " + pTarget.getXInt() + " " + pTarget.getYInt(),
+//                                        "BACKUP " + toWhom});
+//                            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
+//                            return Status.SOLVEMISSION;
+//                        } catch (Exception ex) {
+//                            InfoMessage("Bad transponder");
+//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
+//                            return myStatus;
+//                        }
                     } else {
                         InfoMessage("Unknown request");
                         this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Unknown request " + m.getContent(), null));

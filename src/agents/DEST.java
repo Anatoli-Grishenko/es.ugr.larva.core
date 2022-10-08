@@ -25,9 +25,6 @@ import static zip.ZipTools.unzipString;
  */
 public class DEST extends DroidShip {
 
-    ThingSet population;
-    boolean waitReport = false;
-
     @Override
     public void setup() {
         super.setup();
@@ -44,74 +41,76 @@ public class DEST extends DroidShip {
             InfoMessage("DEST:: Processing request" + fancyWriteACLM(m));
             if (m.getContent().startsWith("REPORT") && m.getPerformative() == ACLMessage.INFORM_REF
                     && myStatus == Status.PARKING) {
-                outbox = m.createReply();
-                String census = checkCensus(m);
-                if (census.length() == 0) {
-                    ACLMessage auxOutbox, auxInbox;
-//                    auxOutbox = session.createReply();
-                    auxOutbox = new ACLMessage(ACLMessage.REQUEST);
-                    auxOutbox.setSender(getAID());
-                    auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
-                    auxOutbox.setConversationId(this.mySessionID);
-                    auxOutbox.setPerformative(ACLMessage.REQUEST);
-                    auxOutbox.setContent("Confirm");
-                    auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
-                    auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
-                    session = this.blockingDialogue(auxOutbox).get(0);
-//                    this.forgetUtterance(auxOutbox);
-                    outbox.setPerformative(ACLMessage.CONFIRM);
-                    outbox.setContent("Confirm");
-                    outbox.setReplyWith("Confirm");
-                    this.Dialogue(outbox);
-//                    this.closeUtterance(m);
-                    this.forgetUtterance(m);
-                    this.waitReport = false;
-                    return Status.CHOOSEMISSION;
-                } else {
-                    outbox.setPerformative(ACLMessage.DISCONFIRM);
-                    outbox.setContent("Disconfirm " + census);
-                    outbox.setReplyWith("Disconfirm");
-                    this.forgetUtterance(m);
-                    return myStatus;
-                }
+                this.forgetUtterance(m);
+                return this.onDemandReport(m);
+//                outbox = m.createReply();
+//                String census = checkCensus(m);
+//                if (census.length() == 0) {
+//                    ACLMessage auxOutbox, auxInbox;
+////                    auxOutbox = session.createReply();
+//                    auxOutbox = new ACLMessage(ACLMessage.REQUEST);
+//                    auxOutbox.setSender(getAID());
+//                    auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+//                    auxOutbox.setConversationId(this.mySessionID);
+//                    auxOutbox.setPerformative(ACLMessage.REQUEST);
+//                    auxOutbox.setContent("Confirm");
+//                    auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
+//                    auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
+//                    session = this.blockingDialogue(auxOutbox).get(0);
+////                    this.forgetUtterance(auxOutbox);
+//                    outbox.setPerformative(ACLMessage.CONFIRM);
+//                    outbox.setContent("Confirm");
+//                    outbox.setReplyWith("Confirm");
+//                    this.Dialogue(outbox);
+////                    this.closeUtterance(m);
+//
+//                    this.waitReport = false;
+//                    return Status.CHOOSEMISSION;
+//                } else {
+//                    outbox.setPerformative(ACLMessage.DISCONFIRM);
+//                    outbox.setContent("Disconfirm " + census);
+//                    outbox.setReplyWith("Disconfirm");
+//                    this.forgetUtterance(m);
+//                    return myStatus;
+//                }
             } else if (m.getContent().startsWith("TRANSFER")) {
-                String fromWho = m.getSender().getLocalName(), sTransponder;
-                Point3D target;
-                //logger.onEcho();
-                sTransponder = this.askTransponder(fromWho);
-                if (sTransponder.length() == 0) {
-                    this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", fromWho));
-                    return myStatus;
-                }
-                Info("Transponder " + sTransponder);
-                try {
-                    target = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-                    if (target.isEqualTo(E.getGPS())) {
-                        String who = m.getContent().replace("TRANSFER ", "");
-                        if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
-                            outbox=m.createReply();
-                            outbox.setPerformative(ACLMessage.INFORM);
-                            outbox.setContent("DONE");
-                            this.Dialogue(outbox);
-                            logger.offEcho();
-                            return myStatus;
-                        } else {
-                            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, TRANSFER " + who + " from " + fromWho + " has failed", fromWho));
-                            logger.offEcho();
-                            return myStatus;
-                        }
-                    } else {
-                        this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
-                        logger.offEcho();
-                        return Status.CHOOSEMISSION;
-                    }
-                } catch (Exception ex) {
-                    this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
-                    logger.offEcho();
-                    return Status.CHOOSEMISSION;
-                }
-
+                return this.onDemandTransfer(m);
             }
+//                fromWho = m.getSender().getLocalName();
+//                sTransponder = this.askTransponder(fromWho);
+//                if (sTransponder.length() == 0) {
+//                    this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", fromWho));
+//                    return myStatus;
+//                }
+//                Info("Transponder " + sTransponder);
+//                try {
+//                    pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
+//                    if (pTarget.isEqualTo(E.getGPS())) {
+//                        who = m.getContent().replace("TRANSFER ", "");
+//                        if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
+//                            outbox = m.createReply();
+//                            outbox.setPerformative(ACLMessage.INFORM);
+//                            outbox.setContent("DONE");
+//                            this.Dialogue(outbox);
+//                            logger.offEcho();
+//                            return myStatus;
+//                        } else {
+//                            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, TRANSFER " + who + " from " + fromWho + " has failed", fromWho));
+//                            logger.offEcho();
+//                            return myStatus;
+//                        }
+//                    } else {
+//                        this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
+//                        logger.offEcho();
+//                        return Status.CHOOSEMISSION;
+//                    }
+//                } catch (Exception ex) {
+//                    this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
+//                    logger.offEcho();
+//                    return Status.CHOOSEMISSION;
+//                }
+//
+//            }
             //this.forgetUtterance(m);
         }
         return myStatus;
@@ -126,50 +125,13 @@ public class DEST extends DroidShip {
             tini = new TimeHandler();
             waitReport = true;
         }
-        tend=new TimeHandler();
-        E.setCurrentMission("WAITING", new String[]{"WAITING REPORT " +tini.elapsedTimeSecsUntil(tend)});
+        tend = new TimeHandler();
+        E.setCurrentMission("WAITING", new String[]{"WAITING REPORT " + tini.elapsedTimeSecsUntil(tend)});
         this.checkOpenUtterances();
         this.LARVAwait(1000);
         return myStatus;
     }
 
-    public String checkCensus(ACLMessage msg) {
-        String census[] = msg.getContent().split(Mission.sepMissions);
-        if (census.length < 2) {
-            return "Error processing report. Please follow the instructions given by teachers";
-        }
-        for (int i = 1; i < census.length; i++) {
-            String cityCensus[] = census[i].split(" "),
-                    scity = cityCensus[0];
-            if (cityCensus[i].length() < 1) {
-                continue;
-            }
-            for (int j = 1; j < cityCensus.length; j++) {
-                String stype;
-                int snumber, slives;
-                try {
-                    stype = cityCensus[1];
-                    snumber = Integer.parseInt(cityCensus[2]);
-                    slives = 0;
-                    for (Thing t : population.getAllThings()) {
-                        if (t.getType().toUpperCase().equals(stype.toUpperCase())
-                                && t.getBelongsTo().toUpperCase().equals(scity.toUpperCase())) {
-                            slives++;
-                        }
-                    }
-                    if (slives != snumber) {
-                        return "Error counting people " + stype + " at " + scity
-                                + "\nThere should be " + slives + " " + stype + "\n"
-                                + "but " + snumber + "have been reported";
-                    }
-                } catch (Exception ex) {
-                    return "Error processing report. Please follow the instructions given by teachers";
-                }
-            }
-
-        }
-        return "";
-    }
 
     @Override
     public Status MyJoinSession() {
@@ -216,15 +178,22 @@ public class DEST extends DroidShip {
         this.doQueryPeople("people");
         this.waitReport = false;
         nextCity = this.mySelectCityCourse();
+        if (nextCity.length() == 0) {
+            Info("Error reading cities list");
+            return Status.CHECKOUT;
+        }
         this.onMission(null, "FINAL", new String[]{"MOVEIN " + nextCity + ""});
         return Status.SOLVEMISSION;
     }
-    
+
     @Override
     public String mySelectCityCourse() {
-        this.MyReadPerceptions();
+        if (!this.MyReadPerceptions()) {
+            Info("Communication error");
+            return "";
+        }
         return E.getCurrentCity();
-        
+
 //        String city;
 //        this.MyReadPerceptions();
 //        do {
@@ -259,23 +228,4 @@ public class DEST extends DroidShip {
 //        outbox.setContent("Refuse");
 //        this.LARVAsend(outbox);
 //    }
-    protected boolean checkReport(ACLMessage msg) {
-        return true;
-    }
-
-    protected Status doQueryPeople(String type) {
-        Info("Querying people " + type);
-        outbox = session.createReply();
-        outbox.setContent("Query " + type.toUpperCase() + " session " + sessionKey);
-        outbox.setPerformative(ACLMessage.QUERY_REF);
-        session = this.blockingDialogue(outbox).get(0);
-        population = new ThingSet();
-        String unzipedcontent = unzipString(session.getContent().replace("ZIPDATA", ""));
-
-        JsonObject jspeople = Json.parse(unzipedcontent).asObject().get("thingset").asObject();
-//        System.out.println("CENSUS:"+jspeople.toString(WriterConfig.PRETTY_PRINT));
-        population.fromJson(jspeople.get("people").asArray());
-        return myStatus;
-    }
-
 }

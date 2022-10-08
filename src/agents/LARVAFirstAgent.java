@@ -69,6 +69,7 @@ import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
+import swing.SwingTools;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -867,6 +868,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            Info(message);
 //        }
     }
+    
+//    public void Message(String message, String icon) {
+//        JOptionPane.showMessageDialog(null,
+//                message, "Agent " + getLocalName()+" "+E.getType(), JOptionPane.INFORMATION_MESSAGE,
+//                SwingTools.toIcon(icon, 100, 100));
+//        Info(message);
+//    }
 
     /**
      * It asks the user to input a String
