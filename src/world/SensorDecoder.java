@@ -1414,11 +1414,11 @@ public class SensorDecoder {
 
     public void fromJson(JsonArray jsareading) {
         if (verbose) {
-            System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "SensorDecoder::Procesing readings");
+            System.out.println("\n\nSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS\n" + "SensorDecoder::Procesing readings");
         }
         if (jsareading == null) {
             if (verbose) {
-                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "SensorDecoder::Empty readings");
+                System.out.println("\n\nSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS\n" + "SensorDecoder::Empty readings");
             }
             return;
         }
@@ -1426,7 +1426,7 @@ public class SensorDecoder {
             JsonObject jsosensor = jsareading.get(i).asObject();
             String name = jsosensor.getString("sensor", "");
             if (verbose) {
-                System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "SensorDecoder::Found sensor " + name
+                System.out.println("\n\nSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS\n" + "SensorDecoder::Found sensor " + name
                         +" >>>>>"+jsosensor.get("data").toString());
             }
             encodeSensor(name, jsosensor.get("data").asArray());
@@ -2219,6 +2219,7 @@ public class SensorDecoder {
             for (String scity : positions) {
                 if (new Point3D(scity.split(Mission.sepMissions)[1]).isEqualTo(getGPS())) {
                     cachedCurrentCity = scity.split(Mission.sepMissions)[0];
+
                     return cachedCurrentCity;
                 }
             }

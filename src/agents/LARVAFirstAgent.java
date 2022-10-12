@@ -683,6 +683,35 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     this.addMilestone("MILES23");
                 }
             }
+            if (!this.hasMilestone("MILES45")) {
+                if (msg.getProtocol() != null
+                        && msg.getProtocol().equals("DROIDSHIP")
+                        && msg.getSender().getLocalName().equals(getLocalName())) {
+                    this.addMilestone("MILES45");
+                }
+            }
+            if (!this.hasMilestone("MILES46")) {
+                if (msg.getProtocol() != null
+                        && msg.getProtocol().equals("DROIDSHIP")
+                        && !msg.getSender().getLocalName().equals(getLocalName())) {
+                    this.addMilestone("MILES46");
+                }
+            }
+            if (!this.hasMilestone("MILES15")) {
+                if (msg.getProtocol() != null
+                        && msg.getSender().getLocalName().equals(getLocalName())) {
+                    if (msg.getContent().startsWith("TRANSPOND")) {
+                        addMilestone("MILES15");
+                    }
+                }
+            }
+            if (!this.hasMilestone("MILES57")) {
+                if (msg.getUserDefinedParameter(ACLMROLE) != null
+                        && msg.getUserDefinedParameter(ACLMROLE).equals("DROIDSHIP")
+                        && msg.getPerformative() == ACLMessage.AGREE) {
+                    this.addMilestone("MILES57");
+                }
+            }
         }
         if (msg.getContent().startsWith("Agree to open")) {
             addMilestone("MILES19");
@@ -722,8 +751,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         checkDeepMilestones(msg);
         this.addMilestone("MILES07");
         if (this.allowEaryWarning && this.isErrorMessage(msg)) {
-            Alert(emojis.WARNING + "EARLY WARNING SYSTEM: ERROR NOTIFICATION HS JUST ARRIVED:\n"+ 
-                    emojis.AGENT+msg.getSender().getLocalName()+"\nSays: "
+            Alert(emojis.WARNING + "EARLY WARNING SYSTEM: ERROR NOTIFICATION HS JUST ARRIVED:\n"
+                    + emojis.AGENT + msg.getSender().getLocalName() + "\nSays: "
                     + msg.getContent());
         }
         if (this.isSecuredMessages()) {
@@ -856,7 +885,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void Message(String message) {
         JOptionPane.showMessageDialog(null,
-                message, "Agent " + getLocalName()+" "+E.getType(), JOptionPane.INFORMATION_MESSAGE);
+                message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE);
         Info(message);
 
 //        if (isSwing()) {
@@ -868,13 +897,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            Info(message);
 //        }
     }
-    
-//    public void Message(String message, String icon) {
-//        JOptionPane.showMessageDialog(null,
-//                message, "Agent " + getLocalName()+" "+E.getType(), JOptionPane.INFORMATION_MESSAGE,
-//                SwingTools.toIcon(icon, 100, 100));
-//        Info(message);
-//    }
+
+    public void Message(String message, String icon) {
+        JOptionPane.showMessageDialog(null,
+                message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE,
+                SwingTools.toIcon(icon, 50, 50));
+        Info(message);
+    }
 
     /**
      * It asks the user to input a String
@@ -1351,7 +1380,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         String fields[] = transponder.split(this.sepTransponder);
         for (int i = 0; i < fields.length; i++) {
             if (fields[i].startsWith(field)) {
-                return fields[i].replace(field+" ", "");
+                return fields[i].replace(field + " ", "");
             }
         }
         return "";
@@ -1504,6 +1533,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (baseFactory == null) {
             baseFactory = new BaseFactoryAgent(this);
         }
+        addMilestone("MILES47");
         boolean res = true;
         for (int i = 0; i < n & res; i++) {
             res = doLaunchSubagent(c);
@@ -1551,8 +1581,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         outbox = new ACLMessage(ACLMessage.QUERY_REF);
         outbox.setSender(getAID());
         outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
-        outbox.setConversationId("TRANSPONDER");
-        outbox.setReplyWith("TRANSPONDER");
+        outbox.setConversationId("TRANSPONDER"+getHexaKey());
+        outbox.setReplyWith(outbox.getConversationId());
         outbox.setContent("TRANSPONDER");
         this.LARVAsend(outbox);
         inbox = LARVAblockingReceive();

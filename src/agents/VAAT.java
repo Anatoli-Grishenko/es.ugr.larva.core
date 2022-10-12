@@ -14,6 +14,7 @@ public class VAAT extends DroidShip {
     @Override
     public void setup() {
         super.setup();
+        myType="VAAT";
         this.DFAddMyServices(new String[]{
             "TYPE VAAT",
             "QUERY-IF <name>",

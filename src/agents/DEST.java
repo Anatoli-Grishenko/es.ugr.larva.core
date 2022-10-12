@@ -15,6 +15,7 @@ import jade.lang.acl.ACLMessage;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.fancyWriteACLM;
 import tools.TimeHandler;
+import tools.emojis;
 import world.Thing;
 import world.ThingSet;
 import static zip.ZipTools.unzipString;
@@ -28,9 +29,11 @@ public class DEST extends DroidShip {
     @Override
     public void setup() {
         super.setup();
+        myType = "DEST";
         this.DFAddMyServices(new String[]{"TYPE DEST"});
         this.allowParking = true;
 //        logger.offEcho();
+//        logger.onEcho();
     }
 
     @Override
@@ -38,11 +41,14 @@ public class DEST extends DroidShip {
 //        Info(this.DM.toString());
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getExtRequests()) {
-            InfoMessage("DEST:: Processing request" + fancyWriteACLM(m));
             if (m.getContent().startsWith("REPORT") && m.getPerformative() == ACLMessage.INFORM_REF
                     && myStatus == Status.PARKING) {
+                InfoMessage("I have received a report." 
+                        +"\n"+emojis.ROBOT+" From: "+m.getSender().getLocalName()+
+                        "\n"+emojis.FOLDER+" Content: "+m.getContent());
                 this.forgetUtterance(m);
-                return this.onDemandReport(m);
+                Status sAux=this.onDemandReport(m);
+                return sAux;
 //                outbox = m.createReply();
 //                String census = checkCensus(m);
 //                if (census.length() == 0) {
@@ -131,7 +137,6 @@ public class DEST extends DroidShip {
         this.LARVAwait(1000);
         return myStatus;
     }
-
 
     @Override
     public Status MyJoinSession() {

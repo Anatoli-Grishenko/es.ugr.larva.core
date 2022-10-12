@@ -8,6 +8,7 @@ package agents;
 import geometry.Point3D;
 import jade.lang.acl.ACLMessage;
 import static messaging.ACLMessageTools.fancyWriteACLM;
+import tools.emojis;
 
 /**
  *
@@ -18,6 +19,7 @@ public class MTT extends DroidShip {
     @Override
     public void setup() {
         super.setup();
+        myType = "MTT";
         this.DFAddMyServices(new String[]{
             "TYPE MTT",
             "REQUEST BACKUP",
@@ -35,14 +37,14 @@ public class MTT extends DroidShip {
 //        Info(this.DM.toString());
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getExtRequests()) {
-            InfoMessage("MTT:: Processing request" + fancyWriteACLM(m));
             contentTokens = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
             if (isOnMission()) {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
-                    Info("Received CANCEL");
-                    this.offMission();
+//                    "Backup to " + toWhom + " has just finished\nGood luck!"
+                    InfoMessage("Backup to " + toWhom + " has just finished\nGood luck!");
                     this.forgetUtterance(m);
+                    this.offMission();
                     return Status.CHOOSEMISSION;
                 } else {
                     this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, I am busy", null));
@@ -75,13 +77,17 @@ public class MTT extends DroidShip {
 //                            return myStatus;
 //                        }
                     } else {
-                        InfoMessage("Unknown request");
+                        InfoMessage("Unknown request"
+                                + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                                + "\n" + emojis.FOLDER + " Content: " + m.getContent());
                         this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Unknown request " + m.getContent(), null));
                         return myStatus;
                     }
                 }
             }
-            InfoMessage("Unknown request");
+            InfoMessage("Unknown request"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                    + "\n" + emojis.FOLDER + " Content: " + m.getContent());
             this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Unknown request " + m.getContent(), null));
             return myStatus;
         }

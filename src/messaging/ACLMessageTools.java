@@ -7,6 +7,7 @@ package messaging;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import static crypto.Keygen.getHexaKey;
 import static disk.Logger.trimString;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -227,7 +228,7 @@ public class ACLMessageTools {
         incoming.setLanguage(incoming.getLanguage() == null ? _NULLVAL : incoming.getLanguage());
         incoming.setConversationId((incoming.getConversationId() == null ? _NULLVAL : incoming.getConversationId()));
         incoming.setOntology((incoming.getOntology() == null ? _NULLVAL : incoming.getOntology()));
-        incoming.setReplyWith((incoming.getReplyWith() == null ? _NULLVAL : incoming.getReplyWith()));
+        incoming.setReplyWith((incoming.getReplyWith() == null ? getHexaKey() : incoming.getReplyWith()));
         incoming.setInReplyTo((incoming.getInReplyTo() == null ? _NULLVAL : incoming.getInReplyTo()));
         incoming.setProtocol((incoming.getProtocol() == null ? _NULLVAL : incoming.getProtocol()));
         return incoming;

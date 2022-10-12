@@ -10,6 +10,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.fancyWriteACLM;
+import tools.emojis;
 
 /**
  *
@@ -20,8 +21,8 @@ public class BB1F extends DroidShip {
     @Override
     public void setup() {
         super.setup();
-        myType="BB1F";
-        this.DFAddMyServices(new String[]{"TYPE "+myType});
+        myType = "BB1F";
+        this.DFAddMyServices(new String[]{"TYPE " + myType});
         this.allowParking = true;
         logger.offEcho();
     }
@@ -32,7 +33,6 @@ public class BB1F extends DroidShip {
         String toWhom;
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getExtRequests()) {
-            InfoMessage("BB1F:: Processing request" + fancyWriteACLM(m));
             String tokens[] = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
             if (isOnMission()) {
@@ -72,13 +72,17 @@ public class BB1F extends DroidShip {
 //                            return myStatus;
 //                        }
                     } else {
-                        InfoMessage("Unknown request");
+                        InfoMessage("Unknown request"
+                                + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                                + "\n" + emojis.FOLDER + " Content: " + m.getContent());
                         this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Unknown request " + m.getContent(), null));
                         return myStatus;
                     }
                 }
             }
-            InfoMessage("Unknown request");
+            InfoMessage("Unknown request"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                    + "\n" + emojis.FOLDER + " Content: " + m.getContent());
             this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Unknown request " + m.getContent(), null));
             return myStatus;
         }

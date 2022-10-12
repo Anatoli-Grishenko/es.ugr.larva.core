@@ -45,7 +45,7 @@ public class Mission extends ArrayList<String> {
     }
 
     public void setName(String name) {
-        this.name = name.toUpperCase();
+        this.name = name;
     }
 
     @Override

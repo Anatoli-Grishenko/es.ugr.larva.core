@@ -345,7 +345,7 @@ public class World {
 //            if (!i.getType().equals("ENVIRONMENT")) {
 //                i.setPosition(getEnvironment().getPosition());
 //                i.setOrientation(getEnvironment().getOrientation());
-//            }
+//            
 //        }
 //        if (i.getSize() == null) {
 //            i.setSize(new Point3D(1, 1, 0));
@@ -944,6 +944,7 @@ public class World {
                         agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
                         res = false;
                     }
+                    break;
                 case UP:
                     int nups;
                     nups = 5;

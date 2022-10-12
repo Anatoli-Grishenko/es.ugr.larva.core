@@ -29,12 +29,12 @@ import static zip.ZipTools.unzipString;
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class XUIAgent extends LARVAFirstAgent {
-
+    
     enum Status {
         CHECKIN, CHECKOUT, IDLE, HASSESSION, UPDATE, EXIT
     }
     Status myStatus;
-
+    
     protected OleDashBoard myDashBoard;
     protected String sessionKey = "", telegramBot;
     protected boolean showTrail = false;
@@ -46,7 +46,7 @@ public class XUIAgent extends LARVAFirstAgent {
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
     TelegramBackdoor tgb;
-
+    
     @Override
     public void setup() {
         super.setup();
@@ -59,6 +59,7 @@ public class XUIAgent extends LARVAFirstAgent {
         } else {
             logger.offEcho();
         }
+        setSecuredMessages(false);
 //        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
         _XUI = (JPanel) this.payload.getGuiComponents().get("XUI");
@@ -100,7 +101,7 @@ public class XUIAgent extends LARVAFirstAgent {
         tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
         tgb.setPreferredSize(new Dimension(100, 200));
     }
-
+    
     @Override
     public void Execute() {
         Info("Status: " + myStatus.name());
@@ -119,9 +120,9 @@ public class XUIAgent extends LARVAFirstAgent {
                 LARVAexit = true;
                 break;
         }
-
+        
     }
-
+    
     @Override
     public void takeDown() {
         myDashBoard.removeAll();
@@ -129,7 +130,7 @@ public class XUIAgent extends LARVAFirstAgent {
         Info("Taking down and deleting agent");
         super.takeDown();
     }
-
+    
     public Status MyCheckin() {
         Info("Loading passport and checking-in to LARVA");
         if (!doLARVACheckin()) {
@@ -140,12 +141,12 @@ public class XUIAgent extends LARVAFirstAgent {
 //        TheMap.clear();
         return Status.IDLE;
     }
-
+    
     public Status MyCheckout() {
         this.doLARVACheckout();
         return Status.EXIT;
     }
-
+    
     public Status myIdle() {
         String buffer[];
         boolean zip = false;
@@ -161,7 +162,7 @@ public class XUIAgent extends LARVAFirstAgent {
             buffer = new String[]{inbox.getContent()};
             zip = false;
         }
-
+        
         for (String rawcontent : buffer) {
             String content;
             if (zip) {
@@ -186,17 +187,17 @@ public class XUIAgent extends LARVAFirstAgent {
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("perceptions")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "Perceptions received");
+                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
                 }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("city")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "Cities received");
+                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Cities received");
                 }
                 myDashBoard.preProcessACLM(content);
             } else if (content.contains("people")) {
                 if (verbose) {
-                    Info("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\nXUI Agent" + "People received");
+                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "People received");
                 }
                 myDashBoard.preProcessACLM(content);
             }
@@ -225,9 +226,13 @@ public class XUIAgent extends LARVAFirstAgent {
 //        if (Milis / 1000 > runSecs) {
 //            return Status.EXIT;
 //        }
+        outbox = inbox.createReply();
+        outbox.setContent("");
+        outbox.setPerformative(ACLMessage.INFORM);
+//        this.LARVAsend(outbox);
         return Status.IDLE;
     }
-
+    
     @Override
     public ACLMessage LARVAblockingReceive() {
         premesg = new TimeHandler();
@@ -243,7 +248,7 @@ public class XUIAgent extends LARVAFirstAgent {
         nmessages++;
         return res;
     }
-
+    
     public void backSendTelegram(String what) {
         if (telegramBot.length() > 0) {
             outbox = new ACLMessage(ACLMessage.REQUEST);
@@ -254,7 +259,7 @@ public class XUIAgent extends LARVAFirstAgent {
             outbox.setProtocol("NOTIFICATION");
             outbox.setEncoding(this.getMypassport());
             this.LARVAsend(outbox);
-            this.tgb.write(what+"\n");
+            this.tgb.write(what + "\n");
         } else {
             this.Alert("DBA Droid not found in DF services");
         }

@@ -21,6 +21,9 @@ import geometry.SimpleVector3D;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.fancyWriteACLM;
 import tools.TimeHandler;
@@ -37,6 +40,8 @@ import static zip.ZipTools.unzipString;
 public class DroidShip extends LARVADialogicalAgent {
 
     protected static boolean debugDroid = false;
+    protected HashMap<String, ArrayList<String>> myCitizens;
+    protected HashMap<String, String> citizenOf;
 
     public static void Debug() {
         debugDroid = true;
@@ -54,7 +59,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected String problems[], plan[], actions[];
     protected ACLMessage open, session;
     protected String[] contentTokens, cities, goalTokens;
-    protected String action = "", preplan = "", baseCity, currentCity, nextCity, myMission;
+    protected String action = "", preplan = "", baseCity, currentCity, nextCity, myMission, Message;
     protected Point3D gpsBase, pTarget, pSource;
     protected int indexplan = 0, myEnergy = 0, counterSessionManager = 0;
     protected boolean showPerceptions, onMission, changeMission;
@@ -65,7 +70,7 @@ public class DroidShip extends LARVADialogicalAgent {
 
     protected boolean allowREQUEST, allowCFP, allowParking;
     protected boolean inNegotiation;
-    protected String rw = "", toWhom, fromWho, who, sTransponder, myType;
+    protected String rw = "", toWhom, fromWho, who, sTransponder, myType, myCity;
     protected Status reaction;
 
     protected Plan behaviour = null;
@@ -112,6 +117,8 @@ public class DroidShip extends LARVADialogicalAgent {
         this.allowExceptionShield = false;
         this.disableDeepLARVAMonitoring();
         super.setup();
+        citizenOf = new HashMap();
+        myCitizens = new HashMap();
 //        logger.onEcho();
         logger.offEcho();
         this.setSecuredMessages(true);
@@ -352,6 +359,9 @@ public class DroidShip extends LARVADialogicalAgent {
         if (G(E)) {
             Info("Target reached");
             E.setNextGoal();
+//            if (!E.getCurrentCity().equals("MOVING")) {
+//                this.doQueryPeople("People");
+//            }
             return Status.SOLVEMISSION;
         }
         Choice a = Ag(E, A);
@@ -713,15 +723,26 @@ public class DroidShip extends LARVADialogicalAgent {
         }
     }
 
+//    protected ACLMessage droidReply(ACLMessage msg) {
+//        ACLMessage out;
+//        if (msg != null) {
+//            out = msg.createReply();
+//        } else {
+//            out = new ACLMessage();
+//        }
+//        out.addUserDefinedParameter(ACLMROLE, "DROIDSHIP");
+//        return out;
+//    }
+//
     protected Status processAsynchronousMessages() {
         for (ACLMessage m : this.getExtRequests()) {
 //            String tokens[] = m.getContent().split(",")[0].split(" ");
-            Info("DroidStarshipD:: Processing " + fancyWriteACLM(m));
-            if (m.getPerformative() == ACLMessage.QUERY_REF && m.getContent().toUpperCase().equals("TRANSPONDER")
+//            InfoMessage("Received request from " + m.getSender().getLocalName());
+            if (!m.getProtocol().equals("DROIDSHIP")) {
+                forgetUtterance(m);
+            } else if (m.getPerformative() == ACLMessage.QUERY_REF && m.getContent().toUpperCase().equals("TRANSPONDER")
                     && m.getPerformative() == ACLMessage.QUERY_REF) {
-                outbox = m.createReply();
-                outbox.setPerformative(ACLMessage.INFORM);
-                outbox.setContent(this.Transponder());
+                outbox = respondTo(m, ACLMessage.INFORM, this.Transponder(), null);
                 this.Dialogue(outbox);
                 this.forgetUtterance(m);
             }
@@ -731,17 +752,20 @@ public class DroidShip extends LARVADialogicalAgent {
 
     protected ACLMessage respondTo(ACLMessage incoming, int Performative, String what, String toWhom) {
         ACLMessage res;
+        InfoMessage(what);
         if (incoming == null) {
             res = new ACLMessage(Performative);
             res.setConversationId(this.sessionKey);
             res.setReplyWith(getHexaKey(6));
             res.setSender(getAID());
             res.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+            res.addUserDefinedParameter(ACLMROLE, "DROIDSHIP");
         } else {
             res = incoming.createReply();
             res.setPerformative(Performative);
             res.setConversationId(this.sessionKey);
             res.setReplyWith(getHexaKey(6));
+            res.addUserDefinedParameter(ACLMROLE, "DROIDSHIP");
         }
         res.setContent(what);
         return res;
@@ -750,7 +774,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected void InfoMessage(String what) {
         Info(what);
         if (debugDroid) {
-            Message(what); //, "/resources/images/"+myType+".png");
+            Message(what, "/resources/images/" + myType + ".png");
         }
     }
 
@@ -759,25 +783,24 @@ public class DroidShip extends LARVADialogicalAgent {
         toWhom = goalTokens[1];
         sTransponder = this.askTransponder(toWhom);
         if (sTransponder.length() == 0) {
-            this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", toWhom));
+            this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry," + toWhom + " your position is not available in Transponder", toWhom));
             return myStatus;
         }
-        InfoMessage("Transponder " + sTransponder);
         try {
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             if (pTarget.isEqualTo(E.getGPS())) {
-                outbox = this.respondTo(null, ACLMessage.INFORM, "DONE", goalTokens[1]);
+                outbox = this.respondTo(null, ACLMessage.INFORM, "Backup to " + toWhom + " starts now!\nRoger! Roger!", goalTokens[1]);                        
                 Dialogue(outbox);
                 this.forgetUtterance(outbox);
-                logger.offEcho();
+//                logger.offEcho();
                 return Status.WAIT;
             } else {
-                this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", toWhom));
+                this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, " + toWhom + " your position is not valid", toWhom));
                 logger.offEcho();
                 return Status.CHOOSEMISSION;
             }
         } catch (Exception ex) {
-            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", toWhom));
+            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, " + toWhom + " your transponder seems to be corrupted", toWhom));
             logger.offEcho();
             return Status.CHOOSEMISSION;
         }
@@ -790,17 +813,17 @@ public class DroidShip extends LARVADialogicalAgent {
             toWhom = goalTokens[1];
             sTransponder = this.askTransponder(toWhom);
             if (sTransponder.length() == 0) {
-                this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", toWhom));
+                this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry," + toWhom + " your position is not available in Transponder", toWhom));
                 return myStatus;
             }
-            InfoMessage("Transponder " + sTransponder);
+//            InfoMessage("Transponder received ok");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             if (pTarget.isEqualTo(E.getGPS())) {
                 if (!this.MyExecuteAction(E.getCurrentGoal())) {
                     Info("Communication error");
                     return Status.CHECKOUT;
                 }
-                outbox = this.respondTo(null, ACLMessage.INFORM, "DONE", goalTokens[1]);
+                outbox = this.respondTo(null, ACLMessage.INFORM, "Recharge completed!", goalTokens[1]);
                 Dialogue(outbox);
                 this.forgetUtterance(outbox);
                 this.offMission();
@@ -811,9 +834,11 @@ public class DroidShip extends LARVADialogicalAgent {
                 return Status.CHOOSEMISSION;
             }
         } catch (Exception ex) {
-            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", toWhom));
+            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, " + toWhom + " your transponder seems to be corrupted", toWhom));
+            logger.offEcho();
             return Status.CHOOSEMISSION;
         }
+
     }
 
     protected Status doGoalMoveIn() {
@@ -861,19 +886,17 @@ public class DroidShip extends LARVADialogicalAgent {
             InfoMessage("Received TRANSFER  " + who + " from " + fromWho);
             sTransponder = this.askTransponder(fromWho);
             if (sTransponder.length() == 0) {
-                InfoMessage("Sorry, your position is not available in Transponder");
-                this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", fromWho));
+                this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry," + fromWho + " your position is not available in Transponder", toWhom));
                 return myStatus;
             }
-            Info("Transponder " + sTransponder + "\n\nReceived. Waiting for your transfer");
+            InfoMessage("Transponder received ok");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             if (pTarget.isEqualTo(E.getGPS())) {
                 if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
-                    outbox = m.createReply();
-                    outbox.setPerformative(ACLMessage.INFORM);
-                    outbox.setContent("DONE");
+                    outbox = respondTo(m, ACLMessage.INFORM, "DONE", null);
                     this.Dialogue(outbox);
                     logger.offEcho();
+                    InfoMessage("Transfer " + who + " ok");
                     return myStatus;
                 } else {
                     InfoMessage("Sorry, TRANSFER " + who + " from " + fromWho + " has failed");
@@ -888,38 +911,40 @@ public class DroidShip extends LARVADialogicalAgent {
                 return Status.CHOOSEMISSION;
             }
         } catch (Exception ex) {
-            InfoMessage("Sorry, your position is not valid");
-            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
+            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, " + fromWho + " your transponder seems to be corrupted", toWhom));
             logger.offEcho();
             return Status.CHOOSEMISSION;
         }
     }
 
     protected Status onDemandReport(ACLMessage m) {
-        outbox = m.createReply();
+//                droidReply(m);
         toWhom = m.getSender().getLocalName();
-        InfoMessage("Received REPORT from " + toWhom + " ... checking report");
+//        InfoMessage("Received REPORT from " + toWhom + " ... checking report");
         String census = checkCensus(m);
         if (census.length() == 0) {
             ACLMessage auxOutbox, auxInbox;
-            auxOutbox = new ACLMessage(ACLMessage.REQUEST);
-            auxOutbox.setSender(getAID());
-            auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
-            auxOutbox.setConversationId(this.mySessionID);
-            auxOutbox.setPerformative(ACLMessage.REQUEST);
+            auxOutbox = newStealthMessage();
+//            auxOutbox = new ACLMessage(ACLMessage.REQUEST);
+//            auxOutbox.setSender(getAID());
+//            auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+//            auxOutbox.setConversationId(this.mySessionID);
+//            auxOutbox.setPerformative(ACLMessage.REQUEST);
+//            auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
             auxOutbox.setContent("Confirm");
-            auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
+            auxOutbox.setPerformative(ACLMessage.INFORM_REF);
             auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
             session = this.blockingDialogue(auxOutbox).get(0);
-            outbox.setPerformative(ACLMessage.CONFIRM);
+            outbox = respondTo(m, ACLMessage.CONFIRM, "Ok. Your report is right"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName(), null);
             outbox.setContent("Confirm");
             outbox.setReplyWith("Confirm");
             this.Dialogue(outbox);
             this.waitReport = false;
-            InfoMessage("Ok. Your report is right");
             return Status.CHOOSEMISSION;
         } else {
-            InfoMessage("Sorry. Your report is not valid");
+            InfoMessage(emojis.WARNING + " Sorry. Your report is not valid"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName());
             outbox.setPerformative(ACLMessage.DISCONFIRM);
             outbox.setContent("Disconfirm " + census);
             outbox.setReplyWith("Disconfirm");
@@ -931,47 +956,55 @@ public class DroidShip extends LARVADialogicalAgent {
     protected Status onDemandBackup(ACLMessage m) {
         try {
             toWhom = m.getSender().getLocalName();
-            InfoMessage("Received BACKUP from " + toWhom + " asking Transponder");
+            InfoMessage("Received BACKUP request"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName());
             sTransponder = this.askTransponder(toWhom);
             if (sTransponder.length() == 0) {
-                InfoMessage("Sorry, your position is not available in Transponder");
-                this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
+                this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry," + toWhom + " your position is not available in Transponder", toWhom));
                 return myStatus;
             }
-            InfoMessage("Received transponder " + sTransponder + "\n\n in my way to your position");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             this.onMission(m, "BACKUP" + toWhom,
                     new String[]{"MOVETO " + pTarget.getXInt() + " " + pTarget.getYInt(),
                         "BACKUP " + toWhom});
-            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
+            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Received transponder ok\non my way to your position"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName(), null));
             return Status.SOLVEMISSION;
         } catch (Exception ex) {
-            InfoMessage("Corrupted transponder data");
-            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-            return myStatus;
+            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your transponder seems to be corrupted"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                    + "\n" + emojis.FOLDER + " Content: " + m.getContent(), sTransponder));
+            logger.offEcho();
+            return Status.CHOOSEMISSION;
         }
+
     }
 
     protected Status onDemandRefill(ACLMessage m) {
         try {
             toWhom = m.getSender().getLocalName();
-            InfoMessage("Received REFILL from " + toWhom + " asking Transponder");
+            InfoMessage("Received REFILL request"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName());
             sTransponder = this.askTransponder(toWhom);
             if (sTransponder.length() == 0) {
-                this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
+                this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder"
+                        + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                        + "\n" + emojis.FOLDER + " Content: " + sTransponder, null));
                 return myStatus;
             }
-            InfoMessage("Received transponder " + sTransponder + "\n\n in my way to your position");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             this.onMission(m, "REFILL " + toWhom,
                     new String[]{"MOVETO " + pTarget.getXInt() + " " + pTarget.getYInt(),
                         "REFILL " + toWhom});
-            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
+            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Received transponder ok\non my way to your position"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName(), null));
             return Status.SOLVEMISSION;
         } catch (Exception ex) {
-            InfoMessage("Bad transponder");
-            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-            return myStatus;
+            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your transponder seems to be corrupted"
+                    + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()
+                    + "\n" + emojis.FOLDER + " Content: " + sTransponder, toWhom));
+            logger.offEcho();
+            return Status.CHOOSEMISSION;
         }
     }
 
@@ -1021,11 +1054,26 @@ public class DroidShip extends LARVADialogicalAgent {
         session = this.blockingDialogue(outbox).get(0);
         population = new ThingSet();
         String unzipedcontent = unzipString(session.getContent().replace("ZIPDATA", ""));
-
         JsonObject jspeople = Json.parse(unzipedcontent).asObject().get("thingset").asObject();
 //        System.out.println("CENSUS:"+jspeople.toString(WriterConfig.PRETTY_PRINT));
         population.fromJson(jspeople.get("people").asArray());
+//        for (Thing t : population.getAllThings()) {
+//            if (citizenOf.keySet().contains(t.getName())) {
+//                if (citizenOf.get(t.getName()).equals())
+//            }
+//        }
         return myStatus;
     }
 
+    protected ACLMessage newStealthMessage() {
+        ACLMessage auxOutbox;
+        auxOutbox = new ACLMessage(ACLMessage.REQUEST);
+        auxOutbox.setSender(getAID());
+        auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
+        auxOutbox.setConversationId(this.mySessionID);
+        auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
+        auxOutbox.setContent("STEALTH");
+        auxOutbox.setReplyWith("STEALTH");
+        return auxOutbox;
+    }
 }

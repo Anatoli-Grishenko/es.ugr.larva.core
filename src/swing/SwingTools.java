@@ -77,13 +77,29 @@ public class SwingTools {
         }
     }
 
-    public static ImageIcon toIcon(String image, int nw, int nh) {
+ public static ImageIcon toIcon(String image, int nw, int nh) {
         ImageIcon res;
         Image aux;
-        aux = new ImageIcon(image).getImage();
+        if (image.startsWith("/resources")) {
+            try {
+                aux = new ImageIcon(getFileResource(image.substring(1)).readAllBytes()).getImage();
+            } catch (IOException ex) {
+                aux=null;
+            }
+        } else {
+            aux = new ImageIcon(image).getImage();
+        }
         res = new ImageIcon(aux.getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
         return res;
     }
+
+//    public static ImageIcon toIcon(String image, int nw, int nh) {
+//        ImageIcon res;
+//        Image aux;
+//        aux = new ImageIcon(image).getImage();
+//        res = new ImageIcon(aux.getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
+//        return res;
+//    }
 
     public static void initLookAndFeel(String UI) {
         try {
