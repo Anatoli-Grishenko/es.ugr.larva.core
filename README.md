@@ -1,3 +1,6 @@
+# Changelog
+https://github.com/Anatoli-Grishenko/es.ugr.larva.core/blob/master/src/resources/changelog/changelog.md
+
 # JADE
 https://docs.google.com/document/d/1qhItQlVjrXJ0qGMx5bAdXFWPtK2kHjoLqWuH2Txexx4/edit#heading=h.zcuxqyp15e1
 

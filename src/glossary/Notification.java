@@ -16,7 +16,8 @@ public class Notification {
         DUPMILESTONE, // Messages about duplicated milestones
         PROBLEMSOLVED, // Messages about problems being solved
         GOALMISSION, // Messages related to goals and missions
-        PROBLEMS, // Checkin Checkout messages
-        IDENTITY // Open & close problem messages
+        PROBLEMS, // Open & close problem messages, WEelcome from sessoin managers
+        IDENTITY, // Checkin Checkout messages
+        MANDATORY;  // Errors,  warnings and relevant information. This is mandatory and cannot be disabled
     };
 }

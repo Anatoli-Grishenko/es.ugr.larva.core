@@ -12,7 +12,7 @@
             - When a problem is solved
             - Notifications related to the achievement of goals and missions
             - Notifications coming from Identity Managers (checkin, checkout)
-            - Notificatoins coming from Problem Managers (open problem, close problem)
+            - Notifications coming from Problem Managers (open problem, close problem)
             - The reception of errors and warnings is mandatory and cannot be disabled
 
 # 2022-10-01 Ready for Lab1 and Lab2
