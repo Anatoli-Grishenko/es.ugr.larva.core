@@ -6,7 +6,7 @@
       - Telegram bot DBA Droid
          - All messages have a HTML format to highlight relevant information
          - Button "Notifications" renamed as "Preferences"
-         - Buttonn "Preferences" include the possibility of selecting the level of notifications one wants to receive:
+         - Button "Preferences" include the possibility of selecting the level of notifications one wants to receive: [Issue #7](https://github.com/Anatoli-Grishenko/es.ugr.larva.core/issues/7)
             - When a new milestone is achieved
             - When an already achieved milestone is re-achieved
             - When a problem is solved
