@@ -738,13 +738,15 @@ public class DroidShip extends LARVADialogicalAgent {
         for (ACLMessage m : this.getExtRequests()) {
 //            String tokens[] = m.getContent().split(",")[0].split(" ");
 //            InfoMessage("Received request from " + m.getSender().getLocalName());
-            if (!m.getProtocol().equals("DROIDSHIP")) {
-                forgetUtterance(m);
-            } else if (m.getPerformative() == ACLMessage.QUERY_REF && m.getContent().toUpperCase().equals("TRANSPONDER")
-                    && m.getPerformative() == ACLMessage.QUERY_REF) {
-                outbox = respondTo(m, ACLMessage.INFORM, this.Transponder(), null);
-                this.Dialogue(outbox);
-                this.forgetUtterance(m);
+            if (!m.getContent().startsWith("REPORT")) {
+                if (!m.getProtocol().equals("DROIDSHIP")) {
+                    forgetUtterance(m);
+                } else if (m.getPerformative() == ACLMessage.QUERY_REF && m.getContent().toUpperCase().equals("TRANSPONDER")
+                        && m.getPerformative() == ACLMessage.QUERY_REF) {
+                    outbox = respondTo(m, ACLMessage.INFORM, this.Transponder(), null);
+                    this.Dialogue(outbox);
+                    this.forgetUtterance(m);
+                }
             }
         }
         return myStatus;
@@ -789,7 +791,7 @@ public class DroidShip extends LARVADialogicalAgent {
         try {
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             if (pTarget.isEqualTo(E.getGPS())) {
-                outbox = this.respondTo(null, ACLMessage.INFORM, "Backup to " + toWhom + " starts now!\nRoger! Roger!", goalTokens[1]);                        
+                outbox = this.respondTo(null, ACLMessage.INFORM, "Backup to " + toWhom + " starts now!\nRoger! Roger!", goalTokens[1]);
                 Dialogue(outbox);
                 this.forgetUtterance(outbox);
 //                logger.offEcho();
@@ -948,6 +950,7 @@ public class DroidShip extends LARVADialogicalAgent {
             outbox.setPerformative(ACLMessage.DISCONFIRM);
             outbox.setContent("Disconfirm " + census);
             outbox.setReplyWith("Disconfirm");
+            this.Dialogue(outbox);
             this.forgetUtterance(m);
             return myStatus;
         }

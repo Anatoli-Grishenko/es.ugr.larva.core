@@ -41,7 +41,8 @@ public class DEST extends DroidShip {
 //        Info(this.DM.toString());
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getExtRequests()) {
-            if (m.getContent().startsWith("REPORT") && m.getPerformative() == ACLMessage.INFORM_REF
+            if (m.getContent().startsWith("REPORT") 
+                    //&& m.getPerformative() == ACLMessage.INFORM_REF
                     && myStatus == Status.PARKING) {
                 InfoMessage("I have received a report." 
                         +"\n"+emojis.ROBOT+" From: "+m.getSender().getLocalName()+
@@ -49,75 +50,9 @@ public class DEST extends DroidShip {
                 this.forgetUtterance(m);
                 Status sAux=this.onDemandReport(m);
                 return sAux;
-//                outbox = m.createReply();
-//                String census = checkCensus(m);
-//                if (census.length() == 0) {
-//                    ACLMessage auxOutbox, auxInbox;
-////                    auxOutbox = session.createReply();
-//                    auxOutbox = new ACLMessage(ACLMessage.REQUEST);
-//                    auxOutbox.setSender(getAID());
-//                    auxOutbox.addReceiver(new AID(this.mySessionmanager, AID.ISLOCALNAME));
-//                    auxOutbox.setConversationId(this.mySessionID);
-//                    auxOutbox.setPerformative(ACLMessage.REQUEST);
-//                    auxOutbox.setContent("Confirm");
-//                    auxOutbox.addUserDefinedParameter(ACLMSTEALTH, "TRUE");
-//                    auxOutbox.setReplyWith("CONFIRM MISSION " + m.getSender().getLocalName());
-//                    session = this.blockingDialogue(auxOutbox).get(0);
-////                    this.forgetUtterance(auxOutbox);
-//                    outbox.setPerformative(ACLMessage.CONFIRM);
-//                    outbox.setContent("Confirm");
-//                    outbox.setReplyWith("Confirm");
-//                    this.Dialogue(outbox);
-////                    this.closeUtterance(m);
-//
-//                    this.waitReport = false;
-//                    return Status.CHOOSEMISSION;
-//                } else {
-//                    outbox.setPerformative(ACLMessage.DISCONFIRM);
-//                    outbox.setContent("Disconfirm " + census);
-//                    outbox.setReplyWith("Disconfirm");
-//                    this.forgetUtterance(m);
-//                    return myStatus;
-//                }
             } else if (m.getContent().startsWith("TRANSFER")) {
                 return this.onDemandTransfer(m);
             }
-//                fromWho = m.getSender().getLocalName();
-//                sTransponder = this.askTransponder(fromWho);
-//                if (sTransponder.length() == 0) {
-//                    this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", fromWho));
-//                    return myStatus;
-//                }
-//                Info("Transponder " + sTransponder);
-//                try {
-//                    pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-//                    if (pTarget.isEqualTo(E.getGPS())) {
-//                        who = m.getContent().replace("TRANSFER ", "");
-//                        if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
-//                            outbox = m.createReply();
-//                            outbox.setPerformative(ACLMessage.INFORM);
-//                            outbox.setContent("DONE");
-//                            this.Dialogue(outbox);
-//                            logger.offEcho();
-//                            return myStatus;
-//                        } else {
-//                            this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, TRANSFER " + who + " from " + fromWho + " has failed", fromWho));
-//                            logger.offEcho();
-//                            return myStatus;
-//                        }
-//                    } else {
-//                        this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
-//                        logger.offEcho();
-//                        return Status.CHOOSEMISSION;
-//                    }
-//                } catch (Exception ex) {
-//                    this.Dialogue(this.respondTo(null, ACLMessage.FAILURE, "Sorry, your position is not valid", fromWho));
-//                    logger.offEcho();
-//                    return Status.CHOOSEMISSION;
-//                }
-//
-//            }
-            //this.forgetUtterance(m);
         }
         return myStatus;
     }
