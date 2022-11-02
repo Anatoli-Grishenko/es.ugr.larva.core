@@ -40,7 +40,7 @@ public class DEST extends DroidShip {
     protected Status processAsynchronousMessages() {
 //        Info(this.DM.toString());
         super.processAsynchronousMessages();
-        for (ACLMessage m : this.getExtRequests()) {
+        for (ACLMessage m : this.getInboundOpen()) {
             if (m.getContent().startsWith("REPORT") 
                     //&& m.getPerformative() == ACLMessage.INFORM_REF
                     && myStatus == Status.PARKING) {

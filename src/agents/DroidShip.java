@@ -735,7 +735,7 @@ public class DroidShip extends LARVADialogicalAgent {
 //    }
 //
     protected Status processAsynchronousMessages() {
-        for (ACLMessage m : this.getExtRequests()) {
+        for (ACLMessage m : this.getInboundOpen()) {
 //            String tokens[] = m.getContent().split(",")[0].split(" ");
 //            InfoMessage("Received request from " + m.getSender().getLocalName());
             if (!m.getContent().startsWith("REPORT")) {

@@ -183,7 +183,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return this;
     }
 
-    public ArrayList<ACLMessage> getAllOpenUtterances() {
+    public ArrayList<ACLMessage> getAllOpen() {
         this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
@@ -197,7 +197,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending;
     }
 
-    public ArrayList<ACLMessage> getExtOpenUtterances() {
+    public ArrayList<ACLMessage> getInboundOpen() {
         this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
@@ -213,7 +213,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending;
     }
 
-    public ArrayList<ACLMessage> getMyOpenUtterances() {
+    public ArrayList<ACLMessage> getOutboundOpen() {
         this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
@@ -229,7 +229,33 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending;
     }
 
-    public ArrayList<ACLMessage> queryAllDueUtterances() {
+    public ArrayList<ACLMessage> getAllInbound() {
+        this.checkAllUtterances();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        for (String cid : this.keySet()) {
+            for (String rw : this.get(cid).keySet()) {
+                if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
+                }
+            }
+        }
+        return pending;
+    }
+
+    public ArrayList<ACLMessage> getAllOutbound() {
+        this.checkAllUtterances();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        for (String cid : this.keySet()) {
+            for (String rw : this.get(cid).keySet()) {
+                if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
+                    this.pushBack(pending, get(cid).get(rw).getStarter());
+                }
+            }
+        }
+        return pending;
+    }
+
+    public ArrayList<ACLMessage> getAllDue() {
         this.checkAllUtterances();
         ArrayList<ACLMessage> pending = new ArrayList();
         for (String cid : this.keySet()) {
@@ -245,7 +271,43 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return pending;
     }
 
-//    public ArrayList<ACLMessage> getAllDueUtterances() {
+    public ArrayList<ACLMessage> getOutboundDue() {
+        this.checkAllUtterances();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        for (String cid : this.keySet()) {
+            for (String rw : this.get(cid).keySet()) {
+                if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
+                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
+                            && get(cid).get(rw).isAlive()) {
+
+//                    pending.add(get(cid).get(rw).getStarter());
+                        this.pushBack(pending, get(cid).get(rw).getStarter());
+                    }
+                }
+            }
+        }
+        return pending;
+    }
+
+    public ArrayList<ACLMessage> getInboundDue() {
+        this.checkAllUtterances();
+        ArrayList<ACLMessage> pending = new ArrayList();
+        for (String cid : this.keySet()) {
+            for (String rw : this.get(cid).keySet()) {
+                if (!get(cid).get(rw).getInitiator().equals(AgentOwner)) {
+                    if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
+                            && get(cid).get(rw).isAlive()) {
+
+//                    pending.add(get(cid).get(rw).getStarter());
+                        this.pushBack(pending, get(cid).get(rw).getStarter());
+                    }
+                }
+            }
+        }
+        return pending;
+    }
+
+//    public ArrayList<ACLMessage> getAllDue() {
 //        this.checkAllUtterances();
 //        ArrayList<ACLMessage> pending = new ArrayList();
 //        for (String cid : this.keySet()) {
@@ -259,7 +321,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 //        return pending;
 //    }
 //
-    private ArrayList<ACLMessage> queryAllAnswersTo(ACLMessage msg) {
+    public ArrayList<ACLMessage> getAllAnswersTo(ACLMessage msg) {
         ArrayList<ACLMessage> res = new ArrayList();
         if (msg == null) {
             return res;
@@ -272,8 +334,8 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         return res;
     }
 
-    public ArrayList<ACLMessage> getAllAnswersTo(ACLMessage msg) {
-        return this.queryAllAnswersTo(msg);
+//    public ArrayList<ACLMessage> getAllAnswersTo(ACLMessage msg) {
+//        return this.queryAllAnswersTo(msg);
 //        ArrayList<ACLMessage> res = new ArrayList();
 //        if (msg == null) {
 //            return res;
@@ -285,7 +347,7 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
 ////            u.close();
 //        }
 //        return res;
-    }
+//    }
 
     public ArrayList<ACLMessage> queryIgnoredMessages() {
         this.checkAllUtterances();
@@ -323,9 +385,9 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
             }
         }
         res += "\n-------------------------------\n";
-        res += "OPEN CONVERSATIONS: " + this.getAllOpenUtterances().size() + "\n";
-        res += "\tMine: " + this.getMyOpenUtterances().size() + "\n";
-        res += "DUE CONVERSATIONS: " + this.queryAllDueUtterances().size() + "\n";
+        res += "OPEN CONVERSATIONS: " + this.getAllOpen().size() + "\n";
+        res += "\tMine: " + this.getOutboundOpen().size() + "\n";
+        res += "DUE CONVERSATIONS: " + this.getAllDue().size() + "\n";
         return res;
 
     }

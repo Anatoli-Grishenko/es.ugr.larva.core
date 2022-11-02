@@ -39,11 +39,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         DM = new DialogueManager(getLocalName());
     }
 
-    protected boolean isOpenUtterance(ACLMessage msg) {
+    protected boolean isOpen(ACLMessage msg) {
         return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OPEN;
     }
 
-    protected boolean isOverdueUtterance(ACLMessage msg) {
+    protected boolean isOverdue(ACLMessage msg) {
         return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OVERDUE;
     }
 
@@ -52,10 +52,13 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     protected boolean isAliveUtterance(ACLMessage msg) {
-        return DM.getMyUtterance(msg).isAlive();
+        if (DM.getMyUtterance(msg) != null) {
+            return DM.getMyUtterance(msg).isAlive();
+        }
+        return false;
     }
 
-    protected boolean isClosedUtterance(ACLMessage msg) {
+    protected boolean isClosed(ACLMessage msg) {
         return !DM.getMyUtterance(msg).isAlive();
     }
 
@@ -77,37 +80,66 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 //        }
 //        return u.getMyStatus() != Utterance.Status.OPEN;
 //    }
-    protected boolean hasDueUtterances() {
+    protected boolean hasDue() {
         checkOpenUtterances();
-        return !DM.queryAllDueUtterances().isEmpty();
+        return !DM.getAllDue().isEmpty();
     }
 
-    protected ArrayList<ACLMessage> getAllDueUtterances() {
+    protected ArrayList<ACLMessage> getAllDue() {
         this.checkOpenUtterances();
-        return DM.queryAllDueUtterances();
+        return DM.getAllDue();
     }
 
-    protected boolean hasOpenUtterances() {
+    protected ArrayList<ACLMessage> getInboundDue() {
+        this.checkOpenUtterances();
+        return DM.getInboundDue();
+    }
+
+    protected ArrayList<ACLMessage> getOutboundDue() {
+        this.checkOpenUtterances();
+        return DM.getOutboundDue();
+    }
+
+    protected ArrayList<ACLMessage> getAllInbound() {
+        this.checkOpenUtterances();
+        return DM.getAllInbound();
+    }
+
+    protected ArrayList<ACLMessage> getAllOutbound() {
+        this.checkOpenUtterances();
+        return DM.getAllOutbound();
+    }
+
+    protected boolean hasOpen() {
         checkOpenUtterances();
-        return !DM.getAllOpenUtterances().isEmpty();
+        return !DM.getAllOpen().isEmpty();
     }
 
-    protected ArrayList<ACLMessage> getAllOpenUtterances() {
+    protected ArrayList<ACLMessage> getAllOpen() {
         this.checkOpenUtterances();
-        return DM.getAllOpenUtterances();
+        return DM.getAllOpen();
     }
 
-    protected boolean hasExtRequests() {
+//    protected ArrayList<ACLMessage> getInboundOpen() {
+//        this.checkOpenUtterances();
+//        return DM.getInboundOpen();
+//    }
+    protected ArrayList<ACLMessage> getOutboundOpen() {
+        this.checkOpenUtterances();
+        return DM.getOutboundOpen();
+    }
+
+    protected boolean hasInboundOpen() {
         checkOpenUtterances();
-        return !DM.getExtOpenUtterances().isEmpty();
+        return !DM.getInboundOpen().isEmpty();
     }
 
-    protected ArrayList<ACLMessage> getExtRequests() {
+    protected ArrayList<ACLMessage> getInboundOpen() {
         this.checkOpenUtterances();
-        return DM.getExtOpenUtterances();
+        return DM.getInboundOpen();
     }
 
-    protected ArrayList<ACLMessage> getIgnoredMessages() {
+    protected ArrayList<ACLMessage> getInboundIgnored() {
         this.checkOpenUtterances();
         ArrayList<ACLMessage> res = DM.queryIgnoredMessages();
         DM.clearIgnoredMessages();
@@ -218,13 +250,13 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         do {
             received = super.LARVAblockingReceive();
             DM.addUtterance(received);
-            still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
+            still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
         } while (still);
-//        still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
+//        still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
 //        while (still) {
 //            received = super.LARVAblockingReceive();
 //            DM.addUtterance(received);
-//            still = (msg == null ? !this.hasExtRequests() : this.isOpenUtterance(msg));
+//            still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
 //        }
         Info("Wake up!. I have received " + fancyWriteACLM(received, true));
         if (msg != null) {
@@ -234,7 +266,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 
     protected ArrayList<ACLMessage> blockingDialogue() {
         this.waitOpenUtterance(null);
-        return this.getExtRequests();
+        return this.getInboundOpen();
     }
 
     protected ArrayList<ACLMessage> blockingDialogue(ACLMessage msg) {
@@ -242,7 +274,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         Info("Opening uttterance ");
         this.Dialogue(msg);
         if (isInitiator(msg.getPerformative())) {
-            while (this.isOpenUtterance(msg) || this.getAnswersTo(msg).size() == 0) {
+            while (this.isOpen(msg) || this.getAnswersTo(msg).size() == 0) {
                 Info("Waiting to close utterance");
                 this.waitOpenUtterance(msg);
             }
@@ -259,7 +291,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
 //    protected ArrayList<ACLMessage> waitAnswersTo(ACLMessage msg) {
-//        while (this.isOpenUtterance(msg)) {
+//        while (this.isOpen(msg)) {
 //            Info("Waiting to close utterance");
 //            this.waitOpenUtterance(msg);
 //        }
@@ -396,11 +428,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         outbox.setReplyWith("TRANSPONDER");
         outbox.setContent("TRANSPONDER");
         outbox.setReplyByDate(nextSecs(45).toDate());
-        inBoxes= blockingDialogue(outbox);
-        if (inBoxes.size()>0 && inBoxes.get(0).getPerformative()==ACLMessage.INFORM) {
+        inBoxes = blockingDialogue(outbox);
+        if (inBoxes.size() > 0 && inBoxes.get(0).getPerformative() == ACLMessage.INFORM) {
             return inBoxes.get(0).getContent();
-        }else{
-            Alert("No answer to Transponder of "+toWhom);
+        } else {
+            Alert("No answer to Transponder of " + toWhom);
             return "";
         }
     }

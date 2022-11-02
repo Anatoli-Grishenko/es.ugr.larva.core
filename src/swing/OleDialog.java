@@ -878,4 +878,8 @@ public class OleDialog extends JDialog implements ActionListener {
 //            return null;
 //
 //    }
+
+    public boolean run(OleDialog oDlg) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

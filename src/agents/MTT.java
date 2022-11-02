@@ -36,7 +36,7 @@ public class MTT extends DroidShip {
     protected Status processAsynchronousMessages() {
 //        Info(this.DM.toString());
         super.processAsynchronousMessages();
-        for (ACLMessage m : this.getExtRequests()) {
+        for (ACLMessage m : this.getInboundOpen()) {
             contentTokens = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
             if (isOnMission()) {

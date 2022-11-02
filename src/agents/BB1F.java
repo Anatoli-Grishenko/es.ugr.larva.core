@@ -32,7 +32,7 @@ public class BB1F extends DroidShip {
 //        Info(this.DM.toString());
         String toWhom;
         super.processAsynchronousMessages();
-        for (ACLMessage m : this.getExtRequests()) {
+        for (ACLMessage m : this.getInboundOpen()) {
             String tokens[] = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
             if (isOnMission()) {

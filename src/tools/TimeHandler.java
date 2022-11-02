@@ -67,6 +67,13 @@ public class TimeHandler {
 
     }
 
+    public TimeHandler(Date d) {
+        try {
+            fromDate(d);
+        } catch (DateTimeParseException ex) {
+        }
+    }
+
     public Date toDate() {
         return this.asDate(_theTime);
     }

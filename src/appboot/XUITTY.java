@@ -8,6 +8,9 @@ package appboot;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.function.Consumer;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -16,16 +19,35 @@ import javax.swing.JPanel;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class XUITTY extends JEditorPane {
+public class XUITTY extends JEditorPane implements KeyListener {
 
     public static final String windowFrames[] = {"┌┐└┘─│┬┴┼┤├▄", "++++-|", "▁▂▃▄▅▆▇█", "▏▎▍▌▋▊▉█"};
-
+    protected Consumer<KeyEvent> keyListener;
+    
     public void textColor(int white) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public void setText(HTMLColor htmlColor) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public void setKeyListener(Consumer <KeyEvent> kl) {
+        keyListener = kl;
+    }
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (keyListener != null) {
+            keyListener.accept(e);
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
     }
 
     public static enum HTMLStyle {
@@ -46,7 +68,6 @@ public class XUITTY extends JEditorPane {
 
     public XUITTY() {
         super();
-
         f = new Font("Monospaced", Font.PLAIN, 12);
         this.setFont(f);
         this.setBackground(Color.BLACK);
@@ -289,6 +310,7 @@ public class XUITTY extends JEditorPane {
         return this;
     }
 
+    
     public void printGrid(int x, int y, int x2, int y2, int level) {
         if (level > 0) {
             int pmx = (x + x2) / 2, pmy = (y + y2) / 2;

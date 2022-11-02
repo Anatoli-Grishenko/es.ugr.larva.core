@@ -1194,7 +1194,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         xuitty = new XUITTY();
         xuitty.init((JPanel) this.payload.getGuiComponents().get("XUI"));
         xuitty.clearScreen();
-        xuitty.render();
+        xuitty.render();        
     }
 
     protected void closeRemote() {
