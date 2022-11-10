@@ -1351,6 +1351,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     //////////////////////
+    
+    
     protected String Transponder() {
         String goal = "";
         String sep = this.sepTransponder, answer = "TRANSPONDER" + sep;
@@ -1361,19 +1363,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } else {
             answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
-        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
-        answer += sep + "GOAL " + E.getCurrentGoal() + sep + "MISSION " + E.getCurrentMission();
+        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + 
+                SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + 
+                sep + "PAYLOAD " + E.getPayload();
+        answer += sep + "GOAL " + E.getCurrentGoal() + 
+                sep + "MISSION " + E.getCurrentMission();
         return answer;
-//    String sep = Mission.sepMissions, answer = "TRANSPONDER" + sep;
-//        answer += "NAME " + getLocalName() + sep + "TYPE " + E.getType();
-//        if (E.getGround() > 0) {
-//            answer += sep + "ONAIR";
-//        } else {
-//            answer += sep + "GROUND " + getEnvironment().getCurrentCity();
-//        }
-//        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + sep + "PAYLOAD " + E.getPayload();
-//        answer += sep + "MISSION " + E.getCurrentMission() + sep + "GOAL " + E.getCurrentGoal();
-//        return answer;
     }
 
     public String getTransponderField(String transponder, String field) {
@@ -1577,19 +1572,20 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.continuousSequence = t;
     }
 
-    protected String askTransponder(String toWhom) {
-        outbox = new ACLMessage(ACLMessage.QUERY_REF);
-        outbox.setSender(getAID());
-        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
-        outbox.setConversationId("TRANSPONDER"+getHexaKey());
-        outbox.setReplyWith(outbox.getConversationId());
-        outbox.setContent("TRANSPONDER");
-        this.LARVAsend(outbox);
-        inbox = LARVAblockingReceive();
-        if (inbox.getPerformative() == ACLMessage.INFORM) {
-            return inbox.getContent();
-        } else {
-            return "";
-        }
-    }
+//    protected String askTransponder(String toWhom) {
+//        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+//        outbox.setSender(getAID());
+//        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+//        outbox.setConversationId("TRANSPONDER"+getHexaKey());
+//        outbox.setReplyWith(outbox.getConversationId());
+//        outbox.setContent("TRANSPONDER");
+//        outbox.setProtocol("DROIDSHIP");
+//        this.LARVAsend(outbox);
+//        inbox = LARVAblockingReceive();
+//        if (inbox.getPerformative() == ACLMessage.INFORM) {
+//            return inbox.getContent();
+//        } else {
+//            return "";
+//        }
+//    }
 }

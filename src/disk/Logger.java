@@ -146,8 +146,8 @@ public class Logger {
     protected boolean initRecord(String filename) {
         File file;
 
-        file = new File(filename);
         if (filename != null) {
+            file = new File(filename);
             if (file.exists()) {
                 if (file.isFile()) {
                     if (_overwrite) {
@@ -297,6 +297,7 @@ public class Logger {
         }
 //    return s;
     }
+
     public static String trimFullString(String original) {
         String s = "", ss[] = original.split(" ");
         for (int i = 0; i < ss.length; i++) {

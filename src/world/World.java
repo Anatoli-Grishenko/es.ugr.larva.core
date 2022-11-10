@@ -933,7 +933,7 @@ public class World {
 //                    agent.Raw().setEnergyburnt(agent.Raw().getEnergyburnt() + agent.Raw().getBurnratemove());
                     res = true;
                     break;
-                case CAPTURE:                    
+                case CAPTURE:
                     String who = command.replace("CAPTURE ", "").trim();
                     Point3D gps = agent.getPosition(),
                      guy = this.getThingByName(who).getPosition();
@@ -1111,7 +1111,12 @@ public class World {
         Point3D lastPoint = null;
         path = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdest));
         if (path != null) {
-            int i = 0, istep = agent.Raw().getRange() * 2;
+            int i = 0, istep;
+            if (this.getName().equals("AlertDeathStar")) {
+                istep = agent.Raw().getRange()/2;
+            } else {
+                istep = agent.Raw().getRange() * 2;
+            }
             for (Choice c : path) {
 //                if (i == path.size() - 1) {
 //                    lastPoint = c.getPosition();

@@ -70,6 +70,7 @@ public class DEST extends DroidShip {
         E.setCurrentMission("WAITING", new String[]{"WAITING REPORT " + tini.elapsedTimeSecsUntil(tend)});
         this.checkOpenUtterances();
         this.LARVAwait(1000);
+//        System.out.println("\n\n"+this.DM.toString()+"\n\n");
         return myStatus;
     }
 

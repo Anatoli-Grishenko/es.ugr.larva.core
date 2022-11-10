@@ -27,6 +27,7 @@ import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.fancyWriteACLM;
 import tools.TimeHandler;
+import static tools.TimeHandler.nextSecs;
 import tools.emojis;
 import world.Perceptor;
 import world.Thing;
@@ -117,6 +118,7 @@ public class DroidShip extends LARVADialogicalAgent {
         this.allowExceptionShield = false;
         this.disableDeepLARVAMonitoring();
         super.setup();
+        logger.setLoggerFileName(null);
         citizenOf = new HashMap();
         myCitizens = new HashMap();
 //        logger.onEcho();
@@ -317,6 +319,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected boolean MyExecuteAction(String action) {
         Info("Executing action " + action);
         outbox = session.createReply();
+        outbox.addUserDefinedParameter("DROIDSHIP", "true");
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setContent("Request execute " + action + " session " + sessionKey);
         outbox.setReplyWith(getHexaKey());
@@ -336,6 +339,7 @@ public class DroidShip extends LARVADialogicalAgent {
         outbox.setContent("Query sensors session " + sessionKey);
         outbox.setPerformative(ACLMessage.QUERY_REF);
         outbox.setReplyWith(getHexaKey());
+        outbox.addUserDefinedParameter("DROIDSHIP", "true");
         this.myEnergy++;
         session = this.blockingDialogue(outbox).get(0);
 //        session = this.fromSessionManager(); //this.LARVAblockingReceive(MessageTemplate.MatchSender(new AID(sessionManager, AID.ISLOCALNAME)));
@@ -520,6 +524,7 @@ public class DroidShip extends LARVADialogicalAgent {
         outbox.setContent("Request course to " + x + " " + y + " Session " + sessionKey);
         outbox.setReplyWith(getHexaKey());
         Info("Request course to " + x + " " + y + " Session " + sessionKey);
+        outbox.addUserDefinedParameter("DROIDSHIP", "true");
         session = this.blockingDialogue(outbox).get(0);
         if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
             E.setExternalPerceptions(session.getContent());
@@ -772,7 +777,21 @@ public class DroidShip extends LARVADialogicalAgent {
         res.setContent(what);
         return res;
     }
-
+//    protected String askTransponder(String toWhom) {
+//        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+//        outbox.setSender(getAID());
+//        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+//        outbox.setConversationId("TRANSPONDER"+getHexaKey());
+//        outbox.setReplyWith(outbox.getConversationId());
+//        outbox.setContent("TRANSPONDER");
+//        this.LARVAsend(outbox);
+//        inbox = LARVAblockingReceive();
+//        if (inbox.getPerformative() == ACLMessage.INFORM) {
+//            return inbox.getContent();
+//        } else {
+//            return "";
+//        }
+//    }
     protected void InfoMessage(String what) {
         Info(what);
         if (debugDroid) {
@@ -880,6 +899,23 @@ public class DroidShip extends LARVADialogicalAgent {
         return MyMoveProblem();
 
     }
+    protected String askTransponder(String toWhom) {
+        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+        outbox.setSender(getAID());
+        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+        outbox.setConversationId("TRANSPONDER"+getHexaKey());
+        outbox.setReplyWith(outbox.getConversationId());
+        outbox.setContent("TRANSPONDER");
+        outbox.setReplyByDate(nextSecs(45).toDate());
+        inBoxes = blockingDialogue(outbox);
+        if (inBoxes.size() > 0 && inBoxes.get(0).getPerformative() == ACLMessage.INFORM) {
+            return inBoxes.get(0).getContent();
+        } else {
+            Alert("No answer to Transponder of " + toWhom);
+            return "";
+        }
+    }
+
 
     protected Status onDemandTransfer(ACLMessage m) {
         try {

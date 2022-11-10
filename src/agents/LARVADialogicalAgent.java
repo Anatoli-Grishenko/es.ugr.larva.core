@@ -419,24 +419,38 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         return false;
     }
 
-    @Override
-    protected String askTransponder(String toWhom) {
-        outbox = new ACLMessage(ACLMessage.QUERY_REF);
-        outbox.setSender(getAID());
-        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
-        outbox.setConversationId("TRANSPONDER");
-        outbox.setReplyWith("TRANSPONDER");
-        outbox.setContent("TRANSPONDER");
-        outbox.setReplyByDate(nextSecs(45).toDate());
-        inBoxes = blockingDialogue(outbox);
-        if (inBoxes.size() > 0 && inBoxes.get(0).getPerformative() == ACLMessage.INFORM) {
-            return inBoxes.get(0).getContent();
-        } else {
-            Alert("No answer to Transponder of " + toWhom);
-            return "";
-        }
-    }
-
+//    protected String askTransponder(String toWhom) {
+//        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+//        outbox.setSender(getAID());
+//        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+//        outbox.setConversationId("TRANSPONDER"+getHexaKey());
+//        outbox.setReplyWith(outbox.getConversationId());
+//        outbox.setContent("TRANSPONDER");
+//        outbox.setProtocol("DROIDSHIP");
+//        this.LARVAsend(outbox);
+//        inbox = LARVAblockingReceive();
+//        if (inbox.getPerformative() == ACLMessage.INFORM) {
+//            return inbox.getContent();
+//        } else {
+//            return "";
+//        }
+//    }//    protected String askTransponder(String toWhom) {
+////        outbox = new ACLMessage(ACLMessage.QUERY_REF);
+////        outbox.setSender(getAID());
+////        outbox.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
+////        outbox.setConversationId("TRANSPONDER");
+////        outbox.setReplyWith("TRANSPONDER");
+////        outbox.setContent("TRANSPONDER");
+////        outbox.setReplyByDate(nextSecs(45).toDate());
+////        inBoxes = blockingDialogue(outbox);
+////        if (inBoxes.size() > 0 && inBoxes.get(0).getPerformative() == ACLMessage.INFORM) {
+////            return inBoxes.get(0).getContent();
+////        } else {
+////            Alert("No answer to Transponder of " + toWhom);
+////            return "";
+////        }
+////    }
+////
     @Override
     public String toString() {
         return DM.toString();

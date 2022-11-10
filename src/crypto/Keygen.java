@@ -1,5 +1,3 @@
-
-
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -7,6 +5,10 @@
  */
 package crypto;
 
+import static glossary.Nombres.Apellidos;
+import static glossary.Nombres.Calles;
+import static glossary.Nombres.Hombre;
+import static glossary.Nombres.Mujer;
 import java.math.BigInteger;
 
 /**
@@ -15,10 +17,11 @@ import java.math.BigInteger;
  */
 public class Keygen {
 
-    public static final String HEXATOMS = "0123456789ABCDEF", 
+    public static final String HEXATOMS = "0123456789ABCDEF", NUMATOMS = "0123456789",
             VOWELS = "aaaeeioou",
-            CLINK="rsnlm",
-            CONSONANTS = CLINK+"bcdfghjklmnprstvwz";
+            LETTERS="ABCDEFGHIJKLOMNOPQRSTUVWXYZ",
+            CLINK = "rsnlm",
+            CONSONANTS = CLINK + "bcdfghjklmnprstvwz";
     public static final String ALPHANUMATOMS = " abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-";
     public static final int KOFF = 10;
 
@@ -42,6 +45,20 @@ public class Keygen {
             newkey = newkey + ALPHANUMATOMS.charAt(1 + (int) (Math.random() * (ALPHANUMATOMS.length() - 1)));
         }
         return newkey;
+    }
+
+    public static String getDNI(String dni) {
+        
+        int suma=0, d;
+        for (int i=0; i<dni.length(); i++) {
+            try {
+                d=Integer.parseInt(dni.substring(i, i+1));
+            }catch(Exception ex) {
+                d=1;
+            }
+            suma +=d;
+        }
+        return ""+LETTERS.charAt(suma%13);
     }
 
     public static String getWordo(int length) {
@@ -82,6 +99,31 @@ public class Keygen {
             newkey = newkey + HEXATOMS.charAt((int) (Math.random() * HEXATOMS.length()));
         }
         return newkey;
+    }
+
+    public static String getNumKey(int length) {
+        String newkey = "";
+        final int len = length;
+        for (int i = 0; i < len; i++) {
+            newkey = newkey + NUMATOMS.charAt((int) (Math.random() * NUMATOMS.length()));
+        }
+        return newkey;
+    }
+
+    public static String getNombre() {
+        if (Math.random() < 0.5) {
+            return Hombre[(int) (Math.random() * Hombre.length)];
+        } else {
+            return Mujer[(int) (Math.random() * Mujer.length)];
+        }
+    }
+
+    public static String getApellido() {
+        return Apellidos[(int) (Math.random() * Apellidos.length)];
+    }
+
+    public static String getCalle() {
+        return Calles[(int) (Math.random() * Calles.length)];
     }
 
     private void initCode(String input) {

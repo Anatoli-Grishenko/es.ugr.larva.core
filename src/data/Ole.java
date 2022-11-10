@@ -107,7 +107,7 @@ public class Ole extends JsonObject {
      * @param jsole The JsonObject
      * @return A valid importation to a Ole Object
      */
-    public static Ole Json2Ole(JsonObject jsole) {
+    public static Ole Json2Ole(JsonObject jsole) {     
         return new Ole(jsole);
     }
 

@@ -5,6 +5,7 @@
  */
 package data;
 
+import data.*;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -19,14 +20,15 @@ import java.util.HashMap;
  *
  * @author lcv
  */
-public class OleTable extends Ole {
-
-    public OleTable() {
+public class OleMatrix extends Ole {
+    ArrayList<Ole> oRows;
+    
+    public OleMatrix() {
         super();
         InitTable();
     }
 
-    public OleTable(Ole o) {
+    public OleMatrix(Ole o) {
         super(o);
         InitTable();
     }
@@ -36,7 +38,7 @@ public class OleTable extends Ole {
         return this.size() < 1;
     }
 
-    public OleTable(ResultSet rs) {
+    public OleMatrix(ResultSet rs) {
         super();
         InitTable();
         Ole aux;
@@ -107,19 +109,15 @@ public class OleTable extends Ole {
 
     }
 
-    protected void InitTable() {
+    private void InitTable() {
         setType(oletype.OLETABLE.name());
-        add("rows", new JsonArray()); // No añade el field
+        oRows=new ArrayList();
     }
 
-    public int rowSize() {
-        return get("rows").asArray().size();
+    public ArrayList<Ole> rawRows(){
+        return oRows;
     }
-    public JsonArray rawRows(){
-        return this.get("rows").asArray();
-    }
-    
-    protected void initRows() {
+    private void initRows() {
         if (rawRows().size() > 0) {
             Ole o = new Ole(rawRows().get(0).asObject());
             for (String f : o.getFieldList()) {
@@ -128,18 +126,14 @@ public class OleTable extends Ole {
         }
     }
 
-    public OleTable addRow(Ole o) {
-        rawRows().add(o);
-        if (rawRows().size() == 1) {
-            initRows();
-        }
+    public OleMatrix addRow(Ole o) {
+        oRows.add(o);
         return this;
     }
     
     public Ole getRow(int r) {
         if (0 <= r && r < size()) {
-            return new Ole(rawRows().get(r).asObject());
-//            return new Ole(rawRows().get(r).asObject().toString());
+            return oRows.get(r);
         } else {
             return new Ole();
         }
@@ -147,10 +141,9 @@ public class OleTable extends Ole {
 
     public Ole getRow(String field, int value) {
         Ole res = new Ole(), aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getInt(field) == value) {
-                return aux;
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getInt(field) == value) {
+                return jsvo;
             }
         }
         return res;
@@ -159,10 +152,9 @@ public class OleTable extends Ole {
 
     public Ole getRow(String field, String value) {
         Ole res = new Ole(), aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getField(field).equals(value)) {
-                return aux;
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getField(field).equals(value)) {
+                return jsvo;
             }
         }
         return res;
@@ -170,16 +162,14 @@ public class OleTable extends Ole {
     }
 
     public ArrayList<Ole> getAllRows() {
-        return new ArrayList(Transform.toArrayList(rawRows()));
+        return oRows;
     }
 
     public ArrayList<Ole> getAllRows(String field, String value) {
         ArrayList<Ole> res = new ArrayList();
-        Ole aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getField(field).equals(value)) {
-                res.add(aux);
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getField(field).equals(value)) {
+                res.add(jsvo);
             }
         }
         return res;
@@ -187,42 +177,36 @@ public class OleTable extends Ole {
 
     public ArrayList<Ole> getAllRows(String field, int value) {
         ArrayList<Ole> res = new ArrayList();
-        Ole aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getInt(field) == value) {
-                res.add(aux);
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getInt(field) == value) {
+                res.add(jsvo);
             }
         }
         return res;
     }
 
-    public OleTable getAllRowsOleTable(String field, String value) {
-        OleTable res = new OleTable();
-        Ole aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getField(field).equals(value)) {
-                res.addRow(aux);
+    public OleMatrix getAllRowsOleTable(String field, String value) {
+        OleMatrix res = new OleMatrix();
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getField(field).equals(value)) {
+                res.addRow(jsvo);
             }
         }
         return res;
     }
 
-    public OleTable getAllRowsOleTable(String field, int value) {
-        OleTable res = new OleTable();
-        Ole aux;
-        for (JsonValue jsvo : rawRows()) {
-            aux = new Ole(jsvo.asObject());
-            if (aux.getInt(field) == value) {
-                res.addRow(aux);
+    public OleMatrix getAllRowsOleTable(String field, int value) {
+        OleMatrix res = new OleMatrix();
+        for (Ole jsvo : rawRows()) {
+            if (jsvo.getInt(field) == value) {
+                res.addRow(jsvo);
             }
         }
         return res;
     }
 
     public int size() {
-        return rawRows().size();
+        return oRows.size();
     }
 
     public String prettyprint() {
@@ -232,7 +216,7 @@ public class OleTable extends Ole {
         for (; i<size();i++){ 
             if (i == 0) {
                 res += "|";
-                names = new ArrayList(getFieldList());
+                names = new ArrayList(getRow(0).getFieldList());
                 for (String col : names) {
                     res += String.format("%15s|", col);
                 }
@@ -248,33 +232,9 @@ public class OleTable extends Ole {
             }
         }
         res += "\n";
+
         return res;
     }
-//    public String prettyprint() {
-//        String res = "";
-//        ArrayList<String> names = new ArrayList();
-//        int i = 0;
-//        for (Ole orow : getAllRows()) {
-//            if (i == 0) {
-//                res += "|";
-//                names = new ArrayList(getFieldList());
-//                for (String col : names) {
-//                    res += String.format("%15s|", col);
-//                }
-//                res += "\n+";
-//                for (String col : names) {
-//                    res += "---------------+";
-//                }
-//            }
-//            res += "\n|";
-//            for (String key : names) {
-//                String value = orow.getField(key);
-//                res += String.format("%15s|", value.substring(0, Math.min(15, value.length())));
-//            }
-//            i++;
-//        }
-//        res += "\n";
-//
-//        return res;
-//    }
+    
+    
 }
