@@ -39,7 +39,7 @@ public class BB1F extends DroidShip {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
                     Info("Received CANCEL");
                     this.offMission();
-                    this.forgetUtterance(m);
+                    this.forget(m);
                     return Status.CHOOSEMISSION;
                 } else {
                     this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, I am busy", null));
@@ -47,7 +47,7 @@ public class BB1F extends DroidShip {
             } else {
                 if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
                     if (m.getContent().toUpperCase().equals("REFILL")) {
-                        this.forgetUtterance(m);
+                        this.forget(m);
                         return this.onDemandRefill(m);
 //                        //logger.onEcho();
 //                        InfoMessage("Received REFILL from " + toWhom + " asking Transponder");

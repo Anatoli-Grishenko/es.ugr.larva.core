@@ -47,7 +47,7 @@ public class DEST extends DroidShip {
                 InfoMessage("I have received a report." 
                         +"\n"+emojis.ROBOT+" From: "+m.getSender().getLocalName()+
                         "\n"+emojis.FOLDER+" Content: "+m.getContent());
-                this.forgetUtterance(m);
+                this.forget(m);
                 Status sAux=this.onDemandReport(m);
                 return sAux;
             } else if (m.getContent().startsWith("TRANSFER")) {

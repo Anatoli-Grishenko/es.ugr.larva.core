@@ -68,7 +68,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
 
     public XUITTY() {
         super();
-        f = new Font("Monospaced", Font.PLAIN, 12);
+        f = new Font("Monospaced", Font.PLAIN, 18);
         this.setFont(f);
         this.setBackground(Color.BLACK);
         this.setForeground(Color.WHITE);

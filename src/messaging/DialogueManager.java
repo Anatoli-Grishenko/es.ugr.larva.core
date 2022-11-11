@@ -12,6 +12,7 @@ import javax.net.ssl.SSLEngineResult;
 import static messaging.ACLMessageTools.ACLMID;
 import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
+import static messaging.ACLMessageTools.getReceiverList;
 import static messaging.ACLMessageTools.isInitiator;
 import static messaging.ACLMessageTools.secureACLM;
 import tools.TimeHandler;
@@ -117,9 +118,13 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
         }
         this.checkAllUtterances();
         if (!msg.getSender().getLocalName().equals(this.AgentOwner)
-                || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
+                || getReceiverList(msg).contains(this.AgentOwner)) {
             fullQueue.add(msg);
         }
+//        if (!msg.getSender().getLocalName().equals(this.AgentOwner)
+//                || ACLMessageTools.getMainReceiver(msg).getLocalName().equals(this.AgentOwner)) {
+//            fullQueue.add(msg);
+//        }
 //        if (previous != null && previous.isAlive()) {
 //            previous.close();
 //        }

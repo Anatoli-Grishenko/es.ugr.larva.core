@@ -453,7 +453,7 @@ public class DroidShip extends LARVADialogicalAgent {
 //                        }
 //                        outbox = this.respondTo(null, ACLMessage.INFORM, "DONE", goalTokens[1]);
 //                        Dialogue(outbox);
-//                        this.forgetUtterance(outbox);
+//                        this.forget(outbox);
 //                        this.offMission();
 //                        logger.offEcho();
 //                        return Status.CHOOSEMISSION;
@@ -480,7 +480,7 @@ public class DroidShip extends LARVADialogicalAgent {
 //                    if (pTarget.isEqualTo(E.getGPS())) {
 //                        outbox = this.respondTo(null, ACLMessage.INFORM, "DONE", goalTokens[1]);
 //                        Dialogue(outbox);
-//                        this.forgetUtterance(outbox);
+//                        this.forget(outbox);
 //                        logger.offEcho();
 //                        return Status.WAIT;
 //                    } else {
@@ -745,12 +745,12 @@ public class DroidShip extends LARVADialogicalAgent {
 //            InfoMessage("Received request from " + m.getSender().getLocalName());
             if (!m.getContent().startsWith("REPORT")) {
                 if (!m.getProtocol().equals("DROIDSHIP")) {
-                    forgetUtterance(m);
+                    forget(m);
                 } else if (m.getPerformative() == ACLMessage.QUERY_REF && m.getContent().toUpperCase().equals("TRANSPONDER")
                         && m.getPerformative() == ACLMessage.QUERY_REF) {
                     outbox = respondTo(m, ACLMessage.INFORM, this.Transponder(), null);
                     this.Dialogue(outbox);
-                    this.forgetUtterance(m);
+                    this.forget(m);
                 }
             }
         }
@@ -812,7 +812,7 @@ public class DroidShip extends LARVADialogicalAgent {
             if (pTarget.isEqualTo(E.getGPS())) {
                 outbox = this.respondTo(null, ACLMessage.INFORM, "Backup to " + toWhom + " starts now!\nRoger! Roger!", goalTokens[1]);
                 Dialogue(outbox);
-                this.forgetUtterance(outbox);
+                this.forget(outbox);
 //                logger.offEcho();
                 return Status.WAIT;
             } else {
@@ -846,7 +846,7 @@ public class DroidShip extends LARVADialogicalAgent {
                 }
                 outbox = this.respondTo(null, ACLMessage.INFORM, "Recharge completed!", goalTokens[1]);
                 Dialogue(outbox);
-                this.forgetUtterance(outbox);
+                this.forget(outbox);
                 this.offMission();
                 logger.offEcho();
                 return Status.CHOOSEMISSION;
@@ -987,7 +987,7 @@ public class DroidShip extends LARVADialogicalAgent {
             outbox.setContent("Disconfirm " + census);
             outbox.setReplyWith("Disconfirm");
             this.Dialogue(outbox);
-            this.forgetUtterance(m);
+            this.forget(m);
             return myStatus;
         }
     }

@@ -43,7 +43,7 @@ public class MTT extends DroidShip {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
 //                    "Backup to " + toWhom + " has just finished\nGood luck!"
                     InfoMessage("Backup to " + toWhom + " has just finished\nGood luck!");
-                    this.forgetUtterance(m);
+                    this.forget(m);
                     this.offMission();
                     return Status.CHOOSEMISSION;
                 } else {
@@ -52,7 +52,7 @@ public class MTT extends DroidShip {
             } else {
                 if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
                     if (m.getContent().equals("BACKUP")) {
-                        this.forgetUtterance(m);
+                        this.forget(m);
                         return this.onDemandBackup(m);
                         //logger.onEcho();
 //                        InfoMessage("Received BACKUP from " + toWhom + " asking Transponder");

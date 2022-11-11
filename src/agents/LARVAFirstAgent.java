@@ -146,7 +146,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected String sessionAlias = "";
 
     protected boolean securedMessages;
-    protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "";
+    protected String lastSentMsg = "", lastRecMsg = "", lastSentACLMID = "", fixedReceiver;
     protected static String sepTransponder = "/", sepGoals = ";";
     protected int nlastSentMsg = 0, nlastSentACLMID = 0, nlastRecMsg = 0, nrecErrors = 0;
     private ACLMessage lastSend, lastReceive;
@@ -730,6 +730,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
         msg = super.LARVAprocessSendMessage(msg);
+        if (getFixedReceiver()!= null ) {
+            msg.addReceiver(new AID(getFixedReceiver(), AID.ISLOCALNAME));
+        }
         this.addMilestone("MILES04");
         if (this.isSecuredMessages()) {
             this.secureSend(msg);
@@ -1572,6 +1575,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.continuousSequence = t;
     }
 
+    
 //    protected String askTransponder(String toWhom) {
 //        outbox = new ACLMessage(ACLMessage.QUERY_REF);
 //        outbox.setSender(getAID());
@@ -1588,4 +1592,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            return "";
 //        }
 //    }
+
+    public String getFixedReceiver() {
+        return fixedReceiver;
+    }
+
+    public void setFixedReceiver(String fixedReceiver) {
+        this.fixedReceiver = fixedReceiver;
+    }
 }

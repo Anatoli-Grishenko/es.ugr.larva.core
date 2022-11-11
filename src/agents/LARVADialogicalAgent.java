@@ -47,11 +47,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OVERDUE;
     }
 
-    protected boolean isCompleteUtterance(ACLMessage msg) {
+    protected boolean isComplete(ACLMessage msg) {
         return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.COMPLETE;
     }
 
-    protected boolean isAliveUtterance(ACLMessage msg) {
+    protected boolean isAlive(ACLMessage msg) {
         if (DM.getMyUtterance(msg) != null) {
             return DM.getMyUtterance(msg).isAlive();
         }
@@ -206,12 +206,12 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         return u.getInitiator();
     }
 
-    protected void forgetUtterance(ACLMessage msg) {
-        closeUtterance(msg);
+    protected void forget(ACLMessage msg) {
+        close(msg);
         DM.removeUtterance(msg);
     }
 
-    protected void closeUtterance(ACLMessage msg) {
+    protected void close(ACLMessage msg) {
         if (msg == null || DM.getMyUtterance(msg) == null) {
             return;
         }
@@ -260,7 +260,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 //        }
         Info("Wake up!. I have received " + fancyWriteACLM(received, true));
         if (msg != null) {
-            this.closeUtterance(msg);
+            this.close(msg);
         }
     }
 
@@ -279,12 +279,12 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
                 this.waitOpenUtterance(msg);
             }
             res = this.getAnswersTo(msg);
-//            this.closeUtterance(msg);
-            this.forgetUtterance(msg);
+//            this.close(msg);
+            this.forget(msg);
         }
         if (DM.getPrevUtterance(msg) != null) {
             DM.getPrevUtterance(msg).close();
-//            this.forgetUtterance(DM.getPrevUtterance(msg).getStarter());
+//            this.forget(DM.getPrevUtterance(msg).getStarter());
         }
         return res;
 
@@ -295,7 +295,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 //            Info("Waiting to close utterance");
 //            this.waitOpenUtterance(msg);
 //        }
-//        this.closeUtterance(msg);
+//        this.close(msg);
 //        return this.getAnswersTo(msg);
 //    }
 //
