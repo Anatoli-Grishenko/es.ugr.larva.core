@@ -1,4 +1,9 @@
 
+# 2022-11-15
+   - Serveral bug fixes
+      - One that ITT were not allowed to CAPTURE nobody (damn!) because this capability of the agent was not activated in SensorDecoder (perhaps it never did)
+      - Added TelegramBotsApi 6.1 as a new dependence of larva.core This means that, in order to compile this version, you must add this library to the project, that is, Projects-larva.core-Libraries-Add JAr folder. This new library  may be found in src/resource/dependencies
+      
 # 2022-10-25
    - Bugfixes
       - Remove the need to use performative and conversationID in the dialogue to DEST in Lab1. It is not required to do so.

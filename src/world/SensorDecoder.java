@@ -1942,6 +1942,7 @@ public class SensorDecoder {
                     capability.BOARD.name().toUpperCase(),
                     capability.DEBARK.name().toUpperCase(),
                     capability.RECHARGE.name().toUpperCase(),
+                    capability.CAPTURE.name().toUpperCase(),
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
