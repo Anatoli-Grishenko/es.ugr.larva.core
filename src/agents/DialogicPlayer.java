@@ -6,28 +6,12 @@
 package agents;
 
 import agents.LARVADialogicalAgent;
-import agents.LARVAFirstAgent;
-import appboot.XUITTY;
-import appboot.XUITTY.HTMLColor;
-import static appboot.XUITTY.HTMLColor.Blue;
-import static appboot.XUITTY.HTMLColor.DodgerBlue;
-import static appboot.XUITTY.HTMLColor.Gray;
-import static appboot.XUITTY.HTMLColor.Green;
-import static appboot.XUITTY.HTMLColor.Red;
-import static appboot.XUITTY.HTMLColor.White;
 import data.Ole;
 import data.OleConfig;
 import glossary.Dictionary;
-import jade.core.AID;
-import jade.lang.acl.ACLMessage;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import messaging.ACLMessageTools;
 import swing.OleDialog;
-import tools.TimeHandler;
 
 /**
  *
@@ -36,7 +20,7 @@ import tools.TimeHandler;
 public class DialogicPlayer extends LARVADialogicalAgent {
 
     protected ArrayList<String> Players;
-    protected String Service = "PLAYER", AutoService="PLAYER AUTO";
+    protected String Service = "PLAYER", AutoService = "PLAYER AUTO";
 
     protected enum Status {
         WAIT, SEND, RECEIVE, ANSWER, EXIT
@@ -47,6 +31,7 @@ public class DialogicPlayer extends LARVADialogicalAgent {
     @Override
     public void setup() {
         super.setup();
+        deactivateSequenceDiagrams();
         setFixedReceiver("CONTROLLER");
         myStatus = Status.WAIT;
         Dict = new Dictionary();
@@ -55,7 +40,7 @@ public class DialogicPlayer extends LARVADialogicalAgent {
 
     @Override
     public void Execute() {
-        Info("Status: "+myStatus.name());
+        Info("Status: " + myStatus.name());
         switch (myStatus) {
             case WAIT:
                 myStatus = myWait();
@@ -70,7 +55,11 @@ public class DialogicPlayer extends LARVADialogicalAgent {
                 myStatus = myAnswer();
                 break;
             case EXIT:
-                doExit();
+                if (Confirm("Do you want to exit?")) {
+                    doExit();
+                } else {
+                    myStatus=Status.WAIT;
+                }
                 break;
         }
     }
@@ -86,16 +75,17 @@ public class DialogicPlayer extends LARVADialogicalAgent {
     }
 
     public Status myWait() {
-        getIn();
+        ///
         return Status.SEND;
     }
 
     public Status mySend() {
-
+        ///
         return Status.RECEIVE;
     }
 
     public Status myReceive() {
+        ///
         return Status.ANSWER;
     }
 
@@ -103,12 +93,13 @@ public class DialogicPlayer extends LARVADialogicalAgent {
         return Status.SEND;
     }
 
-    public void findPlayers() {
-        Players = DFGetAllProvidersOf(AutoService);
-        if (Players.contains(getLocalName())) {
-            Players.remove(getLocalName());
+    public ArrayList<String> findPlayers() {
+        ArrayList<String> res = DFGetAllProvidersOf(Service);
+        if (res.contains(getLocalName())) {
+            res.remove(getLocalName());
         }
-        Collections.sort(Players);
+        Collections.sort(res);
+        return res;
     }
 
     public ArrayList<String> selectReceivers(ArrayList<String> values, boolean multiple) {
@@ -133,10 +124,10 @@ public class DialogicPlayer extends LARVADialogicalAgent {
     public String selectWord(String word) {
         String w;
         if (word == null || word.length() == 0) {
-            w = inputLine("PLease intro a word in Spanish");
+            w = inputLine("Please intro a word in Spanish");
 
         } else {
-            w = Dict.findNextWord(word);
+            w = inputLine("Please intro a word in Spanish to answer to " + word + "\nSuggestions:" + Dict.findNextWords(word, 5).toString());
         }
         Info("Select word " + w);
         return w;
@@ -144,6 +135,9 @@ public class DialogicPlayer extends LARVADialogicalAgent {
 
     public boolean rollDice(double threshold) {
         return Math.random() > threshold;
+    }
+    public String myMethod() {
+        return Thread.currentThread().getStackTrace()[2].getMethodName();
     }
 
 }

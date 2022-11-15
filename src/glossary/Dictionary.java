@@ -5,6 +5,7 @@
  */
 package glossary;
 
+import crypto.Keygen;
 import static crypto.Keygen.getWordo;
 import java.io.File;
 import java.util.ArrayList;
@@ -17,42 +18,42 @@ import java.util.Scanner;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class Dictionary {
-
+    
     public static final int ALL = Integer.MAX_VALUE;
     protected HashMap<String, Dictionary> lexicon;
     protected final String delim = ".";
     protected String root, name;
-    protected long nWords=0;
-
+    protected long nWords = 0;
+    
     public Dictionary() {
         lexicon = new HashMap();
         root = "";
     }
-
+    
     public Dictionary(String root) {
         lexicon = new HashMap();
         this.root = root.toUpperCase();
     }
-
+    
     public String getName() {
         return name;
     }
-
+    
     public void setName(String name) {
         this.name = name;
     }
-
+    
     public long getnWords() {
         return nWords;
     }
-
+    
     public void setnWords(long nWords) {
         this.nWords = nWords;
     }
-
+    
     public void load(String filename) {
         try {
-            name=filename;
+            name = filename;
             Scanner s = new Scanner(new File(filename));
             String line;
             while (s.hasNext()) {
@@ -60,23 +61,54 @@ public class Dictionary {
                 this.addWord(line);
                 nWords++;
             }
+            System.out.println("Word count:" + nWords);
         } catch (Exception ex) {
-
+            
         }
     }
-
+    
     public String findFirstWord() {
         String wordo;
         ArrayList<String> words;
         do {
-            wordo = getWordo(4);
+            wordo = Keygen.getAlphaKey(2);
             words = completeWord(wordo, 25);
         } while (words.size() == 0);
         return words.get((int) (Math.random() * words.size()));
     }
-
+    
     public String findNextWord(String word) {
-        ArrayList<String> words;
+        ArrayList<String> words = findNextWords(word, 100);
+        if (words.size() > 0) {
+            return words.get((int) (Math.random() * words.size()));
+        } else {
+            return null;
+        }
+
+//        ArrayList<String> words;
+//        String next;
+//        int n = word.length();
+//        do {
+//            try {
+//                words = completeWord(word.substring(word.length() - n), 10);
+//                if (words.size() > 1) {
+//                    do {
+//                        next = words.get((int) (Math.random() * words.size()));
+//                    } while (next.equals(word));
+//                    return next;
+//                }
+//            } catch (Exception ex) {
+//
+//            }
+//            n--;
+//            if (n == 0) {
+//                return null;
+//            }
+//        } while (true);
+    }
+    
+    public ArrayList<String> findNextWords(String word, int many) {
+        ArrayList<String> res = new ArrayList(), words = new ArrayList();
         String next;
         int n = word.length();
         do {
@@ -86,28 +118,36 @@ public class Dictionary {
                     do {
                         next = words.get((int) (Math.random() * words.size()));
                     } while (next.equals(word));
-                    return next;
+                    res.add(next);
+                    if (res.size() == many) {
+                        Collections.shuffle(res);
+                        return res;
+                    }
                 }
             } catch (Exception ex) {
-
+                
             }
             n--;
             if (n == 0) {
-                return null;
+                return res;
             }
         } while (true);
     }
-
+    
     public int checkWords(String prev, String next) {
+        prev = prev.toUpperCase();
+        next=next.toUpperCase();
         int res = -1, max = (int) (Math.min(prev.length(), next.length()));
-        for (int i = 0; i < max; i++) {
-            if (prev.endsWith(next.substring(0, i + 1))) {
-                res = i;
+        if (findWord(prev) && findWord(next)) {
+            for (int i = 0; i < max; i++) {
+                if (prev.endsWith(next.substring(0, i))) {
+                    res = i;
+                }
             }
         }
         return res;
     }
-
+    
     public void addWord(String word) {
         if (word.length() == 0) {
             lexicon.put(delim, new Dictionary(this.root));
@@ -121,7 +161,7 @@ public class Dictionary {
         }
         lexicon.get(first).addWord(rest);
     }
-
+    
     public boolean findWord(String word) {
         if (word.length() == 0) {
             if (lexicon.get(delim) != null) {
@@ -139,7 +179,7 @@ public class Dictionary {
             return false;
         }
     }
-
+    
     public ArrayList<String> completeWord(String word, int max) {
         if (word.length() == 0) {
             return this.preOrder(max);
@@ -153,11 +193,11 @@ public class Dictionary {
             return new ArrayList();
         }
     }
-
+    
     public String toString() {
         return preOrderS("", "");
     }
-
+    
     public ArrayList<String> preOrder(int max) {
         if (max < 0) {
             return new ArrayList();
@@ -176,7 +216,7 @@ public class Dictionary {
         }
         return res;
     }
-
+    
     public String preOrderS(String res, String current) {
         ArrayList<String> keys = new ArrayList(lexicon.keySet());
         Collections.sort(keys);

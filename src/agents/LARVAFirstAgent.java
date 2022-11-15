@@ -69,6 +69,7 @@ import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
+import static messaging.ACLMessageTools.getReceiverList;
 import swing.SwingTools;
 
 /**
@@ -730,8 +731,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
         msg = super.LARVAprocessSendMessage(msg);
-        if (getFixedReceiver()!= null ) {
-            msg.addReceiver(new AID(getFixedReceiver(), AID.ISLOCALNAME));
+        if (getFixedReceiver() != null) {
+            ACLMessage ghost = new ACLMessage(msg.getPerformative());
+            ghost.setSender(getAID());
+            ghost.addReceiver(new AID(getFixedReceiver(), AID.ISLOCALNAME));
+            ghost.setConversationId(msg.getConversationId());
+            ghost.setContent(msg.getContent());
+            ghost.setReplyWith(msg.getReplyWith());
+            ghost.setInReplyTo(msg.getInReplyTo());
+            ghost.setReplyByDate(msg.getReplyByDate());
+            for (String s : getReceiverList(msg)) {
+                ghost.addReplyTo(new AID(s, AID.ISLOCALNAME));
+            }
+            ghost.addUserDefinedParameter("XINREPLYTO", msg.getInReplyTo());
+            this.send(ghost);
+//            msg.addReceiver(new AID(getFixedReceiver(), AID.ISLOCALNAME));
         }
         this.addMilestone("MILES04");
         if (this.isSecuredMessages()) {
@@ -745,6 +759,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         this.addSequenceDiagram(msg);
         checkDeepMilestones(msg);
+        msg.addUserDefinedParameter("XINREPLYTO", msg.getInReplyTo());
         return msg;
     }
 
@@ -1197,7 +1212,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         xuitty = new XUITTY();
         xuitty.init((JPanel) this.payload.getGuiComponents().get("XUI"));
         xuitty.clearScreen();
-        xuitty.render();        
+        xuitty.render();
     }
 
     protected void closeRemote() {
@@ -1354,8 +1369,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     //////////////////////
-    
-    
     protected String Transponder() {
         String goal = "";
         String sep = this.sepTransponder, answer = "TRANSPONDER" + sep;
@@ -1366,11 +1379,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } else {
             answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
-        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE " + 
-                SimpleVector3D.Dir[E.getGPSVector().getsOrient()] + 
-                sep + "PAYLOAD " + E.getPayload();
-        answer += sep + "GOAL " + E.getCurrentGoal() + 
-                sep + "MISSION " + E.getCurrentMission();
+        answer += sep + "GPS " + E.getGPS().toString() + sep + "COURSE "
+                + SimpleVector3D.Dir[E.getGPSVector().getsOrient()]
+                + sep + "PAYLOAD " + E.getPayload();
+        answer += sep + "GOAL " + E.getCurrentGoal()
+                + sep + "MISSION " + E.getCurrentMission();
         return answer;
     }
 
@@ -1575,7 +1588,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.continuousSequence = t;
     }
 
-    
 //    protected String askTransponder(String toWhom) {
 //        outbox = new ACLMessage(ACLMessage.QUERY_REF);
 //        outbox.setSender(getAID());
@@ -1592,7 +1604,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            return "";
 //        }
 //    }
-
     public String getFixedReceiver() {
         return fixedReceiver;
     }

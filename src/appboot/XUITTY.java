@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import swing.SwingTools;
 
 /**
  *
@@ -23,7 +24,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
 
     public static final String windowFrames[] = {"┌┐└┘─│┬┴┼┤├▄", "++++-|", "▁▂▃▄▅▆▇█", "▏▎▍▌▋▊▉█"};
     protected Consumer<KeyEvent> keyListener;
-    
+
     public void textColor(int white) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -32,9 +33,10 @@ public class XUITTY extends JEditorPane implements KeyListener {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public void setKeyListener(Consumer <KeyEvent> kl) {
+    public void setKeyListener(Consumer<KeyEvent> kl) {
         keyListener = kl;
     }
+
     @Override
     public void keyTyped(KeyEvent e) {
         if (keyListener != null) {
@@ -55,7 +57,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
     };
 
     public static enum HTMLColor {
-        Orange, Green, Blue, Yellow, Purple, Red, Brown, Gray, LightGray, DarkGray, DarkSeaGreen, DodgerBlue, White, Black
+        Orange, Green, Blue, Yellow, Purple, Cyan, Red, Brown, Gray, LightGray, DarkGray, DarkSeaGreen, DodgerBlue, White, Black
     }
     Container cXui;
     String matrix[][];
@@ -68,7 +70,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
 
     public XUITTY() {
         super();
-        f = new Font("Monospaced", Font.PLAIN, 18);
+        f = new Font("Monospaced", Font.BOLD, 16);
         this.setFont(f);
         this.setBackground(Color.BLACK);
         this.setForeground(Color.WHITE);
@@ -94,7 +96,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
         cXui.validate();
         bold = false;
         italic = false;
-        width = this.getPreferredSize().width / f.getSize() * 3 / 2;
+        width = this.getPreferredSize().width / f.getSize() * 2; // * 3 / 2;
         height = this.getPreferredSize().height / f.getSize() - 1;
         matrix = new String[height][width];
         clearScreen();
@@ -103,7 +105,9 @@ public class XUITTY extends JEditorPane implements KeyListener {
     }
 
     public void render() {
-        setText(toString());
+        SwingTools.doSwingWait(() -> {
+            setText(toString());
+        });
     }
 
     public XUITTY setBold(boolean b) {
@@ -127,7 +131,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
             if (italic) {
                 c = "<i>" + c + "</i>";
             }
-            c = "<font color=\"" + color.name().toLowerCase() + "\">" + c + "</font>";
+            c = "<font color=\"" + color.name()/*.toLowerCase()*/ + "\">" + c + "</font>";
             matrix[y][x] = c;
         }
     }
@@ -310,7 +314,6 @@ public class XUITTY extends JEditorPane implements KeyListener {
         return this;
     }
 
-    
     public void printGrid(int x, int y, int x2, int y2, int level) {
         if (level > 0) {
             int pmx = (x + x2) / 2, pmy = (y + y2) / 2;

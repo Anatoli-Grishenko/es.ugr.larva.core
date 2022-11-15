@@ -418,11 +418,12 @@ public class Ole extends JsonObject {
         } else if (jsv.isString()) {
             return oletype.STRING.name();
         } else if (jsv.isNumber()) {
-            if (jsv.toString().contains(".")) {
                 return oletype.DOUBLE.name();
-            } else {
-                return oletype.INTEGER.name();
-            }
+//            if (jsv.toString().contains(".")) {
+//                return oletype.DOUBLE.name();
+//            } else {
+//                return oletype.INTEGER.name();
+//            }
         } else if (jsv.isArray()) {
             return oletype.ARRAY.name();
         } else if (jsv.isObject()) {

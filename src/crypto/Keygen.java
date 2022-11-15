@@ -47,6 +47,15 @@ public class Keygen {
         return newkey;
     }
 
+    public static String getAlphaKey(int length) {
+        String newkey = "";
+        final int len = length;
+        for (int i = 0; i < len; i++) {
+            newkey = newkey + LETTERS.charAt(1 + (int) (Math.random() * (LETTERS.length() - 1)));
+        }
+        return newkey;
+    }
+
     public static String getDNI(String dni) {
         
         int suma=0, d;

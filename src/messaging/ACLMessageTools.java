@@ -82,6 +82,16 @@ public class ACLMessageTools {
         return res;
     }
 
+    public static ArrayList<String> getReplyToList(ACLMessage msg) {
+        ArrayList<String> res = new ArrayList();
+        for (Iterator iterator = msg.getAllReplyTo();
+                iterator.hasNext();) {
+            AID r = (AID) iterator.next();
+            res .add(r.getLocalName());
+        }
+        return res;
+    }
+
     public static JsonObject getJsonContentACLM(ACLMessage m) {
         JsonObject res = new JsonObject();
         if (isJsonACLM(m)) {
