@@ -40,29 +40,46 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     protected boolean isOpen(ACLMessage msg) {
-        return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OPEN;
+        if (DM.getMyUtterance(msg) != null) {
+            return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OPEN;
+        } else {
+            return false;
+        }
     }
 
     protected boolean isOverdue(ACLMessage msg) {
-        return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OVERDUE;
+        if (DM.getMyUtterance(msg) != null) {
+            return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OVERDUE;
+        } else {
+            return false;
+        }
     }
 
     protected boolean isComplete(ACLMessage msg) {
-        return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.COMPLETE;
+        if (DM.getMyUtterance(msg) != null) {
+            return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.COMPLETE;
+        } else {
+            return false;
+        }
     }
 
     protected boolean isAlive(ACLMessage msg) {
         if (DM.getMyUtterance(msg) != null) {
             return DM.getMyUtterance(msg).isAlive();
+        } else {
+            return false;
         }
-        return false;
     }
 
     protected boolean isClosed(ACLMessage msg) {
-        return !DM.getMyUtterance(msg).isAlive();
+        if (DM.getMyUtterance(msg) != null) {
+            return !DM.getMyUtterance(msg).isAlive();
+        } else {
+            return false;
+        }
     }
 
-    protected void checkOpenUtterances() {
+    protected void checkDialogues() {
         ACLMessage received;
         received = super.LARVAreceive(); //super.LARVAblockingReceive(5);
         while (received != null) {
@@ -73,7 +90,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
 //    protected boolean isDueUtterance(ACLMessage m) {
-//        checkOpenUtterances();
+//        checkDialogues();
 //        Utterance u = DM.getPrevUtterance(inbox);
 //        if (u == null) {
 //            return false;
@@ -81,73 +98,73 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 //        return u.getMyStatus() != Utterance.Status.OPEN;
 //    }
     protected boolean hasDue() {
-        checkOpenUtterances();
+        checkDialogues();
         return !DM.getAllDue().isEmpty();
     }
 
     protected ArrayList<ACLMessage> getAllDue() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getAllDue();
     }
 
     protected ArrayList<ACLMessage> getInboundDue() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getInboundDue();
     }
 
     protected ArrayList<ACLMessage> getOutboundDue() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getOutboundDue();
     }
 
     protected ArrayList<ACLMessage> getAllInbound() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getAllInbound();
     }
 
     protected ArrayList<ACLMessage> getAllOutbound() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getAllOutbound();
     }
 
     protected boolean hasOpen() {
-        checkOpenUtterances();
+        checkDialogues();
         return !DM.getAllOpen().isEmpty();
     }
 
     protected ArrayList<ACLMessage> getAllOpen() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getAllOpen();
     }
 
 //    protected ArrayList<ACLMessage> getInboundOpen() {
-//        this.checkOpenUtterances();
+//        this.checkDialogues();
 //        return DM.getInboundOpen();
 //    }
     protected ArrayList<ACLMessage> getOutboundOpen() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getOutboundOpen();
     }
 
     protected boolean hasInboundOpen() {
-        checkOpenUtterances();
+        checkDialogues();
         return !DM.getInboundOpen().isEmpty();
     }
 
     protected ArrayList<ACLMessage> getInboundOpen() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getInboundOpen();
     }
 
     protected ArrayList<ACLMessage> getInboundIgnored() {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         ArrayList<ACLMessage> res = DM.queryIgnoredMessages();
         DM.clearIgnoredMessages();
         return res;
     }
 
     protected boolean hasIgnoredMessages() {
-        checkOpenUtterances();
+        checkDialogues();
         return !DM.queryIgnoredMessages().isEmpty();
     }
 
@@ -156,12 +173,12 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     protected ArrayList<ACLMessage> getAnswersTo(ACLMessage msg) {
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return DM.getAllAnswersTo(msg);
     }
 
     protected Utterance.Status getUtteranceStatus(ACLMessage msg) {
-        checkOpenUtterances();
+        checkDialogues();
         Utterance u;
         u = DM.getPrevUtterance(msg);
         if (u == null) {
@@ -239,7 +256,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     protected void Dialogue(ACLMessage msg) {
         super.LARVAsend(secureMessage(msg));
         DM.addUtterance(msg);
-//        this.checkOpenUtterances();
+//        this.checkDialogues();
     }
 
     private void waitOpenUtterance(ACLMessage msg) {

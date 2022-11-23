@@ -5,16 +5,16 @@
  */
 package agents;
 
-import agents.BasicPlayer;
-import agents.DialogicPlayer;
+import data.Ole;
 import data.OleConfig;
 import glossary.Dictionary;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import swing.OleDialog;
-import tools.TimeHandler;
+import swing.SwingTools;
 import static tools.TimeHandler.nextSecs;
 
 /**
@@ -23,8 +23,9 @@ import static tools.TimeHandler.nextSecs;
  */
 public class NPCDialogicPlayer extends DialogicPlayer {
 
+    public static boolean Interactive = true;
     static int ninstances = 0;
-    static int secs = 2500, deadline = 15, points = 2;
+    static int latency = 2500, deadline = 15, points = 2;
     static double psilent = 0, pdeadline = 0;
     static boolean sentToAll = true;
     static OleConfig oCfg;
@@ -32,42 +33,46 @@ public class NPCDialogicPlayer extends DialogicPlayer {
     @Override
     public void setup() {
         super.setup();
+        Unanswered = new ArrayList();
         openRemote();
     }
 
     @Override
     public void takeDown() {
         ninstances--;
+        getOut();
         super.takeDown();
     }
+
     @Override
     public void Execute() {
-        Info("METHOD: "+myMethod());
+        Info("METHOD: " + myMethod());
         super.Execute();
-//        Info("DIALOGUES"+DM.toString());
-        this.LARVAwait(secs+(int)(Math.random()*secs)+secs);
+        this.LARVAwait(latency + (int) (Math.random() * latency));
     }
 
     @Override
     public Status myWait() {
-        Info("METHOD: "+myMethod());
+        Info("METHOD: " + myMethod());
         if (ninstances == 0) {
             oCfg = new OleConfig();
-            oCfg.setField("Send to all", sentToAll);
-            oCfg.setField("Prob. Deadline", pdeadline);
-            oCfg.setField("Deadline secs", deadline);
-            oCfg.setField("Prob. Silent", psilent);
-            oCfg.setField("NPC Delay", secs);
-            oCfg.setField("Max. Points", points);
+//            oCfg.setField("Send to all", sentToAll);
+//            oCfg.setField("Prob. Deadline", pdeadline);
+//            oCfg.setField("Deadline secs", deadline);
+//            oCfg.setField("Prob. Silent", psilent);
+//            oCfg.setField("NPC Delay", latency);
+//            oCfg.setField("Max. Points", points);
+            oCfg.loadFile("config/Controller.conf");
             OleDialog oOptions = new OleDialog(null, "NPC Options");
             if (oOptions.run(oCfg)) {
                 oCfg = oOptions.getResult();
+                oCfg.saveAsFile("config/", "Controller.conf", true);
                 pdeadline = oCfg.getDouble("Prob. Deadline", pdeadline);
                 deadline = oCfg.getInt("Deadline secs", deadline);
                 sentToAll = oCfg.getBoolean("Send to all", sentToAll);
                 psilent = oCfg.getDouble("Prob. Silent", psilent);
                 points = oCfg.getInt("Max. Points", points);
-                secs = oCfg.getInt("NPC Delay", points);
+                latency = oCfg.getInt("NPC Delay", latency);
                 String controller = DFGetAllProvidersOf("CONTROLLER").get(0);
                 outbox = new ACLMessage(ACLMessage.REQUEST);
                 outbox.setSender(getAID());
@@ -75,7 +80,7 @@ public class NPCDialogicPlayer extends DialogicPlayer {
                 outbox.setContent(oCfg.toPlainJson().toString());
                 Dialogue(outbox);
                 forget(outbox);
-                outbox=null;
+                outbox = null;
             }
         }
         ninstances++;
@@ -85,47 +90,31 @@ public class NPCDialogicPlayer extends DialogicPlayer {
     }
 
     @Override
-    public void getIn() {
-        getOut();
-        DFSetMyServices(new String[]{Service, AutoService});
-    }
-
-    @Override
-    public String selectWord(String word) {
-        String w;
-        if (word == null || word.length() == 0) {
-            w = Dict.findFirstWord();
-        } else {
-            w = Dict.findNextWord(word);
-        }
-        Info("Select word " + w);
-        return w;
-    }
-
-    @Override
     public Status mySend() {
-        Info("METHOD: "+myMethod());
-        if (outbox != null) {
-            Info("Cannot send yet.");
-            return Status.RECEIVE;
+        Info("METHOD: " + myMethod());
+        if (Receivers == null) {
+            return Status.WAIT;
         }
-        Players = findPlayers();
-        ArrayList<String> receivers = selectReceivers(Players, true);
-        if (receivers.size() > 0) {
-            String word = selectWord(null);
+        if (!sentToAll) {
+            Receivers = selectReceivers(Receivers, true);
+        }
+        if (Receivers.size() > 0) {
+            String word = selectWord(Dict, (String) null);
             outbox = new ACLMessage(ACLMessage.QUERY_IF);
             outbox.setSender(getAID());
-            outbox.setConversationId("DBA");
+            outbox.setConversationId(BasicPlayer.Conversation);
+            outbox.setProtocol(BasicPlayer.Protocol);
             outbox.setReplyWith(word);
             outbox.setContent(word);
             if (rollDice(1 - pdeadline)) {
                 outbox.setReplyByDate(nextSecs(deadline + (int) (Math.random() * deadline)).toDate());
             }
-            for (String name : selectReceivers(Players, true)) {
+            for (String name : Receivers) {
                 outbox.addReceiver(new AID(name, AID.ISLOCALNAME));
             }
-            Info("Send " + word + " to " + receivers.size());
+            Info("Send " + word + " to " + Receivers.size());
             Dialogue(outbox);
+            Unanswered.addAll(Receivers);
             return Status.RECEIVE;
         } else {
             Info("No receivers found");
@@ -136,22 +125,30 @@ public class NPCDialogicPlayer extends DialogicPlayer {
 
     @Override
     public Status myReceive() {
-        Info("METHOD: "+myMethod());
-        if (outbox != null && (isComplete(outbox) || isOverdue(outbox))) {
-            outbox = null;
-            for (ACLMessage m : getAnswersTo(outbox)) {
-                Info("Received " + m.getContent());
+        Info("METHOD: " + myMethod());
+        for (ACLMessage ob : getOutboundOpen()) {
+            for (ACLMessage m : getAnswersTo(ob)) {
+                if (Unanswered.contains(m.getSender().getLocalName())) {
+                    Info("Received (open)" + m.getContent() + " from " + m.getSender().getLocalName());
+                    Unanswered.remove(m.getSender().getLocalName());
+                }
             }
-            return Status.SEND;
-        } else {
-            Info("Waiting for answers yet. No message read.");
-            return Status.ANSWER;
         }
+        for (ACLMessage ob : getOutboundDue()) {
+            for (ACLMessage m : getAnswersTo(ob)) {
+                if (Unanswered.contains(m.getSender().getLocalName())) {
+                    Info("Received (due)" + m.getContent() + " from " + m.getSender().getLocalName());
+                    Unanswered.remove(m.getSender().getLocalName());
+                }
+            }
+            close(ob);
+        }
+        return Status.ANSWER;
     }
 
     @Override
     public Status myAnswer() {
-        Info("METHOD: "+myMethod());
+        Info("METHOD: " + myMethod());
         if (hasInboundOpen()) {
             Info("Reading pending request");
             for (ACLMessage m : getInboundOpen()) {
@@ -159,7 +156,7 @@ public class NPCDialogicPlayer extends DialogicPlayer {
                     Info("Skipping answer to " + m.getContent());
                     forget(m);
                 } else {
-                    String word = selectWord(m.getContent());
+                    String word = selectWord(Dict, m.getContent());
                     ACLMessage aux = m.createReply();
                     aux.setPerformative(ACLMessage.INFORM);
                     aux.setContent(word);
@@ -174,33 +171,32 @@ public class NPCDialogicPlayer extends DialogicPlayer {
         }
     }
 
-    @Override
-    public ArrayList<String> selectReceivers(ArrayList<String> values, boolean multiple) {
-        ArrayList<String> res = new ArrayList();
-        if (!values.isEmpty()) {
-            Collections.shuffle(values);
-            if (sentToAll) {
-                res.addAll(values);
-            } else {
-                res.add(values.get(0));
-                if (values.size() > 1 && rollDice(0.5)) {
-                    res.add(values.get(1));
-                }
-                if (values.size() > 2 && rollDice(0.5)) {
-                    res.add(values.get(2));
-                }
-                if (values.size() > 3 && rollDice(0.5)) {
-                    res.add(values.get(3));
-                }
-                if (values.size() > 4 && rollDice(0.5)) {
-                    res.add(values.get(3));
-                }
-            }
-        }
-        if (res.contains(getLocalName())) {
-            res.remove(getLocalName());
-        }
-        return res;
-    }
-
+//    @Override
+//    public ArrayList<String> selectReceivers(ArrayList<String> values, boolean multiple) {
+//        ArrayList<String> res = new ArrayList();
+//        if (!values.isEmpty()) {
+//            Collections.shuffle(values);
+//            if (sentToAll) {
+//                res.addAll(values);
+//            } else {
+//                res.add(values.get(0));
+//                if (values.size() > 1 && rollDice(0.5)) {
+//                    res.add(values.get(1));
+//                }
+//                if (values.size() > 2 && rollDice(0.5)) {
+//                    res.add(values.get(2));
+//                }
+//                if (values.size() > 3 && rollDice(0.5)) {
+//                    res.add(values.get(3));
+//                }
+//                if (values.size() > 4 && rollDice(0.5)) {
+//                    res.add(values.get(3));
+//                }
+//            }
+//        }
+//        if (res.contains(getLocalName())) {
+//            res.remove(getLocalName());
+//        }
+//        return res;
+//    }
 }

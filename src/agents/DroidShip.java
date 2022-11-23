@@ -210,7 +210,7 @@ public class DroidShip extends LARVADialogicalAgent {
             E.setCurrentMission("BACKUP", new String[]{"BACKUP"});
         }
         this.defaultBehaviour.block(1000);
-        this.checkOpenUtterances();
+        this.checkDialogues();
         return myStatus;
     }
 

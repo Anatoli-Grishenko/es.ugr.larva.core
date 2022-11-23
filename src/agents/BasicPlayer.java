@@ -1,11 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @file BasicPlayer.java
  */
 package agents;
 
-import agents.LARVAFirstAgent;
 import static appboot.XUITTY.HTMLColor.Green;
 import static appboot.XUITTY.HTMLColor.Red;
 import static appboot.XUITTY.HTMLColor.White;
@@ -17,51 +14,65 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import swing.OleDialog;
+import swing.SwingTools;
 import static tools.TimeHandler.nextSecs;
 import tools.emojis;
 
 /**
  *
- * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
+ * Main Super Class. It contains the tools for doing everythig, send, receive
+ * and asnwer, but it actually does not use anythig -
  */
-public class BasicPlayer extends LARVAFirstAgent {
-    protected int nmessages;
-    protected ArrayList<String> Players;
-    protected ArrayList<String> Receivers;
-    protected String Service = "PLAYER", Word;
-    protected boolean useDeadlines=false;
-    protected int deadline=30;
+public abstract class BasicPlayer extends LARVAFirstAgent {
 
-    // Descripción de los estados del agente
+    public static final String Service = "PLAYER", ///> Register in the DF for every player
+            AutoService = "NPC" + Service, ///> Service for NPCs
+            Protocol = "CHAINEDWORDS", ///> Name of the game
+            Conversation = "GAME"; ///> The game
+    public static boolean Interactive = true;
+
+    protected int nmessages; ///> Message counter
+    protected ArrayList<String> Players; ///> Set of registered players in the game
+    protected ArrayList<String> Receivers; ///> Set of all receivers of the same message
+    protected boolean useDeadlines = false; ///> If true, outgoing messges will have an expiration date, after which, ay answer will be ignored
+    protected int secs = 30; ///> Baseline for the deadlines system. Deadlines would be in the range [secs,2*secs]
+
+    /**
+     * Different states of the agent
+     */
     protected enum Status {
-        WAIT, // Espera inicial o intermedia si hiciese falta
-        SEND, // Enviar un mensaje a otros (pueden ser varios) para que nos respondan
-        RECEIVE, // Recibir cualquier mensaje
-        ANSWER, // En caso de que un mensaje recibido sea una petición, responder a ella
-        EXIT // Salida, previa confirmación
+        WAIT, ///> Espera inicial o intermedia si hiciese falta
+        SEND, ///> Enviar un mensaje a otros (pueden ser varios) para que nos respondan
+        RECEIVE, ///> Recibir cualquier mensaje
+        ANSWER, ///> En caso de que un mensaje recibido sea una petición, responder a ella
+        EXIT ///> Salida, previa confirmación
     };
     protected Status myStatus;
     protected Dictionary Dict;
 
     @Override
+    /**
+     * Configuration of regular parameters
+     */
     public void setup() {
         super.setup();
         openXUITTY();
         deactivateSequenceDiagrams();
-        setFixedReceiver("CONTROLLER");
+        String who = DFGetAllProvidersOf("CONTROLLER").get(0);
+        setFixedReceiver(who);
         myStatus = Status.WAIT;
         Dict = new Dictionary();
-        // Vamos a utilizar el diccion aroi de español con +70K palabras
-        // algunas un poco raras porque se han extraído de libros antiguos (EL Quixote, la Biblia)
-        Dict.load("config/ES.words"); 
+        Dict.load("config/ES.words"); ///> We are using the Spanish dictionary with 70K+ words
         getIn();
     }
 
-    // Típico cuerpo de ejecución
+    /**
+     * Typical execution body
+     */
     @Override
     public void Execute() {
-        Info("Status: " + myStatus.name()+" "+nmessages+" pending answers");
-        printScreen();
+        Info("Status: " + myStatus.name() + " " + nmessages + " pending answers");
+        printXUI();
         switch (myStatus) {
             case WAIT:
                 myStatus = myWait();
@@ -84,82 +95,108 @@ public class BasicPlayer extends LARVAFirstAgent {
                 break;
         }
     }
-    
-    public void printScreen() {
+
+    @Override
+    /**
+     * Destroy the agent
+     */
+    public void takeDown() {
+        getOut(); ///> Before taking the agent down, it gets out the game
+        super.takeDown();
+    }
+
+    /**
+     * Print the basic status on a sort of terminal in the XUI area
+     */
+    public void printXUI() {
+        int w = 25, h = 3, xsent = 5, xrec = xsent + w + 5, ysent = 5;
         xuitty.clearScreen();
-        xuitty.setCursorXY(1,1);
-        xuitty.textColor(White);
-        xuitty.print("SENT : ");
+        xuitty.textColor(Green);
+        xuitty.doFrameTitle("SENT", xsent - 1, ysent - 1, w, h);
+        xuitty.setCursorXY(xsent, ysent);
         if (outbox == null) {
-            xuitty.textColor(Red);
-            xuitty.print("X");
+            xuitty.print("XXX");
         } else {
-            xuitty.textColor(Green);
-            xuitty.print(outbox.getContent()+"   pending answers: ");
-            for (int i=0; i< nmessages; i++) {
-              xuitty.print(emojis.BLACKSQUARE);
+            xuitty.print(outbox.getContent());
+            xuitty.doFrameTitle("PENDING ASNWERS", xsent - 1, ysent + h + 1, w, h);
+            xuitty.setCursorXY(xsent, ysent + h + 2);
+            for (int i = 0; i < nmessages; i++) {
+                xuitty.print(emojis.BLACKSQUARE);
             }
         }
-        xuitty.setCursorXY(1,3);
-        xuitty.textColor(White);
-        xuitty.print("RECEIVED: ");
-        if (inbox==null) {
-            xuitty.textColor(Red);
-            xuitty.print("X");
+        xuitty.textColor(Red);
+        xuitty.doFrameTitle("RECEIVED", xrec - 1, ysent - 1, w, h);
+        xuitty.setCursorXY(xrec, ysent);
+        if (inbox == null) {
+            xuitty.print("XXX");
         } else {
-            xuitty.textColor(Green);
             xuitty.print(inbox.getContent());
         }
-         xuitty.render();
+        xuitty.render();
     }
 
-    // Me registra en el juego, para ello sólo tengo que apuntarme en el DF
+    /**
+     * Introduces the agent inn the play, just by registering it in DF
+     */
     public void getIn() {
         if (!DFHasService(getLocalName(), Service)) {
-            DFSetMyServices(new String[]{Service});
+            DFAddMyServices(new String[]{Service});
         }
     }
 
-    // Me da de baja en el juego
+    /**
+     * Excludes the agent from the play, simply by removing all services
+     */
     public void getOut() {
-        DFRemoveAllMyServices();
+        if (DFHasService(getLocalName(), Service)) {
+            DFRemoveMyServices(new String[]{Service});
+        }
+
     }
 
-    // Gestor del estado WAIT
+    /**
+     * Empty WAIT status controller
+     *
+     * @return By default, the next status
+     */
     public Status myWait() {
+        Players =  findPlayers();
         return Status.SEND;
     }
 
-    // Gestor del estado SEND
-    // Por ahora no hace nada. Se instanciará en las clases inferiores
+    /**
+     * Empty SEND status controller
+     *
+     * @return By default, the next status
+     */
     public Status mySend() {
         return Status.RECEIVE;
     }
 
-    // Gestor del estado RECEIVE
-    // Se activa en cada mensaje recibido
+    /**
+     * Empty RECEIVE status controller
+     *
+     * @return By default, the next status
+     */
     public Status myReceive() {
-        inbox = LARVAblockingReceive();
         return Status.ANSWER;
     }
 
-    // Gestor del estado ANSWER
-    // Crea un a respuesta (pregunta la palabra encadenada) y la envía
+    /**
+     * Empty ANSWER status controller
+     *
+     * @return By default, the next status
+     */
     public Status myAnswer() {
-        // Proceso el mensaje que se había quedado almacenado
-        // en inbox y respondo
-        ACLMessage aux = answerTo(inbox);
-        // En caso de que hala fallado la construcción de la respuesta, se procede a salir.
-        if (aux != null) {
-            LARVAsend(aux);
-            return Status.RECEIVE;
-        } else {
-            return Status.EXIT;
-        }
-
+        return Status.WAIT;
     }
 
-    // Rastrea el DF y encuentra a todos los agentes registrados
+    /**
+     * It reads the full DF and makes a list with all agents registered, without
+     * my own name
+     *
+     * @return A list of agent names registered in the game, ecluding my name
+     */
     public ArrayList<String> findPlayers() {
         ArrayList<String> res = DFGetAllProvidersOf(Service);
         if (res.contains(getLocalName())) {
@@ -169,65 +206,117 @@ public class BasicPlayer extends LARVAFirstAgent {
         return res;
     }
 
-    // Presenta un diálogo para seleccionar, entre los Players, a los posibles destinatarios
-    // pueden ser uno de ellos, dos de ellos o todos
+    /**
+     * It allows to select a set of names (multiple) from a wide list of names
+     *
+     * @param values The original set of names
+     * @param multiple If true, multiple selection isi allowed, if false, only a
+     * single selection is allowed.
+     * @return A subset of @a values
+     */
     public ArrayList<String> selectReceivers(ArrayList<String> values, boolean multiple) {
         ArrayList<String> res = new ArrayList();
-        OleConfig ocfg = new OleConfig(), oList = new OleConfig();
-        oList.setField("Players", new ArrayList(values));
-        Ole options = new Ole();
-        options.setField("Players", oList);
-        ocfg.set("options", options);
-        Ole properties = new Ole();
-        properties.setField("Players", new Ole().setField("multiple", multiple).setField("tooltip", "Please select your rival(s)"));
-        ocfg.set("properties", properties);
-        OleDialog odlg = new OleDialog(null, "Select Player");
-        if (odlg.run(ocfg)) {
-            ocfg = odlg.getResult();
-            return ocfg.getProperties().getOle("Players").getArray("selected");
-        } else {
-            return null;
+        ///> If interactive, it opens a popup Dialogue with the user
+        if (Interactive) {
+            OleConfig ocfg = new OleConfig(), oList = new OleConfig();
+            oList.setField("Players", new ArrayList(values));
+            Ole options = new Ole();
+            options.setField("Players", oList);
+            ocfg.set("options", options);
+            Ole properties = new Ole();
+            properties.setField("Players", new Ole().setField("multiple", multiple).setField("tooltip", "Please select your rival(s)"));
+            ocfg.set("properties", properties);
+            OleDialog odlg = new OleDialog(null, "Select Player");
+            if (odlg.run(ocfg)) {
+                ocfg = odlg.getResult();
+                return ocfg.getProperties().getOle("Players").getArray("selected");
+            } else {
+                return null;
+            }
+        } else { ///> Otherwise it selects things automatically
+            if (!values.isEmpty()) {
+                Collections.shuffle(values);
+                res.add(values.get(0));
+                if (multiple) {
+                    for (String s : values) {
+                        if (!res.contains(s) && rollDice(0.5)) {
+                            res.add(s);
+                        }
+                    }
+                }
+            }
+            return res;
+
         }
     }
 
-    // Ayuda para seleccionar una palabra. Si es una respuesta a una palabra anterior
-    // muestra una sugerencia del diccionario a modo de ayuda
-    public String selectWord(String word) {
+    /**
+     * This method select the most appropriate word.If previous is null, then it
+     * selects a starting word.Otherwise it selects a chained word.
+     *
+     * @param dict The dictionary from where to extract words
+     * @param previous The previous word
+     * @return The next word
+     */
+    public String selectWord(Dictionary dict, String previous) {
         String w;
-        if (word == null || word.length() == 0) {
-            w = inputLine("SEND A WORD\n\n\nPlease intro a word in Spanish");
+        if (previous == null || previous.length() == 0) {
+            ///> If interactive, it opens a popup Dialogue to ask user
+            if (Interactive) {
+                w = SwingTools.inputLine("SEND A WORD\n\n\nPlease intro a word in Spanish");
+            } else { ///> Otherwise it reacts automatically
+                w = dict.findFirstWord();
+            }
 
         } else {
-            w = inputLine("ANSWER TO A WORD\n\n\nPlease intro a word in Spanish to answer to " + word + "\nSuggestions:" + Dict.findNextWords(word, 5).toString());
+            if (Interactive) {
+                w = SwingTools.inputLine("ANSWER TO A WORD\n\n\nPlease intro a word in Spanish to answer to " + previous + "\nSuggestions:" + dict.findNextWords(previous, 5).toString());
+            } else {
+                w = dict.findNextWord(previous);
+            }
         }
-        Info("Select word " + w);
         return w;
     }
-    
-    // Construye un mensaje de respuesta a otro mensaje recibido, listo para modificar algo
-    // o enviarlo
+
+    /**
+     * Given a message that has been received with a request, it ellaborates an
+     * answer to it, but does not send it yet
+     *
+     * @param m The message received
+     * @param dict The dictionary from where to extract words
+     * @return The prepared answer
+     */
     public ACLMessage answerTo(ACLMessage m) {
         ACLMessage answer = m.createReply();
-        answer.setPerformative(ACLMessage.INFORM);
-        Word = selectWord(m.getContent());
-        if (Word != null) {
-            answer.setContent(Word);
-            answer.setReplyWith(Word);
-            if (useDeadlines) {
-                answer.setReplyByDate(getDeadline());
-            }
+        String word = selectWord(Dict, m.getContent());
+        if (word != null) {
+            answer.setContent(word);
             return answer;
         } else {
             return null;
         }
     }
 
-    public Date getDeadline() {
-        return nextSecs(deadline+(int)(Math.random()*deadline)).toDate();
+    /**
+     * It gives a random deadline between the required limists (both included)
+     *
+     * @param minsecs Minimum number of seconds
+     * @param maxsecs Maximum number of seconds
+     * @return A deadline in [minsecs. maxsecs]
+     */
+    public Date getDeadline(int minsecs, int maxsecs) {
+        return nextSecs(minsecs + (int) (Math.random() * maxsecs)).toDate();
     }
-    // Tira los dados para generar comportamientos aleatorios
+
+    /**
+     * It randomly rolls a dice and returns true if the dices is good, false
+     * otherwise
+     *
+     * @param threshold A dice is good if its probability is equal or greater to
+     * this value
+     * @return True or false as explained above
+     */
     public boolean rollDice(double threshold) {
         return Math.random() > threshold;
     }
-
 }
