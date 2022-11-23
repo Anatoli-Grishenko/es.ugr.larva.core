@@ -40,7 +40,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     protected boolean isOpen(ACLMessage msg) {
-        if (DM.getMyUtterance(msg) != null) {
+        if (msg != null && DM.getMyUtterance(msg) != null) {
             return DM.getMyUtterance(msg).getMyStatus() == Utterance.Status.OPEN;
         } else {
             return false;

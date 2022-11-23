@@ -21,7 +21,7 @@ import static tools.TimeHandler.nextSecs;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class NPCDialogicPlayer extends DialogicPlayer {
+public class NPCDP extends NPCDialogic {
 
     public static boolean Interactive = true;
     static int ninstances = 0;

@@ -1,14 +1,14 @@
 /**
- * @file BasicPlayer.java
+ * @file DialogicPlayer.java
  */
 package agents;
 
-import static appboot.XUITTY.HTMLColor.Green;
-import static appboot.XUITTY.HTMLColor.Red;
-import static appboot.XUITTY.HTMLColor.White;
+import static agents.BasicPlayer.AutoService;
+import static agents.BasicPlayer.Service;
 import data.Ole;
 import data.OleConfig;
 import glossary.Dictionary;
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,40 +16,34 @@ import java.util.Date;
 import swing.OleDialog;
 import swing.SwingTools;
 import static tools.TimeHandler.nextSecs;
-import tools.emojis;
 
 /**
  *
- * Main Super Class. It contains the tools for doing everythig, send, receive
- * and asnwer, but it actually does not use anythig -
+ * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public abstract class DialogicPlayer extends LARVADialogicalAgent {
+public class NPCDialogic extends LARVADialogicalAgent {
+    public static boolean Interactive = false;
 
-    public static final String Service = "PLAYER", ///> Register in the DF for every player
-            AutoService = "NPC" + Service, ///> Service for NPCs
-            Protocol = "CHAINEDWORDS", ///> Name of the game
-            Conversation = "GAME"; ///> The game
-    public static boolean Interactive = true;
-
-    protected int nmessages; ///> Message counter
-    protected ArrayList<String> Players; ///> Set of registered players in the game
-    protected ArrayList<String> Receivers; ///> Set of all receivers of the same message
-    protected boolean useDeadlines = false; ///> If true, outgoing messges will have an expiration date, after which, ay answer will be ignored
-    protected int secs = 30; ///> Baseline for the deadlines system. Deadlines would be in the range [secs,2*secs]
-    protected ArrayList<ACLMessage> answers, requests;
+    protected int nmessages; //> Message counter
+    protected ArrayList<String> Players; //> Set of registered players in the game
+    protected ArrayList<String> Receivers; //> Set of all receivers of the same message
+    protected ArrayList<String> Unanswered; //> Agents who have not answered yet
+    protected boolean useDeadlines = false; //> If true, outgoing messges will have an expiration date, after which, ay answer will be ignored
+    protected int secs = 30; //> Baseline for the deadlines system. Deadlines would be in the range [secs,2*secs]
 
     /**
      * Different states of the agent
      */
     protected enum Status {
-        WAIT, ///> Espera inicial o intermedia si hiciese falta
-        SEND, ///> Enviar un mensaje a otros (pueden ser varios) para que nos respondan
-        RECEIVE, ///> Recibir cualquier mensaje
-        ANSWER, ///> En caso de que un mensaje recibido sea una petición, responder a ella
-        EXIT ///> Salida, previa confirmación
+        WAIT, //> Espera inicial o intermedia si hiciese falta
+        SEND, //> Enviar un mensaje a otros (pueden ser varios) para que nos respondan
+        RECEIVE, //> Recibir cualquier mensaje
+        ANSWER, //> En caso de que un mensaje recibido sea una petición, responder a ella
+        EXIT //> Salida, previa confirmación
     };
     protected Status myStatus;
     protected Dictionary Dict;
+    protected String whoController;
 
     @Override
     /**
@@ -57,17 +51,14 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      */
     public void setup() {
         super.setup();
-        openXUITTY(); ///> Uses the XUI as a terminal
         deactivateSequenceDiagrams();
-        String who = DFGetAllProvidersOf("CONTROLLER").get(0);
-        setFixedReceiver(who); //> Always send copies of messages to this agent
+        whoController = DFGetAllProvidersOf("CONTROLLER").get(0);
+        setFixedReceiver(whoController);
         myStatus = Status.WAIT;
-        Dict = new Dictionary(); ///> Load Spanish Dictionary
+        Dict = new Dictionary();
+        Unanswered = new ArrayList();
         Dict.load("config/ES.words"); ///> We are using the Spanish dictionary with 70K+ words
-        getIn(); ///> Register as a known player
-        answers = new ArrayList();
-        requests = new ArrayList();
-       offInteractive();
+        logger.offEcho();
     }
 
     /**
@@ -75,22 +66,43 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      */
     @Override
     public void Execute() {
-        Info("Status: " + myStatus.name() + " " + nmessages + " pending answers");
-        printXUI();
+//        if (getNCycles()%25 == 0) {
+//            reset();
+//        }
+        Info("Status: " + myStatus.name() + " outbound open=" + this.getOutboundOpen().size()
+                + "   inbound open=" + getInboundOpen().size());
+        this.checkDialogues();
+        Players = findPlayers();
+        Receivers = new ArrayList();
+        for (String s : Players) {
+            if (!Unanswered.contains(s)) {
+                Receivers.add(s);
+            }
+        }
+        ArrayList<String> filter = new ArrayList();
+        for (String s : Unanswered) {
+            if (!Players.contains(s)) {
+                filter.add(s);
+            }
+        }
+        Unanswered.removeAll(filter);
+
+//        Info("DIALOGUE"+DM.toString());
+//        Info("Status: " + myStatus.name() + " " + nmessages + " pending answers");
         switch (myStatus) {
             case WAIT:
-                myStatus = myWait(); ///> 1st
+                myStatus = myWait();
                 break;
             case SEND:
-                myStatus = mySend(); ///> 2nd 
+                myStatus = mySend();
                 break;
             case RECEIVE:
-                myStatus = myReceive(); ///>  3rd
+                myStatus = myReceive();
                 break;
             case ANSWER:
-                myStatus = myAnswer(); ///> 4th
+                myStatus = myAnswer();
                 break;
-            case EXIT: ///> emergency
+            case EXIT:
                 if (Confirm("Do you want to exit?")) {
                     doExit();
                 } else {
@@ -105,50 +117,8 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * Destroy the agent
      */
     public void takeDown() {
-        getOut(); ///> Before taking the agent down, it gets out the game
+        getOut(); //> Before takinf the agent down, it gets out the game
         super.takeDown();
-    }
-
-    /**
-     * Print the basic status on a sort of terminal in the XUI area
-     */
-    public void printXUI() {
-        int w = 25, h = 13, xsent = 5, xrec = xsent + w + 5, ysent = 5;
-        xuitty.clearScreen();
-        xuitty.textColor(Green);
-        xuitty.doFrameTitle("SENT", xsent - 1, ysent - 1, w, h);
-        xuitty.setCursorXY(xsent, ysent);
-        if (outbox != null) {
-            xuitty.print(outbox.getContent());
-        }
-//        xuitty.doFrameTitle("RECEIVED ASNWERS", xsent - 1, ysent + h + 1, w, h);
-//        xuitty.setCursorXY(xsent, ysent + h + 2);
-//        for (ACLMessage m : getOutboundDue()) {
-//            for (ACLMessage n : getAnswersTo(m)) {
-//                xuitty.print(emojis.BLACKSQUARE);
-//            }
-//        }
-        xuitty.textColor(Red);
-        xuitty.doFrameTitle("RECEIVED", xrec - 1, ysent - 1, w, h);
-        xuitty.setCursorXY(xrec, ysent);
-        if (getInboundOpen().isEmpty() && getOutboundDue().isEmpty()) {
-            xuitty.print("XXX");
-        } else {
-            int i = 0;
-            for (ACLMessage m : getInboundOpen()) {
-                xuitty.setCursorXY(xrec, ysent + i);
-                xuitty.print(m.getContent());
-                i++;
-            }
-            for (ACLMessage m : getOutboundDue()) {
-                for (ACLMessage ms : getAnswersTo(m)) {
-                    xuitty.setCursorXY(xrec, ysent + i);
-                    xuitty.print(m.getContent());
-                    i++;
-                }
-            }
-        }
-        xuitty.render();
     }
 
     /**
@@ -157,6 +127,9 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
     public void getIn() {
         if (!DFHasService(getLocalName(), Service)) {
             DFAddMyServices(new String[]{Service});
+        }
+        if (!DFHasService(getLocalName(), AutoService)) {
+            DFAddMyServices(new String[]{AutoService});
         }
     }
 
@@ -167,7 +140,9 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
         if (DFHasService(getLocalName(), Service)) {
             DFRemoveMyServices(new String[]{Service});
         }
-
+        if (DFHasService(getLocalName(), AutoService)) {
+            DFRemoveMyServices(new String[]{AutoService});
+        }
     }
 
     /**
@@ -176,7 +151,6 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * @return By default, the next status
      */
     public Status myWait() {
-        Players = findPlayers();
         return Status.SEND;
     }
 
@@ -222,6 +196,25 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
         return res;
     }
 
+    protected void reset() {
+        Info("Reseting ...");
+//        getOut();
+        outbox = new ACLMessage(ACLMessage.CANCEL);
+        outbox.setSender(getAID());
+        outbox.addReceiver(new AID(whoController, AID.ISLOCALNAME));
+        outbox.setContent("");
+        Dialogue(outbox);
+        forget(outbox);
+        for (ACLMessage op : getOutboundOpen()) {
+            forget(op);
+        }
+        LARVAwait(500);
+        Unanswered = new ArrayList();
+//        getIn();
+
+    }
+
+ 
     /**
      * It allows to select a set of names (multiple) from a wide list of names
      *
@@ -232,7 +225,6 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      */
     public ArrayList<String> selectReceivers(ArrayList<String> values, boolean multiple) {
         ArrayList<String> res = new ArrayList();
-        ///> If interactive, it opens a popup Dialogue with the user
         if (Interactive) {
             OleConfig ocfg = new OleConfig(), oList = new OleConfig();
             oList.setField("Players", new ArrayList(values));
@@ -249,7 +241,7 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
             } else {
                 return null;
             }
-        } else { ///> Otherwise it selects things automatically
+        } else {
             if (!values.isEmpty()) {
                 Collections.shuffle(values);
                 res.add(values.get(0));
@@ -277,10 +269,9 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
     public String selectWord(Dictionary dict, String previous) {
         String w;
         if (previous == null || previous.length() == 0) {
-            ///> If interactive, it opens a popup Dialogue to ask user
             if (Interactive) {
                 w = SwingTools.inputLine("SEND A WORD\n\n\nPlease intro a word in Spanish");
-            } else { ///> Otherwise it reacts automatically
+            } else {
                 w = dict.findFirstWord();
             }
 
@@ -302,9 +293,9 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * @param dict The dictionary from where to extract words
      * @return The prepared answer
      */
-    public ACLMessage answerTo(ACLMessage m) {
+    public ACLMessage answerTo(ACLMessage m, Dictionary dict, boolean interactive) {
         ACLMessage answer = m.createReply();
-        String word = selectWord(Dict, m.getContent());
+        String word = selectWord(dict, m.getContent());
         if (word != null) {
             answer.setContent(word);
             return answer;
@@ -335,10 +326,9 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
     public boolean rollDice(double threshold) {
         return Math.random() > threshold;
     }
-   public static void onInteractive(){
-       Interactive=true;
-   }
-   public static void offInteractive(){
-       Interactive=false;
-   }
+
+    public String myMethod() {
+        return Thread.currentThread().getStackTrace()[2].getMethodName();
+    }
+
 }

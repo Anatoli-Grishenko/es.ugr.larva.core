@@ -29,7 +29,7 @@ public abstract class BasicPlayer extends LARVAFirstAgent {
             AutoService = "NPC" + Service, ///> Service for NPCs
             Protocol = "CHAINEDWORDS", ///> Name of the game
             Conversation = "GAME"; ///> The game
-    public static boolean Interactive = true;
+    protected static boolean Interactive = true;
 
     protected int nmessages; ///> Message counter
     protected ArrayList<String> Players; ///> Set of registered players in the game
@@ -56,14 +56,14 @@ public abstract class BasicPlayer extends LARVAFirstAgent {
      */
     public void setup() {
         super.setup();
-        openXUITTY();
+        openXUITTY(); ///> Uses the XUI as a terminal
         deactivateSequenceDiagrams();
         String who = DFGetAllProvidersOf("CONTROLLER").get(0);
-        setFixedReceiver(who);
+        setFixedReceiver(who); //> Always send copies of messages to this agent
         myStatus = Status.WAIT;
-        Dict = new Dictionary();
+        Dict = new Dictionary(); ///> Load Spanish Dictionary
         Dict.load("config/ES.words"); ///> We are using the Spanish dictionary with 70K+ words
-        getIn();
+        getIn(); ///> Register as a known player
     }
 
     /**
@@ -75,18 +75,18 @@ public abstract class BasicPlayer extends LARVAFirstAgent {
         printXUI();
         switch (myStatus) {
             case WAIT:
-                myStatus = myWait();
+                myStatus = myWait(); ///> 1st
                 break;
             case SEND:
-                myStatus = mySend();
+                myStatus = mySend(); ///> 2nd 
                 break;
             case RECEIVE:
-                myStatus = myReceive();
+                myStatus = myReceive(); ///>  3rd
                 break;
             case ANSWER:
-                myStatus = myAnswer();
+                myStatus = myAnswer(); ///> 4th
                 break;
-            case EXIT:
+            case EXIT: ///> emergency
                 if (Confirm("Do you want to exit?")) {
                     doExit();
                 } else {
@@ -319,4 +319,12 @@ public abstract class BasicPlayer extends LARVAFirstAgent {
     public boolean rollDice(double threshold) {
         return Math.random() > threshold;
     }
+    
+    
+   public static void onInteractive(){
+       Interactive=true;
+   }
+   public static void offInteractive(){
+       Interactive=false;
+   }
 }
