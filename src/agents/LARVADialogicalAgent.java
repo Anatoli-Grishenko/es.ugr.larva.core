@@ -174,7 +174,9 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 
     protected ArrayList<ACLMessage> getAnswersTo(ACLMessage msg) {
         this.checkDialogues();
-        return DM.getAllAnswersTo(msg);
+        ArrayList<ACLMessage> received=DM.getAllAnswersTo(msg);
+        close(msg);
+        return received;
     }
 
     protected Utterance.Status getUtteranceStatus(ACLMessage msg) {
@@ -376,6 +378,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
                 this.Error("Please load the passport first");
                 return false;
             }
+            this.addMilestone("MILES16");
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
             IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
             Info("Found agent " + IdentityManager + " as Identity Manager");

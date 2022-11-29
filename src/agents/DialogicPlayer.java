@@ -67,7 +67,7 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
         getIn(); ///> Register as a known player
         answers = new ArrayList();
         requests = new ArrayList();
-       offInteractive();
+        onInteractive();
     }
 
     /**

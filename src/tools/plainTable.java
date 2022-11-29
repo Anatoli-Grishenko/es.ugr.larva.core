@@ -162,7 +162,11 @@ public class plainTable {
 
     public String getSValue(int f, int c) {
         if (isValid()) {
-            return _scontent[f][c];
+            if (_scontent[f][c] != null) {
+                return _scontent[f][c];
+            } else {
+                return "";
+            }
         } else {
             return null;
         }
@@ -614,8 +618,12 @@ public class plainTable {
         }
     }
 
+    @Override
     public String toString() {
         String result = "";
+        if (getID() != null) {
+            result += getID() + "\n";
+        }
         if (!_xLabel.isEmpty()) {
             if (!_yLabel.isEmpty()) {
                 result += StringTools.fitRow(" ", getAlign(), getColumnWidth(0));
@@ -666,6 +674,14 @@ public class plainTable {
             result += bottomRow();
         }
         return result;
+    }
+
+    public String getID() {
+        return _ID;
+    }
+
+    public void setID(String _ID) {
+        this._ID = _ID;
     }
 
 }

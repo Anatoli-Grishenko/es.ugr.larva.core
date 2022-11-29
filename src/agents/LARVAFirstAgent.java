@@ -902,8 +902,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public void Message(String message) {
-        JOptionPane.showMessageDialog(null,
-                message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE);
+        if (E != null && E.getType()!= null) {
+            JOptionPane.showMessageDialog(null,
+                    message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
+        }
         Info(message);
 
 //        if (isSwing()) {

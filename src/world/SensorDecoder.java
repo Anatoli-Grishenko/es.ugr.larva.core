@@ -1427,7 +1427,7 @@ public class SensorDecoder {
             String name = jsosensor.getString("sensor", "");
             if (verbose) {
                 System.out.println("\n\nSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS\n" + "SensorDecoder::Found sensor " + name
-                        +" >>>>>"+jsosensor.get("data").toString());
+                        + " >>>>>" + jsosensor.get("data").toString());
             }
             encodeSensor(name, jsosensor.get("data").asArray());
             if (name.toUpperCase().equals(Sensors.COURSE.name()) && getSensor(Sensors.CITIESPOSITIONS) != null) { // XUI
@@ -1769,7 +1769,11 @@ public class SensorDecoder {
     }
 
     public String getType() {
-        return this.getSensor(Sensors.TYPE).get(0).asString();
+        if (this.getSensor(Sensors.TYPE) != null) {
+            return this.getSensor(Sensors.TYPE).get(0).asString();
+        } else {
+            return null;
+        }
     }
 
     void configureType(String type) {
@@ -2189,7 +2193,7 @@ public class SensorDecoder {
 
     public void setCurrentMission(String mission) {
         String goals[] = getMissionGoals(mission);
-        this.setCurrentMission(mission, goals);        
+        this.setCurrentMission(mission, goals);
     }
 
     public void setCurrentMission(String missionName, String goals[]) {

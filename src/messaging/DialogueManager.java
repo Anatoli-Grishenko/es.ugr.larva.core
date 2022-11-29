@@ -284,8 +284,6 @@ public class DialogueManager extends HashMap<String, HashMap<String, Utterance>>
                 if (get(cid).get(rw).getInitiator().equals(AgentOwner)) {
                     if (get(cid).get(rw).getMyStatus() != Utterance.Status.OPEN
                             && get(cid).get(rw).isAlive()) {
-
-//                    pending.add(get(cid).get(rw).getStarter());
                         this.pushBack(pending, get(cid).get(rw).getStarter());
                     }
                 }
