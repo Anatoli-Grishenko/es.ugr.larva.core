@@ -1,3 +1,8 @@
+# 2022-11-29
+   - Updated new features in LARVADialogicalAgents
+   - Added SingleBrosBrawl y SmahBrosBrawl
+   - Fixed backdoor by LARVAFirstAgent.addMilestone(String m). Thanks to David Correa and his team. Exexcellent discovery that proves your deep understanding of LARVA, congrats!
+
 
 # 2022-11-15
    - Serveral bug fixes
