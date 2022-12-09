@@ -29,12 +29,12 @@ import static zip.ZipTools.unzipString;
  * @author Anatoli Grishenko Anatoli.Grishenko@gmail.com
  */
 public class XUIAgent extends LARVAFirstAgent {
-    
+
     enum Status {
         CHECKIN, CHECKOUT, IDLE, HASSESSION, UPDATE, EXIT
     }
     Status myStatus;
-    
+
     protected OleDashBoard myDashBoard;
     protected String sessionKey = "", telegramBot;
     protected boolean showTrail = false;
@@ -46,7 +46,7 @@ public class XUIAgent extends LARVAFirstAgent {
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
     TelegramBackdoor tgb;
-    
+
     @Override
     public void setup() {
         super.setup();
@@ -58,7 +58,9 @@ public class XUIAgent extends LARVAFirstAgent {
             logger.onTabular();
         } else {
             logger.offEcho();
+            this.deactivateSequenceDiagrams();
         }
+        E.setVerbose(verbose);
         setSecuredMessages(false);
 //        logger.setLoggerFileName(this.getLocalName() + ".json");
         myStatus = Status.CHECKIN;
@@ -100,8 +102,9 @@ public class XUIAgent extends LARVAFirstAgent {
         }
         tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
         tgb.setPreferredSize(new Dimension(100, 200));
+        loadSessionAlias();
     }
-    
+
     @Override
     public void Execute() {
         Info("Status: " + myStatus.name());
@@ -110,8 +113,12 @@ public class XUIAgent extends LARVAFirstAgent {
                 myStatus = MyCheckin();
                 break;
             case IDLE:
+//                try {
                 myStatus = myIdle();
-                break;
+//            } catch (Exception ex) {
+//                myStatus = Status.IDLE;
+//            }
+            break;
             case CHECKOUT:
                 myStatus = MyCheckout();
                 break;
@@ -120,9 +127,9 @@ public class XUIAgent extends LARVAFirstAgent {
                 LARVAexit = true;
                 break;
         }
-        
+
     }
-    
+
     @Override
     public void takeDown() {
         myDashBoard.removeAll();
@@ -130,7 +137,7 @@ public class XUIAgent extends LARVAFirstAgent {
         Info("Taking down and deleting agent");
         super.takeDown();
     }
-    
+
     public Status MyCheckin() {
         Info("Loading passport and checking-in to LARVA");
         if (!doLARVACheckin()) {
@@ -141,12 +148,12 @@ public class XUIAgent extends LARVAFirstAgent {
 //        TheMap.clear();
         return Status.IDLE;
     }
-    
+
     public Status MyCheckout() {
         this.doLARVACheckout();
         return Status.EXIT;
     }
-    
+
     public Status myIdle() {
         String buffer[];
         boolean zip = false;
@@ -162,7 +169,7 @@ public class XUIAgent extends LARVAFirstAgent {
             buffer = new String[]{inbox.getContent()};
             zip = false;
         }
-        
+
         for (String rawcontent : buffer) {
             String content;
             if (zip) {
@@ -232,7 +239,7 @@ public class XUIAgent extends LARVAFirstAgent {
 //        this.LARVAsend(outbox);
         return Status.IDLE;
     }
-    
+
     @Override
     public ACLMessage LARVAblockingReceive() {
         premesg = new TimeHandler();
@@ -248,7 +255,7 @@ public class XUIAgent extends LARVAFirstAgent {
         nmessages++;
         return res;
     }
-    
+
     public void backSendTelegram(String what) {
         if (telegramBot.length() > 0) {
             outbox = new ACLMessage(ACLMessage.REQUEST);

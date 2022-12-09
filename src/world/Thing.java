@@ -34,15 +34,32 @@ public class Thing extends Entity3D {
     protected boolean hasHeliport = false, hasPort = false, hasAirport = false, isCity, isMountain, isArea;
     protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
     protected SensorDecoder myPerceptions;
-    protected Sensors[] minimal;
+    protected Sensors[] minimal = new Sensors[] {
+        Sensors.GPS,
+        Sensors.CURRENTGOAL,
+        Sensors.CURRENTMISSION,
+        Sensors.ENERGY,
+        Sensors.COMPASS,
+        Sensors.GROUND,
+        Sensors.AUTONOMY,
+        Sensors.PAYLOAD,
+        Sensors.ALIVE,
+        Sensors.COMPASS,
+        Sensors.DESTINATION,        
+        Sensors.COURSE, 
+        Sensors.TARGET,
+        Sensors.TRACE,
+        Sensors.TYPE,
+        Sensors.DISTANCE,
+        Sensors.DISTANCE,
+        Sensors.ANGULAR
+    };
+
 
     public Thing(String name) {
         super(name);
         _rawSensors = new ArrayList<>();
         myPerceptions = new SensorDecoder();
-        minimal = new Sensors[] {Sensors.GPS,Sensors.CURRENTGOAL,Sensors.CURRENTMISSION,Sensors.ENERGY,Sensors.AUTONOMY,
-            Sensors.PAYLOAD,Sensors.ALIVE, Sensors.COMPASS,Sensors.DESTINATION,
-        Sensors.COURSE, Sensors.TARGET,Sensors.TYPE};
     }
 
     public Thing(String name, World w) {
@@ -55,18 +72,10 @@ public class Thing extends Entity3D {
         Sensors.COURSE, Sensors.TARGET,Sensors.TYPE};
     }
 
-    public void setType(String c) {
-        _type = c;
-    }
-
-    public String getType() {
-        return _type;
-    }
-
     public World getWorld() {
         return _refWorld;
     }
-
+    
     public Thing setSurface(Map2DColor cartography) {
         _surface = cartography;
         return this;
@@ -131,6 +140,9 @@ public class Thing extends Entity3D {
         res.add("position", new JsonArray().
                 add(getPosition().getXInt()).add(getPosition().getYInt()).add(getPosition().getZInt()));
         res.add("belongs", this.getBelongsTo());
+        res.add("capacity", this.getCapacity());
+        res.add("isavailable", this.isAvailable()
+        );
 
 //        res.add("objectid", this.getId());
 //        res.add("name", this.getName());

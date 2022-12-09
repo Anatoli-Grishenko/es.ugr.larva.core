@@ -26,6 +26,7 @@ public class LARVAPayload {
     OlePassport oPassport;
     HashMap <String , Component> guiComponents;
     AgentReport myReport;
+    String sessionALias;
 
     public LARVAPayload(OleApplication parent, OleConfig olecfg) {
         this.parent = parent;
@@ -73,6 +74,14 @@ public class LARVAPayload {
 
     public void setGuiComponents(HashMap<String, Component> guiComponents) {
         this.guiComponents = guiComponents;
+    }
+
+    public String getSessionALias() {
+        return sessionALias;
+    }
+
+    public void setSessionALias(String sessionALias) {
+        this.sessionALias = sessionALias;
     }
 
 

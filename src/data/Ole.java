@@ -107,7 +107,7 @@ public class Ole extends JsonObject {
      * @param jsole The JsonObject
      * @return A valid importation to a Ole Object
      */
-    public static Ole Json2Ole(JsonObject jsole) {     
+    public static Ole Json2Ole(JsonObject jsole) {
         return new Ole(jsole);
     }
 
@@ -418,7 +418,7 @@ public class Ole extends JsonObject {
         } else if (jsv.isString()) {
             return oletype.STRING.name();
         } else if (jsv.isNumber()) {
-                return oletype.DOUBLE.name();
+            return oletype.DOUBLE.name();
 //            if (jsv.toString().contains(".")) {
 //                return oletype.DOUBLE.name();
 //            } else {
@@ -704,6 +704,10 @@ public class Ole extends JsonObject {
         }
     }
 
+    public Object getMetaField(String field) {
+        return getField(field);
+    }
+
     /**
      * It sets the value of the field
      *
@@ -870,6 +874,64 @@ public class Ole extends JsonObject {
 //        return res;
 //
 //    }
+    public String forceFieldString(String field) {
+        if (get(field) == null) {
+            return null;
+        } else if (get(field).isString()) {
+            return get(field).asString();
+        } else {
+            return null;
+        }
+    }
+
+    public int forceFieldInt(String field) {
+        if (get(field) == null) {
+            return -1;
+        } else if (get(field).isNumber()) {
+            return getInt(field, -1);
+        } else if (get(field).isString()) {
+            try {
+                return Integer.parseInt(getField(field));
+            } catch (Exception ex) {
+                return -1;
+            }
+        }
+        return -1;
+
+    }
+
+    public double forceFieldDouble(String field) {
+        if (get(field) == null) {
+            return -1;
+        } else if (get(field).isNumber()) {
+            return getDouble(field, -1);
+        } else if (get(field).isString()) {
+            try {
+                return Double.parseDouble(getField(field));
+            } catch (Exception ex) {
+                return -1;
+            }
+        }
+        return -1;
+
+    }
+
+    public boolean forceFieldBoolean(String field) {
+        if (get(field) == null) {
+            return false;
+        } else if (get(field).isBoolean()) {
+            return getBoolean(field, false);
+        } else if (get(field).isString()) {
+            try {
+                return Boolean.parseBoolean(getField(field));
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+        return false;
+
+    }
+
     public Ole zipMe() {
         Ole res = new Ole();
         String tozip = this.toString();
@@ -917,6 +979,7 @@ public class Ole extends JsonObject {
         }
         return this;
     }
+
     public String UnzipThis(Ole zipOle) {
         if (zipOle.get("zipdata") == null) {
             return "";

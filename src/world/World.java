@@ -384,6 +384,10 @@ public class World {
         return _population.getThing(name);
     }
 
+    public ArrayList<Thing> getAllThings() {
+        return _population.getAllThings();
+    }
+
     public boolean findThing(String id) {
         return _population.getAllNames().contains(id);
     }
@@ -685,6 +689,10 @@ public class World {
         return _population.getThing(name);
     }
 
+    public ArrayList<String> getAllThingsnames() {
+        return _population.getAllNames();
+    }
+
     public ArrayList<String> getAllThingsNear(String from, String type, int radius) {
         ArrayList<String> res = new ArrayList();
         Thing tfrom;
@@ -698,6 +706,30 @@ public class World {
         return res;
     }
 
+    public ThingSet getAllThingsRightHere(String city, String type) {
+        ThingSet res = new ThingSet();
+        res.setOntology(_population.getOntology());
+        res.setTypeFilter(type);
+        for (Thing tto : _population.indexBelong.getValues(city)) {
+            if (tto.getType().equals(type)) {
+                res.addThing(tto);
+            }
+        }
+        return res;
+    }
+
+//    public ArrayList<String> getAllThingsRightHere(String city, String type) {
+//        ArrayList<String> res = new ArrayList();
+//        Thing tfrom;
+//        for (Thing tto : _population.indexBelong.getValues(city)) {
+//            if (tto.getType().equals(type)) {
+//                res.add(tto.getName());
+//            }
+//        }
+//        Collections.sort(res);
+//        return res;
+//    }
+//
     public Point3D getClosestDocking(Point3D ptentative) {
         Point3D res = ptentative.clone(), res2;
         Map2DColor map = getEnvironment().getSurface();
@@ -934,16 +966,28 @@ public class World {
                     res = true;
                     break;
                 case CAPTURE:
-                    String who = command.replace("CAPTURE ", "").trim();
-                    Point3D gps = agent.getPosition(),
-                     guy = this.getThingByName(who).getPosition();
-                    if (gps.planeDistanceTo(guy) < 15) {
+                    String who = command.replace("CAPTURE ", "").trim(),
+                     city = agent.Raw().getCurrentCity();
+                    Thing tWho = getThingByName(who);
+                    if (tWho.getBelongsTo().equals(city)) {
                         agent.Raw().addCargo(who);
+                        tWho.setBelongsTo("");
+                        tWho.setPosition(new Point3D(-1, -1, -1));
                         res = true;
                     } else {
                         agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
                         res = false;
                     }
+//                    Point3D gps = agent.getPosition()
+//                     guy = this.getThingByName(who).getPosition();
+//                    if (gps.planeDistanceTo(guy) < 15) {
+//                        agent.Raw().addCargo(who);
+//                        this.removeThing(_environment);
+//                        res = true;
+//                    } else {
+//                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
+//                        res = false;
+//                    }
                     break;
                 case UP:
                     int nups;
@@ -1113,7 +1157,7 @@ public class World {
         if (path != null) {
             int i = 0, istep;
             if (this.getName().equals("AlertDeathStar")) {
-                istep = agent.Raw().getRange()/2;
+                istep = agent.Raw().getRange() / 2;
             } else {
                 istep = agent.Raw().getRange() * 2;
             }

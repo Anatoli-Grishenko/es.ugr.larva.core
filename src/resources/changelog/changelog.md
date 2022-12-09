@@ -1,3 +1,17 @@
+# 2022-12-05
+   - Deep refactoring of LARVAFirstAgent DroidShips to cope with session alias automatically since all the future sessions will be shared amongst different stakeholders. A session alias is a single word with no white spaces in between.
+      - All players taking part in a shared session must:
+         - Agree on a password for the session, i.e. "CHOCOLATE"
+         - include defSessionAlias("CHOCOLATE") in their setup and in their services in DF
+         - Agree on the order of execution of the agens for a good operation
+                  -  Now, when a session is open with an alias, the corresponding Session Manager appears in DF as "<alias>" and also as "<sessionKey>" so as it is very easy to identify these terms just by having an alias.
+      - The agent who opens the session must appears as "OPEN <alias>". 
+      - All the agents that take part in a shared session must also hava "TEAM <alias>"
+      - The use of NPCs needs the use of an alias. In order to do that, LARVAFirstAgent provides a unique alias for every user wich cannot be shared to other teams. The safest way of defining an alias for a regular student-agent is during Open Problem as specified in the reference manual.
+      - Any regular agent may open a shared session with an alias and its stepts would be the regular ones: checkin+openproblem+joinsession+closeproblem+checkout I will be the Host agent.
+      - Any agent invited to a shared sesion would be slightly different. It will not have open/close problem because the Host agent already did it (or has the shortcut). It just takes the sessionAlias and explores the DF to get to know its associated Session manager, the session key, the Host agent and all its team mates.
+   - Refactored the GUI. Now on top of older COMMAND box, it appears the sessionKey or the sessionAlias when there is one. On top of the payload appears the name of the agent who is using the XUI
+
 # 2022-11-29
    - Updated new features in LARVADialogicalAgents
    - Added SingleBrosBrawl y SmahBrosBrawl

@@ -21,61 +21,33 @@ public class MTT extends DroidShip {
         super.setup();
         myType = "MTT";
         this.DFAddMyServices(new String[]{
-            "TYPE MTT",
-            "REQUEST BACKUP",
-            "REQUEST CAPTURE <name>",
-            "REQUEST CAPTURE <n> <type>",
-            "REQUEST MOVETO <x> <y>",
-            "REQUEST MOVEIN <city>",
-            "REQUEST MOVEBY <agent>",
-            "REQUEST TRANSFER <agent>"});
-        logger.offEcho();
+            "TYPE MTT"
+        });
+        //logger.onEcho(); showPerceptions=true;
+//        logger.offEcho();
+
     }
 
     @Override
     protected Status processAsynchronousMessages() {
-//        Info(this.DM.toString());
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getInboundOpen()) {
-            contentTokens = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
-            if (isOnMission()) {
+            if (isRecruitedMission()) {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
-//                    "Backup to " + toWhom + " has just finished\nGood luck!"
-                    InfoMessage("Backup to " + toWhom + " has just finished\nGood luck!");
+                    Info("Received CANCEL");
+                    this.offRecruitedMission();
                     this.forget(m);
-                    this.offMission();
                     return Status.CHOOSEMISSION;
                 } else {
                     this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, I am busy", null));
+                    return myStatus;
                 }
             } else {
-                if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
+                if (allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
                     if (m.getContent().equals("BACKUP")) {
                         this.forget(m);
                         return this.onDemandBackup(m);
-                        //logger.onEcho();
-//                        InfoMessage("Received BACKUP from " + toWhom + " asking Transponder");
-//                        sTransponder = this.askTransponder(toWhom);
-//                        if (sTransponder.length() == 0) {
-////                            InfoMessage("Bad Transponder");
-//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-//                            return myStatus;
-//                        }
-////                        this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Going towards you ", null));
-//                        InfoMessage("Transponder " + sTransponder);                        
-//                        try {
-//                            pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-//                            this.onMission(m, "BACKUP" + toWhom,
-//                                    new String[]{"MOVETO " + pTarget.getXInt() + " " + pTarget.getYInt(),
-//                                        "BACKUP " + toWhom});
-//                            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
-//                            return Status.SOLVEMISSION;
-//                        } catch (Exception ex) {
-//                            InfoMessage("Bad transponder");
-//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-//                            return myStatus;
-//                        }
                     } else {
                         InfoMessage("Unknown request"
                                 + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()

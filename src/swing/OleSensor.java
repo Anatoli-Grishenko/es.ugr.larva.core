@@ -70,7 +70,7 @@ public abstract class OleSensor extends JComponent {
     protected double mainRadius, markRadius, textRadius, labelRadius, dialRadius, barRadius;
     protected int stroke = 27, alertLimit = Perceptor.NULLREAD;
     protected Font f, fRead;
-    protected String sRead, sfRead, sfText, labels[], externalSensorName;
+    protected String sRead, sfRead, sfText, labels[], externalSensorName, Description="";
     protected JTextPane jtBag;
     protected JScrollPane jsPane;
     protected Map2DColor map, image1, image2, image3;
@@ -89,7 +89,6 @@ public abstract class OleSensor extends JComponent {
 
     public OleSensor(OleDrawPane parent, String name) {
         super();
-
         setName(name);
         this.attachToExternalSensor(name.toLowerCase());
         parentPane = parent;
@@ -1095,6 +1094,14 @@ public abstract class OleSensor extends JComponent {
         g.setColor(Color.WHITE);
         g.draw(SwingTools.doNarrow(r2, 1));
 
+    }
+
+    public String getDescription() {
+        return Description;
+    }
+
+    public void setDescription(String Description) {
+        this.Description = Description;
     }
 
 }

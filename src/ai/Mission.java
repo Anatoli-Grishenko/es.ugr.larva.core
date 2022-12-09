@@ -6,6 +6,7 @@
 package ai;
 
 import com.eclipsesource.json.JsonArray;
+import data.Transform;
 import java.util.ArrayList;
 
 /**
@@ -14,30 +15,31 @@ import java.util.ArrayList;
  */
 public class Mission extends ArrayList<String> {
 
-    
     public final static String sepMissions = ";";
     protected String name, goalStatus;
     protected int iGoal;
-    
+
     public Mission(String mission) {
         super();
         String goals[] = mission.split(sepMissions);
         setName(goals[0]);
+        iGoal = -1;
         for (int i = 1; i < goals.length; i++) {
             this.add(goals[i]);
+            iGoal = 1;
         }
-        iGoal = 0;
-        goalStatus="NEW";
+        undefCurrentGoalStatus();
     }
 
     public Mission(String missionName, String goals[]) {
         super();
         setName(missionName);
+        iGoal = -1;
         for (int i = 0; i < goals.length; i++) {
+            iGoal = 0;
             this.add(goals[i]);
         }
-        iGoal = 0;
-        goalStatus="NEW";
+        undefCurrentGoalStatus();
     }
 
     public String getName() {
@@ -58,34 +60,60 @@ public class Mission extends ArrayList<String> {
     }
 
     public Mission addGoal(String goal) {
+        if (iGoal < 0) {
+            iGoal = 0;
+        }
         this.add(goal);
         return this;
+    }
+
+    public void setCurrentGoal(String goal) {
+        if (iGoal < 0) {
+            this.addGoal(goal);
+        }
+        this.set(iGoal, goal);
     }
 
     public String getCurrentGoal() {
         if (this.isOver()) {
             return "";
         } else {
-            return get(iGoal);
+            if (getCurrentGoalStatus().length() == 0) {
+                if (iGoal < 0) {
+                    return "";
+                } else {
+                    return get(iGoal);
+                }
+            } else {
+                return getCurrentGoalStatus();
+            }
         }
+    }
+
+    public String[] getAllGoals() {
+        return Transform.toArrayString(this);
     }
 
     public void nextGoal() {
         if (!isOver()) {
             iGoal++;
-            goalStatus="NEW";
+            goalStatus = "";
         }
     }
 
     public boolean isOver() {
         return iGoal >= size();
     }
-    
-    public String getCurrentGoalStatus(){
+
+    public String getCurrentGoalStatus() {
         return goalStatus;
     }
 
-    public void setCurrentGoalStatus(String status){
-        goalStatus=status;
+    public void defCurrentGoalStatus(String status) {
+        goalStatus = status;
+    }
+
+    public void undefCurrentGoalStatus() {
+        goalStatus = "";
     }
 }

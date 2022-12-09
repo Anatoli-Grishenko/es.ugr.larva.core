@@ -8,10 +8,15 @@ package world;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import data.Ole;
+import data.OleTable;
 import data.Transform;
 import geometry.Point3D;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 import ontology.Ontology;
 
 /**
@@ -29,7 +34,7 @@ public class ThingSet {
         typeFilter = "";
         indexType = new ThingIndex().setField("type");
         indexName = new ThingIndex().setField("name");
-        indexBelong = new ThingIndex().setField("belong");
+        indexBelong = new ThingIndex().setField("belongs");
         indexPosition = new ThingIndex().setField("position");
     }
 
@@ -135,19 +140,20 @@ public class ThingSet {
         return indexName.getAllValues();
     }
 
-    public ArrayList <Thing> splitListByType(String type)  {
+    public ArrayList<Thing> splitListByType(String type) {
         ArrayList<Thing> res = new ArrayList();
-        for (String stype : indexType.getKeys()){
-            if (getOntology().matchTypes(stype, type))
+        for (String stype : indexType.getKeys()) {
+            if (getOntology().matchTypes(stype, type)) {
                 res.addAll(this.indexType.getValues(stype));
+            }
         }
         return res;
     }
-    
-    public ArrayList <Thing> splitListByBelong(String type)  {
+
+    public ArrayList<Thing> splitListByBelong(String type) {
         return this.indexBelong.getValues(type);
     }
-    
+
     public ThingSet splitSetByType(String type) {
         ThingSet res = new ThingSet();
         res.setOntology(this.getOntology());
@@ -167,7 +173,36 @@ public class ThingSet {
         if (getTypeFilter().length() > 0) {
             return new JsonObject().add(getTypeFilter(), jsares);
         } else {
-            return new JsonObject().add(getOntology().getRootType(), jsares);
+            if (getOntology() != null) {
+                return new JsonObject().add(getOntology().getRootType(), jsares);
+            } else {
+                return new JsonObject().add("data", jsares);
+            }
         }
     }
+
+    public boolean loadFromTSVFile(String filename) {
+        OleTable ot = new OleTable();
+        if (ot.loadSeparatedFile(filename, "\t")) {
+            System.out.println(ot.toString());
+            System.out.print("Loading ThingSet from "+filename+" ");
+            Thing t;
+            for (int i = 0; i < ot.size(); i++) {
+                t = new Thing(ot.getRow(i).getField("Name"));
+                t.setBelongsTo(ot.getRow(i).getField("BelongsTo"));
+                t.setPosition(new Point3D(ot.getRow(i).getField("Position")));
+                t.setType(ot.getRow(i).getField("Type"));
+                t.setMaxCapacity(ot.getRow(i).forceFieldInt("MaxCapacity"));
+                t.setCapacity(ot.getRow(i).forceFieldInt("Capacity"));
+                t.setAvailable(ot.getRow(i).forceFieldInt("isAvailable")==1);
+                addThing(t);
+            }
+            System.out.println(this.size()+" instances");
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
 }

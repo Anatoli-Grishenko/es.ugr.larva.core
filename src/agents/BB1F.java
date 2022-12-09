@@ -23,54 +23,30 @@ public class BB1F extends DroidShip {
         super.setup();
         myType = "BB1F";
         this.DFAddMyServices(new String[]{"TYPE " + myType});
-        this.allowParking = true;
-        logger.offEcho();
+        //logger.onEcho(); showPerceptions=true;
+//        logger.offEcho();
     }
 
     @Override
     protected Status processAsynchronousMessages() {
-//        Info(this.DM.toString());
-        String toWhom;
         super.processAsynchronousMessages();
         for (ACLMessage m : this.getInboundOpen()) {
-            String tokens[] = m.getContent().split(" ");
             toWhom = m.getSender().getLocalName();
-            if (isOnMission()) {
+            if (isRecruitedMission()) {
                 if (m.getPerformative() == ACLMessage.CANCEL) {
                     Info("Received CANCEL");
-                    this.offMission();
+                    this.offRecruitedMission();
                     this.forget(m);
                     return Status.CHOOSEMISSION;
                 } else {
                     this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, I am busy", null));
+                    return myStatus;
                 }
             } else {
-                if (!inNegotiation && allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
+                if (allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
                     if (m.getContent().toUpperCase().equals("REFILL")) {
                         this.forget(m);
                         return this.onDemandRefill(m);
-//                        //logger.onEcho();
-//                        InfoMessage("Received REFILL from " + toWhom + " asking Transponder");
-//                        sTransponder = this.askTransponder(toWhom);
-//                        if (sTransponder.length() == 0) {
-////                            InfoMessage("Bad Transponder");
-//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-//                            return myStatus;
-//                        }
-////                        this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "Going towards you ", null));
-//                        InfoMessage("Transponder " + sTransponder);
-//                        try {
-//                            pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-//                            this.onMission(m, "REFILL " + toWhom,
-//                                    new String[]{"MOVETO " + pTarget.getXInt() + " " + pTarget.getYInt(),
-//                                        "REFILL " + toWhom});
-//                            this.Dialogue(this.respondTo(m, ACLMessage.AGREE, "On the way", null));
-//                            return Status.SOLVEMISSION;
-//                        } catch (Exception ex) {
-//                            InfoMessage("Bad transponder");
-//                            this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, your position is not available in Transponder", null));
-//                            return myStatus;
-//                        }
                     } else {
                         InfoMessage("Unknown request"
                                 + "\n" + emojis.ROBOT + " From: " + m.getSender().getLocalName()

@@ -9,11 +9,15 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
+import world.Thing;
 
 /**
  *
@@ -115,10 +119,11 @@ public class OleTable extends Ole {
     public int rowSize() {
         return get("rows").asArray().size();
     }
-    public JsonArray rawRows(){
+
+    public JsonArray rawRows() {
         return this.get("rows").asArray();
     }
-    
+
     protected void initRows() {
         if (rawRows().size() > 0) {
             Ole o = new Ole(rawRows().get(0).asObject());
@@ -135,7 +140,7 @@ public class OleTable extends Ole {
         }
         return this;
     }
-    
+
     public Ole getRow(int r) {
         if (0 <= r && r < size()) {
             return new Ole(rawRows().get(r).asObject());
@@ -221,6 +226,7 @@ public class OleTable extends Ole {
         return res;
     }
 
+    @Override
     public int size() {
         return rawRows().size();
     }
@@ -229,7 +235,7 @@ public class OleTable extends Ole {
         String res = "";
         ArrayList<String> names = new ArrayList();
         int i = 0;
-        for (; i<size();i++){ 
+        for (; i < size(); i++) {
             if (i == 0) {
                 res += "|";
                 names = new ArrayList(getFieldList());
@@ -250,6 +256,69 @@ public class OleTable extends Ole {
         res += "\n";
         return res;
     }
+
+    public boolean loadSeparatedFile(String filename, String separator) {
+        File fi = new File(filename);
+        if (fi.exists()) {
+            this.clear();
+            try {
+                Scanner sfi = new Scanner(fi);
+                String line;
+                String linefields[] = null, linevalues[] = null;
+                Ole o;
+                while (sfi.hasNext()) {
+                    line = sfi.nextLine();
+                    if (line.length() > 0) {
+                        if (linefields == null) {
+                            linefields = line.split(separator);
+                        } else {
+                            linevalues = line.split(separator);
+                            o = new Ole();
+                            for (int i = 0; i < linevalues.length; i++) {
+                                o.setField(linefields[i], linevalues[i]);
+                            }
+                            this.addRow(o);
+                        }
+                    }
+                }
+                return true;
+            } catch (FileNotFoundException ex) {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public String toString(){
+        String res="";
+        ArrayList<String> names = new ArrayList<>();
+        int i = 0;
+        for (Ole orow : getAllRows()) {
+            if (i == 0) {
+                res+="|";
+                names = new ArrayList(getFieldList());
+                for (String col : names) {
+                        res+=(String.format("%15s|", col));
+                }
+                res+=("\n+");
+                for (String col : names) {
+                    res+=("---------------+");
+                }
+            }
+            res+=("\n|");
+            for (String key : names) {
+                String value = orow.getField(key);
+                res+=(String.format("%15s|", value.substring(0, Math.min(15, value.length()))));
+            }
+            i++;
+        }
+        res+=("");
+        return res;
+    }
+
+}
+
 //    public String prettyprint() {
 //        String res = "";
 //        ArrayList<String> names = new ArrayList();
@@ -277,4 +346,4 @@ public class OleTable extends Ole {
 //
 //        return res;
 //    }
-}
+

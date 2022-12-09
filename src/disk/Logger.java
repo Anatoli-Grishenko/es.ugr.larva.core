@@ -114,6 +114,11 @@ public class Logger {
         return this;
     }
 
+    public Logger offSaveDisk() {
+        _validFile = false;
+        return this;
+    }
+
     public Logger onOverwrite() {
         this._overwrite = true;
         return this;

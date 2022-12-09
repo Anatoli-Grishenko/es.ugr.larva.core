@@ -39,9 +39,10 @@ public class ThingIndex {
     public ArrayList<Thing> getValues(String key) {
         ArrayList<Thing> res = new ArrayList();
         if (index.get(key) != null) {
-            for (Thing t : index.get(key)) {
-                res.add(t);
-            }
+                return index.get(key);
+//            for (Thing t : index.get(key)) {
+//                res.add(t);
+//            }
         }
         return res;
     }

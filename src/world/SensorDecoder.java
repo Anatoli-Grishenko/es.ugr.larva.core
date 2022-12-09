@@ -370,7 +370,11 @@ public class SensorDecoder {
      * @return Thje height over the ground level
      */
     public int getGround() {
-        return this.getSensor(Sensors.GROUND).get(0).asInt();
+        if (this.getSensor(Sensors.GROUND) != null) {
+            return this.getSensor(Sensors.GROUND).get(0).asInt();
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -784,11 +788,14 @@ public class SensorDecoder {
      * @return
      */
     public String[] getAllMissions() {
-        String res[] = new String[this.getSensor(Sensors.MISSIONSET).size()];
-        int i = 0;
-        for (JsonValue jsv : this.getSensor(Sensors.MISSIONSET)) {
-            String mission[] = jsv.asString().split(Mission.sepMissions);
-            res[i++] = mission[0];
+        String res[] = new String[0];
+        if (this.getSensor(Sensors.MISSIONSET) != null) {
+            res = new String[this.getSensor(Sensors.MISSIONSET).size()];
+            int i = 0;
+            for (JsonValue jsv : this.getSensor(Sensors.MISSIONSET)) {
+                String mission[] = jsv.asString().split(Mission.sepMissions);
+                res[i++] = mission[0];
+            }
         }
         return res;
     }
@@ -2191,9 +2198,15 @@ public class SensorDecoder {
         return currentMission;
     }
 
-    public void setCurrentMission(String mission) {
-        String goals[] = getMissionGoals(mission);
-        this.setCurrentMission(mission, goals);
+    public void makeCurrentMission(String missionString) {
+        String missionName = missionString.split(Mission.sepMissions)[0];
+        String goals[] = missionString.replace(missionName + Mission.sepMissions, "").split(Mission.sepMissions);
+        this.setCurrentMission(missionName, goals);
+    }
+
+    public void setCurrentMission(String missionname) {
+        String goals[] = getMissionGoals(missionname);
+        this.setCurrentMission(missionname, goals);
     }
 
     public void setCurrentMission(String missionName, String goals[]) {
@@ -2216,6 +2229,23 @@ public class SensorDecoder {
             getCurrentMission().nextGoal();
             return "";
         }
+    }
+
+    public void setCurrentGoal(String goal) {
+        getCurrentMission().setCurrentGoal(goal);
+
+    }
+
+    public String getCurrentGoalStatus() {
+        return getCurrentMission().getCurrentGoalStatus();
+    }
+
+    public void defCurrentGoalStatus(String status) {
+        getCurrentMission().defCurrentGoalStatus(status);
+    }
+
+    public void undefCurrentGoalStatus() {
+        getCurrentMission().undefCurrentGoalStatus();
     }
 
     public String getCurrentCity() {
@@ -2242,6 +2272,14 @@ public class SensorDecoder {
 
     public TimeHandler getLastRead() {
         return lastRead;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 
 }

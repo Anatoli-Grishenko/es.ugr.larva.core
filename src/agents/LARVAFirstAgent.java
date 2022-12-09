@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
@@ -70,6 +71,7 @@ import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.getReceiverList;
+import swing.OleFrame;
 import swing.SwingTools;
 
 /**
@@ -113,7 +115,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected JTextArea myText;
 //    protected SensorDecoder Deco;
     protected ACLMessage checkin, checkout;
-    protected String IdentityManager = "";
+    protected String IdentityManager = "", Controller;
 
     protected int userID = -1;
     protected String userName = "";
@@ -136,7 +138,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected boolean cont = true, each = true, remote = false;
     OleAgentTile externalTile;
     OleToolBar externalTB;
-    OleButton olbContinue, olbPause, olbNext, olbUntil;
+    OleButton olbContinue, olbPause, olbNext, olbUntil, olbResume;
     protected int nUntil, iUntil = 0, frameDelay = 0;
     protected boolean showConsole = false, showRemote = false;
     protected XUITTY xuitty;
@@ -260,6 +262,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.frameDelay = oleConfig.getTab("Display").getInt("Frame delay", -1);
             showConsole = this.oleConfig.getTab("Display").getBoolean("Show console");
             showRemote = this.oleConfig.getTab("Display").getBoolean("Show remote");
+//            if (payload.getSessionALias() != null) {
+//                defSessionAlias(payload.getSessionALias());
+//            }
         } else {
             myReport = new AgentReport(getName(), this.getClass(), 100);
         }
@@ -617,6 +622,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     checkedin = true;
                     Info(checkin.getContent());
                     this.getUserData(checkin.getContent());
+                    if (getSessionAlias().length() == 0) {
+                        defSessionAlias("");
+                    }
                     return true;
                 } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
                     Error("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
@@ -902,7 +910,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     public void Message(String message) {
-        if (E != null && E.getType()!= null) {
+        if (E != null && E.getType() != null) {
             JOptionPane.showMessageDialog(null,
                     message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE);
         } else {
@@ -919,6 +927,29 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //        } else {
 //            Info(message);
 //        }
+    }
+
+    public void UnMessage(String message) {
+        Semaphore swait = new Semaphore(0);
+        if (E != null && E.getType() != null) {
+            doSwingLater(() -> {
+                JOptionPane.showMessageDialog(null,
+                        message, "Agent " + getLocalName() + " " + E.getType(), JOptionPane.INFORMATION_MESSAGE);
+                swait.release(1);
+            });
+        } else {
+            doSwingLater(() -> {
+                JOptionPane.showMessageDialog(null,
+                        message, "Agent " + getLocalName(), JOptionPane.INFORMATION_MESSAGE);
+                swait.release(1);
+            });
+        }
+        try {
+            swait.acquire(1);
+        } catch (Exception ex) {
+
+        }
+        Info(message);
     }
 
     public void Message(String message, String icon) {
@@ -1200,9 +1231,12 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             } catch (Exception ex) {
             }
         }
-        if (sessionAlias.length() == 0) {
-            this.sessionAlias = trimFullString(userName);
-        }
+        ///> THis method executed during CHECKIN method, therefore, any definition 
+        ///> of session Alias in the setup must b taken into account
+//        if (getSessionAlias().length() == 0) {
+//            defSessionAlias(trimFullString(userName));
+//        }
+//        loadSessionAlias();
     }
 
     protected void setupEnvironment() {
@@ -1281,6 +1315,24 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         remotePause();
     }
 
+    public void clickToContinue() {
+        closeRemote();
+        OleApplication parentApp = this.payload.getParent();
+        externalTile = (OleAgentTile) this.payload.getGuiComponents().get("TILE " + this.getLocalName());
+        externalTB = externalTile.getExternalToolBar();
+        externalTB.removeAllButtons();
+        int sizeButtons = 24;
+        olbResume = new OleButton(parentApp, "RESUME", "play_circle");
+        olbResume.setExtraFlat();
+        olbResume.setBorderPainted(true);
+        olbResume.setContentAreaFilled(true);
+        olbResume.setIcon(new Dimension(sizeButtons, sizeButtons));
+        olbResume.addActionListener(this);
+        olbResume.setEnabled(true);
+        externalTB.addButton(olbResume);
+        remoteWait();
+    }
+
     public void remotePlay() {
         if (this.remote) {
             this.SWaitButtons.release();
@@ -1301,6 +1353,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.olbPause.setEnabled(false);
             this.olbUntil.setEnabled(true);
         }
+    }
+
+    public void remoteResume() {
+        this.SWaitButtons.release();
+        if (externalTB != null) {
+            externalTB.removeAll();
+            externalTB.repaint();
+        }
+        remote = false;
+    }
+
+    public void remoteWait() {
+        this.cont = false;
+        remote = true;
+        this.SWaitButtons.drainPermits();
     }
 
     public void remoteNextStep() {
@@ -1329,6 +1396,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
+            case "RESUME":
+                remoteResume();
+                break;
             case "CONTINUE":
                 remotePlay();
                 break;
@@ -1357,7 +1427,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         } else {
             m = this.inputSelect("Please chhoose a mission", getEnvironment().getAllMissions(), "");
         }
-        Info("Selected mission " + m);
+        if (m != null) {
+            Info("Selected mission " + m);
+        }
         return m;
     }
 
@@ -1517,9 +1589,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //        if (this.errortags.contains(msg.getContent().split(" ")[0].toUpperCase())) {
 //            return true;
 //        }
-        if (ACLMessageTools.ERRORS.contains(msg.getPerformative())) {
-            return true;
-        }
+//        if (ACLMessageTools.ERRORS.contains(msg.getPerformative())) {
+//            return true;
+//        }
 //        String c = msg.getContent().toUpperCase();
 //        for (String s : errortags) {
 //            if (c.startsWith(s)) {
@@ -1529,14 +1601,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return false;
     }
 
-    public boolean doLaunchSubagent(Class c) {
+    public synchronized boolean doLaunchSubagent(Class c) {
         OlePassport oPassport = new OlePassport();
         oPassport.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
-        LARVAPayload payload = new LARVAPayload();
-        payload.setOlecfg(oleConfig);
-        payload.setoPassport(oPassport);
+        LARVAPayload myPayload = new LARVAPayload();
+        myPayload.setOlecfg(oleConfig);
+        myPayload.setoPassport(oPassport);
         Object _args[] = new Object[1];
-        _args[0] = payload;
+        _args[0] = myPayload;
+//        myPayload.setSessionALias(sessionAlias);
         if (oleConfig.getOptions().getOle("Connection").getString("boot", "").equals("microjade")) {
             return baseFactory.fastMicroBirth(c.getSimpleName().substring(0, 1) + getHexaKey(3), c, _args);
         } else {
@@ -1616,4 +1689,44 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     public void setFixedReceiver(String fixedReceiver) {
         this.fixedReceiver = fixedReceiver;
     }
+
+    /**
+     * Define an alias for the session to be shared
+     *
+     * @param alias The name of the alias
+     */
+    public void defSessionAlias(String alias) {
+        if (alias.length() > 0) {
+            sessionAlias = alias;
+            PrintStream op;
+            try {
+                op = new PrintStream(new File("config/alias.txt"));
+                op.print(sessionAlias);
+                op.close();
+            } catch (FileNotFoundException ex) {
+//            java.util.logging.Logger.getLogger(LARVAFirstAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            defSessionAlias(trimFullString(userName));
+        }
+    }
+
+    public void loadSessionAlias() {
+        try {
+            Scanner fin = new Scanner(new File("config/alias.txt"));
+            sessionAlias = fin.nextLine();
+        } catch (FileNotFoundException ex) {
+            defSessionAlias(trimFullString(userName));
+
+        }
+    }
+
+    public boolean isUsingSessionAlias() {
+        return sessionAlias.length() > 0;
+    }
+
+    public String getSessionAlias() {
+        return sessionAlias;
+    }
+
 }

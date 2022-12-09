@@ -9,6 +9,7 @@ import Environment.Environment;
 import com.eclipsesource.json.JsonObject;
 import data.OleConfig;
 import glossary.Sensors;
+import glossary.TrailSet;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -54,7 +55,8 @@ import world.Thing;
  */
 public class OleSuperMap extends OleSensor implements ActionListener {
 
-    protected HashMap<String, ArrayList<SimpleVector3D>> Trails;
+//    protected HashMap<String, ArrayList<SimpleVector3D>> Trails;
+    TrailSet trailSet;
     protected Polygon hudView[][];
     protected int narrow = 37, margin = 22;
     protected Polygon p;
@@ -75,7 +77,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     public OleSuperMap(OleDrawPane parent, String name) {
         super(parent, name);
         this.setLayout(null);
-        Trails = new HashMap();
+//        Trails = new HashMap();
+        trailSet = new TrailSet();
         isMap = true;
         at = parentPane.getAngleT();
         myDash = ((OleDashBoard) this.parentPane);
@@ -304,18 +307,23 @@ public class OleSuperMap extends OleSensor implements ActionListener {
             this.setForeground(cbkp);
 
             // Paint agents trails
-            for (String name : Trails.keySet()) {
+            for (int it = 0; it < trailSet.size(); it++) {
+                String name = trailSet.getIndividual(it);
 //                if (this.myDash.getDecoderOf(name).getLastRead().elapsedTimeSecsUntil(tnow) < 10000) {
+                if (myDash.getDecoderOf(name) == null) {
+                    continue;
+                }
                 if (this.isShowTrail()) {
-                    for (int i = 2; i < Trails.get(name).size(); i++) {
-                        ptrail = Trails.get(name).get(i);
-                        if (this.getTrailSize() > 25) {
+                    for (int i = 2; i < trailSet.lengthTrail(name); i++) {
+                        ptrail = trailSet.getTrailData(name, i);
+                        if (trailSet.lengthTrail(name) > 25) {
                             c = map.getColor(ptrail);
-                            g.setColor(new Color(0, (Trails.get(name).size() - i) * 255 / Trails.get(name).size(), 0));
+                            g.setColor(new Color(0, (trailSet.lengthTrail(name) - i) * 255
+                                    / trailSet.lengthTrail(name), 0));
                         } else {
                             g.setColor(Color.GREEN);
                         }
-                        g.fill(this.TraceRegularPolygon(ptrail, 4, 3));
+                        g.fill(this.TraceRegularPolygon(ptrail, 4, 2));
                     }
                 }
 
@@ -420,19 +428,11 @@ public class OleSuperMap extends OleSensor implements ActionListener {
     }
 
     public void clearTrail() {
-        Trails.clear();
+        trailSet.clear();
     }
 
-    public void addTrail(String name, SimpleVector3D p) {
-        if (Trails.get(name) == null) {
-            Trails.put(name, new ArrayList());
-        }
-//        Rectangle r = SwingTools.doNarrow(this.getBounds(), 6);
-        Trails.get(name).add(0, p);
-        if (Trails.get(name).size() > getTrailSize()) {
-            Trails.get(name).remove(Trails.get(name).size() - 1);
-        }
-
+    public synchronized void addTrail(String name, SimpleVector3D p) {
+        trailSet.addTrailData(name, p);
     }
 
     protected void paintGoalMap(Graphics2D g, JsonObject jsgoal) {
@@ -496,16 +496,20 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         TextFactory tf;
         String s, climb;
         s = name;
-
+        boolean showAllInfo = true;
         if (myDash.getDecoderOf(name).getAlive()) {
             if (myDash.getDecoderOf(name).getType().equals("DEST")) {
                 g.setColor(Color.RED);
+                showAllInfo = false;
             } else if (myDash.getDecoderOf(name).getType().equals("MTT")) {
                 g.setColor(Color.CYAN);
+                showAllInfo = false;
             } else if (myDash.getDecoderOf(name).getType().equals("BB1F")) {
                 g.setColor(Color.ORANGE);
+                showAllInfo = false;
             } else if (myDash.getDecoderOf(name).getType().equals("VAAT")
                     || myDash.getDecoderOf(name).getType().equals("YV")) {
+                showAllInfo = false;
                 g.setColor(Color.MAGENTA);
             } else {
                 g.setColor(cTrail);
@@ -518,7 +522,9 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         tf = new TextFactory(g);
         tf.setPoint(pLabel).setsText(s).setFontSize(fsize).setTextStyle(Font.BOLD).setHalign(halign).setValign(valign).validate();
         tf.draw();
-
+        g.setStroke(new BasicStroke());
+        this.oDrawLine(g, viewP(sv.getSource()), pLabel);
+        g.setStroke(new BasicStroke(1));
         if (prevsv != null) {
             SimpleVector3D last = new SimpleVector3D(prevsv.getSource(), sv.getSource());
             if (last.canonical().getTarget().getZ() > 0) {
@@ -536,19 +542,25 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
-        tf.draw();
-        
+        if (showAllInfo) {
+            tf.draw();
+        }
+
         s = String.format("e.%03d%% pl.%02d", myDash.getDecoderOf(name).getEnergy() * 100 / myDash.getDecoderOf(name).getAutonomy(),
                 myDash.getDecoderOf(name).getPayload());
         tf = new TextFactory(g);
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
-        tf.draw();
-        g.setStroke(new BasicStroke());
-        this.oDrawLine(g, viewP(sv.getSource()), pLabel);
-        g.setStroke(new BasicStroke(1));
+        if (showAllInfo) {
+            tf.draw();
+        }
         String goal;
+//        if (myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0) != null) {
+//            goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
+//        } else {
+//            goal = " XXX";
+//        }
         try {
             goal = myDash.getDecoderOf(name).getSensor(Sensors.CURRENTGOAL).get(0).asString();
         } catch (Exception ex) {
@@ -559,18 +571,20 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         pLabel.setY(pLabel.getY() + fsize);
         tf.setPoint(pLabel).setsText(s).setsFontName(Font.MONOSPACED).setFontSize(fsize).setForeGround(cTrail)
                 .setTextStyle(Font.PLAIN).setHalign(halign).setValign(valign).validate();
-        tf.draw();
+        if (showAllInfo) {
+            tf.draw();
+        }
     }
 
-    public int getTrailSize() {
+    public synchronized int getTrailSize() {
         return trailSize;
     }
 
-    public void setTrailSize(int trailSize) {
+    public synchronized void setTrailSize(int trailSize) {
         this.trailSize = trailSize;
     }
 
-    public boolean isShowTrail() {
+    public synchronized boolean isShowTrail() {
         return showTrail;
     }
 
@@ -642,7 +656,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         mapView.setColor(x, y, palette.getColor(map.getStepLevel(x, y)));
                     }
                 }
-                cText = OleDashBoard.cCompass;
+                cText = Color.WHITE;
                 cOutline = Color.BLACK;
                 cTrail = Color.GREEN;
                 cGrid = Color.DARK_GRAY;
@@ -674,7 +688,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                         }
                     }
                 }
-                cText = Color.BLACK;
+                cText = Color.DARK_GRAY;
                 cOutline = Color.WHITE;
                 cTrail = OleDashBoard.cTrack;
                 cGrid = Color.GRAY;
@@ -683,4 +697,5 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         }
         this.setForeground(cText);
     }
+
 }

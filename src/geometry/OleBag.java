@@ -29,7 +29,8 @@ import world.Perceptor;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class OleBag extends OleSensor {
-JButton tbAux;
+
+    JButton tbAux;
 
     public OleBag(OleDrawPane parent, String name) {
         super(parent, name);
@@ -38,8 +39,8 @@ JButton tbAux;
         jtBag.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
 //        jtBag.setFont(new Font("Free Mono Regular", Font.PLAIN, 12));
     }
-    
-@Override
+
+    @Override
     public void clear() {
         super.clear();
         this.bag.clear();
@@ -50,8 +51,8 @@ JButton tbAux;
     public void validate() {
         jsPane = new JScrollPane(jtBag);
         jtBag.setBackground(Color.BLACK);
-        jsPane.setBounds(6,30,(int)this.getBounds().getWidth()-12,
-                (int) this.getBounds().getHeight() -35);
+        jsPane.setBounds(6, 30, (int) this.getBounds().getWidth() - 12,
+                (int) this.getBounds().getHeight() - 35);
         this.add(jsPane);
         parentPane.add(this);
         super.validate();
@@ -66,9 +67,15 @@ JButton tbAux;
             g.fillRoundRect(mX + 3, mY + 3, mW - 6, mH - 6, 10, 10);
         }
         Point3D top = new Point3D(this.getBounds().x + this.getBounds().width / 2, this.getBounds().y + 3);
-        TextFactory tf = new TextFactory(g).setsText(getName()).setFontSize(12).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
         g.setColor(Color.WHITE);
+        TextFactory tf = new TextFactory(g).setsText(getName()).setFontSize(12).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
         tf.draw();
+        if (getDescription() != null) {
+            g.setColor(Color.WHITE);
+            top = new Point3D(this.getBounds().x + this.getBounds().width / 2, this.getBounds().y + 15);
+            tf = new TextFactory(g).setsText(getDescription()).setFontSize(12).setPoint(top).setHalign(SwingConstants.CENTER).setValign(SwingConstants.TOP).validate();
+            tf.draw();
+        }
         return this;
     }
 

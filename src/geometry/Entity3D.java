@@ -21,6 +21,8 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     protected SimpleVector3D _vector;
     protected Point3D _size,_center;
     protected Color _color;
+    protected double _capacity=0, _maxCapacity=0;
+    protected boolean _available;
 
 
     public Entity3D(String name) {
@@ -160,6 +162,46 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     @Override
     public int compare(Entity3D one, Entity3D other) {
         return one.compareTo(other);
+    }
+
+    public double getCapacity() {
+        return _capacity;
+    }
+
+    public void setCapacity(double _capacity) {
+        this._capacity = _capacity;
+    }
+
+    public String getKey() {
+        return _key;
+    }
+
+    public void setKey(String _key) {
+        this._key = _key;
+    }
+
+    public String getType() {
+        return _type;
+    }
+
+    public void setType(String _type) {
+        this._type = _type;
+    }
+
+    public boolean isAvailable() {
+        return _available;
+    }
+
+    public void setAvailable(boolean _available) {
+        this._available = _available;
+    }
+
+    public double getMaxCapacity() {
+        return _maxCapacity;
+    }
+
+    public void setMaxCapacity(double _maxCapacity) {
+        this._maxCapacity = _maxCapacity;
     }
 
   
