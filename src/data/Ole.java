@@ -20,10 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -843,12 +846,56 @@ public class Ole extends JsonObject {
             setField(field, (Double) s);
         } else if (s instanceof Boolean) {
             setField(field, (Boolean) s);
+        } else if (s instanceof Enum) {
+//            String sc = ((<E extends <Enum E>> Class <E>) s).;
+//            setField(field, getEnumString(s));
         } else if (s instanceof Ole) {
             setField(field, (Ole) s);
         } else {
             setField(field, (String) s.toString());
         }
         return this;
+    }
+
+    public Ole setFieldGeneric2(String field, Object s, Class c) {
+        if (String.class.isInstance(s)) {
+            setField(field, (String) s);
+        } else if (Integer.class.isInstance(s)) {
+            setField(field, (Integer) s);
+        } else if (Double.class.isInstance(s)) {
+            setField(field, (Double) s);
+        } else if (Boolean.class.isInstance(s)) {
+            setField(field, (Boolean) s);
+        } else if (Enum.class.isInstance(s)) {
+            Object oo[] = c.getEnumConstants();
+            String n = "";
+            for (Object o : oo) {
+                if (o.equals(s)) {
+                    n = o.toString();
+                }
+            }
+            setField(field, n);
+        } else if (Ole.class.isInstance(s)) {
+            setField(field, (Ole) s);
+        } else {
+            setField(field, (String) s.toString());
+        }
+        return this;
+    }
+
+//    public static 
+//            String getEnumString(Object o) {
+//        return ((<E extends Enum<E>>)o).
+//    }
+//
+    public static <E extends Enum<E>>
+            String getEnumString(Class<E> clazz, String s) {
+        for (E en : EnumSet.allOf(clazz)) {
+            if (en.name().equalsIgnoreCase(s)) {
+                return en.name();
+            }
+        }
+        return null;
     }
 
 //    public void serialize(Object o, Class c) {
@@ -995,5 +1042,296 @@ public class Ole extends JsonObject {
         } catch (Exception ex) {
         }
         return "";
+    }
+
+    public static Ole toOle(AutoOle obj) {
+        Ole res = new Ole();
+        Class c = obj.myClass();
+        ArrayList<Field> myFields, fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        myFields = fullFields;
+        for (Field f : myFields) {
+            String getterName;
+            if (f.getType() == boolean.class) {
+                getterName = "is" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+            } else {
+                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+            }
+            try {
+                Method getter = c.getDeclaredMethod(getterName);
+                if (f.getType() == boolean.class
+                        || f.getType() == int.class
+                        || f.getType() == long.class
+                        || f.getType() == double.class
+                        || f.getType() == String.class) {
+                    res.setFieldGeneric(f.getName(), getter.invoke(obj));
+                }
+            } catch (Exception ex) {
+            }
+        }
+        return res;
+    }
+
+    public static Ole toOle2(Object obj) {
+        Ole res = new Ole();
+        Class c = obj.getClass();
+        ArrayList<Field> myFields,
+                fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        myFields = fullFields;
+        for (Field f : myFields) {
+            try {
+                f.setAccessible(true);
+                if (f.getType() == boolean.class) {
+                    res.setField(f.getName(), f.getBoolean(obj));
+                } else if (f.getType() == int.class) {
+                    res.setField(f.getName(), f.getInt(obj));
+                } else if (f.getType() == double.class) {
+                    res.setField(f.getName(), f.getDouble(obj));
+                } else if (f.getType() == String.class) {
+                    res.setField(f.getName(), (String) f.get(obj));
+                } else if (f.getType().isEnum()) {
+                    String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                    Method getter = c.getDeclaredMethod(getterName);
+                    Object oenum = getter.invoke(obj);
+                    res.setField(f.getName(), (String) oenum.toString());
+                }
+            } catch (Exception ex) {
+                System.err.println(ex.toString());
+            }
+        }
+        return res;
+    }
+
+    public static void singleDataToOle(Object ob, Class c, Field f, Ole ol) {
+        try {
+            if (f.getType() == boolean.class) {
+                ol.setField(f.getName(), f.getBoolean(ob));
+            } else if (f.getType() == int.class) {
+                ol.setField(f.getName(), f.getInt(ob));
+            } else if (f.getType() == double.class) {
+                ol.setField(f.getName(), f.getDouble(ob));
+            } else if (f.getType() == String.class) {
+                ol.setField(f.getName(), (String) f.get(ob));
+            } else if (f.getType().isEnum()) {
+                String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                Method getter = c.getDeclaredMethod(getterName);
+                Object oenum = getter.invoke(ob);
+                ol.setField(f.getName(), (String) oenum.toString());
+//                    String labels[] = Transform.toArrayString(Transform.getAllNames(c));
+                ArrayList<String> alValues = new ArrayList();
+                for (Object ov : f.getType().getEnumConstants()) {
+                    alValues.add(ov.toString());
+                }
+                ol.add(f.getName(), new JsonObject().add("select", Transform.toJsonArray(new ArrayList(alValues))));
+            }
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+        }
+    }
+
+//    public static JsonArray arrrayToOle(Object ob, Class c, Array a, Ole ol) {
+//        JsonArray res = new JsonArray();
+//        Ole oaux;
+//        for (int i = 0; i < Array.getLength(a); i++) {
+//            try {
+//                if (Array.get(a, i).getClass() == boolean.class) {
+//                    res.add(Array.getBoolean(ob, i));
+//                } else if (Array.get(a, i).getClass() == int.class) {
+//                    res.add(Array.getInt(ob, i));
+//                } else  if (Array.get(a, i).getClass() == double.class) {
+//                    res.add(Array.getDouble(ob, i));
+//                } else if (Array.get(a, i).getClass() == String.class) {
+//                    res.add((String)Array.get(ob, i));
+//                } else if (f.getType().isEnum()) {
+//                    String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+//                    Method getter = c.getDeclaredMethod(getterName);
+//                    Object oenum = getter.invoke(ob);
+//                    ol.setField(f.getName(), (String) oenum.toString());
+////                    String labels[] = Transform.toArrayString(Transform.getAllNames(c));
+//                    ArrayList<String> alValues = new ArrayList();
+//                    for (Object ov : f.getType().getEnumConstants()) {
+//                        alValues.add(ov.toString());
+//                    }
+//                    ol.add(f.getName(), new JsonObject().add("select", Transform.toJsonArray(new ArrayList(alValues))));
+//                }
+//            } catch (Exception ex) {
+//                System.err.println(ex.toString());
+//            }
+//        }
+//    }
+//
+//    public static Ole toOle4(Object obj) {
+//        Ole res = new Ole(), oOptions = new Ole(), oProp = new Ole();
+//        Class c = obj.getClass();
+//        ArrayList<Field> myFields,
+//                fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+//        myFields = fullFields;
+//        for (Field f : myFields) {
+//            f.setAccessible(true);
+//            if (f.getType() == boolean.class
+//                    || f.getType() == int.class
+//                    || f.getType() == double.class
+//                    || f.getType() == String.class
+//                    || f.getType().isEnum()) {
+//                singleDataToOle(obj, c, f, oProp);
+//            } else if (f.getType().isArray()) {
+//                JsonArray jsa = new JsonArray();
+//                for (int i = 0; i < Array.getLength(f); i++) {
+//
+//                }
+//            }
+//        }
+//        res = new Ole();
+//        res.add("options", new Ole(oOptions));
+//        res.add("properties", new Ole(oProp));
+//        return res;
+//    }
+    public static Ole toOle3(Object obj, boolean readonly) {
+        Ole res = new Ole(), oOptions = new Ole(), oProp = new Ole();
+        Class c = obj.getClass();
+        ArrayList<Field> myFields,
+                fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        myFields = fullFields;
+        for (Field f : myFields) {
+            try {
+                f.setAccessible(true);
+                if (f.getType() == boolean.class) {
+                    if (Modifier.isPrivate(f.getModifiers()) && readonly) {
+                        oOptions.setField(f.getName(), "<html><b>" + f.getName() + "   </b> " + f.getBoolean(obj) + "</html>");
+                    } else {
+                        oOptions.setField(f.getName(), f.getBoolean(obj));
+                    }
+                } else if (f.getType() == int.class) {
+                    if (Modifier.isPrivate(f.getModifiers()) && readonly) {
+                        oOptions.setField(f.getName(), "<html><b>" + f.getName() + "   </b> " + f.getInt(obj) + "</html>");
+                    } else {
+                        oOptions.setField(f.getName(), f.getInt(obj));
+                    }
+                } else if (f.getType() == double.class) {
+                    if (Modifier.isPrivate(f.getModifiers()) && readonly) {
+                        oOptions.setField(f.getName(), "<html><b>" + f.getName() + "   </b> " + f.getDouble(obj) + "</html>");
+                    } else {
+                        oOptions.setField(f.getName(), f.getDouble(obj));
+                    }
+                } else if (f.getType() == String.class) {
+                    if (Modifier.isPrivate(f.getModifiers()) && readonly) {
+                        oOptions.setField(f.getName(), "<html><b>" + f.getName() + "   </b> " + ((String) f.get(obj)) + "</html>");
+                    } else {
+                        oOptions.setField(f.getName(), (String) f.get(obj));
+                    }
+                } else if (f.getType().isEnum()) {
+                    String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                    Method getter = c.getDeclaredMethod(getterName);
+                    Object oenum = getter.invoke(obj);
+                    if (Modifier.isPrivate(f.getModifiers()) && readonly) {
+                        oOptions.setField(f.getName(), "<html><b>" + f.getName() + "   </b> " + ((String) oenum.toString()) + "</html>");
+                    } else {
+                        oOptions.setField(f.getName(), (String) oenum.toString());
+                        ArrayList<String> alValues = new ArrayList();
+                        for (Object ov : f.getType().getEnumConstants()) {
+                            alValues.add(ov.toString());
+                        }
+                        oProp.add(f.getName(), new JsonObject().add("select", Transform.toJsonArray(new ArrayList(alValues))));
+                    }
+//                    String labels[] = Transform.toArrayString(Transform.getAllNames(c));
+                }
+            } catch (Exception ex) {
+                System.err.println(ex.toString());
+            }
+        }
+        res = new Ole();
+        res.add("options", new Ole(oOptions));
+        res.add("properties", new Ole(oProp));
+        return res;
+    }
+
+    public static Object fromOle3(Ole ole, Object obj, boolean readonly) {
+        Class c = obj.getClass();
+        ole = ole.getOle("options");
+        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        for (Field f : fullFields) {
+            if (!Modifier.isPrivate(f.getModifiers()) || !readonly) {
+                f.setAccessible(true);
+                try {
+                    if (f.getType() == boolean.class) {
+                        f.setBoolean(obj, ole.getBoolean(f.getName()));
+                    } else if (f.getType() == int.class) {
+                        f.setInt(obj, ole.getInt(f.getName()));
+                    } else if (f.getType() == double.class) {
+                        f.setDouble(obj, ole.getDouble(f.getName()));
+                    } else if (f.getType() == String.class) {
+                        f.set(obj, ole.getField(f.getName()));
+                    } else if (f.getType().isEnum()) {
+                        String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                        Method setter = c.getDeclaredMethod(setterName, f.getType());
+                        Class enc = f.getType();
+//                    setter.invoke(obj, Enum.valueOf(enc, ole.getField(f.getName())));
+                        f.set(obj, Enum.valueOf(enc, ole.getField(f.getName())));
+                    } else if (f.getType().isArray()) {
+
+                    }
+                } catch (Exception ex) {
+                    System.err.println(ex.toString());
+                }
+            }
+        }
+        return obj;
+    }
+
+    public static Object fromOle2(Ole ole, Object obj) {
+        Class c = obj.getClass();
+        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        for (Field f : fullFields) {
+            f.setAccessible(true);
+            try {
+                if (f.getType() == boolean.class) {
+                    f.setBoolean(obj, ole.getBoolean(f.getName()));
+                } else if (f.getType() == int.class) {
+                    f.setInt(obj, ole.getInt(f.getName()));
+                } else if (f.getType() == double.class) {
+                    f.setDouble(obj, ole.getDouble(f.getName()));
+                } else if (f.getType() == String.class) {
+                    f.set(obj, ole.getField(f.getName()));
+                } else if (f.getType().isEnum()) {
+                    String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                    Method setter = c.getDeclaredMethod(setterName, f.getType());
+                    Class enc = f.getType();
+//                    setter.invoke(obj, Enum.valueOf(enc, ole.getField(f.getName())));
+                    f.set(obj, Enum.valueOf(enc, ole.getField(f.getName())));
+
+                }
+            } catch (Exception ex) {
+                System.err.println(ex.toString());
+            }
+        }
+        return obj;
+    }
+
+    public static AutoOle fromOle(Ole ole, AutoOle obj) {
+        Class c = obj.myClass();
+        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+        for (Field f : fullFields) {
+            String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+            Method setter;
+            try {
+                if (f.getType() == boolean.class) {
+                    setter = c.getDeclaredMethod(setterName, boolean.class);
+                    setter.invoke(obj, ole.getBoolean(f.getName()));
+                } else if (f.getType() == double.class) {
+                    setter = c.getDeclaredMethod(setterName, double.class);
+
+                    setter.invoke(obj, ole.getDouble(f.getName()));
+                } else if (f.getType() == int.class) {
+                    setter = c.getDeclaredMethod(setterName, int.class);
+
+                    setter.invoke(obj, ole.getInt(f.getName()));
+                } else if (f.getType().isInstance("")) {
+                    setter = c.getDeclaredMethod(setterName, String.class
+                    );
+                    setter.invoke(obj, ole.getField(f.getName()));
+                }
+            } catch (Exception ex) {
+            }
+        }
+        return obj;
     }
 }

@@ -277,7 +277,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
 //            DM.addUtterance(received);
 //            still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
 //        }
-        Info("Wake up!. I have received " + fancyWriteACLM(received, true));
+        Info("Wake up!. I have received " + fancyWriteACLM(received, false));
         if (msg != null) {
             this.close(msg);
         }

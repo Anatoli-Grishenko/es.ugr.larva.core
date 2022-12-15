@@ -44,6 +44,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected HashMap<String, ArrayList<String>> myCitizens;
     protected HashMap<String, String> citizenOf;
     protected double radiusPercentage = 0.5;
+    protected int nbackup = 0, nrefill = 0;
 
     public static void Debug() {
         debugDroid = true;
@@ -83,6 +84,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected boolean needCourse = true;
     protected ThingSet population;
     protected boolean waitReport = false;
+    protected boolean Slave = true;
 
     @Override
     public void setup() {
@@ -119,6 +121,16 @@ public class DroidShip extends LARVADialogicalAgent {
         inNegotiation = false;
         usePerformatives = true;
         this.frameDelay = 10;
+        this.DFSetMyServices(new String[]{"DROIDSHIP"});
+        if (Slave) {
+            handleAlias();
+        }
+        logger.offSaveDisk();
+        logger.offEcho();
+//        logger.onEcho();
+    }
+
+    protected void handleAlias() {
         loadSessionAlias();
         getSharedSession(getSessionAlias());
         Info("This is what I know:"
@@ -127,12 +139,15 @@ public class DroidShip extends LARVADialogicalAgent {
                 + "\nSession Alias " + getSessionAlias()
                 + "\nSession Manager " + sessionManager
         );
-        this.DFSetMyServices(new String[]{"DROIDSHIP",
+        this.DFAddMyServices(new String[]{
             getSessionAlias(),
             sessionKey});
-        logger.offSaveDisk();
-        logger.offEcho();
-//        logger.onEcho();
+    }
+
+    protected void defController() {
+        this.DFAddMyServices(new String[]{
+            "OPENER",
+            "CONTROLLER"});
     }
 
     @Override
@@ -737,6 +752,7 @@ public class DroidShip extends LARVADialogicalAgent {
                 Dialogue(outbox);
                 publish("Recharge to" + toWhom + " done!");
                 this.forget(outbox);
+                System.out.println("NREFILL: "+(nrefill++));
                 this.offRecruitedMission();
                 logger.offEcho();
                 return Status.CHOOSEMISSION;
@@ -812,20 +828,20 @@ public class DroidShip extends LARVADialogicalAgent {
         try {
             fromWho = m.getSender().getLocalName();
             who = m.getContent().replace("TRANSFER ", "");
-            InfoMessage("Received TRANSFER  " + who + " from " + fromWho);
+//            InfoMessage("Received TRANSFER  " + who + " from " + fromWho);
             sTransponder = this.askTransponder(fromWho);
             if (sTransponder.length() == 0) {
                 this.Dialogue(this.respondTo(null, ACLMessage.REFUSE, "Sorry," + fromWho + " your position is not available in Transponder", toWhom));
                 return myStatus;
             }
-            InfoMessage("Transponder received ok");
+//            InfoMessage("Transponder received ok");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
             if (pTarget.isEqualTo(E.getGPS())) {
                 if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
                     outbox = respondTo(m, ACLMessage.INFORM, "DONE", null);
                     this.Dialogue(outbox);
                     logger.offEcho();
-                    InfoMessage("Transfer " + who + " ok");
+//                    InfoMessage("Transfer " + who + " ok");
                     return myStatus;
                 } else {
                     InfoMessage("Sorry, TRANSFER " + who + " from " + fromWho + " has failed");

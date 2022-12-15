@@ -217,6 +217,19 @@ public class LARVABaseAgent extends Agent {
      * @return A list of agent names, each of whom is a registered provider of
      * that service
      */
+//    public ArrayList<String> BDFGetAllProvidersOf(String service) {
+//        ArrayList<String> res = new ArrayList<>();
+//        DFAgentDescription list[];
+//        list = this.DFQueryAllProviders(service);
+//        if (list != null && list.length > 0) {
+//            for (DFAgentDescription list1 : list) {
+//                if (!res.contains(list1.getName().getLocalName())) {
+//                    res.add(list1.getName().getLocalName());
+//                }
+//            }
+//        }
+//        return res;
+//    }
     public ArrayList<String> DFGetAllProvidersOf(String service) {
         ArrayList<String> res = new ArrayList<>();
         DFAgentDescription list[];
@@ -231,6 +244,7 @@ public class LARVABaseAgent extends Agent {
         return res;
     }
 
+    
     /**
      * It gives the set of services provided by a certain agent, if any.
      *

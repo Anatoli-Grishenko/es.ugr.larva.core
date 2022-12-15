@@ -517,11 +517,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         logger.logMessage(message);
         try {
             if (isSwing() && logger.isEcho()) {
-                if (myText != null) {
-                    myText.append(logger.getLastlog() + "");
-//            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-                    myText.setCaretPosition(Math.max(myText.getText().length(), 0));
-                }
+//                if (myText != null) {
+//                    myText.append(logger.getLastlog() + "");
+////            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
+//                    myText.setCaretPosition(Math.max(myText.getText().length(), 0));
+//                }
             }
         } catch (Exception ex) {
 
@@ -1527,9 +1527,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (msg.getUserDefinedParameter(ACLMID) == null) {
             secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Irregular message sent. Not a LARVA secure message");
         }
-        if (dupSend(msg)) {
-            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive messages sent");
-        }
+//        if (dupSend(msg)) {
+//            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive messages sent\n"+ACLMessageTools.fancyWriteACLM(msg));
+//        }
         if (msg.getContent() == null) {
             secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "You are sending a message with an empty content. Please use .setContent() properly");
         }

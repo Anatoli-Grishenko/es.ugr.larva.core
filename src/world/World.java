@@ -966,9 +966,24 @@ public class World {
                     res = true;
                     break;
                 case CAPTURE:
+//                    String who = command.replace("CAPTURE ", "").trim(),
+//                     city = agent.Raw().getCurrentCity();
+//                    Thing tWho = getThingByName(who);
+//                    if (tWho.getBelongsTo().equals(city)) {
+//                        agent.Raw().addCargo(who);
+//                        tWho.setBelongsTo("");
+//                        tWho.setPosition(new Point3D(-1, -1, -1));
+//                        res = true;
+//                    } else {
+//                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
+//                        res = false;
+//                    }
+                    
+                    
                     String who = command.replace("CAPTURE ", "").trim(),
                      city = agent.Raw().getCurrentCity();
                     Thing tWho = getThingByName(who);
+                    this.removeThing(tWho);
                     if (tWho.getBelongsTo().equals(city)) {
                         agent.Raw().addCargo(who);
                         tWho.setBelongsTo("");
@@ -978,6 +993,8 @@ public class World {
                         agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
                         res = false;
                     }
+                    
+                    
 //                    Point3D gps = agent.getPosition()
 //                     guy = this.getThingByName(who).getPosition();
 //                    if (gps.planeDistanceTo(guy) < 15) {
@@ -1135,32 +1152,35 @@ public class World {
         a = new AStar(this.getEnvironment().getSurface());
         a.setView(null);
         a.setApp(null);
-        a.setMaxSeconds(10);
-        a.setMaxDepth(1500);
+        a.setMaxSeconds(30);
+        a.setMaxDepth(3500);
         a.setMinlevel(agent.Raw().getMinlevel());
         a.setMaxlevel(agent.Raw().getMaxlevel());
         a.setMaxslope(agent.Raw().getMaxslope());
+        int i = 0, istep=0;
         if (this.getOntology().matchTypes(agent.getType(), "AIRBORNE")) {
             a.setType(PathType.AIRBORNE);
+            istep = agent.Raw().getRange()*2;
         } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
             a.setType(PathType.MARINE);
             pdest = this.getClosestDocking(pdest);
-        } else if (this.getOntology().matchTypes(agent.getType(), "FULLROAD")) {
+        } else if (this.getOntology().matchTypes(agent.getType(), "GROUND")) {
             a.setType(PathType.FULLTERRAIN);
+            istep = agent.Raw().getRange()/2;
         } else {
             a.setType(PathType.ROAD);
+            istep = agent.Raw().getRange()/2;
         }
         res = new ArrayList();
         Plan path;
         Point3D lastPoint = null;
         path = a.SearchLowest(new Choice(agent.Raw().getGPS()), new Choice(pdest));
         if (path != null) {
-            int i = 0, istep;
-            if (this.getName().equals("AlertDeathStar")) {
-                istep = agent.Raw().getRange() / 2;
-            } else {
-                istep = agent.Raw().getRange() * 2;
-            }
+//            if (this.getName().equals("AlertDeathStar")) {
+//                istep = agent.Raw().getRange() / 2;
+//            } else {
+//                istep = agent.Raw().getRange() * 2;
+//            }
             for (Choice c : path) {
 //                if (i == path.size() - 1) {
 //                    lastPoint = c.getPosition();

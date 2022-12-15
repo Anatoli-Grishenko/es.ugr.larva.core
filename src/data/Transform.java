@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import data.Ole;
 import data.Ole.oletype;
+import java.lang.reflect.Field;
 // JsonArray <--> ArrayList <--> Array <-- Enum
 
 /**
@@ -157,7 +158,17 @@ public class Transform {
         return new ArrayList(Arrays.asList(aux));
     }
 
-    protected <E extends Enum<E>> E getEnum(E myenum, String value) {
+    public static  <E extends Enum<E>> String getEnumField(E myenum, Field f) {
+        for (Enum<E> enumVal : myenum.getClass().getEnumConstants()) {
+            if (enumVal.toString().equalsIgnoreCase(f.toString())) {
+               return enumVal.toString();
+            }
+        }
+        return null;
+//            sensors s= sensors.valueOf(jsv.asString());
+
+    }
+    public static  <E extends Enum<E>> E getEnum(E myenum, String value) {
         for (Enum<E> enumVal : myenum.getClass().getEnumConstants()) {
             if (enumVal.toString().equalsIgnoreCase(value)) {
                 return (E) enumVal;
@@ -166,6 +177,11 @@ public class Transform {
         return null;
 //            sensors s= sensors.valueOf(jsv.asString());
 
+    }
+
+    public static <E extends Enum<E>>
+            String getEnumString(E clazz) {
+        return clazz.name();
     }
 
     public static int[][] shift(int original[][], int incrx, int incry, int badvalue) {

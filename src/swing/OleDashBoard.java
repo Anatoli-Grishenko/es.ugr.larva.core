@@ -115,19 +115,19 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         myg = g;
 
 //        myg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        for (String s : layoutSensors) {
-            if (availableDashBoard) {
-                try {
-//                    doSwingLater(() -> {
-                    if (mySensorsVisual.get(s) != null) {
-                        mySensorsVisual.get(s).viewSensor(g);
+        doSwingLater(() -> {
+            for (String s : layoutSensors) {
+                if (availableDashBoard) {
+                    try {
+                        if (mySensorsVisual.get(s) != null) {
+                            mySensorsVisual.get(s).viewSensor(g);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Exception reading sensor " + s + " " + ex.toString());
                     }
-//                    });
-                } catch (Exception ex) {
-                    System.err.println("Exception reading sensor " + s + " " + ex.toString());
                 }
             }
-        }
+        });
 //        if (getMyDecoder().getVisualData().length > 0) {
 //            Map2DColor m;
 //            int zoom = 4;

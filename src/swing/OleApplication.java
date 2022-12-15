@@ -74,13 +74,13 @@ public abstract class OleApplication extends OleFrame {
         String lookaf =oConfig.getOptions().getString("FlatLaf", "Dark");
         SwingTools.initLookAndFeel(lookaf);
         iconSet = new OleIconSet(lookaf);
-        Ole oAux = olecfg.getOle("FrameSize");
+        Ole oAux = olecfg.getOptions().getOle("FrameSize");
         if (oAux.isEmpty()) {
             setSize(800, 600);
         } else {
             setSize(oAux.getInt("width", 800), oAux.getInt("height", 600));
         }
-        this.setPreferredSize(new Dimension(800, 600));
+        this.setPreferredSize(new Dimension(oAux.getInt("width", 800), oAux.getInt("height", 600)));
         setVisible(true);
         init();
     }

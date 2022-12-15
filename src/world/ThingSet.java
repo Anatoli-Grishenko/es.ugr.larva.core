@@ -8,6 +8,7 @@ package world;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.WriterConfig;
 import data.Ole;
 import data.OleTable;
 import data.Transform;
@@ -184,7 +185,7 @@ public class ThingSet {
     public boolean loadFromTSVFile(String filename) {
         OleTable ot = new OleTable();
         if (ot.loadSeparatedFile(filename, "\t")) {
-            System.out.println(ot.toString());
+//            System.out.println(ot.toString());
             System.out.print("Loading ThingSet from "+filename+" ");
             Thing t;
             for (int i = 0; i < ot.size(); i++) {
@@ -205,4 +206,8 @@ public class ThingSet {
 
     }
 
+    @Override
+    public String toString() {
+        return toJson().toString(WriterConfig.PRETTY_PRINT);
+    }
 }

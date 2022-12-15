@@ -42,20 +42,46 @@ public class MissionSet extends HashMap<String, Mission> {
     public Mission getMission(String name) {
         if (this.keySet().contains(name)) {
             return this.get(name);
-        }else
+        } else {
             return null;
+        }
     }
-    
+
+    public ArrayList<String> getAllMissionNames() {
+        return new ArrayList(this.keySet());
+    }
+
+    public ArrayList<Mission> getAllMissions() {
+        return new ArrayList(this.values());
+    }
+
     public MissionSet addMission(String mission) {
         if (this.get(mission) == null) {
             this.put(mission, new Mission(mission));
         }
         return this;
     }
+
+    public MissionSet removeMission(String missionname) {
+        if (this.get(missionname) != null) {
+            this.remove(missionname);
+        }
+        return this;
+    }
+
     public MissionSet addGoal(String mission, String task) {
         if (this.get(mission) != null) {
             this.get(mission).addGoal(task);
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        String message = "";
+        for (Mission m : getAllMissions()) {
+            message += m.toString();
+        }
+        return message;
     }
 }

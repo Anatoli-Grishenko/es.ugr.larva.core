@@ -1851,6 +1851,28 @@ public class SensorDecoder {
                     capability.QUERY.name().toUpperCase()
                 });
                 break;
+            case "SSD":
+                encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
+                encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXSLOPE, Map2DColor.MAXLEVEL);
+                encodeSensor(Sensors.MAXCARGO, 0);
+                encodeSensor(Sensors.AUTONOMY, 360 * energyBase);
+                encodeSensor(Sensors.ENERGYBURNT, 0);
+                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.BURNRATEMOVE, 0);
+                encodeSensor(Sensors.BURNRATEREAD, 0);
+                encodeSensor(Sensors.CAPABILITIES, new String[]{
+                    capability.MOVE.name().toUpperCase(),
+                    capability.LEFT.name().toUpperCase(),
+                    capability.RIGHT.name().toUpperCase(),
+                    capability.UP.name().toUpperCase(),
+                    capability.DOWN.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
+                    capability.DEBARK.name().toUpperCase(),
+                    capability.REFILL.name().toUpperCase(),
+                    capability.QUERY.name().toUpperCase()
+                });
+                break;
             case "YV":
                 encodeSensor(Sensors.MINLEVEL, Map2DColor.MINLEVEL);
                 encodeSensor(Sensors.MAXLEVEL, Map2DColor.MAXLEVEL);
