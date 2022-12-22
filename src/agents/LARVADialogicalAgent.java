@@ -269,6 +269,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         do {
             received = super.LARVAblockingReceive();
             DM.addUtterance(received);
+//            still = !this.hasInboundOpen() && !this.hasDue(); //(msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
             still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
         } while (still);
 //        still = (msg == null ? !this.hasInboundOpen() : this.isOpen(msg));
@@ -293,7 +294,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         Info("Opening uttterance ");
         this.Dialogue(msg);
         if (isInitiator(msg.getPerformative())) {
-            while (this.isOpen(msg) || this.getAnswersTo(msg).size() == 0) {
+            while (this.isOpen(msg) || this.DM.getAllAnswersTo(msg).size() == 0) {
                 Info("Waiting to close utterance");
                 this.waitOpenUtterance(msg);
             }

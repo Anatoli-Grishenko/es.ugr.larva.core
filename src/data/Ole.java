@@ -13,6 +13,7 @@ import com.eclipsesource.json.WriterConfig;
 import crypto.Cryptor;
 import crypto.Keygen;
 import data.Transform;
+import java.awt.Component;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -31,6 +32,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
+import swing.OleApplication;
+import swing.OleDialog;
 import swing.SwingTools;
 import static swing.SwingTools.getFileResource;
 import tools.TimeHandler;
@@ -89,6 +93,14 @@ public class Ole extends JsonObject {
     };
 
     Cryptor myCryptor;
+
+    public static boolean isOle(String oString) {
+        try {
+            return isOle(Json.parse(oString).asObject());
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 
 //////////////////////////////////////////// Static methods    
     /**
@@ -311,8 +323,8 @@ public class Ole extends JsonObject {
 
         } catch (Exception ex) {
             System.err.println(ex.toString());
+            return null;
         }
-        return this;
     }
 //////////////////////////////////////////// Fields
 
@@ -775,7 +787,7 @@ public class Ole extends JsonObject {
      * It sets the value of the field
      *
      * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list. The elements of the array can only be those
+      * adds it to the fields list. The elements of the array can only be those
      * supported by Ole, otherwise, they are stored as their toString().
      * @param value Value of the field. It can be any of the types supported by
      * Ole
@@ -1239,8 +1251,8 @@ public class Ole extends JsonObject {
             }
         }
         res = new Ole();
-        res.add("options", new Ole(oOptions));
-        res.add("properties", new Ole(oProp));
+        res.add("options", oOptions.toPlainJson());        
+        res.add("properties", oProp.toPlainJson());
         return res;
     }
 
@@ -1334,4 +1346,10 @@ public class Ole extends JsonObject {
         }
         return obj;
     }
+
+//    public void edit(OleApplication parent) {
+//    }
+//    
+//    public void view(OleApplication parent) {
+//     }
 }

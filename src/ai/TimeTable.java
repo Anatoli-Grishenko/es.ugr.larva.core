@@ -179,8 +179,10 @@ public class TimeTable {
                     aux = as;
                 }
             }
-            m.addGoal(aux.getAction());
-            res += aux.toString();
+            if (!aux.getAction().toUpperCase().startsWith("STARTING")) {
+                m.addGoal(aux.getAction());
+                res += aux.toString();
+            }
             border.remove(aux);
             if (aux.getPost().size() > 0) {
                 border.add(aux.getPost().get(0));
@@ -211,7 +213,9 @@ public class TimeTable {
                     aux = as;
                 }
             }
-            m.addGoal(aux.getAction());
+            if (!aux.getAction().toUpperCase().startsWith("STARTING")) {
+                m.addGoal(aux.getAction());
+            }
             if (aux.getAction().startsWith("TRANSFER")) {
                 ms.addMission(m.toString());
                 m = new Mission(who + "(" + ms.size() + ")");

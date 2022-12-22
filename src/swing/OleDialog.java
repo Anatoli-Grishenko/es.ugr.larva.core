@@ -9,6 +9,7 @@ import com.eclipsesource.json.JsonArray;
 import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;
+import data.OleFile;
 import data.OleSet;
 import data.Transform;
 import java.awt.Component;
@@ -24,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import static java.nio.file.FileSystems.getDefault;
 import java.nio.file.Paths;
@@ -74,9 +76,10 @@ public class OleDialog extends JDialog implements ActionListener {
     JButton bOK, bCancel;
     int spacing = 5, fieldheight = 20, fieldwidth = 160;
     boolean bresult;
-    JFrame parent;
+//    JFrame parent;
     BiConsumer<ActionEvent, OleConfig> buttonListener;
     int listsize = 5;
+    boolean edit = true;
 
     public static String doSelectFile(String currentfolder, String extension) {
         JFileChooser choose;
@@ -170,7 +173,7 @@ public class OleDialog extends JDialog implements ActionListener {
         switch (e.getActionCommand()) {
             case "OK":
                 output = getValues(output);
-                bresult = true;              
+                bresult = true;
                 dispose();
                 break;
             case "Cancel":
@@ -178,7 +181,24 @@ public class OleDialog extends JDialog implements ActionListener {
                 dispose();
                 break;
             default:
-                if (e.getActionCommand().startsWith(".../")) { //select folder
+                if (e.getActionCommand().startsWith("VIEW")) { //view Instance
+                    sfield = e.getActionCommand().replace("VIEW ", "");
+                    Ole ofield = new Ole().set(((JTextField) components.get(sfield)).getText());
+                    if (ofield.getType().equals(oletype.OLECONFIG.name())) {
+                        OleConfig oCfgaux = new OleConfig(ofield);
+                        oCfgaux.view((OleApplication) getParent());
+                    } else if (ofield.getType().equals(oletype.OLEFILE.name())) {
+                        OleFile oFgaux = new OleFile(ofield);
+                        oFgaux.saveFile("./");
+                        final ProcessBuilder pb = new ProcessBuilder("/usr/bin/xdg-open", oFgaux.getFileName());
+                        pb.directory(new File("./"));
+                        try {
+                            final Process p = pb.start();
+                        } catch (IOException ex) {
+                            
+                        }
+                    }
+                } else if (e.getActionCommand().startsWith(".../")) { //select folder
                     sfield = e.getActionCommand().replace(".../", "");
                     if (components.get(sfield) != null) {
                         choosevalue = (JTextField) components.get(sfield);
@@ -220,7 +240,7 @@ public class OleDialog extends JDialog implements ActionListener {
 
     public boolean run(OleConfig o) {
         SwingTools.doSwingWait(() -> {
-           run(o, "");
+            run(o, "");
         });
         return this.bresult;
 //        tpMain.removeAll();
@@ -323,16 +343,16 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridwidth = 1;
                 dataPanel.add(bAux, gc);
                 gc.gridx++;
-            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name()) && 
-                    fieldproperties.getString("type", "").equals("icon")) {
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name())
+                    && fieldproperties.getString("type", "").equals("icon")) {
 //                    gc.gridx++;
-                    ImageIcon icon=SwingTools.toIcon(ocomponents.getString(sfield, "").replace("file:", ""), -1, fieldproperties.getInt("height", -1));
-                    label = new JLabel(icon);
-                    components.put(sfield, label);
-                    dataPanel.add(label, gc);
-                    gc.gridx++;
-                
-            }else  if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
+                ImageIcon icon = SwingTools.toIcon(ocomponents.getString(sfield, "").replace("file:", ""), -1, fieldproperties.getInt("height", -1));
+                label = new JLabel(icon);
+                components.put(sfield, label);
+                dataPanel.add(label, gc);
+                gc.gridx++;
+
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
                 label = new JLabel(sfield);
@@ -353,6 +373,8 @@ public class OleDialog extends JDialog implements ActionListener {
                     dataPanel.add(combobox, gc);
                     gc.gridx++;
 
+                    combobox.setEnabled(edit);
+
                 } else if (fieldproperties.get("folder") != null) {     // Select folder               
                     text = new JTextField();
 //                    text.setText(ocomponents.getField(sfield));
@@ -369,6 +391,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     bFileChoose.setActionCommand(".../" + sfield);
                     bFileChoose.addActionListener(this);
                     dataPanel.add(bFileChoose, gc);
+                    bFileChoose.setEnabled(edit);
                     gc.gridx++;
                 } else if (fieldproperties.get("file") != null) {     // Select file               
                     text = new JTextField();
@@ -386,6 +409,43 @@ public class OleDialog extends JDialog implements ActionListener {
                     bFileChoose.setActionCommand("..." + sfield);
                     bFileChoose.addActionListener(this);
                     dataPanel.add(bFileChoose, gc);
+                    bFileChoose.setEnabled(edit);
+                    gc.gridx++;
+                } else if (Ole.isOle(ocomponents.getField(sfield))) {
+                    Ole oaux = new Ole().set(ocomponents.getField(sfield));
+                    text = new JTextField();
+                    text.setPreferredSize(new Dimension(fieldwidth, fieldheight));
+                    text.setEnabled(false);
+                    tooltip = fieldproperties.getString("tooltip");
+                    if (tooltip != null) {
+                        text.setToolTipText(tooltip);
+                    }
+                    components.put(sfield, text);
+                    dataPanel.add(text, gc);
+                    gc.gridx++;
+                    OleButton oButton;
+                    if (oaux.getType().equals(oletype.OLECONFIG.name())) {
+//                        if (edit) {
+//                            oButton = new OleButton((OleApplication) getParent(), "EDIT " + sfield, "settings");
+//                        } else {
+                            oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "settings");
+//                        }
+                    } else if (oaux.getType().equals(oletype.OLEFILE.name())) {
+                        oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "article");
+                    } else {
+                        oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "warning");
+                    }
+                    oButton.setFlat();
+                    oButton.setIcon();
+                    oButton.setText("");
+                    oButton.addActionListener(this);
+                    dataPanel.add(oButton, gc);
+//                    bFileChoose = new JButton("VIEW");
+//                    bFileChoose.setIcon(SwingTools.toIcon("resources/icons/", WIDTH, WIDTH));
+//                    bFileChoose.setActionCommand("VIEW " + sfield);
+//                    bFileChoose.addActionListener(this);
+//                    dataPanel.add(bFileChoose, gc);
+//                    bFileChoose.setEnabled(edit);
                     gc.gridx++;
                 } else {
                     text = new JTextField();
@@ -398,6 +458,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     components.put(sfield, text);
                     dataPanel.add(text, gc);
                     gc.gridx++;
+                    text.setEnabled(edit);
                 }
             } else if (ocomponents.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {
                 checkbox = new JCheckBox();
@@ -412,6 +473,8 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridx++;
                 dataPanel.add(checkbox, gc);
                 gc.gridx++;
+                checkbox.setEnabled(edit);
+
             } else if (ocomponents.getFieldType(sfield).equals(oletype.ARRAY.name())) { // Lists
                 listsize = fieldproperties.getInt("rows", 5);
                 OleList.Type listtype;
@@ -426,6 +489,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     list.setToolTipText(tooltip);
                 }
                 components.put(sfield, list);
+                list.setEnabled(edit);
                 label = new JLabel(sfield);
                 dataPanel.add(label, gc);
                 gc.gridx++;
@@ -484,9 +548,9 @@ public class OleDialog extends JDialog implements ActionListener {
             fieldproperties = olecfg.getProperties(sfield);
             if (ocomponents.getField(sfield).contains("<html>")) {
             } else if (sfield.startsWith("[") && sfield.endsWith("]")) {
-            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name()) && 
-                    fieldproperties.getString("type", "").equals("icon")) {
-            }else  if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.STRING.name())
+                    && fieldproperties.getString("type", "").equals("icon")) {
+            } else if (ocomponents.getFieldType(sfield).equals(oletype.INTEGER.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.DOUBLE.name())
                     || ocomponents.getFieldType(sfield).equals(oletype.STRING.name())) {
                 if (fieldproperties.getArray("select") != null) { // Combobox
@@ -502,6 +566,9 @@ public class OleDialog extends JDialog implements ActionListener {
                     text = (JTextField) components.get(sfield);
                     text.setText(ocomponents.getField(sfield));
                 } else if (fieldproperties.get("file") != null) {     // Select file               
+                    text = (JTextField) components.get(sfield);
+                    text.setText(ocomponents.getField(sfield));
+                } else if (Ole.isOle(ocomponents.getField(sfield))) {
                     text = (JTextField) components.get(sfield);
                     text.setText(ocomponents.getField(sfield));
                 } else {
@@ -560,8 +627,8 @@ public class OleDialog extends JDialog implements ActionListener {
                 continue;
             }
             select = fieldproperties.getArray("select");
-            if (currentTab.getFieldType(sfield).equals(oletype.STRING.name()) && 
-                    fieldproperties.getString("type", "").equals("icon")) {
+            if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())
+                    && fieldproperties.getString("type", "").equals("icon")) {
             } else if (currentTab.getFieldType(sfield).equals(oletype.STRING.name())) {
                 if (select == null) {
                     text = (JTextField) components.get(sfield);
@@ -878,8 +945,15 @@ public class OleDialog extends JDialog implements ActionListener {
 //            return null;
 //
 //    }
-
     public boolean run(OleDialog oDlg) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public boolean isEdit() {
+        return edit;
+    }
+
+    public void setEdit(boolean edit) {
+        this.edit = edit;
     }
 }

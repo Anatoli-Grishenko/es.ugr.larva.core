@@ -17,6 +17,7 @@ import java.util.zip.GZIPOutputStream;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class ZipTools {
+    public static final String ZIPMARK="ZIPDATA";
 
     public static byte[] zipToByte(String string) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream(string.length());

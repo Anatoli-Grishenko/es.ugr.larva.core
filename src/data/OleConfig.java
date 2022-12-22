@@ -9,6 +9,10 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFrame;
+import swing.OleApplication;
+import swing.OleDialog;
+import swing.SwingTools;
 
 public class OleConfig extends Ole {
 
@@ -24,11 +28,13 @@ public class OleConfig extends Ole {
 
     //--------------------
     public Ole getProperties() {
-        if (getOle("properties").getFieldList().size()!=0)
+        if (getOle("properties").getFieldList().size() != 0) {
             return getOle("properties");
-        else
+        } else {
             return new Ole();
+        }
     }
+
     public Ole getProperties(String sfield) {
         return getProperties().getOle(sfield);
     }
@@ -80,6 +86,23 @@ public class OleConfig extends Ole {
     public List<String> getAllTabFields(String stab) {
         ArrayList<String> res = new ArrayList();
         return getTab(stab).getFieldList();
+    }
+
+    public OleConfig edit(OleApplication parent) {
+        SwingTools.doSwingWait(() -> {
+            OleDialog oDlg = new OleDialog(parent, "Edit ");
+            oDlg.setEdit(true);
+            if (oDlg.run(this)) {
+                this.set(oDlg.getResult().toPlainJson().toString());
+            }
+        });
+        return this;
+    }
+
+    public void view(OleApplication parent) {
+        OleDialog oDlg = new OleDialog(parent, "View ");
+        oDlg.setEdit(false);
+        oDlg.run(new OleConfig(this));
     }
 
 }

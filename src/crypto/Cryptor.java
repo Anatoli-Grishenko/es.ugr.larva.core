@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @author lcv
  */
 public class Cryptor {
+    public static final String CRYPTOMARK="CRYPTODATA";
    protected String  _cryptoKey,
         _charset="ISO-8859-1";
     public static final String _atoms="abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",

@@ -7,6 +7,7 @@ package messaging;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import crypto.Cryptor;
 import static crypto.Keygen.getHexaKey;
 import static disk.Logger.trimString;
 import jade.core.AID;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import tools.TimeHandler;
 import tools.emojis;
+import zip.ZipTools;
 
 /**
  *
@@ -38,7 +40,7 @@ public class ACLMessageTools {
 
     // External fields
     public static final String ACLMID = "ACLMID", ACLMRCVDATE = "RECEIVEDDATE", ACLMSNDDATE = "SENDDATE",
-            ACLMADMIN = "LARVAADMIN", ACLMROLE = "LARVAROLE",  ACLMSTEALTH="LARVASTEALTH";
+            ACLMADMIN = "LARVAADMIN", ACLMROLE = "LARVAROLE", ACLMSTEALTH = "LARVASTEALTH";
 
 //static final ArrayList<Integer> ERRORS = new ArrayList(Stream.of().collect(Collectors.toList()));
 //            CONTINUERS[] = {ACLMessage.AGREE, ACLMessage.PROPOSE},
@@ -77,7 +79,7 @@ public class ACLMessageTools {
         for (Iterator iterator = msg.getAllReceiver();
                 iterator.hasNext();) {
             AID r = (AID) iterator.next();
-            res .add(r.getLocalName());
+            res.add(r.getLocalName());
         }
         return res;
     }
@@ -87,7 +89,7 @@ public class ACLMessageTools {
         for (Iterator iterator = msg.getAllReplyTo();
                 iterator.hasNext();) {
             AID r = (AID) iterator.next();
-            res .add(r.getLocalName());
+            res.add(r.getLocalName());
         }
         return res;
     }
@@ -165,7 +167,19 @@ public class ACLMessageTools {
         while (it.hasNext()) {
             res += ((AID) it.next()).getLocalName() + " ";
         }
-        res = res + "||CNT" + sep + (isJsonACLM(msg) ? trimString(msg.getContent(), 255) : (msg.getContent().startsWith("ZIPDATA") ? "ZIPDATA": msg.getContent()));
+        String cnt = "||CNT" + sep;
+        if (msg.getContent().startsWith("ZIPDATA")) {
+            cnt += ZipTools.ZIPMARK;
+        } else if (msg.getContent().startsWith(ZipTools.ZIPMARK)) {
+            cnt += ZipTools.ZIPMARK;
+        } else if (msg.getContent().startsWith(Cryptor.CRYPTOMARK)) {
+            cnt += Cryptor.CRYPTOMARK;
+        } else if (isJsonACLM(msg)) {
+            cnt += trimString(msg.getContent(), 255);
+        } else {
+            cnt += msg.getContent();
+        }
+        res = res + cnt;
         if (!simple) {
             res = "||PFM" + sep + ACLMessage.getPerformative(msg.getPerformative()) + res;
             it = msg.getAllReplyTo();
@@ -328,5 +342,5 @@ public class ACLMessageTools {
         }
         return false;
     }
-        
+
 }
