@@ -62,16 +62,17 @@ public abstract class OleApplication extends OleFrame {
     protected OleFrame ofProgress;
     protected OleToolBar otbToolBar;
     protected JTextArea jtaProgress;
-    protected boolean debug=true;
+    protected boolean debug = true;
     protected HashMap<String, Component> dicComponents;
     protected ArrayList<String> listComponents;
     protected Map2DColor watermarkHeader;
     protected Color colorHeader;
     protected OleIconSet iconSet;
+
     public OleApplication(OleConfig olecfg) {
         super(olecfg);
         oConfig = olecfg;
-        String lookaf =oConfig.getOptions().getString("FlatLaf", "Dark");
+        String lookaf = oConfig.getOptions().getString("FlatLaf", "Dark");
         SwingTools.initLookAndFeel(lookaf);
         iconSet = new OleIconSet(lookaf);
         Ole oAux = olecfg.getOptions().getOle("FrameSize");
@@ -83,6 +84,17 @@ public abstract class OleApplication extends OleFrame {
         this.setPreferredSize(new Dimension(oAux.getInt("width", 800), oAux.getInt("height", 600)));
         setVisible(true);
         init();
+    }
+
+    @Override
+    public void reDimension(Dimension d) {
+        Container mainPane = this.getContentPane();
+        mainPane.setPreferredSize(d);
+        pMain.setPreferredSize(d);
+        opDiagram.setPreferredSize(getMainPanel().getPreferredSize());
+        osDiagram.setPreferredSize(getMainPanel().getPreferredSize());
+        getMainPanel().validate();
+        super.reDimension(d);
     }
 
     @Override
@@ -163,6 +175,7 @@ public abstract class OleApplication extends OleFrame {
 
         getMainPanel().add(osDiagram, BorderLayout.CENTER);
         getMainPanel().validate();
+        this.addKeyListener(this);
         this.pack();
         return this;
     }
@@ -253,12 +266,12 @@ public abstract class OleApplication extends OleFrame {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        myKeyListener(e);
+     //   myKeyListener(e);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        myKeyListener(e);
+       // myKeyListener(e);
     }
 
     public void cleanStatus() {
@@ -452,4 +465,21 @@ public abstract class OleApplication extends OleFrame {
         return bResult;
     }
 
+    public JPanel getpMain() {
+        return pMain;
+    }
+
+    public JPanel getpStatus() {
+        return pStatus;
+    }
+
+    public JPanel getpToolBar() {
+        return pToolBar;
+    }
+
+    public JPanel getpHeader() {
+        return pHeader;
+    }
+
+    
 }

@@ -1056,32 +1056,32 @@ public class Ole extends JsonObject {
         return "";
     }
 
-    public static Ole toOle(AutoOle obj) {
-        Ole res = new Ole();
-        Class c = obj.myClass();
-        ArrayList<Field> myFields, fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
-        myFields = fullFields;
-        for (Field f : myFields) {
-            String getterName;
-            if (f.getType() == boolean.class) {
-                getterName = "is" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-            } else {
-                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-            }
-            try {
-                Method getter = c.getDeclaredMethod(getterName);
-                if (f.getType() == boolean.class
-                        || f.getType() == int.class
-                        || f.getType() == long.class
-                        || f.getType() == double.class
-                        || f.getType() == String.class) {
-                    res.setFieldGeneric(f.getName(), getter.invoke(obj));
-                }
-            } catch (Exception ex) {
-            }
-        }
-        return res;
-    }
+//    public static Ole toOle(AutoOle obj) {
+//        Ole res = new Ole();
+//        Class c = obj.myClass();
+//        ArrayList<Field> myFields, fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+//        myFields = fullFields;
+//        for (Field f : myFields) {
+//            String getterName;
+//            if (f.getType() == boolean.class) {
+//                getterName = "is" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+//            } else {
+//                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+//            }
+//            try {
+//                Method getter = c.getDeclaredMethod(getterName);
+//                if (f.getType() == boolean.class
+//                        || f.getType() == int.class
+//                        || f.getType() == long.class
+//                        || f.getType() == double.class
+//                        || f.getType() == String.class) {
+//                    res.setFieldGeneric(f.getName(), getter.invoke(obj));
+//                }
+//            } catch (Exception ex) {
+//            }
+//        }
+//        return res;
+//    }
 
     public static Ole toOle2(Object obj) {
         Ole res = new Ole();
@@ -1318,35 +1318,35 @@ public class Ole extends JsonObject {
         return obj;
     }
 
-    public static AutoOle fromOle(Ole ole, AutoOle obj) {
-        Class c = obj.myClass();
-        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
-        for (Field f : fullFields) {
-            String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-            Method setter;
-            try {
-                if (f.getType() == boolean.class) {
-                    setter = c.getDeclaredMethod(setterName, boolean.class);
-                    setter.invoke(obj, ole.getBoolean(f.getName()));
-                } else if (f.getType() == double.class) {
-                    setter = c.getDeclaredMethod(setterName, double.class);
-
-                    setter.invoke(obj, ole.getDouble(f.getName()));
-                } else if (f.getType() == int.class) {
-                    setter = c.getDeclaredMethod(setterName, int.class);
-
-                    setter.invoke(obj, ole.getInt(f.getName()));
-                } else if (f.getType().isInstance("")) {
-                    setter = c.getDeclaredMethod(setterName, String.class
-                    );
-                    setter.invoke(obj, ole.getField(f.getName()));
-                }
-            } catch (Exception ex) {
-            }
-        }
-        return obj;
-    }
-
+//    public static AutoOle fromOle(Ole ole, AutoOle obj) {
+//        Class c = obj.myClass();
+//        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
+//        for (Field f : fullFields) {
+//            String setterName = "set" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+//            Method setter;
+//            try {
+//                if (f.getType() == boolean.class) {
+//                    setter = c.getDeclaredMethod(setterName, boolean.class);
+//                    setter.invoke(obj, ole.getBoolean(f.getName()));
+//                } else if (f.getType() == double.class) {
+//                    setter = c.getDeclaredMethod(setterName, double.class);
+//
+//                    setter.invoke(obj, ole.getDouble(f.getName()));
+//                } else if (f.getType() == int.class) {
+//                    setter = c.getDeclaredMethod(setterName, int.class);
+//
+//                    setter.invoke(obj, ole.getInt(f.getName()));
+//                } else if (f.getType().isInstance("")) {
+//                    setter = c.getDeclaredMethod(setterName, String.class
+//                    );
+//                    setter.invoke(obj, ole.getField(f.getName()));
+//                }
+//            } catch (Exception ex) {
+//            }
+//        }
+//        return obj;
+//    }
+//
 //    public void edit(OleApplication parent) {
 //    }
 //    

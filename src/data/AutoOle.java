@@ -5,19 +5,21 @@
  */
 package data;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import swing.OleApplication;
 
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public interface AutoOle {
-
-    public Class myClass();
-
-//    public ArrayList<String> mySections();
+  
+    public String getOptionsFile();
+    public String getOptionsFolder();
+    public OleApplication getApplication();
     
-//    public ArrayList <Field> myFields(String section);
+    
 }

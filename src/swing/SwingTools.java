@@ -93,6 +93,12 @@ public class SwingTools {
         return res;
     }
 
+ public static ImageIcon toIcon(Image image, int nw, int nh) {
+        ImageIcon res;
+        res = new ImageIcon(image.getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
+        return res;
+    }
+
 //    public static ImageIcon toIcon(String image, int nw, int nh) {
 //        ImageIcon res;
 //        Image aux;

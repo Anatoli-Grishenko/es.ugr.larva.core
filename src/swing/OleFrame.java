@@ -6,6 +6,7 @@
 package swing;
 
 import data.OleConfig;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -53,6 +54,12 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
     public abstract void myActionListener(ActionEvent e);
 
     public abstract void myKeyListener(KeyEvent e);
+    
+    public void reDimension(Dimension d) {
+        setSize(d);
+        validate();
+//        pack();
+    }
 
 //    public void Info(String message) {
 //        JOptionPane.showMessageDialog(this,
