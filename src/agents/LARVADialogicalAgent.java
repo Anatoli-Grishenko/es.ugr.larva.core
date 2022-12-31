@@ -370,6 +370,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     //Legacy
+    @Override
     protected boolean doLARVACheckin() {
         Info("Checking-in to LARVA");
         if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
@@ -415,6 +416,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
         return false;
     }
 
+    @Override
     protected boolean doLARVACheckout() {
         Info("Checking-out from LARVA");
         if (checkout == null) {

@@ -12,6 +12,7 @@ import ai.MissionSet;
 import ai.Scheduler;
 import ai.SchedulerViewer;
 import ai.TimeTable;
+import crypto.Keygen;
 import data.OleConfig;
 import geometry.Point3D;
 import jade.lang.acl.ACLMessage;
@@ -77,10 +78,7 @@ public class SSD extends DroidShip {
     protected OleScrollPane osDiagram;
     protected Semaphore waitS = new Semaphore(0);
     protected Icon icon;
-//            ,
-//            waitToOpenProblem = new Semaphore(0),
-//            waitToJoinSession = new Semaphore(0),
-//            waitToScheduleSession = new Semaphore(0);
+
     protected ArrayList<String> names;
     protected HashMap<String, JProgressBar> Progress;
     protected HashMap<String, Mission> AssignedGoals;
@@ -143,8 +141,8 @@ public class SSD extends DroidShip {
         problemManager = this.DFGetAllProvidersOf(service).get(0);
         Info("Found problem manager " + problemManager);
         problem = this.inputSelect("Please select problem to solve", problems, problem);
-        defSessionAlias(inputLine("Please type in session ALIAS"));
-//        defSessionAlias("patata");
+//        defSessionAlias(inputLine("Please type in session ALIAS"));
+        defSessionAlias(Keygen.getHexaKey());
 //        problem = "CoruscantApr";
         if (problem == null) {
             return changeStatus(Status.CHECKOUT);
@@ -408,10 +406,11 @@ public class SSD extends DroidShip {
 //            DroidShip.Debug();
         this.doPrepareNPC(1, DESTL3.class);
 //            this.doPrepareNPC(1, VAAT.class);
-        this.doPrepareNPC(names.size()*3/2, BB1F.class);
+        this.doPrepareNPC(3, BB1F.class);
+//        this.doPrepareNPC(names.size()*3/2, BB1F.class);
 //        this.doPrepareNPC((int) (Math.max(1, names.size() - 1)), BB1F.class);
 //        this.doPrepareNPC(1, YV.class);
-        this.doPrepareNPC(names.size(), MTT.class);
+        this.doPrepareNPC(3, MTT.class);
 //        this.doPrepareNPC(names.size() / 2 + 1, MTT.class);
     }
 
@@ -489,8 +488,8 @@ public class SSD extends DroidShip {
     public void frameActionListener(ActionEvent e) {
         if (e.getActionCommand().equals("Load Passport")) {
             String passportfile;
-            passportfile = OleDialog.doSelectFile("./", "passport");
-//            passportfile = "config/ANATOLI_GRISHENKO.passport";
+//            passportfile = OleDialog.doSelectFile("./", "passport");
+            passportfile = "config/ANATOLI_GRISHENKO.passport";
             if (passportfile != null) {
                 this.loadMyPassport(passportfile);
                 waitS.release();

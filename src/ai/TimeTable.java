@@ -179,7 +179,10 @@ public class TimeTable {
                     aux = as;
                 }
             }
-            if (!aux.getAction().toUpperCase().startsWith("STARTING")) {
+            if (!aux.getAction().toUpperCase().startsWith("STARTING") 
+                    &&!aux.getAction().toUpperCase().startsWith("REQUEST")
+                    &&!aux.getAction().toUpperCase().startsWith("CANCEL")
+                    ) {
                 m.addGoal(aux.getAction());
                 res += aux.toString();
             }

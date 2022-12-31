@@ -656,7 +656,7 @@ public class DroidShip extends LARVADialogicalAgent {
                     this.Dialogue(outbox);
                     this.forget(m);
                 }
-            }
+            } 
         }
         return myStatus;
     }
@@ -752,7 +752,7 @@ public class DroidShip extends LARVADialogicalAgent {
                 Dialogue(outbox);
                 publish("Recharge to" + toWhom + " done!");
                 this.forget(outbox);
-                System.out.println("NREFILL: "+(nrefill++));
+                System.out.println("NREFILL: " + (nrefill++));
                 this.offRecruitedMission();
                 logger.offEcho();
                 return Status.CHOOSEMISSION;
