@@ -47,6 +47,7 @@ public class BB1F extends DroidShip {
                     if (Math.random() <= 0.5) {
                         this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, but I decline your request", null));
                         forget(m);
+                        return myStatus;
                     } else if (m.getContent().toUpperCase().equals("REFILL")) {
                         this.forget(m);
                         return this.onDemandRefill(m);
