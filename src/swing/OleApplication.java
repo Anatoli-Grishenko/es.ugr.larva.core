@@ -24,6 +24,7 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.ObjectInputFilter.Status;
@@ -175,8 +176,10 @@ public abstract class OleApplication extends OleFrame {
 
         getMainPanel().add(osDiagram, BorderLayout.CENTER);
         getMainPanel().validate();
-        this.addKeyListener(this);
-        this.pack();
+       for (KeyListener kl : this.getKeyListeners()) {
+            this.removeKeyListener(kl);
+        }
+        this.addKeyListener(this);        this.pack();
         return this;
     }
 
@@ -266,12 +269,12 @@ public abstract class OleApplication extends OleFrame {
 
     @Override
     public void keyPressed(KeyEvent e) {
-     //   myKeyListener(e);
+        myKeyListener(e);
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-       // myKeyListener(e);
+        myKeyListener(e);
     }
 
     public void cleanStatus() {
@@ -465,21 +468,4 @@ public abstract class OleApplication extends OleFrame {
         return bResult;
     }
 
-    public JPanel getpMain() {
-        return pMain;
-    }
-
-    public JPanel getpStatus() {
-        return pStatus;
-    }
-
-    public JPanel getpToolBar() {
-        return pToolBar;
-    }
-
-    public JPanel getpHeader() {
-        return pHeader;
-    }
-
-    
 }

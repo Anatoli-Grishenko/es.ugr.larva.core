@@ -141,8 +141,8 @@ public class SSD extends DroidShip {
         problemManager = this.DFGetAllProvidersOf(service).get(0);
         Info("Found problem manager " + problemManager);
         problem = this.inputSelect("Please select problem to solve", problems, problem);
-//        defSessionAlias(inputLine("Please type in session ALIAS"));
-        defSessionAlias(Keygen.getHexaKey());
+        defSessionAlias(inputLine("Please type in session ALIAS"));
+//        defSessionAlias(Keygen.getHexaKey());
 //        problem = "CoruscantApr";
         if (problem == null) {
             return changeStatus(Status.CHECKOUT);
@@ -488,8 +488,8 @@ public class SSD extends DroidShip {
     public void frameActionListener(ActionEvent e) {
         if (e.getActionCommand().equals("Load Passport")) {
             String passportfile;
-//            passportfile = OleDialog.doSelectFile("./", "passport");
-            passportfile = "config/ANATOLI_GRISHENKO.passport";
+            passportfile = OleDialog.doSelectFile("./", "passport");
+//            passportfile = "config/ANATOLI_GRISHENKO.passport";
             if (passportfile != null) {
                 this.loadMyPassport(passportfile);
                 waitS.release();

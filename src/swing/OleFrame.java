@@ -44,7 +44,11 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         return this;
     }
-
+    public void reDimension(Dimension d) {
+        setSize(d);
+        validate();
+//        pack();
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         myActionListener(e);
@@ -54,12 +58,6 @@ public abstract class OleFrame extends JFrame implements ActionListener, KeyList
     public abstract void myActionListener(ActionEvent e);
 
     public abstract void myKeyListener(KeyEvent e);
-    
-    public void reDimension(Dimension d) {
-        setSize(d);
-        validate();
-//        pack();
-    }
 
 //    public void Info(String message) {
 //        JOptionPane.showMessageDialog(this,
