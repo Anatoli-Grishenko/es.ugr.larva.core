@@ -97,8 +97,10 @@ public class SSD extends DroidShip {
         super.setup();
         myType = "SSD";
         this.DFAddMyServices(new String[]{"TYPE " + myType});
-        logger.onEcho(); //showPerceptions=true;
-        logger.offEcho();
+        logger.onEcho(); 
+        showPerceptions=false;
+        deactivateSequenceDiagrams();
+//        logger.offEcho();
         l.loadFromTSVFile("data/Cities.tsv");
         aproblem.setMap(l);
         ts = new ThingSet();
@@ -406,11 +408,11 @@ public class SSD extends DroidShip {
 //            DroidShip.Debug();
         this.doPrepareNPC(1, DESTL3.class);
 //            this.doPrepareNPC(1, VAAT.class);
-        this.doPrepareNPC(3, BB1F.class);
+        this.doPrepareNPC(1, BB1F.class);
 //        this.doPrepareNPC(names.size()*3/2, BB1F.class);
 //        this.doPrepareNPC((int) (Math.max(1, names.size() - 1)), BB1F.class);
 //        this.doPrepareNPC(1, YV.class);
-        this.doPrepareNPC(3, MTT.class);
+        this.doPrepareNPC(1, MTT.class);
 //        this.doPrepareNPC(names.size() / 2 + 1, MTT.class);
     }
 

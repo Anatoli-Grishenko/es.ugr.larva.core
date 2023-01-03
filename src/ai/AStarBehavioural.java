@@ -22,7 +22,7 @@ public class AStarBehavioural extends Search {
     DecisionSet children;
     Choice currentNode = null, newchild, oldchild, start, end;
 //    ACLMessage request;
-    final int nIterations = 100;
+    final int nIterations = 50;
     int iterations;
 
     public AStarBehavioural(Map2DColor map, PathType path, int minlevel, int maxlevel, int maxslope, Choice from, Choice to) {

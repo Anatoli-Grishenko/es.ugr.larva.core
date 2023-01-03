@@ -43,7 +43,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected static boolean debugDroid = false;
     protected HashMap<String, ArrayList<String>> myCitizens;
     protected HashMap<String, String> citizenOf;
-    protected double radiusPercentage = 0.5;
+    protected double radiusPercentage = 0.1;
     protected int nbackup = 0, nrefill = 0;
 
     public static void Debug() {

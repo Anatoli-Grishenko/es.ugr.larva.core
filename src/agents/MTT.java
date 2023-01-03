@@ -46,11 +46,12 @@ public class MTT extends DroidShip {
             } else {
                 if (allowREQUEST && m.getPerformative() == ACLMessage.REQUEST) {
 
-                    if (Math.random() <= 0.5) {
-                        this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, but I decline your request", null));
-                        forget(m);
-                        return myStatus;
-                    } else if (m.getContent().equals("BACKUP")) {
+//                    if (Math.random() <= 0.5) {
+//                        this.Dialogue(this.respondTo(m, ACLMessage.REFUSE, "Sorry, but I decline your request", null));
+//                        forget(m);
+//                        return myStatus;
+//                    } else
+                    if (m.getContent().equals("BACKUP")) {
                         this.forget(m);
                         return this.onDemandBackup(m);
                     } else {
