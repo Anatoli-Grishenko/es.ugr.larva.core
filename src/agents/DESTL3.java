@@ -22,11 +22,11 @@ public class DESTL3 extends DEST {
 
     @Override
     public String autoSelectCity() {
-        return "Seward";
+        return "Hartley";
     }
 
     public String autoSelectNextCity() {
-        return "Seward";
+        return "Hartley";
     }
 
 }

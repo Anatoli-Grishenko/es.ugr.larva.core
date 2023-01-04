@@ -43,8 +43,9 @@ public class DroidShip extends LARVADialogicalAgent {
     protected static boolean debugDroid = false;
     protected HashMap<String, ArrayList<String>> myCitizens;
     protected HashMap<String, String> citizenOf;
-    protected double radiusPercentage = 0.1;
-    protected int nbackup = 0, nrefill = 0;
+    protected double radiusPercentage = 0.2;
+    protected Point3D mapCenter;
+    protected int nbackup = 0, nrefill = 0, myCity;
 
     public static void Debug() {
         debugDroid = true;
@@ -59,7 +60,7 @@ public class DroidShip extends LARVADialogicalAgent {
     protected Status myStatus;
     protected String service = "PMANAGER", problem = "",
             problemManager = "", content, sessionKey, sessionManager, gobackHome = "GOBACKHOME";
-    protected String problems[], plan[], actions[];
+    protected String problems[], plan[], actions[], around[];
     protected ACLMessage open, session;
     protected String[] contentTokens, cities, goalTokens;
     protected String action = "", preplan = "", baseCity, currentCity, nextCity, myMission, Message;
@@ -73,7 +74,7 @@ public class DroidShip extends LARVADialogicalAgent {
 
     protected boolean allowREQUEST, allowCFP, allowParking;
     protected boolean inNegotiation;
-    protected String rw = "", toWhom, fromWho, who, sTransponder, myType, myCity, employer = "";
+    protected String rw = "", toWhom, fromWho, who, sTransponder, myType, employer = "";
 
     protected Environment Ei, Ef;
     protected Choice a;
@@ -256,45 +257,44 @@ public class DroidShip extends LARVADialogicalAgent {
     }
 
     public String autoSelectCity() {
-        String city, around[]; // = {"Fort Babine", "Bakerville", "Port Alexander"};
+        String city; // = {"Fort Babine", "Bakerville", "Port Alexander"};
         double sx = 0, sy = 0, x = 0, y = 0, n = 0, minx = 1000000, maxx = -minx, miny = minx, maxy = -maxx;
         Point3D p;
         doQueryCities();
-        for (String s : E.getCityList()) {
-            try {
-                p = E.getCityPosition(s);
-                x = p.getX();
-                y = p.getY();
-                sx += x;
-                sy += y;
-                if (maxx < x) {
-                    maxx = x;
-                }
-                if (minx > x) {
-                    minx = x;
-                }
-                if (maxy < y) {
-                    maxy = y;
-                }
-                if (miny > y) {
-                    miny = y;
-                }
-                n++;
-            } catch (Exception ex) {
-                System.out.println("EX " + ex.toString());
-            }
-        }
-        p = new Point3D(sx / n, sy / n, 0);
-        around = E.getCitiesAround(p, (int) (radiusPercentage * (maxx - minx)));
-        city = around[0];
+//        for (String s : E.getCityList()) {
+//            try {
+//                p = E.getCityPosition(s);
+//                x = p.getX();
+//                y = p.getY();
+//                sx += x;
+//                sy += y;
+//                if (maxx < x) {
+//                    maxx = x;
+//                }
+//                if (minx > x) {
+//                    minx = x;
+//                }
+//                if (maxy < y) {
+//                    maxy = y;
+//                }
+//                if (miny > y) {
+//                    miny = y;
+//                }
+//                n++;
+//            } catch (Exception ex) {
+//                System.out.println("EX " + ex.toString());
+//            }
+//        }
+        mapCenter = new Point3D(518, 603, 0);
+        around = E.getCitiesAround(mapCenter, 160);
+        myCity = 0;
+        city = around[myCity];
         return city;
     }
 
     public String autoSelectNextCity() {
-        String city, around[] = E.getCitiesAround(200);
-
-        city = around[(int) (Math.random() * around.length)];
-        return city;
+        myCity = (myCity+1)%around.length;
+        return around[myCity];
     }
 
 //    public String mySelectCityCourse() {

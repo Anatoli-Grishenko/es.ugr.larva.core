@@ -149,7 +149,7 @@ public class Scheduler {
 
                 if (tship.getCapacity() == tship.getMaxCapacity()) {
                     csource = cdestination;
-                    cdestination = "Seward";
+                    cdestination = "Hartley";
                     aux = new Assignment(
                             tship.getName(),
                             (String) null,
@@ -176,7 +176,7 @@ public class Scheduler {
                         .getAllThings()) {
             if (wship.getCapacity() > 0) {
                 csource = wship.getBelongsTo();
-                cdestination = "Seward";
+                cdestination = "Hartley";
                 aux = new Assignment(
                         wship.getName(),
                         (String) null,
@@ -297,7 +297,7 @@ public class Scheduler {
 
                 if (tship.getCapacity() == tship.getMaxCapacity()) {
                     csource = cdestination;
-                    cdestination = "Seward";
+                    cdestination = "Hartley";
                     aux = new Assignment(
                             tship.getName(),
                             (String) null,
@@ -324,7 +324,7 @@ public class Scheduler {
                         .getAllThings()) {
             if (wship.getCapacity() > 0) {
                 csource = wship.getBelongsTo();
-                cdestination = "Seward";
+                cdestination = "Hartley";
                 aux = new Assignment(
                         wship.getName(),
                         (String) null,
@@ -471,7 +471,7 @@ public class Scheduler {
 
                 if (tship.getCapacity() == tship.getMaxCapacity()) {
                     csource = cdestination;
-                    cdestination = "Seward";
+                    cdestination = "Hartley";
                     aux = new Assignment(
                             tship.getName(),
                             (String) null,
@@ -498,7 +498,7 @@ public class Scheduler {
                         .getAllThings()) {
             if (wship.getCapacity() > 0) {
                 csource = wship.getBelongsTo();
-                cdestination = "Seward";
+                cdestination = "Hartley";
                 aux = new Assignment(
                         wship.getName(),
                         (String) null,
