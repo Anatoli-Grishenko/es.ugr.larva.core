@@ -17,41 +17,41 @@ import world.Perceptor;
  */
 public class Point3D {
 
-    public static final double _pNULL = 0;
+    public static final double pNULL = 0;
     static final int NDIGITS = 4;
     static final String TEMPLATE = "%0" + NDIGITS + "d";
 
-    private double _coord[];
-    private int _dim;
+    private double coord[];
+    private int dim;
 
     public Point3D() {
         clear();
-        _dim = 3;
+        dim = 3;
         setX(Integer.MIN_VALUE).setY(Integer.MIN_VALUE).setZ(Integer.MIN_VALUE);    
     }
 
     public Point3D(double x, double y, double z) {
         clear();
-        _dim = 3;
+        dim = 3;
         setX(x).setY(y).setZ(z);
     }
 
     public Point3D(double x, double y) {
         clear();
-        _dim = 2;
+        dim = 2;
         setX(x).setY(y);
     }
 
     public Point3D(double x) {
         clear();
-        _dim = 1;
+        dim = 1;
         setX(x);
     }
 
     public Point3D(JsonArray values) {
         clear();
         
-        _dim = 3;
+        dim = 3;
         setX(0).setY(0).setZ(Perceptor.NULLREAD);
         switch(values.size()) {
             case 3:
@@ -65,7 +65,7 @@ public class Point3D {
 
     public Point3D(double values[]) {
         clear();
-        _dim = values.length;
+        dim = values.length;
         setX(values[0]).
                 setY(values[1]).
                 setZ(values[2]);
@@ -74,8 +74,8 @@ public class Point3D {
     public Point3D(String spoint) {
         clear();
         String parts[] = spoint.split(",");
-        _dim = parts.length;
-        switch (_dim) {
+        dim = parts.length;
+        switch (dim) {
             case 3:
                 try {
                 this.setZ(Double.parseDouble(parts[2]));
@@ -100,7 +100,7 @@ public class Point3D {
     public Point3D(Ole o) {
         if (o.getType().equals(oletype.OLEPOINT.name())) {
             clear();
-            _dim = o.getInt("dim");
+            dim = o.getInt("dim");
             setX(o.getDouble("X"));
             setY(o.getDouble("Y"));
             setZ(o.getDouble("Z"));
@@ -127,57 +127,57 @@ public class Point3D {
 //    }
 
     public int getXInt() {
-        return (int) (Math.round(_coord[0]));
+        return (int) (Math.round(coord[0]));
     }
 
     public int getYInt() {
-        return (int) (Math.round(_coord[1]));
+        return (int) (Math.round(coord[1]));
     }
 
     public int getZInt() {
-        return (int) (Math.round(_coord[2]));
+        return (int) (Math.round(coord[2]));
     }
 
     public double getX() {
-        return _coord[0];
+        return coord[0];
     }
 
     public Point3D setX(double x) {
-        _coord[0] = x;
+        coord[0] = x;
         return this;
     }
 
     public double getY() {
-        return _coord[1];
+        return coord[1];
     }
 
     public Point3D setY(double y) {
-        _coord[1] = y;
+        coord[1] = y;
         return this;
     }
 
     public double getZ() {
-        return _coord[2];
+        return coord[2];
     }
 
     public Point3D setZ(double z) {
-        _coord[2] = z;
+        coord[2] = z;
         return this;
     }
 
     public int getDimension() {
-        return _dim;
+        return dim;
     }
 
     public Point3D clear() {
-        _coord = new double[]{_pNULL, _pNULL, _pNULL};
+        coord = new double[]{pNULL, pNULL, pNULL};
         return this;
     }
 
     public Point3D define(String key) {
-        _dim = (key.length() - 1) / (NDIGITS + 1);
+        dim = (key.length() - 1) / (NDIGITS + 1);
         int ini, end;
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 ini = key.length() - TEMPLATE.length();
                 end = key.length();
@@ -199,19 +199,19 @@ public class Point3D {
 
     private Point3D define(double x, double y, double z) {
         clear();
-        _dim = 3;
+        dim = 3;
         return this.setX(x).setY(y).setZ(z);
     }
 
     private Point3D define(double x, double y) {
         clear();
-        _dim = 2;
+        dim = 2;
         return this.setX(x).setY(y);
     }
 
     private Point3D define(double x) {
         clear();
-        _dim = 1;
+        dim = 1;
         return this.setX(x);
     }
 
@@ -227,7 +227,7 @@ public class Point3D {
 
     public double realDistanceTo(Point3D p) {
         double res = 0;
-        int mdim = (int) Math.min(_dim, p.getDimension());
+        int mdim = (int) Math.min(dim, p.getDimension());
         if (mdim == 1) {
             return Math.abs(getX() - p.getX());
         }
@@ -245,7 +245,7 @@ public class Point3D {
 
     public Point3D getOrigin() {
         Point3D res;
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 res = new Point3D(0, 0, 0);
                 break;
@@ -261,10 +261,10 @@ public class Point3D {
 
     public boolean isEqualTo(Point3D p) {
         boolean res = true;
-        if (_dim != p.getDimension()) {
+        if (dim != p.getDimension()) {
             return false;
         }
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 res &= getZ() == p.getZ();
             case 2:
@@ -278,7 +278,7 @@ public class Point3D {
 
     public boolean isProjection(Point3D p) {
         boolean res = true;
-        switch ((int) Math.min(_dim, p.getDimension())) {
+        switch ((int) Math.min(dim, p.getDimension())) {
             case 3:
                 res &= getZ() == p.getZ();
             case 2:
@@ -291,7 +291,7 @@ public class Point3D {
     }
 
     public Point3D plus(Point3D p) {
-        switch ((int) Math.min(_dim, p.getDimension())) {
+        switch ((int) Math.min(dim, p.getDimension())) {
             case 3:
                 setZ(getZ() + p.getZ());
             case 2:
@@ -308,7 +308,7 @@ public class Point3D {
     }
 
     public Point3D invert() {
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 setZ(-getZ());
             case 2:
@@ -325,7 +325,7 @@ public class Point3D {
     }
 
     public Point3D times(Point3D p) {
-        switch ((int) Math.min(_dim, p.getDimension())) {
+        switch ((int) Math.min(dim, p.getDimension())) {
             case 3:
                 setZ(getZ() * p.getZ());
             case 2:
@@ -338,7 +338,7 @@ public class Point3D {
     }
 
     public Point3D scalar(double s) {
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 setZ(s * getZ());
             case 2:
@@ -358,7 +358,7 @@ public class Point3D {
     @Override
     public String toString() {
         String s = "";
-        switch (_dim) {
+        switch (dim) {
             case 3:
                 s = String.format("," + TEMPLATE, (int) getZ()) + s;
             case 2:
@@ -390,8 +390,8 @@ public class Point3D {
     public Ole toOle() {
         Ole res = new Ole();
         res.setType(oletype.OLEPOINT.name());
-        res.setField("dim", _dim);
-        switch (_dim) {
+        res.setField("dim", dim);
+        switch (dim) {
             case 3:
                 res.setField("Z", getZ());
             case 2:
@@ -433,7 +433,7 @@ public class Point3D {
     @Override
     public Point3D clone() {
         Point3D res = new Point3D(getX(), getY(), getZ());
-        res._dim = _dim;
+        res.dim = dim;
         return res;
     }
 

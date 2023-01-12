@@ -888,7 +888,7 @@ public abstract class OleSensor extends JComponent {
         this.myPalette.addWayPoint(perc, Color.RED);
         this.myPalette.addWayPoint(perc + 1, Color.WHITE);
         this.myPalette.addWayPoint(100, Color.WHITE);
-        this.myPalette.fillWayPoints((int) (this.getMaxValue() - this.getMinValue()));
+        this.myPalette.fillWayPointsPerc((int) (this.getMaxValue() - this.getMinValue()));
         this.validate();
     }
 
@@ -901,7 +901,7 @@ public abstract class OleSensor extends JComponent {
         this.myPalette.addWayPoint(perc, Color.WHITE);
         this.myPalette.addWayPoint(perc + 1, Color.RED);
         this.myPalette.addWayPoint(100, Color.RED);
-        this.myPalette.fillWayPoints((int) (this.getMaxValue() - this.getMinValue()));
+        this.myPalette.fillWayPointsPerc((int) (this.getMaxValue() - this.getMinValue()));
         this.validate();
     }
 

@@ -7,8 +7,10 @@ package tools;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.SocketException;
@@ -38,7 +40,7 @@ public class Internet {
     }
 
     public static String getLocalIPAddress() {
-        String res="";
+        String res = "";
         try (final DatagramSocket socket = new DatagramSocket()) {
             socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
             res = socket.getLocalAddress().getHostAddress();
@@ -46,8 +48,34 @@ public class Internet {
         }
         return res;
     }
-    
+
     public static boolean isBehindRouter() {
         return !getExtIPAddress().equals(getLocalIPAddress());
     }
+
+//    public static String getGeoBind(String ip) {
+//        URL url;
+//        String res="";
+//        try {
+//            url = new URL("http://freegeoip.net/csv/" + ip);
+//            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+//            connection.connect();
+//
+//            InputStream is = connection.getInputStream();
+//
+//            int status = connection.getResponseCode();
+//            if (status != 200) {
+//                return null;
+//            }
+//
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+//            for (String line; (line = reader.readLine()) != null;) {
+//                //this API call will return something like:
+////            "2.51.255.200" ,"AE","United Arab Emirates","03","Dubai","Dubai","","x-coord","y-coord","",""
+//                // you can extract whatever you want from it
+//            }
+//        } catch (Exception ex) {
+//        }
+//        return res;
+//    }
 }

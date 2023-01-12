@@ -85,7 +85,7 @@ public class OleHud extends OleSensor {
         palette = new Palette();
         palette.addWayPoint(0, Color.BLACK); // BW
         palette.addWayPoint(100, Color.WHITE);
-        palette.fillWayPoints(256);
+        palette.fillWayPointsPerc(256);
         this.resetTerrain();
 //        this.addMouseListener(this);
     }

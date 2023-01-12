@@ -323,6 +323,13 @@ public class LARVABaseAgent extends Agent {
         return DFSetMyServices(Transform.toArrayString(prevServices));
     }
 
+    protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
+        ACLMessage outgoing = incoming.createReply();
+        outgoing.setSender(getAID());
+        return outgoing;
+    }
+
+
     /**
      * It allows the de-registration of all services.
      */

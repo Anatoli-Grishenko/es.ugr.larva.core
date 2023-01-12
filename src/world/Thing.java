@@ -21,19 +21,24 @@ import java.util.ArrayList;
  */
 public class Thing extends Entity3D {
 
+    public Thing() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public static enum PROPERTY {
         POSITION, PRESENCE, ORIENTATION, SURFACE, TEMPERATURE, REPORT, ENERGY, STATUS, PAYLOAD, CARGO, ONTARGET,
         CHANNEL1, CHANNEL2, CHANNEL3, CHANNEL4, CHANNEL5, CHANNEL6, CHANNEL7, CHANNEL8, CHANNEL9, CHANNEL10
     }
 
-    protected World _refWorld;
-    protected Map2DColor _surface;
+    protected World refWorld;
+    protected Map2DColor surface;
     protected ArrayList<Point3D> trail;
-    protected String _type = "", _belongsTo = "";
-    protected ArrayList<Perceptor> _rawSensors;
+    protected String belongsTo = "";
+    protected ArrayList<Perceptor> rawSensors;
     protected boolean hasHeliport = false, hasPort = false, hasAirport = false, isCity, isMountain, isArea;
     protected int nLightH, nHeavyH, nLightT, nHeavyG, nFB, nLightS;
     protected SensorDecoder myPerceptions;
+    protected ThingSet Container;
     protected Sensors[] minimal = new Sensors[] {
         Sensors.GPS,
         Sensors.CURRENTGOAL,
@@ -58,31 +63,33 @@ public class Thing extends Entity3D {
 
     public Thing(String name) {
         super(name);
-        _rawSensors = new ArrayList<>();
+        rawSensors = new ArrayList<>();
         myPerceptions = new SensorDecoder();
+        Container = new ThingSet();
     }
 
     public Thing(String name, World w) {
         super(name);
-        _refWorld = w;
-        _rawSensors = new ArrayList<>();
+        refWorld = w;
+        rawSensors = new ArrayList<>();
         myPerceptions = new SensorDecoder();
         minimal = new Sensors[] {Sensors.GPS,Sensors.CURRENTGOAL,Sensors.CURRENTMISSION,Sensors.ENERGY,Sensors.AUTONOMY,
             Sensors.PAYLOAD,Sensors.ALIVE, Sensors.COMPASS,Sensors.DESTINATION,
         Sensors.COURSE, Sensors.TARGET,Sensors.TYPE};
+        Container = new ThingSet();
     }
 
     public World getWorld() {
-        return _refWorld;
+        return refWorld;
     }
     
     public Thing setSurface(Map2DColor cartography) {
-        _surface = cartography;
+        surface = cartography;
         return this;
     }
 
     public Map2DColor getSurface() {
-        return _surface;
+        return surface;
     }
 
     public Thing placeAtSurface(Point3D p) {
@@ -91,7 +98,7 @@ public class Thing extends Entity3D {
     }
 
     public Thing addSensor(Perceptor p) {
-        _rawSensors.add(p);
+        rawSensors.add(p);
         return this;
     }
 
@@ -107,8 +114,8 @@ public class Thing extends Entity3D {
     public void readPerceptions() {
         JsonArray res = new JsonArray();
         JsonObject reading;
-//        System.out.println("Agent "+this.getName()+" reading "+_rawSensors.size()+" perceptions ");
-        for (Perceptor s : _rawSensors) {
+//        System.out.println("Agent "+this.getName()+" reading "+rawSensors.size()+" perceptions ");
+        for (Perceptor s : rawSensors) {
             if (s.getType() != null) {
                 reading = s.getReading();
                 res.add(reading);
@@ -128,7 +135,7 @@ public class Thing extends Entity3D {
     }
 
     public int sizePerceptions() {
-        return _rawSensors.size();
+        return rawSensors.size();
     }
 
     public JsonObject toJson() {
@@ -141,8 +148,7 @@ public class Thing extends Entity3D {
                 add(getPosition().getXInt()).add(getPosition().getYInt()).add(getPosition().getZInt()));
         res.add("belongs", this.getBelongsTo());
         res.add("capacity", this.getCapacity());
-        res.add("isavailable", this.isAvailable()
-        );
+        res.add("isavailable", this.isAvailable());
 
 //        res.add("objectid", this.getId());
 //        res.add("name", this.getName());
@@ -154,8 +160,9 @@ public class Thing extends Entity3D {
 //            res.merge(this.getPerceptions());
 //        }
 //        res.add("properties", new JsonArray());
-//        res.add("hasport", this.isHasPort());
-//        res.add("hasairport", this.isHasAirport());
+        res.add("hasport", this.isHasPort());
+        res.add("hasairport", this.isHasAirport());
+        res.add("hasheliport", this.isHasHeliport());
 //        res.add("belongs", this.getBelongsTo());
         return res;
     }
@@ -168,6 +175,7 @@ public class Thing extends Entity3D {
         this.setOrientation(o.getInt("orientation", Compass.NORTH));
         this.setHasPort(o.getBoolean("hasport", false));
         this.setHasAirport(o.getBoolean("hasairport", false));
+        this.setHasHeliport(o.getBoolean("hasheliport", false));
     }
 
     @Override
@@ -204,11 +212,27 @@ public class Thing extends Entity3D {
     }
 
     public String getBelongsTo() {
-        return _belongsTo;
+        return belongsTo;
     }
 
     public void setBelongsTo(String _belongsTo) {
-        this._belongsTo = _belongsTo;
+        this.belongsTo = _belongsTo;
     }
 
+    public ThingSet getContainer() {
+        return Container;
+    }
+
+    public void addToContainer(String what) {
+        if (what != null){
+            Thing tadd = new Thing(what);
+            Container.addThing(tadd);
+        }
+    }
+
+    public void removefromContainer(String what) {
+        if (getContainer().getAllNames().contains(what)) {
+            getContainer().removeThing(what);
+        }
+    }
 }

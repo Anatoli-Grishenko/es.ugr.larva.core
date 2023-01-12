@@ -209,7 +209,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal = new Palette();
 //        pal.addWayPoint(0, Color.WHITE);
 //        pal.addWayPoint(100, Color.RED);
-//        pal.fillWayPoints(255);
+//        pal.fillWayPointsPerc(255);
 //        osAltitude.setPalette(pal);
 //        osAltitude.showScale(true);
 //        osAltitude.showScaleNumbers(true);
@@ -231,7 +231,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(20, Color.WHITE);
 //        pal.addWayPoint(100, Color.WHITE);
-//        pal.fillWayPoints(275);
+//        pal.fillWayPointsPerc(275);
 //        osGround.setPalette(pal);
 //        osGround.showScale(true);
 //        osGround.showScaleNumbers(false);
@@ -257,7 +257,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         pal.addWayPoint(75, Color.YELLOW);
         pal.addWayPoint(76, Color.YELLOW);
         pal.addWayPoint(100, Color.GREEN);
-        pal.fillWayPoints(3500);
+        pal.fillWayPointsPerc(3500);
         osBattery.setPalette(pal);
 //        osBattery.showScale(true);
 //        osBattery.showScaleNumbers(true);
@@ -505,7 +505,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 pal.addWayPoint(75, Color.YELLOW);
                 pal.addWayPoint(76, Color.YELLOW);
                 pal.addWayPoint(100, Color.GREEN);
-                pal.fillWayPoints(getMyDecoder().getAutonomy());
+                pal.fillWayPointsPerc(getMyDecoder().getAutonomy());
                 osBattery.setPalette(pal);
             }
             odLed[0].setCurrentValue(getMyDecoder().getAlive());
@@ -628,7 +628,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         pal = new Palette();
         pal.addWayPoint(0, Color.BLACK);
         pal.addWayPoint(100, this.cGauge);
-        pal.fillWayPoints(255);
+        pal.fillWayPointsPerc(255);
         osAltitude.setPalette(pal);
         osAltitude.showScale(true);
         osAltitude.showScaleNumbers(true);
@@ -648,7 +648,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(20, Color.WHITE);
 //        pal.addWayPoint(100, Color.WHITE);
-//        pal.fillWayPoints(275);
+//        pal.fillWayPointsPerc(275);
 //        osGround.setPalette(pal);
         osGround.showScale(true);
         osGround.showScaleNumbers(false);
@@ -668,7 +668,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(50, Color.YELLOW);
 //        pal.addWayPoint(100, Color.GREEN);
-//        pal.fillWayPoints(3500);
+//        pal.fillWayPointsPerc(3500);
 //        osBattery.setPalette(pal);
         osBattery.showScale(true);
         osBattery.showScaleNumbers(true);
@@ -845,7 +845,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal = new Palette();
 //        pal.addWayPoint(0, Color.WHITE);
 //        pal.addWayPoint(100, Color.RED);
-//        pal.fillWayPoints(255);
+//        pal.fillWayPointsPerc(255);
 //        osAltitude.setPalette(pal);
 //        osAltitude.showScale(true);
 //        osAltitude.showScaleNumbers(true);
@@ -866,7 +866,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(20, Color.WHITE);
 //        pal.addWayPoint(100, Color.WHITE);
-//        pal.fillWayPoints(275);
+//        pal.fillWayPointsPerc(275);
 //        osGround.setPalette(pal);
 //        osGround.showScale(true);
 //        osGround.showScaleNumbers(false);
@@ -891,7 +891,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         pal.addWayPoint(75, Color.YELLOW);
         pal.addWayPoint(76, Color.YELLOW);
         pal.addWayPoint(100, Color.GREEN);
-        pal.fillWayPoints(3500);
+        pal.fillWayPointsPerc(3500);
         osBattery.setPalette(pal);
 //        osBattery.showScale(true);
 //        osBattery.showScaleNumbers(true);
@@ -1067,7 +1067,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal = new Palette();
 //        pal.addWayPoint(0, Color.WHITE);
 //        pal.addWayPoint(100, Color.RED);
-//        pal.fillWayPoints(255);
+//        pal.fillWayPointsPerc(255);
 //        osAltitude.setPalette(pal);
 //        osAltitude.showScale(true);
 //        osAltitude.showScaleNumbers(true);
@@ -1088,7 +1088,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        pal.addWayPoint(0, Color.RED);
 //        pal.addWayPoint(20, Color.WHITE);
 //        pal.addWayPoint(100, Color.WHITE);
-//        pal.fillWayPoints(275);
+//        pal.fillWayPointsPerc(275);
 //        osGround.setPalette(pal);
 //        osGround.showScale(true);
 //        osGround.showScaleNumbers(false);
@@ -1113,7 +1113,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         pal.addWayPoint(75, Color.YELLOW);
         pal.addWayPoint(76, Color.YELLOW);
         pal.addWayPoint(100, Color.GREEN);
-        pal.fillWayPoints(3500);
+        pal.fillWayPointsPerc(3500);
         osBattery.setPalette(pal);
 //        osBattery.showScale(true);
 //        osBattery.showScaleNumbers(true);

@@ -50,7 +50,7 @@ public class Palette {
         return this;
     }
 
-    public Palette fillWayPoints(int nlevels) {
+    public Palette fillWayPointsPerc(int nlevels) {
         int i = 0, iwp = 0;
         int r1, r2, g1, g2, b1, b2;
         double s, s1, s2, r, g, b;
@@ -64,6 +64,41 @@ public class Palette {
         s2 = wayPoints.get(iwp + 1).percentage;
         while (i < nlevels) {
             s = (i * 100.0) / nlevels;
+            if (s1 <= s && s <= s2) {
+                r = Math.round(r1 + (r2 - r1) * (s - s1) / (s2 - s1));
+                g = Math.round(g1 + (g2 - g1) * (s - s1) / (s2 - s1));
+                b = Math.round(b1 + (b2 - b1) * (s - s1) / (s2 - s1));
+                palette.put(i, new Color((int) r, (int) g, (int) b));
+                i++;
+            } else {
+                r1 = r2;
+                g1 = g2;
+                b1 = b2;
+                s1 = s2;
+                iwp++;
+                r2 = wayPoints.get(iwp + 1).color.getRed();
+                g2 = wayPoints.get(iwp + 1).color.getGreen();
+                b2 = wayPoints.get(iwp + 1).color.getBlue();
+                s2 = wayPoints.get(iwp + 1).percentage;
+            }
+        }
+        return this;
+    }
+
+    public Palette fillWayPointsLevel(int nlevels) {
+        int i = 0, iwp = 0;
+        int r1, r2, g1, g2, b1, b2;
+        double s, s1, s2, r, g, b;
+        r1 = wayPoints.get(iwp).color.getRed();
+        g1 = wayPoints.get(iwp).color.getGreen();
+        b1 = wayPoints.get(iwp).color.getBlue();
+        s1 = wayPoints.get(iwp).percentage;
+        r2 = wayPoints.get(iwp + 1).color.getRed();
+        g2 = wayPoints.get(iwp + 1).color.getGreen();
+        b2 = wayPoints.get(iwp + 1).color.getBlue();
+        s2 = wayPoints.get(iwp + 1).percentage;
+        while (i < nlevels) {
+            s = i;
             if (s1 <= s && s <= s2) {
                 r = Math.round(r1 + (r2 - r1) * (s - s1) / (s2 - s1));
                 g = Math.round(g1 + (g2 - g1) * (s - s1) / (s2 - s1));

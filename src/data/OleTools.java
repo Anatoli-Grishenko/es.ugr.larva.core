@@ -13,10 +13,15 @@ import java.io.File;
  */
 public interface OleTools {
 
+    public static boolean isConfig(AutoOle ol) {
+        return (new File(ol.getOptionsFolder() +"/"+ ol.getOptionsFile()).exists());
+    }
+
     public static void bootConfig(AutoOle ol) {
         if (new File(ol.getOptionsFolder() + ol.getOptionsFile()).exists()) {
             loadConfig(ol);
         } else {
+            editConfig(ol);
             saveConfig(ol);
         }
     }
@@ -33,9 +38,9 @@ public interface OleTools {
         Ole.toOle2(ol).saveAsFile(ol.getOptionsFolder(), ol.getOptionsFile(), true);
         return true;
     }
-    
+
     public static boolean editConfig(AutoOle ol) {
-        OleConfig ocfg= new OleConfig(Ole.toOle3(ol, false));
+        OleConfig ocfg = new OleConfig(Ole.toOle3(ol, false));
         ocfg = ocfg.edit(ol.getApplication());
         Ole.fromOle3(ocfg, ol, false);
         saveConfig(ol);
@@ -43,7 +48,7 @@ public interface OleTools {
     }
 
     public static boolean viewConfig(AutoOle ol) {
-        OleConfig ocfg= (OleConfig) Ole.toOle3(ol, false);
+        OleConfig ocfg = new OleConfig(Ole.toOle3(ol, false));
         ocfg.view(ol.getApplication());
         return true;
     }

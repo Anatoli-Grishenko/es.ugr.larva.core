@@ -19,7 +19,7 @@ public class Line3D extends Entity3D{
 
     public Line3D setEnd(Point3D end) {
         this.end = end.clone();
-        this._center =this.getPosition().clone().plus(end).scalar(0.5);
+        this.center =this.getPosition().clone().plus(end).scalar(0.5);
         return this;
     }
 

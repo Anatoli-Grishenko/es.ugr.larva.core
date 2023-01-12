@@ -119,6 +119,14 @@ public class ThingSet {
         return this;
     }
 
+    public ThingSet removeThing(String sname) {
+        Thing t = this.getThing(sname);
+        if (t != null) {
+            removeThing(t);
+        }
+        return this;
+    }
+
     public ThingSet reIndexThing(Thing t) {
         removeThing(t);
         addThing(t);
@@ -186,7 +194,7 @@ public class ThingSet {
         OleTable ot = new OleTable();
         if (ot.loadSeparatedFile(filename, "\t")) {
 //            System.out.println(ot.toString());
-            System.out.print("Loading ThingSet from "+filename+" ");
+            System.out.print("Loading ThingSet from " + filename + " ");
             Thing t;
             for (int i = 0; i < ot.size(); i++) {
                 t = new Thing(ot.getRow(i).getField("Name"));
@@ -195,10 +203,10 @@ public class ThingSet {
                 t.setType(ot.getRow(i).getField("Type"));
                 t.setMaxCapacity(ot.getRow(i).forceFieldInt("MaxCapacity"));
                 t.setCapacity(ot.getRow(i).forceFieldInt("Capacity"));
-                t.setAvailable(ot.getRow(i).forceFieldInt("isAvailable")==1);
+                t.setAvailable(ot.getRow(i).forceFieldInt("isAvailable") == 1);
                 addThing(t);
             }
-            System.out.println(this.size()+" instances");
+            System.out.println(this.size() + " instances");
             return true;
         } else {
             return false;

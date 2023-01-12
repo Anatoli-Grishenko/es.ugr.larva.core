@@ -107,12 +107,10 @@ public class TextFactory {
         }
         Color p = g.getColor();
         if (this.isOutline()) {
-            g.setColor(cShadow);
-            int s = this.getFontSize();
-            this.setTextStyle(Font.BOLD).setFontSize(s + 2);
-            g.setFont(newFont);
-            g.drawString(sText, x - 1, y - 1);
-            this.setTextStyle(Font.PLAIN).setFontSize(s);
+            g.setColor(Color.BLACK);
+            Font outline =newFont.deriveFont(Font.BOLD);
+            g.setFont(outline);
+            g.drawString(sText, x-1, y-1);
         }
         g.setColor(this.cForeground);
         g.setFont(newFont);
@@ -277,6 +275,9 @@ public class TextFactory {
     public TextFactory setForeGround(Color c) {
         this.cForeground = c;
         return this;
+    }
+    public Color getForeGround() {
+        return cForeground;
     }
 
     public TextFactory setShadow(Color c) {

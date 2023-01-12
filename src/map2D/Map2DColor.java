@@ -392,6 +392,10 @@ public class Map2DColor {
         return Map2DColor.this.getStepLevel((int) x, (int) y);
     }
 
+    public int getRawLevel(double x, double y) {
+        return Map2DColor.this.getRawLevel((int) x, (int) y);
+    }
+
     /**
      * Define the grayscale level of a given point
      *

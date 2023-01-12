@@ -255,8 +255,8 @@ public class World {
                 spalette = oaux.getField("palette");
                 terrain.loadMapRaw(getSurfaceName());
                 e.setSurface(terrain);
-                e.setSize(new Point3D(this._environment._surface.getWidth(),
-                        this._environment._surface.getHeight(), 0));
+                e.setSize(new Point3D(this._environment.surface.getWidth(),
+                        this._environment.surface.getHeight(), 0));
                 this.removeAllThings();
                 oThings = oaux.get("things").asArray();
                 for (JsonValue jsvthing : oaux.get("things").asArray()) {
@@ -351,8 +351,10 @@ public class World {
 //            i.setSize(new Point3D(1, 1, 0));
 //        }
         _population.addThing(i);
-        for (int ch = 0; ch < visible.length; ch++) {
-            addVisibility(visible[ch], i);
+        if (visible != null) {
+            for (int ch = 0; ch < visible.length; ch++) {
+                addVisibility(visible[ch], i);
+            }
         }
         return i;
     }
@@ -978,8 +980,7 @@ public class World {
 //                        agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
 //                        res = false;
 //                    }
-                    
-                    
+
                     String who = command.replace("CAPTURE ", "").trim(),
                      city = agent.Raw().getCurrentCity();
                     Thing tWho = getThingByName(who);
@@ -993,8 +994,7 @@ public class World {
                         agent.Raw().addStatus(agent.Raw().getStatus() + "Person " + who + " does not seem to be aorund");
                         res = false;
                     }
-                    
-                    
+
 //                    Point3D gps = agent.getPosition()
 //                     guy = this.getThingByName(who).getPosition();
 //                    if (gps.planeDistanceTo(guy) < 15) {
@@ -1157,19 +1157,19 @@ public class World {
         a.setMinlevel(agent.Raw().getMinlevel());
         a.setMaxlevel(agent.Raw().getMaxlevel());
         a.setMaxslope(agent.Raw().getMaxslope());
-        int i = 0, istep=0;
+        int i = 0, istep = 0;
         if (this.getOntology().matchTypes(agent.getType(), "AIRBORNE")) {
             a.setType(PathType.AIRBORNE);
-            istep = agent.Raw().getRange()*2;
+            istep = agent.Raw().getRange() * 2;
         } else if (this.getOntology().matchTypes(agent.getType(), "MARINE")) {
             a.setType(PathType.MARINE);
             pdest = this.getClosestDocking(pdest);
         } else if (this.getOntology().matchTypes(agent.getType(), "GROUND")) {
             a.setType(PathType.FULLTERRAIN);
-            istep = agent.Raw().getRange()/2;
+            istep = agent.Raw().getRange() / 2;
         } else {
             a.setType(PathType.ROAD);
-            istep = agent.Raw().getRange()/2;
+            istep = agent.Raw().getRange() / 2;
         }
         res = new ArrayList();
         Plan path;

@@ -56,7 +56,7 @@ public class OleSemiDial extends OleSensor {
             myPalette = new Palette();
             myPalette.addWayPoint(0, Color.WHITE);
             myPalette.addWayPoint(100, Color.WHITE);
-            myPalette.fillWayPoints(255);
+            myPalette.fillWayPointsPerc(255);
         }
     }
 

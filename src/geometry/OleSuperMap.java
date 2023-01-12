@@ -108,7 +108,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         palette.addWayPoint(40, new Color(51, 60, 0));
         palette.addWayPoint(75, new Color(153, 79, 0));
         palette.addWayPoint(100, Color.WHITE);
-        palette.fillWayPoints(256);
+        palette.fillWayPointsPerc(256);
 
         this.setScaledCoordinates(false);
     }

@@ -22,47 +22,47 @@ public class Vector3D {
 //    public static final Vector3D COMPASS[] = new Vector3D[]{WINDROSE2D[EAST], WINDROSE2D[SOUTHEAST], WINDROSE2D[SOUTH], WINDROSE2D[SOUTHWEST],
 //        WINDROSE2D[WEST], WINDROSE2D[NORTHWEST], WINDROSE2D[NORTH], WINDROSE2D[NORTHEAST],
 //        new Vector3D(new Point3D().define(0, 0, 1)), new Vector3D(new Point3D().define(0, 0, 1))};
-    protected Point3D _source, _target, _canonical;
+    protected Point3D source, target, canonical;
 
     public Vector3D(Point3D t) {
-        _source = t.getOrigin();
-        _target = t.clone();
+        source = t.getOrigin();
+        target = t.clone();
         update();
     }
 
     public Vector3D(Point3D s, Point3D t) {
-        _source = s.clone();
-        _target = t.clone();
+        source = s.clone();
+        target = t.clone();
         update();
     }
 
     protected Vector3D update() {
-        _canonical = getTarget().clone().minus(getSource());
+        canonical = getTarget().clone().minus(getSource());
         return this;
     }
 
     public Vector3D setSource(Point3D s) {
-        _source = s.clone();
+        source = s.clone();
         update();
         return this;
     }
 
     public Vector3D setTarget(Point3D t) {
-        _target = t.clone();
+        target = t.clone();
         update();
         return this;
     }
 
     public Point3D getSource() {
-        return _source;
+        return source;
     }
 
     public Point3D getTarget() {
-        return _target;
+        return target;
     }
 
     public Vector3D canonical() {
-        return new Vector3D(getSource().getOrigin(), _canonical);
+        return new Vector3D(getSource().getOrigin(), canonical);
     }
     
     public double modulo() {
@@ -70,15 +70,15 @@ public class Vector3D {
     }
 
     public double moduloX() {
-        return _canonical.getX();
+        return canonical.getX();
     }
 
     public double moduloY() {
-        return _canonical.getY();
+        return canonical.getY();
     }
 
     public double moduloZ() {
-        return _canonical.getZ();
+        return canonical.getZ();
     }
 
 // [-180, 180]
@@ -124,7 +124,7 @@ public class Vector3D {
 
     @Override
     public String toString() {
-        return getSource().toString() + "->" + _canonical.toString();
+        return getSource().toString() + "->" + canonical.toString();
     }
 
     public JsonArray toJson() {
@@ -135,8 +135,8 @@ public class Vector3D {
         Point3D t = new Point3D(0);
         t.fromJson(p);
         if (t != null) {
-            _source = t.getOrigin();
-            _target=t;
+            source = t.getOrigin();
+            target=t;
             update();
             return this;
         } else {

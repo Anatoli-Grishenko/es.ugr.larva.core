@@ -17,17 +17,18 @@ import java.util.Comparator;
  */
 public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 
-    protected String _name, _key, _type;
-    protected SimpleVector3D _vector;
-    protected Point3D _size,_center;
-    protected Color _color;
-    protected double _capacity=0, _maxCapacity=0;
-    protected boolean _available;
+    protected String name, key, type;
+    protected SimpleVector3D position;
+    protected Point3D size,center;
+    protected Color color;
+    protected double capacity=0, maxCapacity=0;
+    protected double storage=0, maxStorage=0;
+    protected boolean available;
 
 
     public Entity3D(String name) {
-        _name = name;
-        _key = getAlphaNumKey(16);
+        this.name = name;
+        key = getAlphaNumKey(16);
 //        _sorientation = direction.EAST.ordinal();
        setPosition(new Point3D(0,0,0));
        setSize(new Point3D(1,1,0));
@@ -35,84 +36,84 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
 
      public Entity3D(Point3D position, Color color) {
          setPosition(position);
-         _color = color;
-        _name = getHexaKey();
+         this.color = color;
+        name = getHexaKey();
     }
     
      public Entity3D(SimpleVector3D vposition, Color color) {
-        _vector = vposition;
-        _color = color;
-        _name = getHexaKey();
+        position = vposition;
+        this.color = color;
+        name = getHexaKey();
     }
     
     public Entity3D() {
-        _vector = new SimpleVector3D(new Point3D(0,0,0), SimpleVector3D.N);
-        _color = Color.WHITE;
-        _name = getHexaKey();
+        position = new SimpleVector3D(new Point3D(0,0,0), SimpleVector3D.N);
+        color = Color.WHITE;
+        name = getHexaKey();
     } 
 
     public Point3D getCenter() {
-        return _center;
+        return center;
     }
 
     public Entity3D  setCenter(Point3D _center) {
-        this._center = _center;
+        this.center = _center;
         return this;
     }
     
     public String getName() {
-        return _name;
+        return name;
     }
 
     public String getId() {
-        return _key;
+        return key;
     }
 
     public final Entity3D setPosition(Point3D p) {
-        _vector = new SimpleVector3D(p,SimpleVector3D.N);
-        _center = _vector.getSource().clone();
+        position = new SimpleVector3D(p,SimpleVector3D.N);
+        center = position.getSource().clone();
         return this;
     }
 
     public final Entity3D setPosition(SimpleVector3D p) {
-        _vector = p.clone();
-        _center = _vector.getSource().clone();
+        position = p.clone();
+        center = position.getSource().clone();
         return this;
     }
 
     public Color getColor() {
-        return _color;
+        return color;
     }
 
     public Entity3D setColor(Color _color) {
-        this._color = _color;
+        this.color = _color;
         return this;
     }
     
    public Point3D getPosition() {
-        return _vector.getSource();
+        return position.getSource();
     }
 
    public SimpleVector3D getVector() {
-        return _vector;
+        return position;
     }
 
     public final Entity3D setSize(Point3D p) {
-        _size = p.clone();
+        size = p.clone();
         return this;
     }
 
     public Point3D getSize() {
-        return _size;
+        return size;
     }
 
     public Entity3D setName(String _name) {
-        this._name = _name;
+        this.name = _name;
         return this;
     }
 
     public int getDimension() {
-        return _vector.getSource().getDimension();
+        return position.getSource().getDimension();
     }
 
 
@@ -122,13 +123,13 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public Entity3D setOrientation(int orientation) {
-        this._vector.setsOrient(orientation);
+        this.position.setsOrient(orientation);
         return this;
     }
     
 
     public int getOrientation() {
-        return _vector.getsOrient();
+        return position.getsOrient();
     }
     
 //    public Vector3D getVector(){
@@ -144,11 +145,11 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
         boolean res = true;
         switch (p.getDimension()) {
             case 3:
-                res &= getPosition().getZ() <= p.getZ() && p.getZ() <= getPosition().getZ() + _size.getZ();
+                res &= getPosition().getZ() <= p.getZ() && p.getZ() <= getPosition().getZ() + size.getZ();
             case 2:
-                res &= getPosition().getY() <= p.getY() && p.getY() <= getPosition().getY() + _size.getY();
+                res &= getPosition().getY() <= p.getY() && p.getY() <= getPosition().getY() + size.getY();
             case 1:
-                res &= getPosition().getX() <= p.getX() && p.getX() <= getPosition().getX() + _size.getX();
+                res &= getPosition().getX() <= p.getX() && p.getX() <= getPosition().getX() + size.getX();
                 break;
         }
         return res;
@@ -165,43 +166,59 @@ public  class Entity3D implements Comparator<Entity3D>, Comparable<Entity3D>{
     }
 
     public double getCapacity() {
-        return _capacity;
+        return capacity;
     }
 
     public void setCapacity(double _capacity) {
-        this._capacity = _capacity;
+        this.capacity = _capacity;
     }
 
     public String getKey() {
-        return _key;
+        return key;
     }
 
     public void setKey(String _key) {
-        this._key = _key;
+        this.key = _key;
     }
 
     public String getType() {
-        return _type;
+        return type;
     }
 
     public void setType(String _type) {
-        this._type = _type;
+        this.type = _type;
     }
 
     public boolean isAvailable() {
-        return _available;
+        return available;
     }
 
     public void setAvailable(boolean _available) {
-        this._available = _available;
+        this.available = _available;
     }
 
     public double getMaxCapacity() {
-        return _maxCapacity;
+        return maxCapacity;
     }
 
     public void setMaxCapacity(double _maxCapacity) {
-        this._maxCapacity = _maxCapacity;
+        this.maxCapacity = _maxCapacity;
+    }
+
+    public double getStorage() {
+        return storage;
+    }
+
+    public void setStorage(double _storage) {
+        this.storage = _storage;
+    }
+
+    public double getMaxStorage() {
+        return maxStorage;
+    }
+
+    public void setMaxStorage(double _maxStorage) {
+        this.maxStorage = _maxStorage;
     }
 
   

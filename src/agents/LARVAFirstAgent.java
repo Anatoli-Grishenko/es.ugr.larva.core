@@ -21,6 +21,11 @@ import data.Ole;
 import data.OleConfig;
 import data.OlePassport;
 import data.OleSet;
+import data.OleTools;
+import static data.OleTools.editConfig;
+import static data.OleTools.loadConfig;
+import static data.OleTools.saveConfig;
+import static data.OleTools.viewConfig;
 import data.Transform;
 import disk.Logger;
 import static disk.Logger.trimFullString;
@@ -73,6 +78,11 @@ import static messaging.ACLMessageTools.ACLMSTEALTH;
 import static messaging.ACLMessageTools.getReceiverList;
 import swing.OleFrame;
 import swing.SwingTools;
+import tools.Internet;
+import tools.Monitor;
+import tools.NetworkAccessPoint;
+import tools.NetworkCookie;
+import zip.ZipTools;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -159,6 +169,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             continuousSequence = true,
             ignoreExceptions = false, allowEaryWarning = true,
             usePerformatives = false;
+    private boolean profiling = false;
+    protected NetworkAccessPoint nap;
+    protected NetworkCookie lastCookie;
+    protected String netMon = "", myGMap, profileDescription="";
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -517,11 +531,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         logger.logMessage(message);
         try {
             if (isSwing() && logger.isEcho()) {
-//                if (myText != null) {
-//                    myText.append(logger.getLastlog() + "");
-////            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
-//                    myText.setCaretPosition(Math.max(myText.getText().length(), 0));
-//                }
+                if (myText != null) {
+                    myText.append(logger.getLastlog() + "");
+//            myText.setCaretPosition(Math.max(myText.getText().lastIndexOf("\n"), 0));
+                    myText.setCaretPosition(Math.max(myText.getText().length(), 0));
+                }
             }
         } catch (Exception ex) {
 
@@ -828,6 +842,21 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         boolean repeat;
         msg = blockingReceive();
         if (msg != null) {
+            lastCookie = null;
+            if (profiling) {
+                if (Monitor.isHiddenMonitor(msg)) {
+                    ACLMessage outgoing = LARVAcreateReply(msg);
+                    outgoing.setPerformative(ACLMessage.INFORM);
+                    outgoing.setContent(Keygen.getHexaKey(64));
+                    if (ACLMessageTools.isZipped(msg)) {
+                        outgoing.setContent("ZIPDATA" + ZipTools.zipToString(outgoing.getContent()));
+                    }
+                    outgoing = Monitor.hidePong(msg, outgoing, nap, profileDescription);
+                    LARVAsend(outgoing);
+                    lastCookie = Monitor.extractCookie(outgoing);
+                    msg.setContent(getHexaKey(16));
+                }
+            }
             InfoACLM("⭕< Received ACLM ", msg);
             msg = this.LARVAprocessReceiveMessage(msg);
         }
@@ -1729,4 +1758,55 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return sessionAlias;
     }
 
+    public void activateProfiling(String service) {
+        profiling = Confirm("Please confirm the activation of profiling tools");
+        if (profiling) {
+            nap = new NetworkAccessPoint("./config/");
+            if (OleTools.isConfig(nap)) {
+                loadConfig(nap);
+            }
+            if (Confirm("Do you grant permission to read your private IP, please?")) {
+                String extIP = Internet.getExtIPAddress();
+                nap.setExtIP(extIP);
+                nap.setLocalIP(Internet.getLocalIPAddress());
+            }
+            saveConfig(nap);
+            loadConfig(nap);
+            boolean good = false;
+            do {
+                editConfig(nap);
+                good = nap.validate();
+                if (!good) {
+                    good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
+                }
+            } while (!good);
+            viewConfig(nap);
+            saveConfig(nap);
+            if (!DFGetAllProvidersOf(service).isEmpty()) {
+                netMon = DFGetAllProvidersOf(service).get(0);
+                Message("It is ok, network monitor service has been found:\n" + netMon);
+            } else {
+                Alert("Sorry, network monitor service not found");
+                deactivateProfiling();
+            }
+        }
+        isProfiling();
+    }
+
+    public void deactivateProfiling() {
+        profiling = false;
+    }
+
+    public boolean isProfiling() {
+//        if (profiling) {
+//            Alert("Your profiling is active");
+//        } else {
+//            Message("Your profiling is not currently active");
+//        }
+        return profiling;
+    }
+
+    public void setProfileDescription(String des){
+        profileDescription = des;
+    }
 }

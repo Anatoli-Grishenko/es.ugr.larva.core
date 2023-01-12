@@ -88,6 +88,7 @@ public class OleConfig extends Ole {
         return getTab(stab).getFieldList();
     }
 
+    @Override
     public OleConfig edit(OleApplication parent) {
         SwingTools.doSwingWait(() -> {
             OleDialog oDlg = new OleDialog(parent, "Edit ");
@@ -99,6 +100,7 @@ public class OleConfig extends Ole {
         return this;
     }
 
+    @Override
     public void view(OleApplication parent) {
         OleDialog oDlg = new OleDialog(parent, "View ");
         oDlg.setEdit(false);

@@ -343,4 +343,12 @@ public class ACLMessageTools {
         return false;
     }
 
+    public static boolean isZipped(ACLMessage msg) {
+        if (msg.getContent().startsWith("ZIPDATA")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }
