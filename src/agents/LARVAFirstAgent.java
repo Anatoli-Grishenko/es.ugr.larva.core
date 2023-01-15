@@ -172,7 +172,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     private boolean profiling = false;
     protected NetworkAccessPoint nap;
     protected NetworkCookie lastCookie;
-    protected String netMon = "", myGMap, profileDescription="";
+    protected String netMon = "", myGMap, profileDescription = "", profilingType;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -843,8 +843,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         msg = blockingReceive();
         if (msg != null) {
             lastCookie = null;
-            if (profiling) {
-                if (Monitor.isHiddenMonitor(msg)) {
+            if (Monitor.isHiddenMonitor(msg)) {
+                if (!profiling) {
+                    activateProfiling("NETMON");
+                }
+                if (profiling) {
                     ACLMessage outgoing = LARVAcreateReply(msg);
                     outgoing.setPerformative(ACLMessage.INFORM);
                     outgoing.setContent(Keygen.getHexaKey(64));
@@ -905,14 +908,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     @Override
     protected boolean Confirm(String message) {
-        if (isSwing()) {
+//        if (isSwing()) {
             int op = JOptionPane.showConfirmDialog(null,
                     message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
 
             return op == JOptionPane.YES_OPTION;
-        } else {
-            return super.Confirm(message);
-        }
+//        } else {
+//            return super.Confirm(message);
+//        }
     }
 
     /**
@@ -1759,38 +1762,43 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void activateProfiling(String service) {
-        profiling = Confirm("Please confirm the activation of profiling tools");
-        if (profiling) {
-            nap = new NetworkAccessPoint("./config/");
-            if (OleTools.isConfig(nap)) {
-                loadConfig(nap);
-            }
-            if (Confirm("Do you grant permission to read your private IP, please?")) {
-                String extIP = Internet.getExtIPAddress();
-                nap.setExtIP(extIP);
-                nap.setLocalIP(Internet.getLocalIPAddress());
-            }
-            saveConfig(nap);
-            loadConfig(nap);
-            boolean good = false;
-            do {
-                editConfig(nap);
-                good = nap.validate();
-                if (!good) {
-                    good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
+        doSwingWait(() -> {
+            if (Confirm("Please confirm the activation of profiling tools")) {
+                profileDescription = service;
+                nap = new NetworkAccessPoint("./config/");
+                if (OleTools.isConfig(nap)) {
+                    loadConfig(nap);
                 }
-            } while (!good);
-            viewConfig(nap);
-            saveConfig(nap);
-            if (!DFGetAllProvidersOf(service).isEmpty()) {
-                netMon = DFGetAllProvidersOf(service).get(0);
-                Message("It is ok, network monitor service has been found:\n" + netMon);
-            } else {
-                Alert("Sorry, network monitor service not found");
-                deactivateProfiling();
+                if (Confirm("Do you grant permission to read your private IP, please?")) {
+                    String extIP = Internet.getExtIPAddress();
+                    nap.setExtIP(extIP);
+                    nap.setLocalIP(Internet.getLocalIPAddress());
+                }
+                saveConfig(nap);
+                loadConfig(nap);
+                boolean good;
+                do {
+                    editConfig(nap);
+                    good = nap.validate();
+                    if (!good) {
+                        good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
+                    }
+                } while (!good);
+                viewConfig(nap);
+                saveConfig(nap);
+                if (!DFGetAllProvidersOf(service).isEmpty()) {
+                    profilingType = service;
+                    netMon = DFGetAllProvidersOf(profilingType).get(0);
+                    Message("It is ok, network monitor service has been found:\n" + netMon
+                            + "\n\nprofiling active");
+                    profiling = true;
+                } else {
+                    Alert("Sorry, network monitor service not found. Profiling is disabled");
+                    profiling = false;
+                    profilingType = null;
+                }
             }
-        }
-        isProfiling();
+        });
     }
 
     public void deactivateProfiling() {
@@ -1806,7 +1814,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return profiling;
     }
 
-    public void setProfileDescription(String des){
+    public void setProfileDescription(String des) {
         profileDescription = des;
     }
 }

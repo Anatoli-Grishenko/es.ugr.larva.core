@@ -29,6 +29,7 @@ public class Palette {
     protected ArrayList<WayPoint> wayPoints;
     protected String name = "Palette" + getHexaKey(4);
     protected boolean debug = false;
+    protected double alpha;
 
     protected void debugPing(String message) {
         if (debug) {
@@ -86,6 +87,10 @@ public class Palette {
     }
 
     public Palette fillWayPointsLevel(int nlevels) {
+        return fillWayPointsLevel(nlevels, 1);
+    }
+
+    public Palette fillWayPointsLevel(int nlevels, double alpha01) {
         int i = 0, iwp = 0;
         int r1, r2, g1, g2, b1, b2;
         double s, s1, s2, r, g, b;
@@ -103,9 +108,24 @@ public class Palette {
                 r = Math.round(r1 + (r2 - r1) * (s - s1) / (s2 - s1));
                 g = Math.round(g1 + (g2 - g1) * (s - s1) / (s2 - s1));
                 b = Math.round(b1 + (b2 - b1) * (s - s1) / (s2 - s1));
-                palette.put(i, new Color((int) r, (int) g, (int) b));
+                Color calpha;
+                if (alpha01 < 0) {
+                    calpha = new Color(
+                            (int) (Math.min(255, Math.max(0, r * alpha01))),
+                            (int) (Math.min(255, Math.max(0, g * alpha01))),
+                            (int) (Math.min(255, Math.max(0, b * alpha01)))
+                    );
+                } else {
+                    calpha = new Color(
+                            (int) (Math.min(255, Math.max(0, r / alpha01))),
+                            (int) (Math.min(255, Math.max(0, g / alpha01))),
+                            (int) (Math.min(255, Math.max(0, b / alpha01)))
+                    );
+                }
+                palette.put(i, calpha);
                 i++;
-            } else {
+            }
+            else {
                 r1 = r2;
                 g1 = g2;
                 b1 = b2;
@@ -249,7 +269,7 @@ public class Palette {
             g.setColor(getColor(size() - i));
             g.fillRect(r.x, r.y + i * ch, r.width, ch);
             g.setColor(Color.WHITE);
-            if (i %20 == 0 || i == size()) {
+            if (i % 20 == 0 || i == size()) {
                 g.drawString(String.format("%03d", size() - i), r.x + r.width, r.y + i * ch + 10);
             }
         }

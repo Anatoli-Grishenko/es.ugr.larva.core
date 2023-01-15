@@ -1,5 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ * To change this license header, choose License Headers in Prject Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -10,7 +10,7 @@ package tools;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class NetworkCookie {
-    protected String ID="", tSend="", tReceive="", payload="", 
+    protected String ID="", tStart="", tSend="", tReceive="", tReturn="", tArrive="", payload="", 
             owner="", accessPoint="", description="";
     protected boolean zipped=false;
     int size=0, serie=0, scale=0, realSize=0;
@@ -40,6 +40,30 @@ public class NetworkCookie {
 
     public void settReceive(String tReceive) {
         this.tReceive = tReceive;
+    }
+
+    public String gettStart() {
+        return tStart;
+    }
+
+    public void settStart(String tStart) {
+        this.tStart = tStart;
+    }
+
+    public String gettReturn() {
+        return tReturn;
+    }
+
+    public void settReturn(String tReturn) {
+        this.tReturn = tReturn;
+    }
+
+    public String gettArrive() {
+        return tArrive;
+    }
+
+    public void settArrive(String tArrive) {
+        this.tArrive = tArrive;
     }
 
     public String getPayload() {

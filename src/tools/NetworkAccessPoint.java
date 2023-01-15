@@ -17,7 +17,7 @@ import swing.OleApplication;
 public class NetworkAccessPoint implements AutoOle {
 
     public enum District {
-        ALBAYCIN, BEIRO, CENTRO, CHANA, GENIL, NORTE, RONDA, ZAIDIN, OTROMUNICIPIO
+        EDUROAM, ALBAYCIN, BEIRO, CENTRO, CHANA, GENIL, NORTE, RONDA, ZAIDIN, OTROMUNICIPIO
     };
     protected District myDistrict = District.ALBAYCIN;
     protected Granada Municipio = Granada.Granada;

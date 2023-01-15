@@ -7,7 +7,6 @@ package map2D;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -15,9 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import javax.imageio.ImageIO;
-import swing.SwingTools;
 
 /**
  *
@@ -537,6 +534,31 @@ public class Map2DColor {
 //            }
 //        }
         return toGrayScale(1.0);
+    }
+
+    public Map2DColor alpha(double alpha01) {
+        Color calpha;
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                Color c = this.getColor((int) (x), (int) y);
+                if (alpha01 < 0) {
+                    calpha = new Color(
+                            (int) (Math.min(255,Math.max(0,c.getRed() * alpha01))),
+                            (int) (Math.min(255,Math.max(0,c.getGreen()* alpha01))),
+                            (int) (Math.min(255,Math.max(0,c.getBlue()* alpha01)))
+                    );
+                } else {
+                    calpha = new Color(
+                            (int) (Math.min(255,Math.max(0,c.getRed() / alpha01))),
+                            (int) (Math.min(255,Math.max(0,c.getGreen()/ alpha01))),
+                            (int) (Math.min(255,Math.max(0,c.getBlue()/ alpha01)))
+                    );
+                }
+                setColor(x, y, calpha);
+
+            }
+        }
+        return this;
     }
 
     public Map2DColor toGrayScale(double scale) {

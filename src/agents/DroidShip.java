@@ -261,6 +261,7 @@ public class DroidShip extends LARVADialogicalAgent {
         double sx = 0, sy = 0, x = 0, y = 0, n = 0, minx = 1000000, maxx = -minx, miny = minx, maxy = -maxx;
         Point3D p;
         doQueryCities();
+
 //        for (String s : E.getCityList()) {
 //            try {
 //                p = E.getCityPosition(s);
@@ -285,7 +286,10 @@ public class DroidShip extends LARVADialogicalAgent {
 //                System.out.println("EX " + ex.toString());
 //            }
 //        }
-        mapCenter = new Point3D(518, 603, 0);
+//        mapCenter = new Point3D(518, 603, 0);
+//        mapCenter = new Point3D((maxx-minx)/n, (maxy-miny)/n, 0);
+        
+        mapCenter = E.getCityPosition(E.getCityList()[0]);
         around = E.getCitiesAround(mapCenter, 160);
         myCity = 0;
         city = around[myCity];
