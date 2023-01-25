@@ -9,13 +9,9 @@ import Environment.Environment;
 import ai.Choice;
 import ai.DecisionSet;
 import ai.Mission;
-import ai.MissionSet;
 import appboot.XUITTY;
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import console.Console;
-import crypto.Keygen;
+import com.eclipsesource.json.WriterConfig;
 import static crypto.Keygen.getHexaKey;
 import data.Ole;
 import data.OleConfig;
@@ -32,14 +28,9 @@ import static disk.Logger.trimFullString;
 import geometry.SimpleVector3D;
 import glossary.Signals;
 import jade.core.AID;
-import jade.core.MicroRuntime;
 import jade.core.behaviours.Behaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
@@ -67,21 +57,17 @@ import swing.OleAgentTile;
 import swing.OleApplication;
 import swing.OleButton;
 import swing.OleToolBar;
-import static tools.Internet.getExtIPAddress;
-import static tools.Internet.getLocalIPAddress;
-import tools.TimeHandler;
 import tools.emojis;
-import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMROLE;
-import static messaging.ACLMessageTools.ACLMSNDDATE;
 import static messaging.ACLMessageTools.ACLMSTEALTH;
+import static messaging.ACLMessageTools.getMainReceiver;
 import static messaging.ACLMessageTools.getReceiverList;
-import swing.OleFrame;
 import swing.SwingTools;
 import tools.Internet;
-import tools.Monitor;
-import tools.NetworkAccessPoint;
+import profiling.NetworkData;
+import profiling.Profiler;
 import tools.NetworkCookie;
+import tools.TimeHandler;
 import zip.ZipTools;
 
 /**
@@ -170,9 +156,39 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             ignoreExceptions = false, allowEaryWarning = true,
             usePerformatives = false;
     private boolean profiling = false;
-    protected NetworkAccessPoint nap;
+    protected NetworkData nap;
     protected NetworkCookie lastCookie;
     protected String netMon = "", myGMap, profileDescription = "", profilingType;
+    protected Profiler MyCPUProfiler, MyNetworkProfiler;
+    private ACLMessage message;
+
+    public Profiler getMyCPUProfiler() {
+        return MyCPUProfiler;
+    }
+
+    public Profiler getMyNetworkProfiler() {
+        return MyNetworkProfiler;
+    }
+
+    public void activateMyCPUProfiler(String filename) {
+        getMyCPUProfiler().setActive(true);
+        getMyCPUProfiler().setOwner(getLocalName());
+        getMyCPUProfiler().setTsvFileName(filename+".tsv");
+    }
+
+    public void activateMyNetworkProfiler(String filename) {
+        getMyNetworkProfiler().setActive(true);
+        getMyNetworkProfiler().setOwner(getLocalName());
+        getMyNetworkProfiler().setTsvFileName(filename+".tsv");
+    }
+
+    public void deactivateMyCPUProfiler() {
+        getMyCPUProfiler().setActive(false);
+    }
+
+    public void deactivateMyNetworkProfiler() {
+        getMyNetworkProfiler().setActive(true);
+    }
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -291,6 +307,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.activateSequenceDiagrams();
         this.setContinuousSequenceDiagram(true);
         doNotExit();
+        MyCPUProfiler = new Profiler();
+        MyCPUProfiler.setOwner(getLocalName());
+        MyNetworkProfiler = new Profiler();
+        MyNetworkProfiler.setOwner(getLocalName());
     }
 
     public void LARVAwait(int milis) {
@@ -360,7 +380,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 public void action() {
                     doShield(() -> {
                         preExecute();
-                        Execute();
+                        getMyCPUProfiler().profileThis("BODY", "CYCLE" + getNCycles(),
+                                () -> {
+                                    Execute();
+                                });
                         postExecute();
                         ncycles++;
                     });
@@ -381,7 +404,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 @Override
                 public void action() {
                     preExecute();
-                    Execute();
+                    getMyCPUProfiler().profileThis("BODY", "CYCLE" + getNCycles(),
+                            () -> {
+                                Execute();
+                            });
                     postExecute();
                     ncycles++;
                     if (isExit()) {
@@ -487,6 +513,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.addSequenceDiagram(null);
             this.saveSequenceDiagram(getName() + ".seqd");
             this.drawSequenceDiagram();
+        }
+        if (getMyCPUProfiler().isActive()) {
+            getMyCPUProfiler().close();
         }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
@@ -631,7 +660,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 Error("Agent " + IdentityManager + " does not answer. Not checked in");
             } else {
                 addMilestone("MILES17");
-                checkout = checkin.createReply();
+                checkout = LARVAcreateReply(checkin);
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
                     Info(checkin.getContent());
@@ -779,6 +808,20 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             msg.setConversationId(this.mySessionID);
             msg.setReplyWith("MyReport");
         }
+        if (getMyNetworkProfiler().isActive()) {
+            if (lastCookie == null) {
+                lastCookie = new NetworkCookie();
+            }
+            if (lastCookie.getSize() < 0) {
+                lastCookie.setSize(msg.getContent().length());
+            }
+//            if (lastCookie.getSerie() < 0) {
+                lastCookie.setSerie((int) getNCycles());
+//            }
+            lastCookie.settUpstream(TimeHandler.Now());
+            msg = Profiler.injectProfiler(msg, lastCookie);
+//            System.out.println("SENDING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+        }
         this.addSequenceDiagram(msg);
         checkDeepMilestones(msg);
         msg.addUserDefinedParameter("XINREPLYTO", msg.getInReplyTo());
@@ -799,6 +842,31 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.secureReceive(msg);
         }
         this.addSequenceDiagram(msg);
+
+        if (Profiler.isProfiler(msg) && getMyNetworkProfiler().isActive()) {
+            String stime = TimeHandler.Now();
+            lastCookie = Profiler.extractProfiler(msg);
+            lastCookie.settReceive(stime);
+            if (ACLMessageTools.isZipped(msg)) {
+                lastCookie.setSize(ZipTools.unzipString(msg.getContent().replace("ZIPDATA", "")).length());
+            } else {
+                lastCookie.setSize(msg.getContent().length());
+            }
+            String label, label2;
+            label = "PING\t" + lastCookie.getSerie() + "\tTARGET\t"+lastCookie.getOwner()
+                    +"\tSIZE\t" + lastCookie.getSize() + "\tPAYLOAD\t" 
+                    + msg.getContent().length() 
+                    + "\tZIP\t"  + ACLMessageTools.isZipped(msg) + "\t";
+            label2 = "UPSTREAM\t" + lastCookie.getLatencyUp()
+                    + "\tSERVER\t" + lastCookie.getLatencyServer()
+                    + "\tDOWNSTREAM\t" + lastCookie.getLatencyDown()
+                    + "\tTimeline\t"+lastCookie.gettUpstream();
+            getMyNetworkProfiler().profileThis(label, label2, () -> {
+//                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+                System.out.println(label + "" + label2);
+
+            });
+        }
         return msg;
     }
 
@@ -838,43 +906,27 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     protected ACLMessage LARVAblockingReceive() {
-        ACLMessage msg;
         boolean repeat;
-        msg = blockingReceive();
-        if (msg != null) {
-            lastCookie = null;
-            if (Monitor.isHiddenMonitor(msg)) {
-                if (!profiling) {
-                    activateProfiling("NETMON");
-                }
-                if (profiling) {
-                    ACLMessage outgoing = LARVAcreateReply(msg);
-                    outgoing.setPerformative(ACLMessage.INFORM);
-                    outgoing.setContent(Keygen.getHexaKey(64));
-                    if (ACLMessageTools.isZipped(msg)) {
-                        outgoing.setContent("ZIPDATA" + ZipTools.zipToString(outgoing.getContent()));
-                    }
-                    outgoing = Monitor.hidePong(msg, outgoing, nap, profileDescription);
-                    LARVAsend(outgoing);
-                    lastCookie = Monitor.extractCookie(outgoing);
-                    msg.setContent(getHexaKey(16));
-                }
-            }
-            InfoACLM("⭕< Received ACLM ", msg);
-            msg = this.LARVAprocessReceiveMessage(msg);
+        getMyCPUProfiler().profileThis("WAITING ANSWERS LF", () -> {
+            message = blockingReceive();
+        });
+        if (message != null) {
+            InfoACLM("⭕< Received ACLM ", message);
+            message = this.LARVAprocessReceiveMessage(message);
         }
-        return msg;
+        return message;
     }
 
     protected ACLMessage LARVAblockingReceive(long milis) {
-        ACLMessage msg;
         boolean repeat = false;
-        msg = blockingReceive(milis);
-        if (msg != null) {
-            InfoACLM("⭕< Received ACLM ", msg);
-            msg = this.LARVAprocessReceiveMessage(msg);
+        getMyCPUProfiler().profileThis("WAITING ANSWERS LF", () -> {
+            message = blockingReceive(milis);
+        });
+        if (message != null) {
+            InfoACLM("⭕< Received ACLM ", message);
+            message = this.LARVAprocessReceiveMessage(message);
         }
-        return msg;
+        return message;
     }
 
     public ACLMessage LARVAblockingReceive(MessageTemplate t) {
@@ -909,10 +961,10 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     @Override
     protected boolean Confirm(String message) {
 //        if (isSwing()) {
-            int op = JOptionPane.showConfirmDialog(null,
-                    message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
+        int op = JOptionPane.showConfirmDialog(null,
+                message, "Agent " + getLocalName(), JOptionPane.YES_NO_OPTION);
 
-            return op == JOptionPane.YES_OPTION;
+        return op == JOptionPane.YES_OPTION;
 //        } else {
 //            return super.Confirm(message);
 //        }
@@ -1765,7 +1817,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         doSwingWait(() -> {
             if (Confirm("Please confirm the activation of profiling tools")) {
                 profileDescription = service;
-                nap = new NetworkAccessPoint("./config/");
+                nap = new NetworkData("./config/");
                 if (OleTools.isConfig(nap)) {
                     loadConfig(nap);
                 }

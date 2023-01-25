@@ -1836,7 +1836,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 0);
                 encodeSensor(Sensors.AUTONOMY, 360 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.RANGE, 3);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
@@ -1858,7 +1858,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 0);
                 encodeSensor(Sensors.AUTONOMY, 360 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.RANGE, 1);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
@@ -1902,7 +1902,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 250);
                 encodeSensor(Sensors.AUTONOMY, 360 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.RANGE, 3);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
@@ -1924,7 +1924,7 @@ public class SensorDecoder {
                 encodeSensor(Sensors.MAXCARGO, 250);
                 encodeSensor(Sensors.AUTONOMY, 360 * energyBase);
                 encodeSensor(Sensors.ENERGYBURNT, 0);
-                encodeSensor(Sensors.RANGE, 11);
+                encodeSensor(Sensors.RANGE, 3);
                 encodeSensor(Sensors.BURNRATEMOVE, 0);
                 encodeSensor(Sensors.BURNRATEREAD, 0);
                 encodeSensor(Sensors.CAPABILITIES, new String[]{
@@ -2038,6 +2038,7 @@ public class SensorDecoder {
                     capability.UP.name().toUpperCase(),
                     capability.DOWN.name().toUpperCase(),
                     capability.CAPTURE.name().toUpperCase(),
+                    capability.BOARD.name().toUpperCase(),
                     capability.DEBARK.name().toUpperCase(),
                     capability.RECHARGE.name().toUpperCase(),
                     capability.QUERY.name().toUpperCase()

@@ -294,7 +294,7 @@ public class NPCDialogic extends LARVADialogicalAgent {
      * @return The prepared answer
      */
     public ACLMessage answerTo(ACLMessage m, Dictionary dict, boolean interactive) {
-        ACLMessage answer = m.createReply();
+        ACLMessage answer = LARVAcreateReply(m);
         String word = selectWord(dict, m.getContent());
         if (word != null) {
             answer.setContent(word);

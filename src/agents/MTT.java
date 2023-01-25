@@ -25,6 +25,7 @@ public class MTT extends DroidShip {
         });
         //logger.onEcho(); showPerceptions=true;
 //        logger.offEcho();
+        getMyCPUProfiler().setTsvFileName("./"+myType+".tsv");
 
     }
 

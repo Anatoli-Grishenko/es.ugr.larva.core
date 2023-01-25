@@ -1015,21 +1015,21 @@ public class World {
                     res = true;
                     break;
                 case RECHARGE:
-//                    if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
-//                            agent.getPosition().getY()) && agent.getPosition().getZ() > 5) {
-//
-//                        agent.Raw().setEnergy(agent.Raw().getAutonomy());
-//                        res = true;
-//
-//                        break;
-//                    } else {
-//                        agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed for it is only possible at ground level");
-//                        res = true;
-//                        break;
-//                    }
-                    agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed. You must request BB1F");
-                    res = true;
-                    break;
+                    if (agent.getPosition().getZ() == getEnvironment().getSurface().getStepLevel(agent.getPosition().getX(),
+                            agent.getPosition().getY()) && agent.getPosition().getZ() > 5) {
+
+                        agent.Raw().setEnergy(agent.Raw().getAutonomy());
+                        res = true;
+
+                        break;
+                    } else {
+                        agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed for it is only possible at ground level");
+                        res = true;
+                        break;
+                    }
+//                    agent.Raw().addStatus(agent.Raw().getStatus() + "Recharge failed. You must request BB1F");
+//                    res = true;
+//                    break;
                 case REFILL:
                     if (parts.length > 1) {
                         return true;

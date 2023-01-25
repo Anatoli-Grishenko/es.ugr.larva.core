@@ -1344,7 +1344,9 @@ public class Ole extends JsonObject {
                 jsares.add(objectToOle(Array.get(obj, i)).get("value"));
             }
             res.set("value", jsares);
-            res.setDescription(Array.get(obj, 0).getClass().getSimpleName() + "[]");
+            if (Array.getLength(obj) > 0) {
+                res.setDescription(Array.get(obj, 0).getClass().getSimpleName() + "[]");
+            }
         }
         return res;
     }

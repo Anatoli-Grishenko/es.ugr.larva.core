@@ -21,6 +21,7 @@ import glossary.Roles;
 import glossary.Sensors;
 import java.util.ArrayList;
 import java.util.Collections;
+import profiling.Profiler;
 import world.ThingSet;
 import world.Perceptor;
 import world.SensorDecoder;
@@ -44,6 +45,7 @@ public class Environment extends SensorDecoder {
     protected ThingSet census;
     protected int slope;
     protected LARVAFirstAgent ownerHook;
+    protected Profiler refProfiler;
 
 //    public Environment() {
 //        super();
@@ -59,6 +61,7 @@ public class Environment extends SensorDecoder {
 //        World = new World("innerworld");
         cadastre = new ThingSet();
         census = new ThingSet();
+        refProfiler = owner.getMyCPUProfiler();
     }
 
     protected Environment(Environment other) {
@@ -96,14 +99,19 @@ public class Environment extends SensorDecoder {
      * @return A copy of the same instance (to chain methods calls)
      */
     public Environment setExternalPerceptions(String perceptions) {
+
         try {
-            feedPerception(perceptions);
-            if (this.getGPSMemorySize() > 1) {
-                slope = this.getGPS().getZInt() - this.getGPSMemory(1).getZInt();
-            } else {
-                slope = 0;
-            }
-            cache();
+// Profiling: this is irrelevant: +- 1 ms always
+            refProfiler.profileThis("READPERCEPTIONS", "" + perceptions.length(),
+                    () -> {
+                        feedPerception(perceptions);
+                        if (this.getGPSMemorySize() > 1) {
+                            slope = this.getGPS().getZInt() - this.getGPSMemory(1).getZInt();
+                        } else {
+                            slope = 0;
+                        }
+                        cache();
+                    });
             return this;
         } catch (Exception ex) {
             return null;
@@ -112,21 +120,24 @@ public class Environment extends SensorDecoder {
 
     public Environment setExternalObjects(String things) {
         try {
-            JsonObject jsoThings = Json.parse(things).asObject();
-            JsonArray jsathings;
-            if (jsoThings.get("city") != null) {
-                if (cadastre == null) {
-                    cadastre = new ThingSet();
-                }
-                cadastre.fromJson(jsoThings.get("city").asArray());
-            }
-            if (jsoThings.get("people") != null) {
-                if (census == null) {
-                    census = new ThingSet();
-                }
-                census.fromJson(jsoThings.get("cities").asArray());
-            }
-            cache();
+            refProfiler.profileThis("READEXTERNALOBJECTS", "" + things.length(),
+                    () -> {
+                        JsonObject jsoThings = Json.parse(things).asObject();
+                        JsonArray jsathings;
+                        if (jsoThings.get("city") != null) {
+                            if (cadastre == null) {
+                                cadastre = new ThingSet();
+                            }
+                            cadastre.fromJson(jsoThings.get("city").asArray());
+                        }
+                        if (jsoThings.get("people") != null) {
+                            if (census == null) {
+                                census = new ThingSet();
+                            }
+                            census.fromJson(jsoThings.get("cities").asArray());
+                        }
+                        cache();
+                    });
         } catch (Exception ex) {
 
         }

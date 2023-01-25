@@ -44,6 +44,14 @@ public class SimpleVector3D extends Vector3D {
         }
     }
 
+    public SimpleVector3D(Vector3D v) {
+        super(v);
+        int aux = getInverseOrientation();
+        if (aux != 8) {
+            sOrient = aux;
+        }
+    }
+
     public int getInverseOrientation() {
         int r = this.canonical().getTarget().getXInt() + 1, c = this.canonical().getTarget().getYInt() + 1;
         if (0 <= r && r < 3 && 0 <= c && c < 3) {

@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import messaging.ACLMessageTools;
+import profiling.Profiler;
 import swing.OleDashBoard;
 import swing.TelegramBackdoor;
 import tools.TimeHandler;
@@ -46,6 +47,8 @@ public class XUIAgent extends LARVAFirstAgent {
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
     TelegramBackdoor tgb;
+    boolean zip;
+    String content;
 
     @Override
     public void setup() {
@@ -57,7 +60,7 @@ public class XUIAgent extends LARVAFirstAgent {
             logger.onOverwrite();
             logger.onTabular();
         } else {
-            logger.offEcho();
+//            logger.offEcho();
             this.deactivateSequenceDiagrams();
         }
         E.setVerbose(verbose);
@@ -93,21 +96,32 @@ public class XUIAgent extends LARVAFirstAgent {
                 + "Distance" + Mission.sepMissions
                 + "Targets" + Mission.sepMissions
         );
-        this.ignoreExceptions = true;
+        this.ignoreExceptions = false;
         this.allowEaryWarning = false;
-        if (this.DFGetAllProvidersOf("STUDENTS").size() > 0) {
-            telegramBot = this.DFGetAllProvidersOf("STUDENTS").get(0);
-        } else {
-            telegramBot = "";
-        }
-        tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
-        tgb.setPreferredSize(new Dimension(100, 200));
+//        if (this.DFGetAllProvidersOf("STUDENTS").size() > 0) {
+//            telegramBot = this.DFGetAllProvidersOf("STUDENTS").get(0);
+//        } else {
+//            telegramBot = "";
+//        }
+//        tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
+//        tgb.setPreferredSize(new Dimension(100, 200));
         loadSessionAlias();
+        // Profiling
+        getMyCPUProfiler().setActive(true);
+        getMyCPUProfiler().setOwner("XUICPU");
+        activateMyCPUProfiler("XUI-CPU");
+//        activateMyNetworkProfiler("XUI-NETWORK");
+
+        myDashBoard.refProfiler.setOwner("DASHBOARD");
+        myDashBoard.refProfiler.setTsvFileName("DASHBOARD.tsv");
+        myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
     }
 
     @Override
     public void Execute() {
         Info("Status: " + myStatus.name());
+        getMyCPUProfiler().setSeries(myStatus.name());
+        getMyNetworkProfiler().setSeries(myStatus.name());
         switch (myStatus) {
             case CHECKIN:
                 myStatus = MyCheckin();
@@ -118,7 +132,7 @@ public class XUIAgent extends LARVAFirstAgent {
 //            } catch (Exception ex) {
 //                myStatus = Status.IDLE;
 //            }
-            break;
+                break;
             case CHECKOUT:
                 myStatus = MyCheckout();
                 break;
@@ -127,11 +141,17 @@ public class XUIAgent extends LARVAFirstAgent {
                 LARVAexit = true;
                 break;
         }
-
     }
 
     @Override
     public void takeDown() {
+        if (getMyCPUProfiler().isActive()) {
+            getMyCPUProfiler().close();
+        }
+        if (getMyNetworkProfiler().isActive()) {
+            getMyNetworkProfiler().close();
+        }
+        myDashBoard.closeProfiler();
         myDashBoard.removeAll();
         MyCheckout();
         Info("Taking down and deleting agent");
@@ -156,68 +176,93 @@ public class XUIAgent extends LARVAFirstAgent {
 
     public Status myIdle() {
         String buffer[];
-        boolean zip = false;
-        inbox = this.LARVAblockingReceive();
-//        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
-        if (inbox.getInReplyTo().equals("BCKTLGRM")) {
-            this.tgb.write(inbox.getContent());
-            return myStatus;
-        } else if (inbox.getContent().startsWith("ZIPDATA")) {
-            buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
-            zip = true;
-        } else {
-            buffer = new String[]{inbox.getContent()};
-            zip = false;
-        }
-
-        for (String rawcontent : buffer) {
-            String content;
-            if (zip) {
-                content = unzipString(rawcontent);
-            } else {
-                content = rawcontent;
+        zip = false;
+        inbox = this.LARVAblockingReceive(5000);
+        if (inbox != null) {
+            if (!getMyNetworkProfiler().isActive()) {
+                getMyNetworkProfiler().setActive(true);
+                getMyNetworkProfiler().setOwner(inbox.getSender().getLocalName());
+                getMyNetworkProfiler().setTsvFileName("XUI-SessionManager.tsv");
             }
-            sizezip = inbox.getContent().length();
-            sizeraw = content.length();
+//        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
+            if (inbox.getInReplyTo().equals("BCKTLGRM")) {
+//                this.tgb.write(inbox.getContent());
+                return myStatus;
+            } else if (inbox.getContent().startsWith("ZIPDATA")) {
+                buffer = inbox.getContent().replace("ZIPDATA", "").split(Mission.sepMissions + Mission.sepMissions);
+                zip = true;
+            } else {
+                buffer = new String[]{inbox.getContent()};
+                zip = false;
+            }
+
+            for (String rawcontent : buffer) {
+                getMyCPUProfiler().profileThis("PREUNZIP", "" + rawcontent.length(),
+                        () -> {
+                            if (zip) {
+                                content = unzipString(rawcontent);
+                            } else {
+                                content = rawcontent;
+                            }
+                        });
+                getMyCPUProfiler().profileThis("POSTUNZIP", "" + content.length(), () -> {
+                    sizezip = inbox.getContent().length();
+                    sizeraw = content.length();
+                });
+
 //            System.out.println("Received " + sizeraw + "/" + sizezip + " bytes");
 //        String content = new Ole().UnzipThis(new Ole(inbox.getContent()));
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
-            if (content.contains("filedata")) {
+                if (content.contains("filedata")) {
+                    getMyCPUProfiler().profileThis("filedata", "" + content.length(),
+                            () -> {
+
 //                System.out.println("Map received");
-                oleConfig.loadFile("config/Configuration.conf");
-                showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
-                trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
-                myDashBoard.setTrailSize(trailSize);
-                myDashBoard.setShowTrail(showTrail);
-                this.sessionKey = inbox.getConversationId();
-                myDashBoard.preProcessACLM(content);
-            } else if (content.contains("perceptions")) {
-                if (verbose) {
-                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
+                                oleConfig.loadFile("config/Configuration.conf");
+                                showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
+                                trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
+                                myDashBoard.setTrailSize(trailSize);
+                                myDashBoard.setShowTrail(showTrail);
+                                this.sessionKey = inbox.getConversationId();
+                                myDashBoard.preProcessACLM(content);
+                            });
+                } else if (content.contains("perceptions")) {
+                    getMyCPUProfiler().profileThis("perceptions", "" + content.length(),
+                            () -> {
+                                if (verbose) {
+                                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
+                                }
+                                myDashBoard.preProcessACLM(content);
+                            });
+                } else if (content.contains("city")) {
+//                    getMyCPUProfiler().profileThis("cities", "" + content.length(),
+//                            () -> {
+                    if (verbose) {
+                        Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Cities received");
+                    }
+                    myDashBoard.preProcessACLM(content);
+//                            });
+                } else if (content.contains("people")) {
+//                    getMyCPUProfiler().profileThis("people", "" + content.length(),
+//                            () -> {
+
+                    if (verbose) {
+                        Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "People received");
+                    }
+                    myDashBoard.preProcessACLM(content);
+//                            });
                 }
-                myDashBoard.preProcessACLM(content);
-            } else if (content.contains("city")) {
-                if (verbose) {
-                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Cities received");
+                _XUI.repaint();
+                nagents = myDashBoard.decoderSet.keySet().size();
+                int distance = 0, goals = 0;
+                for (String s : myDashBoard.decoderSet.keySet()) {
+                    distance += myDashBoard.decoderSet.get(s).getNSteps();
+                    goals += (myDashBoard.decoderSet.get(s).getOntarget() ? 1 : 0);
                 }
-                myDashBoard.preProcessACLM(content);
-            } else if (content.contains("people")) {
-                if (verbose) {
-                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "People received");
-                }
-                myDashBoard.preProcessACLM(content);
-            }
-            _XUI.repaint();
-            nagents = myDashBoard.decoderSet.keySet().size();
-            int distance = 0, goals = 0;
-            for (String s : myDashBoard.decoderSet.keySet()) {
-                distance += myDashBoard.decoderSet.get(s).getNSteps();
-                goals += (myDashBoard.decoderSet.get(s).getOntarget() ? 1 : 0);
-            }
-            totaldistance = distance;
-            totaltargets += goals;
-            Milis = start.elapsedTimeMilisecsUntil(new TimeHandler());
+                totaldistance = distance;
+                totaltargets += goals;
+//            Milis = start.elapsedTimeMilisecsUntil(new TimeHandler());
 //            System.out.println("XUI" + Mission.sepMissions + TimeHandler.Now() + Mission.sepMissions
 //                    + Milis + Mission.sepMissions
 //                    + nmessages + Mission.sepMissions
@@ -229,46 +274,54 @@ public class XUIAgent extends LARVAFirstAgent {
 //                    + totaldistance + Mission.sepMissions
 //                    + totaltargets + Mission.sepMissions
 //            );
-        }
+            }
 //        if (Milis / 1000 > runSecs) {
 //            return Status.EXIT;
 //        }
-        outbox = inbox.createReply();
-        outbox.setContent("");
-        outbox.setPerformative(ACLMessage.INFORM);
+//        outbox = inbox.createReply();
+//        outbox.setContent("");
+//        outbox.setPerformative(ACLMessage.INFORM);
 //        this.LARVAsend(outbox);
-        return Status.IDLE;
-    }
-
-    @Override
-    public ACLMessage LARVAblockingReceive() {
-        premesg = new TimeHandler();
-        if (postmesg != null) {
-            this.milisnext = (int) postmesg.elapsedTimeMilisecsUntil(premesg);
-        }
-        ACLMessage res = null;
-        while (res == null) {
-            res = this.LARVAblockingReceive(100);
-        }
-        postmesg = new TimeHandler();
-        miliswait = (int) premesg.elapsedTimeMilisecsUntil(postmesg);
-        nmessages++;
-        return res;
-    }
-
-    public void backSendTelegram(String what) {
-        if (telegramBot.length() > 0) {
-            outbox = new ACLMessage(ACLMessage.REQUEST);
-            outbox.setSender(getAID());
-            outbox.addReceiver(new AID(telegramBot, AID.ISLOCALNAME));
-            outbox.setContent(what);
-            outbox.setReplyWith("BCKTLGRM");
-            outbox.setProtocol("NOTIFICATION");
-            outbox.setEncoding(this.getMypassport());
-            this.LARVAsend(outbox);
-            this.tgb.write(what + "\n");
+            return Status.IDLE;
         } else {
-            this.Alert("DBA Droid not found in DF services");
+//            return Status.IDLE;
+            if (getMyCPUProfiler().isActive()) {
+                return Status.EXIT;
+            } else
+                return Status.IDLE;
         }
     }
+
+//    @Override
+//    public ACLMessage LARVAblockingReceive() {
+//        premesg = new TimeHandler();
+//        if (postmesg != null) {
+//            this.milisnext = (int) postmesg.elapsedTimeMilisecsUntil(premesg);
+//        }
+//        ACLMessage res = null;
+//        res = super.LARVAblockingReceive();
+////        while (res == null) {
+////            res = this.LARVAblockingReceive(100);
+////        }
+//        postmesg = new TimeHandler();
+//        miliswait = (int) premesg.elapsedTimeMilisecsUntil(postmesg);
+//        nmessages++;
+//        return res;
+//    }
+//
+//    public void backSendTelegram(String what) {
+//        if (telegramBot.length() > 0) {
+//            outbox = new ACLMessage(ACLMessage.REQUEST);
+//            outbox.setSender(getAID());
+//            outbox.addReceiver(new AID(telegramBot, AID.ISLOCALNAME));
+//            outbox.setContent(what);
+//            outbox.setReplyWith("BCKTLGRM");
+//            outbox.setProtocol("NOTIFICATION");
+//            outbox.setEncoding(this.getMypassport());
+//            this.LARVAsend(outbox);
+////            this.tgb.write(what + "\n");
+//        } else {
+//            this.Alert("DBA Droid not found in DF services");
+//        }
+//    }
 }

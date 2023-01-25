@@ -5,11 +5,7 @@
  */
 package agents;
 
-import geometry.Point3D;
-import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import static messaging.ACLMessageTools.ACLMSTEALTH;
-import static messaging.ACLMessageTools.fancyWriteACLM;
 import tools.emojis;
 
 /**
@@ -23,8 +19,10 @@ public class BB1F extends DroidShip {
         super.setup();
         myType = "BB1F";
         this.DFAddMyServices(new String[]{"TYPE " + myType});
+        getMyCPUProfiler().setTsvFileName("./"+myType+".tsv");
         //logger.onEcho(); showPerceptions=true;
 //        logger.offEcho();
+
     }
 
     @Override

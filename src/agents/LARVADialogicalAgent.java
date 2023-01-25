@@ -355,11 +355,11 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     }
 
     public ACLMessage LARVAreplyAll(ACLMessage m) {
-        return m.createReply();
+        return LARVAcreateReply(m);
     }
 
     public ACLMessage LARVAreplySender(ACLMessage m) {
-        ACLMessage res = m.createReply();
+        ACLMessage res = LARVAcreateReply(m);
         res.clearAllReceiver();
         res.addReceiver(m.getSender());
         return res;
@@ -398,7 +398,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
             } else {
                 checkin = inBoxes.get(0);
                 addMilestone("MILES20");
-                checkout = checkin.createReply();
+                checkout = LARVAcreateReply(checkin);
                 if (checkin.getPerformative() == ACLMessage.CONFIRM) {
                     checkedin = true;
                     Info(checkin.getContent());

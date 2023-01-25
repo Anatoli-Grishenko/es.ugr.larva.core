@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tools;
+package profiling;
 
 import data.AutoOle;
 import georeference.GeoCoord;
@@ -14,7 +14,7 @@ import swing.OleApplication;
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
-public class NetworkAccessPoint implements AutoOle {
+public class NetworkData implements AutoOle {
 
     public enum District {
         EDUROAM, ALBAYCIN, BEIRO, CENTRO, CHANA, GENIL, NORTE, RONDA, ZAIDIN, OTROMUNICIPIO
@@ -25,6 +25,8 @@ public class NetworkAccessPoint implements AutoOle {
     protected int utmX=0, utmY=0;
     protected double lattitude=0, longitude=0;
     protected String myISP = "", localIP = "", extIP = "", folder="";
+    protected int datasize=-1;
+    protected boolean isZipped, isEncrypted; 
 
 
     @Override
@@ -42,11 +44,11 @@ public class NetworkAccessPoint implements AutoOle {
         return null;
     }
 
-    public NetworkAccessPoint(String folder) {
+    public NetworkData(String folder) {
         this.folder = folder;
     }
 
-    public NetworkAccessPoint() {
+    public NetworkData() {
         this.folder = "./client/";
     }
 
@@ -138,6 +140,32 @@ public class NetworkAccessPoint implements AutoOle {
         this.longitude = longitude;
     }
 
+    public int getDatasize() {
+        return datasize;
+    }
+
+    public void setDatasize(int datasize) {
+        this.datasize = datasize;
+    }
+
+    public boolean isIsZipped() {
+        return isZipped;
+    }
+
+    public void setIsZipped(boolean isZipped) {
+        this.isZipped = isZipped;
+    }
+
+    public boolean isIsEncrypted() {
+        return isEncrypted;
+    }
+
+    public void setIsEncrypted(boolean isEncrypted) {
+        this.isEncrypted = isEncrypted;
+    }
+
+    
+    
     public boolean validate() {
         boolean res = true;
         if (getMyGMaps()!= null && getMyGMaps().length()>0) {

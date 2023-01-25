@@ -5,8 +5,9 @@
  */
 package profiling;
 
+import crypto.Keygen;
 import data.Ole;
-import tools.NetworkAccessPoint;
+import tools.TimeHandler;
 
 /**
  *
@@ -14,19 +15,24 @@ import tools.NetworkAccessPoint;
  */
 public class ProfilingTicket {
 
-    protected String owner = "", id = "", description = "", supertiket = "", request = "";
+    protected String owner = "", id = "", description = "", series="", supertiket = "";
     protected String start = "", end = "";
-    protected String accessPoint = "";
-    protected int size = -1;
-    protected ProfilingTicket[] compound = new ProfilingTicket[0];
+    protected String payload = "";
+    protected int size = -1, depth=-1;
 
     public ProfilingTicket() {
+        init();
     }
 
     public ProfilingTicket(ProfilingTicket pt) {
+        init();
         setSupertiket(pt.getId());
     }
 
+    protected void init() {
+        setId(Keygen.getAlphaKey(16));        
+        setStart(TimeHandler.Now());
+    }
     public String getOwner() {
         return owner;
     }
@@ -75,39 +81,54 @@ public class ProfilingTicket {
         this.end = end;
     }
 
-    public String getRequest() {
-        return request;
+    public String getSeries() {
+        return series;
     }
 
-    public void setRequest(String request) {
-        this.request = request;
+    public void setSeries(String series) {
+        this.series = series;
     }
 
-    public String getAccessPoint() {
-        return accessPoint;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setAccessPoint(String accessPoint) {
-        this.accessPoint = accessPoint;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 
-    public NetworkAccessPoint extractAccessPoint() {
-        if (getAccessPoint() != null) {
-            NetworkAccessPoint nap = new NetworkAccessPoint();
-            Ole.oleToObject(new Ole(getAccessPoint()), nap, NetworkAccessPoint.class);
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    
+    
+    public NetworkData decodeNetworkData() {
+        if (getPayload() != null) {
+            NetworkData nap = new NetworkData();
+            Ole.oleToObject(new Ole(getPayload()), nap, NetworkData.class);
             return nap;
         } else {
             return null;
         }
     }
-
-    public void addProfilingSubTicket(ProfilingTicket pt) {
-        ProfilingTicket[] ptnew = new ProfilingTicket[compound.length + 1];
-        int i = 0;
-        for (ProfilingTicket apt : compound) {
-            ptnew[i] = compound[i++];
-        }
-        compound = ptnew;
-
+    public void encodeNetworkData(NetworkData nd) {
+        setPayload(Ole.objectToOle(nd).toPlainJson().toString());
+    }
+    
+    public int getElapsedTimeMilisecs() {
+        return (int)(new TimeHandler(getStart()).elapsedTimeMilisecsUntil(new TimeHandler(getEnd())));
     }
 }

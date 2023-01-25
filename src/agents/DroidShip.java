@@ -16,8 +16,11 @@ import com.eclipsesource.json.JsonObject;
 import static crypto.Keygen.getHexaKey;
 import data.OlePassport;
 import static disk.Logger.trimFullString;
+import geometry.Compass;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
+import geometry.Vector3D;
+import glossary.direction;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -32,6 +35,7 @@ import tools.emojis;
 import world.Perceptor;
 import world.Thing;
 import world.ThingSet;
+import world.liveBot;
 import static zip.ZipTools.unzipString;
 
 /**
@@ -43,8 +47,8 @@ public class DroidShip extends LARVADialogicalAgent {
     protected static boolean debugDroid = false;
     protected HashMap<String, ArrayList<String>> myCitizens;
     protected HashMap<String, String> citizenOf;
-    protected double radiusPercentage = 0.2;
-    protected Point3D mapCenter;
+    protected double radiusPercentage = 0.2, ground;
+    protected Point3D mapCenter, pTarget;
     protected int nbackup = 0, nrefill = 0, myCity;
 
     public static void Debug() {
@@ -63,8 +67,8 @@ public class DroidShip extends LARVADialogicalAgent {
     protected String problems[], plan[], actions[], around[];
     protected ACLMessage open, session;
     protected String[] contentTokens, cities, goalTokens;
-    protected String action = "", preplan = "", baseCity, currentCity, nextCity, myMission, Message;
-    protected Point3D gpsBase, pTarget, pSource;
+    protected String action = "", preplan = "", currentCity, nextCity, myMission, Message;
+    protected Point3D gpsBase, pSource;
     protected int indexplan = 0, myEnergy = 0, counterSessionManager = 0;
     protected boolean showPerceptions, recruitedMission, localMission;
 
@@ -86,6 +90,8 @@ public class DroidShip extends LARVADialogicalAgent {
     protected ThingSet population;
     protected boolean waitReport = false;
     protected boolean Slave = true;
+    protected Plan behaviour = null;
+    protected SimpleVector3D myGPS, MyTarget;
 
     @Override
     public void setup() {
@@ -96,8 +102,8 @@ public class DroidShip extends LARVADialogicalAgent {
         citizenOf = new HashMap();
         myCitizens = new HashMap();
         logger.onEcho();
-//        logger.offEcho();
-        this.setSecuredMessages(true);
+        logger.offEcho();
+        this.setSecuredMessages(false);
         this.deactivateSequenceDiagrams();
         this.setFrameDelay(0);
         showPerceptions = false;
@@ -127,8 +133,8 @@ public class DroidShip extends LARVADialogicalAgent {
             handleAlias();
         }
         logger.offSaveDisk();
-        logger.offEcho();
-//        logger.onEcho();
+//        getMyCPUProfiler().setActive(true);
+//        getMyCPUProfiler().setTsvFileName("./Droidships.tsv");
     }
 
     protected void handleAlias() {
@@ -154,6 +160,7 @@ public class DroidShip extends LARVADialogicalAgent {
     @Override
     public void Execute() {
         myStatus = this.processAsynchronousMessages();
+        getMyCPUProfiler().setSeries(myStatus.name() + (E.getCurrentMission() != null ? "," + E.getCurrentGoal() : ""));
         switch (myStatus) {
             case START:
                 myStatus = Status.CHECKIN;
@@ -193,15 +200,13 @@ public class DroidShip extends LARVADialogicalAgent {
     @Override
     public void takeDown() {
         Info("Taking down...");
+        if (getMyCPUProfiler().isActive()) {
+            getMyCPUProfiler().close();
+        }
         this.closeRemote();
         super.takeDown();
     }
 
-//    public Status endBackup() {
-//        InfoMessage("Backup to " + toWhom + " has just finished\nGood luck!");
-//        this.offRecruitedMission();
-//        return Status.CHOOSEMISSION;
-//    }
     public Status MyWait() {
 //        if (tini == null) {
 //            realParkingTime = PARKINGTIME + (int) (Math.random() * PARKINGTIME);
@@ -240,7 +245,7 @@ public class DroidShip extends LARVADialogicalAgent {
         if (checkin.getPerformative() == ACLMessage.CONFIRM) {
             checkedin = true;
             Info(checkin.getContent());
-            checkout = checkin.createReply();
+            checkout = LARVAcreateReply(checkin);
         } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
             Alert("Checkin at LARVA refused.\nDetails: " + checkin.getContent());
             return Status.EXIT;
@@ -257,47 +262,25 @@ public class DroidShip extends LARVADialogicalAgent {
     }
 
     public String autoSelectCity() {
-        String city; // = {"Fort Babine", "Bakerville", "Port Alexander"};
         double sx = 0, sy = 0, x = 0, y = 0, n = 0, minx = 1000000, maxx = -minx, miny = minx, maxy = -maxx;
         Point3D p;
         doQueryCities();
 
-//        for (String s : E.getCityList()) {
-//            try {
-//                p = E.getCityPosition(s);
-//                x = p.getX();
-//                y = p.getY();
-//                sx += x;
-//                sy += y;
-//                if (maxx < x) {
-//                    maxx = x;
-//                }
-//                if (minx > x) {
-//                    minx = x;
-//                }
-//                if (maxy < y) {
-//                    maxy = y;
-//                }
-//                if (miny > y) {
-//                    miny = y;
-//                }
-//                n++;
-//            } catch (Exception ex) {
-//                System.out.println("EX " + ex.toString());
-//            }
-//        }
-//        mapCenter = new Point3D(518, 603, 0);
-//        mapCenter = new Point3D((maxx-minx)/n, (maxy-miny)/n, 0);
-        
         mapCenter = E.getCityPosition(E.getCityList()[0]);
-        around = E.getCitiesAround(mapCenter, 160);
-        myCity = 0;
-        city = around[myCity];
-        return city;
+        around = E.getCitiesAround(mapCenter, 250);
+        myCity = (int) (Math.random() * around.length);
+        nextCity = around[myCity];
+        pTarget = E.getCityPosition(around[myCity]);
+        return nextCity;
     }
 
     public String autoSelectNextCity() {
-        myCity = (myCity+1)%around.length;
+        do {
+        myCity = (myCity + 1) % around.length;
+        nextCity = around[myCity];
+//        nextCity = "Arbaer";
+        pTarget = E.getCityPosition(nextCity);
+        } while (myType.equals("DEST") && pTarget.getZ()>220);
         return around[myCity];
     }
 
@@ -314,6 +297,7 @@ public class DroidShip extends LARVADialogicalAgent {
 //    }
     public Status autoChooseLocalMission() {
         nextCity = this.autoSelectNextCity();
+//        nextCity = "Arbaer";
         this.onLocalMission("AUTOMODE", new String[]{"MOVEIN " + nextCity});
         return Status.SOLVEMISSION;
     }
@@ -350,7 +334,7 @@ public class DroidShip extends LARVADialogicalAgent {
 
     protected boolean MyExecuteAction(String action) {
         Info("Executing action " + action);
-        outbox = session.createReply();
+        outbox = LARVAcreateReply(session);
         outbox.addUserDefinedParameter("DROIDSHIP", "true");
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setContent("Request execute " + action + " session " + sessionKey);
@@ -358,6 +342,24 @@ public class DroidShip extends LARVADialogicalAgent {
         this.myEnergy++;
         session = this.blockingDialogue(outbox).get(0);
         if (session.getContent().toUpperCase().startsWith("INFORM")) {
+            switch (action) {
+                case "MOVE":
+                    myGPS = moveForward(myGPS, 1);
+                    break;
+                case "DOWN":
+                    myGPS = moveDown(myGPS, 5);
+                    break;
+                case "UP":
+                    myGPS = moveUp(myGPS, 5);
+                    break;
+                case "LEFT":
+                    myGPS = rotateLeft(myGPS);
+                    break;
+                case "RIGHT":
+                    myGPS = rotateRight(myGPS);
+                    break;
+                default:
+            }
             return true;
         } else {
             Alert("Execution of action " + action + " failed due to " + session.getContent());
@@ -365,9 +367,47 @@ public class DroidShip extends LARVADialogicalAgent {
         }
     }
 
+    public SimpleVector3D move(SimpleVector3D source, Vector3D shift) {
+        SimpleVector3D res = source.clone();
+        res.getSource().plus(shift.canonical().getTarget());
+        return res;
+    }
+
+    public SimpleVector3D moveForward(SimpleVector3D source, int units) {
+        return move(source, source.canonical().clone().scalar(units));
+    }
+
+    public SimpleVector3D moveUp(SimpleVector3D source, int units) {
+        return move(source, Compass.SHIFT[direction.UP.ordinal()].clone().scalar(units));
+    }
+
+    public SimpleVector3D moveDown(SimpleVector3D source, int units) {
+        return move(source, Compass.SHIFT[direction.DOWN.ordinal()].clone().scalar(units));
+    }
+
+    public SimpleVector3D rotateLeft(SimpleVector3D source) {
+        SimpleVector3D res = source.clone();
+        res.setsOrient(rotateLeft(res.getsOrient()));
+        return res;
+    }
+
+    public SimpleVector3D rotateRight(SimpleVector3D source) {
+        SimpleVector3D res = source.clone();
+        res.setsOrient(rotateRight(res.getsOrient()));
+        return res;
+    }
+
+    public int rotateLeft(int sdirection) {
+        return (sdirection + 1) % 8;
+    }
+
+    public int rotateRight(int sdirection) {
+        return (sdirection + 7) % 8;
+    }
+
     protected boolean MyReadPerceptions() {
         Info("Reading perceptions");
-        outbox = session.createReply();
+        outbox = LARVAcreateReply(session);
         outbox.setContent("Query sensors session " + sessionKey);
         outbox.setPerformative(ACLMessage.QUERY_REF);
         outbox.setReplyWith(getHexaKey());
@@ -381,6 +421,7 @@ public class DroidShip extends LARVADialogicalAgent {
         } else {
             Info("Read perceptions ok");
             getEnvironment().setExternalPerceptions(session.getContent());
+            myGPS = E.getGPSVector();
             return true;
         }
 
@@ -390,33 +431,102 @@ public class DroidShip extends LARVADialogicalAgent {
         return Thread.currentThread().getStackTrace()[2].getMethodName();
     }
 
+    @Override
+    public boolean G(Environment e) {
+        if (pTarget == null) {
+            return false;
+        } else {
+            return myGPS.getSource().isEqualTo(pTarget);
+        }
+    }
+
+    @Override
+    protected Choice Ag(Environment E, DecisionSet A) {
+        if (G(E)) {
+            return null;
+        } else if (A.isEmpty()) {
+            return null;
+        } else {
+            if (pTarget == null) {
+                return null;
+            } else {
+                if (myGPS.getSource().planeDistanceTo(pTarget) == 0) {
+                    if (myGPS.getSource().getZ() == E.getMaxlevel()) {
+                        MyReadPerceptions();
+                    }
+                    if (myGPS.getSource().getZ() > pTarget.getZ()) {
+                        return new Choice("DOWN");
+                    }
+                } else {
+                    MyTarget = new SimpleVector3D(myGPS.getSource(), pTarget);
+                    if (myGPS.getSource().getZ() < E.getMaxlevel()) {
+                        return new Choice("UP");
+                    } else {
+//                        Confirm("Next?");
+                        double dm, dl, dr;
+                        int beam = 45 / 2;
+                        dm = this.moveForward(myGPS, 1).getSource().planeDistanceTo(pTarget);
+                        dl = moveForward(this.rotateLeft(myGPS), 1).getSource().planeDistanceTo(pTarget);
+                        dr = moveForward(this.rotateRight(myGPS), 1).getSource().planeDistanceTo(pTarget);
+                        if (MyTarget.angleXYTo(myGPS) < 270 &&
+                                MyTarget.angleXYTo(myGPS) >90 ) {
+                            return new Choice("LEFT");
+                        } 
+                        if (dl <= dm && dl <= dr) {
+                            return new Choice("LEFT");
+                        } else if (dm <= dl && dm <= dr) {
+                            return new Choice("MOVE");
+                        } else {
+                            return new Choice("RIGHT");
+                        }
+//                        }
+                    }
+                }
+            }
+            return new Choice("MOVE");
+        }
+    }
+
     public Status MyMoveProblem() {
         // Analizar objetivo
         if (G(E)) {
             Info("Target reached");
+            MyReadPerceptions();
             E.setNextGoal();
             return Status.SOLVEMISSION;
         }
-        Info(easyPrintPerceptions());
-        Choice a = Ag(E, A);
+        a = Ag(E, A);
         if (a == null) {
-            Alert("Found no action to execute");
             return Status.CLOSEMISSION;
         } else {// Execute
-            Info("Excuting " + a);
-            if (!this.MyExecuteAction(a.getName())) {
-                Info("Communication error");
-                return Status.CHECKOUT;
-            }
-            if (!this.MyReadPerceptions()) {
-                Info("Communication error");
-                return Status.CHECKOUT;
-            }
-            if (!Ve(E)) {
-                this.Error("The agent is not alive: " + E.getStatus());
-                return Status.CLOSEMISSION;
-            }
+            Info("Found action: " + a.getName());
+            this.MyExecuteAction(a.getName());
             return Status.SOLVEMISSION;
+
+////        Info(easyPrintPerceptions());
+//        Choice a = Ag(E, A);
+//        if (a == null) {
+//            Alert("Found no action to execute");
+//            return Status.CLOSEMISSION;
+//        } else {// Execute
+//            Info("Excuting " + a);
+//            if (!this.MyExecuteAction(a.getName())) {
+//                Info("Communication error");
+//                return Status.CHECKOUT;
+//            }
+//            if (a.getName().equals("MOVE")) {
+//                E = E.simmulate(a);
+//            } else {
+//                if (!this.MyReadPerceptions()) {
+//                    Info("Communication error");
+//                    return Status.CHECKOUT;
+//                }
+//            }
+//            if (!Ve(E)) {
+//                this.Error("The agent is not alive: " + E.getStatus());
+//                return Status.CLOSEMISSION;
+//            }
+//            return Status.SOLVEMISSION;
         }
     }
 
@@ -447,38 +557,23 @@ public class DroidShip extends LARVADialogicalAgent {
         }
     }
 
-    public boolean doFindCourseIn(String destination) {
-        if (E.getDestinationCity().equals(destination)) {
-            return true;
-        }
-        if (E.getCurrentCity().equals(destination)) {
-            Message("I am already there");
-            return true;
-        }
-        Info("Searching a course in " + destination);
-        Point3D p = E.getCityPosition(destination);
-        return doFindCourseTo(p.getXInt(), p.getYInt());
-    }
-
-    public boolean doFindCourseTo(int x, int y) {
-        Info("Searching a course to " + x + " " + y);
-        outbox = session.createReply();
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setContent("Request course to " + x + " " + y + " Session " + sessionKey);
-        outbox.setReplyWith(getHexaKey());
-        Info("Request course to " + x + " " + y + " Session " + sessionKey);
-        outbox.addUserDefinedParameter("DROIDSHIP", "true");
-        session = this.blockingDialogue(outbox).get(0);
-        if (!session.getContent().toUpperCase().startsWith("FAILURE")) {
-            E.setExternalPerceptions(session.getContent());
-            Info("Successfully found a route");
-            return true;
-        } else {
-            Info("Failed to find a route");
-            return false;
-        }
-    }
-
+//    public boolean doFindCourseIn(String destination) {
+//        if (E.getDestinationCity().equals(destination)) {
+//            return true;
+//        }
+//        if (E.getCurrentCity().equals(destination)) {
+//            Message("I am already there");
+//            return true;
+//        }
+//        Info("Searching a course in " + destination);
+//        Point3D p = E.getCityPosition(destination);
+//        return doFindCourseTo(p.getXInt(), p.getYInt(), p.getZInt());
+//    }
+//    public boolean doFindCourseTo(int x, int y, int z) {
+//        Info("Searching a course to " + x + " " + y);
+//        pTarget = new Point3D(x,y,z);
+//        return true;
+//    }
     public Status MyJoinSession() {
         Info("Joining session " + getSessionAlias());
         if (sessionKey.length() == 0) {
@@ -493,11 +588,10 @@ public class DroidShip extends LARVADialogicalAgent {
             Error("Sorry this agent can only join worlds with cities");
             return Status.CHECKOUT;
         }
-        baseCity = this.autoSelectCity();
-        currentCity = baseCity;
-        Info("Joining session with base in  " + baseCity);
-        outbox = session.createReply();
-        outbox.setContent("Request join session " + sessionKey + " in " + baseCity);
+        currentCity = this.autoSelectCity();
+        Info("Joining session with base in  " + currentCity);
+        outbox = LARVAcreateReply(session);
+        outbox.setContent("Request join session " + sessionKey + " in " + currentCity);
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setConversationId(sessionKey);
         outbox.setReplyWith(getHexaKey());
@@ -509,7 +603,7 @@ public class DroidShip extends LARVADialogicalAgent {
         if (!this.MyReadPerceptions()) {
             return Status.EXIT;
         }
-        gpsBase = E.getGPS();
+        gpsBase = myGPS.getSource();
         publish("Hi I am a Droidship of type " + myType);
         return Status.CHOOSEMISSION;
     }
@@ -578,78 +672,6 @@ public class DroidShip extends LARVADialogicalAgent {
         return recruitedMission;
     }
 
-    protected double goTurnBack(Environment E, Choice a) {
-        if (E.isTargetLeft()) {
-            if (a.getName().equals("LEFT")) {
-                a.setAnnotation(this.myMethod());
-
-                return Choice.ANY_VALUE;
-            }
-        } else if (E.isTargetRight()) {
-            if (a.getName().equals("RIGHT")) {
-                a.setAnnotation(this.myMethod());
-
-                return Choice.ANY_VALUE;
-            }
-        }
-        return Choice.MAX_UTILITY;
-    }
-
-    public double goTakeOff(Environment E, Choice a) {
-        if (a.getName().equals("UP")) {
-            a.setAnnotation(this.myMethod());
-            return Choice.ANY_VALUE;
-        }
-        return Choice.MAX_UTILITY;
-    }
-
-    public double goLanding(Environment E, Choice a) {
-        if (a.getName().equals("DOWN")) {
-            a.setAnnotation(this.myMethod());
-            return Choice.ANY_VALUE;
-        }
-        return Choice.MAX_UTILITY;
-    }
-
-    protected double goAhead(Environment E, Choice a) {
-        if (a.getName().equals("MOVE")) {
-            a.setAnnotation(this.myMethod());
-            return U(S(E, a));
-        } else if (a.getName().equals("LEFT") || a.getName().equals("RIGHT")) {
-            a.setAnnotation(this.myMethod());
-            return U(S(E, a), new Choice("MOVE"));
-        }
-        return Choice.MAX_UTILITY;
-
-    }
-
-    protected double goLowEnergy(Environment E, Choice a) {
-        if (E.getGround() > 0) {
-            return goLanding(E, a);
-        } else if (a.getName().equals("RECHARGE")) {
-            return Choice.ANY_VALUE;
-        }
-        return Choice.MAX_UTILITY;
-    }
-
-    @Override
-    protected double U(Environment E, Choice a) {
-        if (E.getEnergy() * 100 / E.getAutonomy() < 20) {
-            return goLowEnergy(E, a);
-        }
-        if (E.getDistance() > 0
-                && E.getGPS().getZ() < E.getMaxlevel()) {
-//                && E.getGPS().getZ() < Math.min(E.getVisualFront() + 15, E.getMaxlevel())) {
-            return goTakeOff(E, a);
-        } else if (E.getDistance() == 0 && E.getGround() > 0) {
-            return goLanding(E, a);
-        } else if (E.isTargetBack()) {
-            return goTurnBack(E, a);
-        } else {
-            return goAhead(E, a);
-        }
-    }
-
     protected Status processAsynchronousMessages() {
         for (ACLMessage m : this.getInboundOpen()) {
             if (!m.getContent().startsWith("REPORT")) {
@@ -660,7 +682,7 @@ public class DroidShip extends LARVADialogicalAgent {
                     this.Dialogue(outbox);
                     this.forget(m);
                 }
-            } 
+            }
         }
         return myStatus;
     }
@@ -675,7 +697,7 @@ public class DroidShip extends LARVADialogicalAgent {
             res.addReceiver(new AID(toWhom, AID.ISLOCALNAME));
             res.addUserDefinedParameter(ACLMROLE, "DROIDSHIP");
         } else {
-            res = incoming.createReply();
+            res = LARVAcreateReply(incoming);
             res.setPerformative(Performative);
             res.setReplyWith(getHexaKey(6));
             res.addUserDefinedParameter(ACLMROLE, "DROIDSHIP");
@@ -714,7 +736,7 @@ public class DroidShip extends LARVADialogicalAgent {
         }
         try {
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-            if (pTarget.isEqualTo(E.getGPS())) {
+            if (pTarget.isEqualTo(myGPS.getSource())) {
                 outbox = this.respondTo(null, ACLMessage.INFORM, "Backup to " + toWhom + " starts now!\nRoger! Roger!", goalTokens[1]);
                 Dialogue(outbox);
                 publish("BACKUP to " + toWhom + " ongoing!");
@@ -747,7 +769,7 @@ public class DroidShip extends LARVADialogicalAgent {
             }
 //            InfoMessage("Transponder received ok");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-            if (pTarget.isEqualTo(E.getGPS())) {
+            if (pTarget.isEqualTo(myGPS.getSource())) {
                 if (!this.MyExecuteAction(E.getCurrentGoal())) {
                     Info("Communication error");
                     return Status.CHECKOUT;
@@ -773,40 +795,11 @@ public class DroidShip extends LARVADialogicalAgent {
     }
 
     protected Status doGoalMoveIn() {
-        if (needCourse) {
-            nextCity = E.getCurrentGoal().replace("MOVEIN ", "");
-            if (E.getCurrentCity().equals(nextCity)) {
-                E.setNextGoal();
-                return Status.SOLVEMISSION;
-            }
-            if (!this.doFindCourseIn(nextCity)) {
-                Alert("Could not find a course towards " + nextCity);
-                return Status.EXIT;
-            }
-            needCourse = false;
-        }
+
         return MyMoveProblem();
     }
 
     protected Status doGoalMoveTo() {
-        int x, y;
-        if (needCourse) {
-            goalTokens = E.getCurrentGoal().split(" ");
-            if (E.getGPS().getX() == Integer.parseInt(goalTokens[1])
-                    && E.getGPS().getY() == Integer.parseInt(goalTokens[2])
-                    && E.getGround() == 0) {
-                E.setNextGoal();
-                needCourse = false;
-                return Status.SOLVEMISSION;
-            }
-            x = Integer.parseInt(goalTokens[1]);
-            y = Integer.parseInt(goalTokens[2]);
-            if (!this.doFindCourseTo(x, y)) {
-                Alert("Could not find a course towards ");
-                return Status.EXIT;
-            }
-            needCourse = false;
-        }
         return MyMoveProblem();
 
     }
@@ -840,7 +833,7 @@ public class DroidShip extends LARVADialogicalAgent {
             }
 //            InfoMessage("Transponder received ok");
             pTarget = new Point3D(this.getTransponderField(sTransponder, "GPS"));
-            if (pTarget.isEqualTo(E.getGPS())) {
+            if (pTarget.isEqualTo(myGPS.getSource())) {
                 if (this.MyExecuteAction("TRANSFER " + fromWho + " " + who)) {
                     outbox = respondTo(m, ACLMessage.INFORM, "DONE", null);
                     this.Dialogue(outbox);
@@ -1150,7 +1143,7 @@ public class DroidShip extends LARVADialogicalAgent {
         } else {
             answer += sep + "STATUS GROUNDED " + getEnvironment().getCurrentCity();
         }
-        answer += sep + "GPS " + E.getGPS().toString()
+        answer += sep + "GPS " + myGPS.getSource().toString()
                 + sep + "COURSE " + SimpleVector3D.Dir[E.getGPSVector().getsOrient()]
                 + sep + "PAYLOAD " + E.getPayload();
         goal = "GOAL " + E.getCurrentGoal();

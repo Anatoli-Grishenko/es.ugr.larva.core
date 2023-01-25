@@ -7,7 +7,7 @@ package tools;
 
 import georeference.GeoCoord;
 import glossary.Granada;
-import tools.NetworkAccessPoint.District;
+import profiling.NetworkData.District;
 
 /**
  *

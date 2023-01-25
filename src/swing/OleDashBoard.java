@@ -30,6 +30,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import map2D.Palette;
+import profiling.Profiler;
 import static swing.SwingTools.doSwingLater;
 import static swing.SwingTools.doSwingWait;
 import tools.TimeHandler;
@@ -75,6 +76,10 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     OleFrame of;
     int ndash, nprepr;
     LARVAFirstAgent myXUIAgent;
+    public Profiler refProfiler;
+    String newBag[];
+    int max = 30;
+    ArrayList<String> monitorSensors = new ArrayList();
 
     public OleDashBoard(Component parent, String nameagent) {
         myParent = parent;
@@ -88,8 +93,14 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         availableDashBoard = false;
         initLayout();
         this.addMouseListener(this);
+        refProfiler = new Profiler();
     }
 
+    public void closeProfiler() {
+        if (refProfiler.isActive()) {
+            refProfiler.close();
+        }
+    }
 //    public void purge() {
 //        TimeHandler thNow = new TimeHandler();
 //        ArrayList<String> purge = new ArrayList();
@@ -114,19 +125,28 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
     public void OleDraw(Graphics2D g) {
         myg = g;
 
+//        monitorSensors.clear();
 //        myg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        doSwingLater(() -> {
-            for (String s : layoutSensors) {
-                if (availableDashBoard) {
-                    try {
-                        if (mySensorsVisual.get(s) != null) {
-                            mySensorsVisual.get(s).viewSensor(g);
+        refProfiler.profileThis("DRAW", "DRAWING", () -> {
+            doSwingLater(() -> {
+                for (String s : layoutSensors) {
+                    if (availableDashBoard) {
+                        try {
+                            if (mySensorsVisual.get(s) != null) {
+//                                if (monitorSensors.contains(s)) {
+                                    refProfiler.profileThis(s, () -> {
+                                        mySensorsVisual.get(s).viewSensor(g);
+                                    });
+//                                } else {
+//                                    mySensorsVisual.get(s).viewSensor(g);
+//                                }
+                            }
+                        } catch (Exception ex) {
+                            System.err.println("Exception reading sensor " + s + " " + ex.toString());
                         }
-                    } catch (Exception ex) {
-                        System.err.println("Exception reading sensor " + s + " " + ex.toString());
                     }
                 }
-            }
+            });
         });
 //        if (getMyDecoder().getVisualData().length > 0) {
 //            Map2DColor m;
@@ -169,6 +189,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osMap.setBackground(Color.BLACK);
         osMap.showFrame(true);
         osMap.validate();
+        monitorSensors.add(osMap.getName());
 
         osHud = new OleHud(this, "HUD");
         osHud.setBounds(5 * ww, hLabels, 5 * ww, 5 * ww);
@@ -178,6 +199,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         osHud.setVPStretch(ldials / 2);
         osHud.showFrame(true);
         osHud.validate();
+        monitorSensors.add(osHud.getName());
 
         orCompass1 = new OleRotatory(this, "Compass");
         orCompass1.setMinValue(0);
@@ -194,6 +216,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        orCompass1.showFrame(true);
         orCompass1.setAutoRotate(false);
         orCompass1.validate();
+        monitorSensors.add(orCompass1.getName());
 
         osAltitude = new OleSemiDial(this, "Altitude");
         osAltitude.setMinValue(0);
@@ -351,6 +374,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         olPayload.setBounds(xx, yy, 2 * ww2, 11 * hh);
         olPayload.showFrame(true);
         olPayload.validate();
+        monitorSensors.add(olPayload.getName());
 
         xx += 2 * ww2;
         yy = hLabels;
@@ -362,6 +386,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
         olCommand.showFrame(true);
         olCommand.clear();
         olCommand.validate();
+        monitorSensors.add(olCommand.getName());
 
         topLabels = new OleLabels(this, "LABELS");
         topLabels.setForeground(Color.WHITE);
@@ -412,6 +437,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 //        System.out.println("DashBoard Preprocess");
 
         if (content.contains("filedata")) {
+            res = true;
             Ole ocontent = new Ole().set(content);
             agentName = ocontent.getString("owner", "");
             agentOwner = agentName;
@@ -427,7 +453,6 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             availableDashBoard = false;
             ndash = 0;
             this.nprepr = 0;
-            res = true;
             if (verbose) {
                 System.out.println("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>\n" + "Dashboard::" + agentName + " has received the map owned by " + ocontent.getString("owner", "unkwnown") + ". Fields " + ocontent.getFieldList());
             }
@@ -464,6 +489,9 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             if (agentName.length() == 0) {
                 return;
             }
+//            refProfiler.profileThis("perceptions, " + agentName, "" + perception.length(),
+//                    () -> {
+
             if (decoderSet.get(agentName) == null) {
                 decoderSet.put(agentName, new Environment(this.myXUIAgent));
                 decoderSet.get(agentName).verbose = this.verbose;
@@ -515,9 +543,8 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
             olSteps.setCurrentValue(getMyDecoder().getNSteps());
             olTime.setCurrentValue(tstart.elapsedTimeSecsUntil(new TimeHandler()));
             osHud.setCurrentValue(-1); // Ficticious, just to update terrain
-
-            String newBag[] = getMyDecoder().getTrace();
-            int max = 30;
+            newBag = getMyDecoder().getTrace();
+            max = 30;
             olCommand.clear();
             try {
                 olCommand.setDescription(getMyDecoder().getSensor(Sensors.CURRENTGOAL).get(0).asString());
@@ -545,7 +572,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
                 }
             }
             lastPerception = perception;
-
+//                    });
         } catch (Exception ex) {
             System.err.println("Error processing perceptions " + ex.toString() + "\ndata: " + perception);
             ex.printStackTrace(System.out);

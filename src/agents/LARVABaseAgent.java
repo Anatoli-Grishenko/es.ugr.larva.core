@@ -32,6 +32,8 @@ import tools.TimeHandler;
 import static messaging.ACLMessageTools.ACLMRCVDATE;
 import static messaging.ACLMessageTools.ACLMROLE;
 import static messaging.ACLMessageTools.ACLMSNDDATE;
+import profiling.Profiler;
+import tools.NetworkCookie;
 
 /**
  * This is the basic agent in LARVA. It extends a Jade Agent with an API of
@@ -326,6 +328,11 @@ public class LARVABaseAgent extends Agent {
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
+        if (Profiler.isProfiler(incoming)) {
+            NetworkCookie nc = Profiler.extractProfiler(incoming);
+            nc.setSerie(nc.getSerie()+1);
+            Profiler.injectProfiler(outgoing, nc);
+        }
         return outgoing;
     }
 

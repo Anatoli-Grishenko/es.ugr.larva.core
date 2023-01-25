@@ -23,6 +23,7 @@ public class DEST extends DroidShip {
         allowParking = true;
         //logger.onEcho(); showPerceptions=true;
         logger.offEcho();
+        getMyCPUProfiler().setTsvFileName("./" + myType + ".tsv");
     }
 
     @Override

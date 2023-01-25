@@ -506,7 +506,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 showAllInfo = false;
             } else if (myDash.getDecoderOf(name).getType().equals("BB1F")) {
                 g.setColor(Color.ORANGE);
-                showAllInfo = false;
+                showAllInfo = true;
             } else if (myDash.getDecoderOf(name).getType().equals("VAAT")
                     || myDash.getDecoderOf(name).getType().equals("YV")) {
                 showAllInfo = false;

@@ -303,7 +303,7 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * @return The prepared answer
      */
     public ACLMessage answerTo(ACLMessage m) {
-        ACLMessage answer = m.createReply();
+        ACLMessage answer = LARVAcreateReply(m);
         String word = selectWord(Dict, m.getContent());
         if (word != null) {
             answer.setContent(word);

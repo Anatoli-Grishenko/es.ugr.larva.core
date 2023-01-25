@@ -5,17 +5,22 @@
  */
 package tools;
 
+import crypto.Keygen;
+
 /**
  *
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class NetworkCookie {
-    protected String ID="", tStart="", tSend="", tReceive="", tReturn="", tArrive="", payload="", 
-            owner="", accessPoint="", description="";
-    protected boolean zipped=false;
-    int size=0, serie=0, scale=0, realSize=0;
+
+    protected String ID = "", payload = "",
+            owner = "", accessPoint = "", description = "", replyID = "";
+    String tUpstream, tArrive, tSendBack, tReceive;
+    protected boolean zipped = false;
+    int size = -1, serie = -1, scale = -1, realSize = -1;
 
     public NetworkCookie() {
+        setID(Keygen.getAlphaKey(16));
     }
 
     public String getID() {
@@ -26,36 +31,12 @@ public class NetworkCookie {
         this.ID = ID;
     }
 
-    public String gettSend() {
-        return tSend;
+    public String gettUpstream() {
+        return tUpstream;
     }
 
-    public void settSend(String tSend) {
-        this.tSend = tSend;
-    }
-
-    public String gettReceive() {
-        return tReceive;
-    }
-
-    public void settReceive(String tReceive) {
-        this.tReceive = tReceive;
-    }
-
-    public String gettStart() {
-        return tStart;
-    }
-
-    public void settStart(String tStart) {
-        this.tStart = tStart;
-    }
-
-    public String gettReturn() {
-        return tReturn;
-    }
-
-    public void settReturn(String tReturn) {
-        this.tReturn = tReturn;
+    public void settUpstream(String tUpstream) {
+        this.tUpstream = tUpstream;
     }
 
     public String gettArrive() {
@@ -64,6 +45,22 @@ public class NetworkCookie {
 
     public void settArrive(String tArrive) {
         this.tArrive = tArrive;
+    }
+
+    public String gettSendBack() {
+        return tSendBack;
+    }
+
+    public void settSendBack(String tSendBack) {
+        this.tSendBack = tSendBack;
+    }
+
+    public String gettReceive() {
+        return tReceive;
+    }
+
+    public void settReceive(String tReceive) {
+        this.tReceive = tReceive;
     }
 
     public String getPayload() {
@@ -105,9 +102,17 @@ public class NetworkCookie {
     public void setSerie(int serie) {
         this.serie = serie;
     }
-    
-    public long getLatency() {
-        return new TimeHandler(this.gettSend()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettReceive()));
+
+    public long getLatencyUp() {
+        return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));
+    }
+
+    public long getLatencyDown() {
+        return new TimeHandler(this.gettSendBack()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettReceive()));
+    }
+
+    public long getLatencyServer() {
+        return new TimeHandler(this.gettArrive()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettSendBack()));
     }
 
     public String getAccessPoint() {
@@ -141,5 +146,14 @@ public class NetworkCookie {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getReplyID() {
+        return replyID;
+    }
+
+    public void setReplyID(String replyID) {
+        this.replyID = replyID;
+    }
+
 
 }

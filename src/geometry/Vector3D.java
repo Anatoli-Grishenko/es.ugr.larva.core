@@ -36,6 +36,12 @@ public class Vector3D {
         update();
     }
 
+    public Vector3D(Vector3D origin) {
+        source = origin.getSource().clone();
+        target = origin.getTarget().clone();
+        update();
+    }
+
     protected Vector3D update() {
         canonical = getTarget().clone().minus(getSource());
         return this;
