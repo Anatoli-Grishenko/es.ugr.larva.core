@@ -105,12 +105,16 @@ public class LARVABaseAgent extends Agent {
      */
     protected String mypassport,
             // Remember the name of the Session Manager
-            mySessionmanager = "", mySessionID="";
+            mySessionmanager = "", mySessionID = "";
 
     /**
      * Counter of cycles of the method Execute()
      */
     protected long ncycles;
+    protected NetworkCookie lastCookie;
+
+    protected Profiler MyCPUProfiler, MyNetworkProfiler;
+    protected boolean isProfiling = false;
 
     /**
      * Main constructor
@@ -133,6 +137,10 @@ public class LARVABaseAgent extends Agent {
         LARVAexit = true;
         logger.setOwner(this.getLocalName());
         this.BehaviourDefaultSetup();
+        MyCPUProfiler = new Profiler();
+        MyCPUProfiler.setOwner(getLocalName());
+        MyNetworkProfiler = new Profiler();
+        MyNetworkProfiler.setOwner(getLocalName());
     }
 
     @Override
@@ -152,19 +160,27 @@ public class LARVABaseAgent extends Agent {
     }
 
     public void preExecute() {
+        lastCookie = new NetworkCookie();
+        lastCookie.setOwner(getLocalName());
+        lastCookie.setSerie((int) getNCycles());
+
     }
 
     public void postExecute() {
+        lastCookie = null;
+
     }
 
     //
     // Messaging
     //
     protected ACLMessage LARVAprocessAnyMessage(ACLMessage msg) {
-        if (msg.getUserDefinedParameter(ACLMID) == null) {
-            msg.addUserDefinedParameter(ACLMID, Keygen.getHexaKey(20));
+        if (msg != null) {
+            if (msg.getUserDefinedParameter(ACLMID) == null) {
+                msg.addUserDefinedParameter(ACLMID, Keygen.getHexaKey(20));
+            }
+            msg = ACLMessageTools.secureACLM(msg);
         }
-        msg = ACLMessageTools.secureACLM(msg);
         return msg;
     }
 
@@ -180,12 +196,14 @@ public class LARVABaseAgent extends Agent {
     }
 
     protected ACLMessage LARVAprocessReceiveMessage(ACLMessage msg) {
-        if (msg.getUserDefinedParameter(ACLMRCVDATE) == null) {
-            msg.addUserDefinedParameter(ACLMRCVDATE, "" + new TimeHandler().elapsedTimeSecs());
-        }
-        if (msg.getUserDefinedParameter(ACLMROLE) != null && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
-            this.mySessionmanager=msg.getSender().getLocalName();
-            this.mySessionID=msg.getConversationId();
+        if (msg != null) {
+            if (msg.getUserDefinedParameter(ACLMRCVDATE) == null) {
+                msg.addUserDefinedParameter(ACLMRCVDATE, "" + new TimeHandler().elapsedTimeSecs());
+            }
+            if (msg.getUserDefinedParameter(ACLMROLE) != null && msg.getUserDefinedParameter(ACLMROLE).equals("SESSION MANAGER")) {
+                this.mySessionmanager = msg.getSender().getLocalName();
+                this.mySessionID = msg.getConversationId();
+            }
         }
         return this.LARVAprocessAnyMessage(msg);
     }
@@ -246,7 +264,6 @@ public class LARVABaseAgent extends Agent {
         return res;
     }
 
-    
     /**
      * It gives the set of services provided by a certain agent, if any.
      *
@@ -325,17 +342,47 @@ public class LARVABaseAgent extends Agent {
         return DFSetMyServices(Transform.toArrayString(prevServices));
     }
 
+    public Profiler getMyCPUProfiler() {
+        return MyCPUProfiler;
+    }
+
+    public Profiler getMyNetworkProfiler() {
+        return MyNetworkProfiler;
+    }
+
+    public void activateMyCPUProfiler(String filename) {
+        getMyCPUProfiler().setActive(true);
+        isProfiling = true;
+        getMyCPUProfiler().setOwner(getLocalName());
+        getMyCPUProfiler().setTsvFileName(filename + ".tsv");
+    }
+
+    public void activateMyNetworkProfiler(String filename) {
+        isProfiling = true;
+        getMyNetworkProfiler().setActive(true);
+        getMyNetworkProfiler().setOwner(getLocalName());
+        getMyNetworkProfiler().setTsvFileName(filename + ".tsv");
+    }
+
+    public void deactivateMyCPUProfiler() {
+        getMyCPUProfiler().setActive(false);
+    }
+
+    public void deactivateMyNetworkProfiler() {
+        getMyNetworkProfiler().setActive(true);
+    }
+
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
-        if (Profiler.isProfiler(incoming)) {
+        if (Profiler.isProfiler(incoming)
+                && (MyCPUProfiler != null && MyCPUProfiler.isActive()
+                || MyNetworkProfiler != null && MyNetworkProfiler.isActive())) {
             NetworkCookie nc = Profiler.extractProfiler(incoming);
-            nc.setSerie(nc.getSerie()+1);
             Profiler.injectProfiler(outgoing, nc);
         }
         return outgoing;
     }
-
 
     /**
      * It allows the de-registration of all services.

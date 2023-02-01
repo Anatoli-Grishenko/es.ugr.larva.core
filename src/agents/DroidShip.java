@@ -133,6 +133,8 @@ public class DroidShip extends LARVADialogicalAgent {
             handleAlias();
         }
         logger.offSaveDisk();
+        getMyCPUProfiler().setActive(false);
+        getMyNetworkProfiler().setActive(false);
 //        getMyCPUProfiler().setActive(true);
 //        getMyCPUProfiler().setTsvFileName("./Droidships.tsv");
     }

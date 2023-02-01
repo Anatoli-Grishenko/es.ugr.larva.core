@@ -104,7 +104,11 @@ public class NetworkCookie {
     }
 
     public long getLatencyUp() {
+        try{
         return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));
+        } catch(Exception ex) {
+        return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));            
+        }
     }
 
     public long getLatencyDown() {

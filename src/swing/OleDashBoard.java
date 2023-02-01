@@ -127,7 +127,7 @@ public class OleDashBoard extends OleDrawPane implements MouseListener {
 
 //        monitorSensors.clear();
 //        myg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        refProfiler.profileThis("DRAW", "DRAWING", () -> {
+        refProfiler.profileThis(""+this.myXUIAgent.getNCycles(), "DRAWING", () -> {
             doSwingLater(() -> {
                 for (String s : layoutSensors) {
                     if (availableDashBoard) {

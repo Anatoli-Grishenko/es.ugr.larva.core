@@ -108,9 +108,11 @@ public class XUIAgent extends LARVAFirstAgent {
         loadSessionAlias();
         // Profiling
         getMyCPUProfiler().setActive(true);
-        getMyCPUProfiler().setOwner("XUICPU");
+        getMyCPUProfiler().setOwner("XUI");
         activateMyCPUProfiler("XUI-CPU");
-//        activateMyNetworkProfiler("XUI-NETWORK");
+        getMyNetworkProfiler().setActive(true);
+        getMyNetworkProfiler().setOwner("XUI");
+        activateMyNetworkProfiler("XUI-NETWORK");
 
         myDashBoard.refProfiler.setOwner("DASHBOARD");
         myDashBoard.refProfiler.setTsvFileName("DASHBOARD.tsv");

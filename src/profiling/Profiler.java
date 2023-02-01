@@ -182,7 +182,8 @@ public class Profiler {
     }
 
     public ProfilingTicket tic(String description, String series) {
-        if (!isActive()) {
+//          TimeHandler th = new TimeHandler();
+      if (!isActive()) {
             return null;
         }
 //        sWait("tic-"+description+"-"+series);
@@ -190,7 +191,7 @@ public class Profiler {
         pt.setOwner(getOwner());
         pt.setDescription(description);
         pt.setSeries(series);
-        pt.setStart(TimeHandler.Now());
+        pt.setStart(TimeHandler.NetNow());
         addTicket(pt);
 //        Tickets.put(pt.getId(), pt);
 //        if (!Stack.isEmpty()) {
@@ -216,13 +217,14 @@ public class Profiler {
     }
 
     public ProfilingTicket toc(String description) {
+//        TimeHandler th = new TimeHandler();
         if (!isActive()) {
             return null;
         }
 //        sWait("toc-" + description);
         ProfilingTicket pt = getTail();
         if (pt != null && pt.getDescription().equals(description)) {
-            pt.setEnd(TimeHandler.Now());
+            pt.setEnd(TimeHandler.NetNow());
             saveTicket(pt);
             removeTail();
         }
@@ -394,6 +396,5 @@ public class Profiler {
             getTail().setSeries(series);
         }
     }
-    
-    
+
 }

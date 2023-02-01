@@ -5,6 +5,9 @@
  */
 package tools;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,6 +17,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
 
 /**
  *
@@ -25,9 +32,59 @@ public class TimeHandler {
             outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("dd/MM/uuuu kk:mm:ss:SSS"),
             outputolddateformat = inputdateformat;
     public static final TimeHandler _baseTime = new TimeHandler("2020-01-01 00:00:00");
+    public static int timeSlack = Integer.MAX_VALUE;
+
+    public static int getTimeSlack() {
+        if (!isSynchro()) {
+            Synchro();
+        }
+        return timeSlack;
+    }
+
+    public static boolean isSynchro() {
+        return timeSlack != Integer.MAX_VALUE;
+    }
 
     public static String Now() {
         return new TimeHandler().toString();
+    }
+
+    public static String NetNow() {
+        if (!isSynchro()) {
+            Synchro();
+        }
+        return new TimeHandler(getTimeSlack()).toString();
+    }
+
+    public static TimeHandler getNetworkTime() {
+        String TIME_SERVER = "time-a.nist.gov";
+        NTPUDPClient timeClient = new NTPUDPClient();
+        InetAddress inetAddress;
+        TimeHandler th1, th2;
+        try {
+            inetAddress = InetAddress.getByName(TIME_SERVER);
+            TimeInfo timeInfo = timeClient.getTime(inetAddress);
+            long returnTime = timeInfo.getReturnTime();
+            Date time = new Date(returnTime);
+            th1 = new TimeHandler(time);
+            return th1;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static boolean Synchro() {
+        TimeHandler th1, th2;
+        if (!isSynchro()) {
+            try {
+                th1 = getNetworkTime();
+                th2 = new TimeHandler();
+                timeSlack = (int) th1.elapsedTimeMilisecsUntil(th2);
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static TimeHandler nextSecs(long secs) {
@@ -40,8 +97,8 @@ public class TimeHandler {
         _theTime = LocalDateTime.now();
     }
 
-    public TimeHandler(long l) {
-        _theTime = _baseTime._theTime.plusSeconds(l);
+    public TimeHandler(int slackms) {
+        _theTime = LocalDateTime.now().minusNanos(slackms * 1000000);
     }
 
     public TimeHandler plusSeconds(long s) {
@@ -51,6 +108,16 @@ public class TimeHandler {
 
     public TimeHandler minusSeconds(long s) {
         _theTime = _theTime.minusSeconds(s);
+        return this;
+    }
+
+    public TimeHandler plusMiliSeconds(long ms) {
+        _theTime = _theTime.plusNanos(ms * 1000000);
+        return this;
+    }
+
+    public TimeHandler minusMiliSeconds(long ms) {
+        _theTime = _theTime.minusSeconds(ms * 1000000);
         return this;
     }
 
@@ -88,12 +155,12 @@ public class TimeHandler {
     }
 
     public boolean isAfterEq(TimeHandler t) {
-        return this.elapsedTimeSecsUntil(t)>=0;
+        return this.elapsedTimeSecsUntil(t) >= 0;
 //        return _theTime.isAfter(t._theTime) || _theTime.isEqual(t._theTime);
     }
 
     public boolean isBeforeEq(TimeHandler t) {
-        return this.elapsedTimeSecsUntil(t)<=0;
+        return this.elapsedTimeSecsUntil(t) <= 0;
 //        return _theTime.isBefore(t._theTime) || _theTime.isEqual(t._theTime);
     }
 

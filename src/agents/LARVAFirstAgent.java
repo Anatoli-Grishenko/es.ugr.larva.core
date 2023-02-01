@@ -157,38 +157,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             usePerformatives = false;
     private boolean profiling = false;
     protected NetworkData nap;
-    protected NetworkCookie lastCookie;
     protected String netMon = "", myGMap, profileDescription = "", profilingType;
-    protected Profiler MyCPUProfiler, MyNetworkProfiler;
     private ACLMessage message;
 
-    public Profiler getMyCPUProfiler() {
-        return MyCPUProfiler;
-    }
-
-    public Profiler getMyNetworkProfiler() {
-        return MyNetworkProfiler;
-    }
-
-    public void activateMyCPUProfiler(String filename) {
-        getMyCPUProfiler().setActive(true);
-        getMyCPUProfiler().setOwner(getLocalName());
-        getMyCPUProfiler().setTsvFileName(filename+".tsv");
-    }
-
-    public void activateMyNetworkProfiler(String filename) {
-        getMyNetworkProfiler().setActive(true);
-        getMyNetworkProfiler().setOwner(getLocalName());
-        getMyNetworkProfiler().setTsvFileName(filename+".tsv");
-    }
-
-    public void deactivateMyCPUProfiler() {
-        getMyCPUProfiler().setActive(false);
-    }
-
-    public void deactivateMyNetworkProfiler() {
-        getMyNetworkProfiler().setActive(true);
-    }
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -307,10 +278,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.activateSequenceDiagrams();
         this.setContinuousSequenceDiagram(true);
         doNotExit();
-        MyCPUProfiler = new Profiler();
-        MyCPUProfiler.setOwner(getLocalName());
-        MyNetworkProfiler = new Profiler();
-        MyNetworkProfiler.setOwner(getLocalName());
     }
 
     public void LARVAwait(int milis) {
@@ -380,7 +347,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 public void action() {
                     doShield(() -> {
                         preExecute();
-                        getMyCPUProfiler().profileThis("BODY", "CYCLE" + getNCycles(),
+                        getMyCPUProfiler().profileThis(""+getNCycles(),
                                 () -> {
                                     Execute();
                                 });
@@ -427,6 +394,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     public void postExecute() {
+        super.postExecute();
         myReport.tick();
         if (this.frameDelay > 0 && (!remote || cont)) {
 //            LARVAwait(frameDelay);
@@ -437,6 +405,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     public void preExecute() {
+        super.preExecute();
         waitRemoteSemaphore();
     }
 
@@ -809,16 +778,11 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             msg.setReplyWith("MyReport");
         }
         if (getMyNetworkProfiler().isActive()) {
-            if (lastCookie == null) {
-                lastCookie = new NetworkCookie();
-            }
+ 
             if (lastCookie.getSize() < 0) {
                 lastCookie.setSize(msg.getContent().length());
             }
-//            if (lastCookie.getSerie() < 0) {
-                lastCookie.setSerie((int) getNCycles());
-//            }
-            lastCookie.settUpstream(TimeHandler.Now());
+            lastCookie.settUpstream(TimeHandler.NetNow());
             msg = Profiler.injectProfiler(msg, lastCookie);
 //            System.out.println("SENDING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
         }
@@ -844,7 +808,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         this.addSequenceDiagram(msg);
 
         if (Profiler.isProfiler(msg) && getMyNetworkProfiler().isActive()) {
-            String stime = TimeHandler.Now();
+            String stime = TimeHandler.NetNow();
             lastCookie = Profiler.extractProfiler(msg);
             lastCookie.settReceive(stime);
             if (ACLMessageTools.isZipped(msg)) {
@@ -863,7 +827,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     + "\tTimeline\t"+lastCookie.gettUpstream();
             getMyNetworkProfiler().profileThis(label, label2, () -> {
 //                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-                System.out.println(label + "" + label2);
+//                System.out.println(label + "" + label2);
 
             });
         }
