@@ -101,14 +101,32 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         } else {
             displayCfg.saveAsFile("config/", "displayoptions.json", true);
         }
-        palette = new Palette();
-        palette.addWayPoint(0, new Color(0, 0, 128));
-        palette.addWayPoint(5, new Color(0, 0, 1, 0));
-        palette.addWayPoint(10, new Color(0, 160, 0));
-        palette.addWayPoint(40, new Color(51, 60, 0));
-        palette.addWayPoint(75, new Color(153, 79, 0));
-        palette.addWayPoint(100, Color.WHITE);
-        palette.fillWayPointsPerc(256);
+
+                int sealevel=5;
+                palette = new Palette();
+//                46, 134, 193
+//                palette.addWayPoint(0, new Color(9,39,104)); //Terrain
+                palette.addWayPoint(0, new Color(0, 79, 157)); //Terrain
+//                palette.addWayPoint(19, new Color(0, 79, 157)); //Terrain
+                palette.addWayPoint(sealevel-1, new Color(0, 79, 157)); //Terrain
+//                palette.addWayPoint(sealevel, new Color(4, 68, 3));
+                palette.addWayPoint(sealevel+25, new Color(222,182,83 ));
+                palette.addWayPoint(sealevel+50, new Color(30, 185, 28));
+                palette.addWayPoint(sealevel+100, new Color(125,80, 64));
+                palette.addWayPoint(200, new Color(31,9 , 1)); //Terrain
+//                palette.addWayPoint(200, new Color(216 ,176 , 162)); //Terrain
+                palette.addWayPoint(255, Color.WHITE);
+                palette.fillWayPointsLevel(256,1.75);
+
+
+//        palette = new Palette();
+//        palette.addWayPoint(0, new Color(0, 0, 128));
+//        palette.addWayPoint(5, new Color(0, 0, 1, 0));
+//        palette.addWayPoint(10, new Color(0, 160, 0));
+//        palette.addWayPoint(40, new Color(51, 60, 0));
+//        palette.addWayPoint(75, new Color(153, 79, 0));
+//        palette.addWayPoint(100, Color.WHITE);
+//        palette.fillWayPointsPerc(256);
 
         this.setScaledCoordinates(false);
     }
@@ -653,7 +671,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 mapView = new Map2DColor(map.getWidth(), map.getHeight());
                 for (int x = 0; x < map.getWidth(); x++) {
                     for (int y = 0; y < map.getHeight(); y++) {
-                        mapView.setColor(x, y, palette.getColor(map.getStepLevel(x, y)));
+                        mapView.setColor(x, y, palette.getColor(map.getRawLevel(x, y)));
                     }
                 }
                 cText = Color.WHITE;

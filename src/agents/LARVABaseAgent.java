@@ -375,9 +375,9 @@ public class LARVABaseAgent extends Agent {
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
-        if (Profiler.isProfiler(incoming)
-                && (MyCPUProfiler != null && MyCPUProfiler.isActive()
-                || MyNetworkProfiler != null && MyNetworkProfiler.isActive())) {
+        if (Profiler.isProfiler(incoming)){
+//                && (MyCPUProfiler != null && MyCPUProfiler.isActive()
+//                || MyNetworkProfiler != null && MyNetworkProfiler.isActive())) {
             NetworkCookie nc = Profiler.extractProfiler(incoming);
             Profiler.injectProfiler(outgoing, nc);
         }

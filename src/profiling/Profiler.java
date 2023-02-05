@@ -8,9 +8,13 @@ package profiling;
 import crypto.Keygen;
 import data.Ole;
 import jade.lang.acl.ACLMessage;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
@@ -28,7 +32,7 @@ public class Profiler {
 
     protected HashMap<String, ProfilingTicket> Tickets;
     protected ArrayList<ProfilingTicket> Stack;
-    protected String owner;
+    protected String owner, Record = "";
     protected ProfilingTicket ptMaster;
     protected boolean active = false;
     protected int minDepth = 0, maxDepth = -1;
@@ -77,9 +81,7 @@ public class Profiler {
         Stack = new ArrayList<>();
         ptMaster = new ProfilingTicket();
         clear();
-//        ptMaster.setDescription("MASTER");
-//        ptMaster.setDepth(minDepth);
-//        addTicket(ptMaster);
+
     }
 
     public void clear() {
@@ -183,7 +185,7 @@ public class Profiler {
 
     public ProfilingTicket tic(String description, String series) {
 //          TimeHandler th = new TimeHandler();
-      if (!isActive()) {
+        if (!isActive()) {
             return null;
         }
 //        sWait("tic-"+description+"-"+series);
@@ -256,6 +258,7 @@ public class Profiler {
             }
         }
         ps.println(spt);
+        Record += spt + "\n";
 //        System.out.println(spt);
 //        sGo();
     }
@@ -397,4 +400,24 @@ public class Profiler {
         }
     }
 
+    public void saveAll(String filename) {
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+        PrintWriter pw = null;
+        try {
+            fw = new FileWriter(filename, true);
+            bw = new BufferedWriter(fw);
+            pw = new PrintWriter(bw);
+            pw.println(Record);
+            pw.flush();
+        } catch (IOException ex) {
+        } finally {
+            try {
+                pw.close();
+                bw.close();
+                fw.close();
+            } catch (IOException io) {
+            }
+        }
+    }
 }

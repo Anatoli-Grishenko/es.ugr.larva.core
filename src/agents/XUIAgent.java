@@ -7,6 +7,7 @@ package agents;
 
 import ai.Mission;
 import data.Ole;
+import data.OleConfig;
 import data.OleFile;
 import disk.Logger;
 import jade.core.AID;
@@ -49,6 +50,7 @@ public class XUIAgent extends LARVAFirstAgent {
     TelegramBackdoor tgb;
     boolean zip;
     String content;
+    String Profilerprefix;
 
     @Override
     public void setup() {
@@ -107,15 +109,18 @@ public class XUIAgent extends LARVAFirstAgent {
 //        tgb.setPreferredSize(new Dimension(100, 200));
         loadSessionAlias();
         // Profiling
+        OleConfig oProfiler = new OleConfig();
+        oProfiler.loadFile("config/profiler.json");
+        Profilerprefix = "profiler/" + oProfiler.getString("C", "X") + oProfiler.getInt("S", 0) + "S" + oProfiler.getInt("K", 0) + "K" + oProfiler.getInt("NN", 0) + "NN";
         getMyCPUProfiler().setActive(true);
         getMyCPUProfiler().setOwner("XUI");
-        activateMyCPUProfiler("XUI-CPU");
+        activateMyCPUProfiler(Profilerprefix + "-" + "XUI-CPU");
         getMyNetworkProfiler().setActive(true);
         getMyNetworkProfiler().setOwner("XUI");
-        activateMyNetworkProfiler("XUI-NETWORK");
+        activateMyNetworkProfiler(Profilerprefix + "-" + "XUI-NETWORK");
 
         myDashBoard.refProfiler.setOwner("DASHBOARD");
-        myDashBoard.refProfiler.setTsvFileName("DASHBOARD.tsv");
+        myDashBoard.refProfiler.setTsvFileName(Profilerprefix + "-" + "DASHBOARD.tsv");
         myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
     }
 
@@ -152,6 +157,8 @@ public class XUIAgent extends LARVAFirstAgent {
         }
         if (getMyNetworkProfiler().isActive()) {
             getMyNetworkProfiler().close();
+            getMyNetworkProfiler().saveAll(Profilerprefix + "-NETWORK.tsv");
+            
         }
         myDashBoard.closeProfiler();
         myDashBoard.removeAll();
@@ -289,8 +296,9 @@ public class XUIAgent extends LARVAFirstAgent {
 //            return Status.IDLE;
             if (getMyCPUProfiler().isActive()) {
                 return Status.EXIT;
-            } else
+            } else {
                 return Status.IDLE;
+            }
         }
     }
 

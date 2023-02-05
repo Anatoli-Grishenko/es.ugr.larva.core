@@ -588,8 +588,8 @@ public class LARVABoot {
         _host = host;
         _port = port;
         Ole oconnect = new Ole();
-        oconnect.setField("host",_host);
-        oconnect.setField("port",_port);
+        oconnect.setField("host", _host);
+        oconnect.setField("port", _port);
         oconnect.setField("boot", "jade");
         oleConfig.getOptions().add("Connection", oconnect);
         oleConfig.saveAsFile("config/", "Configuration.conf", true);
@@ -645,8 +645,8 @@ public class LARVABoot {
         _controllers = new HashMap<>();
         _runningAgents = new ArrayList<>();
         Ole oconnect = new Ole();
-        oconnect.setField("host",_host);
-        oconnect.setField("port",_port);
+        oconnect.setField("host", _host);
+        oconnect.setField("port", _port);
         oconnect.setField("boot", "microjade");
         oleConfig.getOptions().add("Connection", oconnect);
         oleConfig.saveAsFile("config/", "Configuration.conf", true);
@@ -821,6 +821,64 @@ public class LARVABoot {
     protected void Exception(Exception ex) {
         logger.logException(ex);
         taMessages.append(logger.getLastlog());
+    }
+
+    public void WaitToClose() {
+        boolean exit = false;
+        do {
+//            System.out.println("Manager waiting");
+            try {
+                this.doJade.acquire(1);
+            } catch (Exception ex) {
+
+            }
+//            System.out.println("Manager working");
+            String name;
+            while (!_launchingAgents.isEmpty()) {
+                name = _launchingAgents.get(0);
+                _launchingAgents.remove(0);
+                launchAgent(name, _tiles.get(name).getMyClass());
+            }
+            AgentController agc;
+            ArrayList<String> diedAgents = new ArrayList();
+            for (String s : _runningAgents) {
+                try {
+                    if (isMicroBoot()) {
+                        agc = MicroRuntime.getAgent(s);
+                    } else {
+                        agc = _firstContainer.getAgent(s);
+                    }
+//                    System.out.println(s+"**"+_tiles.get(s).getMyReport().getLastCycle());
+//                    _tiles.get(s).updateReportReadings();
+                } catch (Exception ex) {
+                    Info("Agent " + s + " has died");
+                    _tiles.get(s).doDeactivateAgent();
+                    diedAgents.add(s);
+                }
+            }
+            _runningAgents.removeAll(diedAgents);
+            while (!_stoppingAgents.isEmpty()) {
+                name = _stoppingAgents.get(0);
+                _stoppingAgents.remove(0);
+                stopAgent(name);
+            }
+
+            if (_launchingAgents.isEmpty() && _runningAgents.isEmpty() && _stoppingAgents.isEmpty()) {
+                _stoppingAgents.addAll(_runningAgents);
+                _runningAgents.clear();
+                _launchingAgents.clear();
+                exit = true;
+            }
+            this.doJade.release(1);
+//            System.out.println("Manager ending");
+            try {
+                Thread.sleep(1000);
+            } catch (Exception ex) {
+
+            }
+        } while (!exit);
+//        System.out.println("Manager exiting");
+        ShutDown();
     }
 
     public void WaitToShutDown() {
@@ -1012,4 +1070,8 @@ public class LARVABoot {
         }
         return res;
     }
+
+//    public void CloseWindow() {
+//        this.sShutdown.release();
+//    }
 }
