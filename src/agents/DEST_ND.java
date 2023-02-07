@@ -25,7 +25,7 @@ public class DEST_ND extends DroidStarshipLevelA {
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE DEST"});
+        this.LARVADFAddMyServices(new String[]{"TYPE DEST"});
     }
 
     @Override
@@ -104,15 +104,15 @@ public class DEST_ND extends DroidStarshipLevelA {
     public Status MyJoinSession() {
         sessionKey = "";
         Info("Checking session " + sessionAlias);
-        String opener = this.DFGetAllProvidersOf("OPEN ALIAS " + sessionAlias).get(0);
-        for (String service : this.DFGetAllServicesProvidedBy(opener)) {
+        String opener = this.LARVADFGetAllProvidersOf("OPEN ALIAS " + sessionAlias).get(0);
+        for (String service : this.LARVADFGetAllServicesProvidedBy(opener)) {
             if (service.startsWith(sessionAlias)) {
                 sessionKey = service.split(" ")[1];
-                if (this.DFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).isEmpty()) {
+                if (this.LARVADFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).isEmpty()) {
                     Error("Sorry service SESSION MANAGER not found");
                     return Status.CHECKOUT;
                 }
-                this.sessionManager = this.DFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).get(0);
+                this.sessionManager = this.LARVADFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).get(0);
                 Info("Assigned to " + sessionManager + " in problem " + problemName + " during session " + sessionKey);
             }
         }
@@ -122,7 +122,7 @@ public class DEST_ND extends DroidStarshipLevelA {
             Error("Sorry service SESSION MANAGER not found for alias " + sessionAlias);
             return Status.CHECKOUT;
         }
-        this.DFAddMyServices(new String[]{"DROIDSHIP", sessionKey});
+        this.LARVADFAddMyServices(new String[]{"DROIDSHIP", sessionKey});
         if (!this.doQueryCities()) {
             return Status.EXIT;
         }

@@ -14,6 +14,6 @@ public class YV_ND extends DroidStarshipLevelA {
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE YV"});        
+        this.LARVADFAddMyServices(new String[]{"TYPE YV"});        
     }
 }

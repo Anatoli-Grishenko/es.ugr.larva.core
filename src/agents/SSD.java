@@ -96,7 +96,7 @@ public class SSD extends DroidShip {
         Slave = false;
         super.setup();
         myType = "SSD";
-        this.DFAddMyServices(new String[]{"TYPE " + myType});
+        this.LARVADFAddMyServices(new String[]{"TYPE " + myType});
         logger.onEcho(); 
         showPerceptions=false;
         deactivateSequenceDiagrams();
@@ -106,7 +106,7 @@ public class SSD extends DroidShip {
         ts = new ThingSet();
         ts.loadFromTSVFile("data/Census.tsv");
         aproblem.setDeliveries(ts);
-        this.DFAddMyServices(new String[]{
+        this.LARVADFAddMyServices(new String[]{
             "OPENER",
             "CONTROLLER"});
         Progress = new HashMap();
@@ -136,11 +136,11 @@ public class SSD extends DroidShip {
             setButtons(10000);
         } catch (Exception ex) {
         }
-        if (this.DFGetAllProvidersOf(service).isEmpty()) {
+        if (this.LARVADFGetAllProvidersOf(service).isEmpty()) {
             Error("Service PMANAGER is down");
             return changeStatus(Status.CHECKOUT);
         }
-        problemManager = this.DFGetAllProvidersOf(service).get(0);
+        problemManager = this.LARVADFGetAllProvidersOf(service).get(0);
         Info("Found problem manager " + problemManager);
         problem = this.inputSelect("Please select problem to solve", problems, problem);
         defSessionAlias(inputLine("Please type in session ALIAS"));
@@ -160,7 +160,7 @@ public class SSD extends DroidShip {
             session = blockingDialogue().get(0);
             sessionManager = session.getSender().getLocalName();
             Info(sessionManager + " says: " + session.getContent());
-            this.DFAddMyServices(new String[]{
+            this.LARVADFAddMyServices(new String[]{
                 getSessionAlias(), "OWNER " + sessionAlias});
             myApp.addStatus(this.problem + " alias " + getSessionAlias() + "  |   ");
             return changeStatus(Status.JOINSESSION);
@@ -172,7 +172,7 @@ public class SSD extends DroidShip {
 
     @Override
     public Status MyJoinSession() {
-        if (DFGetAllProvidersOf("TEAM " + getSessionAlias()).isEmpty()) {
+        if (LARVADFGetAllProvidersOf("TEAM " + getSessionAlias()).isEmpty()) {
             LARVAwait(500);
             return myStatus;
         }
@@ -182,7 +182,7 @@ public class SSD extends DroidShip {
             setButtons(3);
         } catch (Exception ex) {
         }
-        ArrayList<String> jnames = DFGetAllProvidersOf("TEAM " + getSessionAlias());
+        ArrayList<String> jnames = LARVADFGetAllProvidersOf("TEAM " + getSessionAlias());
         Collections.sort(jnames);
         Team = new ThingSet();
         Thing t;
@@ -500,7 +500,7 @@ public class SSD extends DroidShip {
             waitS.release();
         } else if (e.getActionCommand().equals("Join Session")) {
             waitS.release();
-            names = DFGetAllProvidersOf("TEAM " + getSessionAlias());
+            names = LARVADFGetAllProvidersOf("TEAM " + getSessionAlias());
             Collections.sort(names);
             JPanel jp;
             int i = 0;

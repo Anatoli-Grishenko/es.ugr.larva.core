@@ -279,20 +279,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         doNotExit();
     }
 
-    public void LARVAwait(int milis) {
-        try {
-            Thread.sleep(milis);
-        } catch (InterruptedException ex) {
-        }
-
-    }
-    public void LARVASleep(int milis) {
-        TimeHandler th1=new TimeHandler(), th2=th1;
-        while(th1.elapsedTimeMilisecsUntil(th2)<milis) {
-            th2=new TimeHandler();
-        }
-
-    }
 
     public void LARVAblock() {
         this.defaultBehaviour.block();
@@ -496,6 +482,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             getMyNetworkProfiler().close();
             getMyNetworkProfiler().saveAll(getLocalName() + "-NETWORK.tsv");
         }
+        ArrayList <String> xuis=LARVADFGetAllProvidersOf("XUI "+userID);
+        if (!xuis.isEmpty()) {
+            outbox = new ACLMessage(ACLMessage.CANCEL);
+            outbox.setSender(getAID());
+            outbox.addReceiver(new AID(xuis.get(0), AID.ISLOCALNAME));
+            outbox.setContent("CANCEL");
+            LARVAsend(outbox);
+        }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
 //        }
@@ -611,7 +605,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     protected boolean doLARVACheckin() {
         Info("Checking-in to LARVA");
-        if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
+        if (LARVADFGetAllProvidersOf("IDENTITY").isEmpty()) {
             Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
             if (mypassport == null || mypassport.length() == 0) {
@@ -620,7 +614,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             }
             this.addMilestone("MILES16");
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
-            IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
+            IdentityManager = LARVADFGetAllProvidersOf("IDENTITY").get(0);
             Info("Found agent " + IdentityManager + " as Identity Manager");
             AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
             outbox.setSender(getAID());
@@ -845,7 +839,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     + "\tTimeline\t" + lastCookie.gettUpstream();
             getMyNetworkProfiler().profileThis(label, label2, () -> {
 //                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-                System.out.println(label + "" + label2);
+//                System.out.println(label + "" + label2);
             });
         }
         return msg;
@@ -1109,9 +1103,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return An ArrayList of agent names
      */
     @Override
-    public ArrayList<String> DFGetProviderList() {
+    public ArrayList<String> LARVADFGetProviderList() {
         addMilestone("MILES25");
-        return super.DFGetProviderList();
+        return super.LARVADFGetProviderList();
     }
 
     /**
@@ -1121,9 +1115,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return An ArrayList of names of services
      */
     @Override
-    public ArrayList<String> DFGetServiceList() {
+    public ArrayList<String> LARVADFGetServiceList() {
         addMilestone("MILES25");
-        return super.DFGetServiceList();
+        return super.LARVADFGetServiceList();
     }
 
     /**
@@ -1134,9 +1128,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return An arrayList of agent names who provide that service
      */
     @Override
-    public ArrayList<String> DFGetAllProvidersOf(String service) {
+    public ArrayList<String> LARVADFGetAllProvidersOf(String service) {
         addMilestone("MILES25");
-        return super.DFGetAllProvidersOf(service);
+        return super.LARVADFGetAllProvidersOf(service);
     }
 
     /**
@@ -1146,14 +1140,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return An ArrayList of service names provided by that agent
      */
     @Override
-    public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
+    public ArrayList<String> LARVADFGetAllServicesProvidedBy(String agentName) {
         addMilestone("MILES25");
-        return super.DFGetAllServicesProvidedBy(agentName);
+        return super.LARVADFGetAllServicesProvidedBy(agentName);
     }
 
     public ArrayList<String> DFGetAllMyServices() {
         addMilestone("MILES25");
-        return super.DFGetAllServicesProvidedBy(getLocalName());
+        return super.LARVADFGetAllServicesProvidedBy(getLocalName());
     }
 
     /**
@@ -1164,37 +1158,29 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      * @return True if the agent provides that service, false otherwise
      */
     @Override
-    public boolean DFHasService(String agentName, String service) {
+    public boolean LARVADFHasService(String agentName, String service) {
         addMilestone("MILES25");
-        return super.DFHasService(agentName, service);
+        return super.LARVADFHasService(agentName, service);
     }
 
     @Override
-    public boolean DFSetMyServices(String[] services) {
+    public boolean LARVADFSetMyServices(String[] services) {
         addMilestone("MILES26");
-        return super.DFSetMyServices(services);
+        return super.LARVADFSetMyServices(services);
     }
 
     @Override
-    public boolean DFAddMyServices(String[] services) {
+    public boolean LARVADFAddMyServices(String[] services) {
         addMilestone("MILES26");
-        return super.DFAddMyServices(services);
+        return super.LARVADFAddMyServices(services);
     }
 
     @Override
-    public boolean DFRemoveMyServices(String[] services) {
+    public boolean LARVADFRemoveMyServices(String[] services) {
         addMilestone("MILES26");
-        return super.DFRemoveMyServices(services);
+        return super.LARVADFRemoveMyServices(services);
     }
 
-    /**
-     * It allows the de-registration of all services.
-     */
-    @Override
-    public void DFRemoveAllMyServices() {
-        addMilestone("MILES26");
-        super.DFRemoveAllMyServices();
-    }
 
     protected void addMilestone(String step) {
         if (!DeepMonitor) {
@@ -1500,7 +1486,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected String getagentType(String agentName) {
         if (this.AMSIsConnected(agentName)) {
-            for (String service : this.DFGetAllServicesProvidedBy(agentName)) {
+            for (String service : this.LARVADFGetAllServicesProvidedBy(agentName)) {
                 if (service.startsWith("TYPE")) {
                     return service.replaceAll("TYPE ", "");
                 }
@@ -1819,9 +1805,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 } while (!good);
                 viewConfig(nap);
                 saveConfig(nap);
-                if (!DFGetAllProvidersOf(service).isEmpty()) {
+                if (!LARVADFGetAllProvidersOf(service).isEmpty()) {
                     profilingType = service;
-                    netMon = DFGetAllProvidersOf(profilingType).get(0);
+                    netMon = LARVADFGetAllProvidersOf(profilingType).get(0);
                     Message("It is ok, network monitor service has been found:\n" + netMon
                             + "\n\nprofiling active");
                     profiling = true;

@@ -60,6 +60,8 @@ public class Profiler {
     }
 
     public static ACLMessage injectProfiler(ACLMessage msg, NetworkCookie nc) {
+        if (nc == null)
+            return msg;
         if (msg.getReplyWith() != null) {
             nc.setReplyID(msg.getReplyWith());
         }

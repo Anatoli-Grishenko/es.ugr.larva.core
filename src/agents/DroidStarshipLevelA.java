@@ -107,12 +107,12 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
                 addChoice(new Choice("LEFT")).
                 addChoice(new Choice("RIGHT"));
         Info("Searching who is ProblemManager");
-        if (this.DFGetAllProvidersOf(service).isEmpty()) {
+        if (this.LARVADFGetAllProvidersOf(service).isEmpty()) {
             Error("Service " + service + " is down");
             myStatus = Status.EXIT;
             return;
         }
-        problemManager = this.DFGetAllProvidersOf("PManager").get(0);
+        problemManager = this.LARVADFGetAllProvidersOf("PManager").get(0);
         Info("Found problem manager " + problemManager);
         myStatus = Status.START;
         myText = null;
@@ -197,7 +197,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
         OlePassport op = new OlePassport();
         op.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
         sessionAlias = trimFullString(op.getName());
-        IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
+        IdentityManager = LARVADFGetAllProvidersOf("IDENTITY").get(0);
         Info("Checking-in to LARVA");
         outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
         AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
@@ -443,15 +443,15 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
     public Status MyJoinSession() {
         sessionKey = "";
         Info("Checking session " + sessionAlias);
-        String opener = this.DFGetAllProvidersOf("OPEN ALIAS " + sessionAlias).get(0);
-        for (String service : this.DFGetAllServicesProvidedBy(opener)) {
+        String opener = this.LARVADFGetAllProvidersOf("OPEN ALIAS " + sessionAlias).get(0);
+        for (String service : this.LARVADFGetAllServicesProvidedBy(opener)) {
             if (service.startsWith(sessionAlias)) {
                 sessionKey = service.split(" ")[1];
-                if (this.DFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).isEmpty()) {
+                if (this.LARVADFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).isEmpty()) {
                     Error("Sorry service SESSION MANAGER not found");
                     return Status.CHECKOUT;
                 }
-                this.sessionManager = this.DFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).get(0);
+                this.sessionManager = this.LARVADFGetAllProvidersOf("SESSION MANAGER " + this.sessionKey).get(0);
                 Info("Assigned to " + sessionManager + " in problem " + problemName + " during session " + sessionKey);
             }
         }
@@ -461,7 +461,7 @@ public class DroidStarshipLevelA extends LARVAFirstAgent {
             Error("Sorry service SESSION MANAGER not found for alias " + sessionAlias);
             return Status.CHECKOUT;
         }
-        this.DFAddMyServices(new String[]{"DROIDSHIP", sessionKey});
+        this.LARVADFAddMyServices(new String[]{"DROIDSHIP", sessionKey});
         if (!this.doQueryCities()) {
             return Status.EXIT;
         }

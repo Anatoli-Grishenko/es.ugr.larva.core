@@ -73,7 +73,7 @@ public class NPCDP extends NPCDialogic {
                 psilent = oCfg.getDouble("Prob. Silent", psilent);
                 points = oCfg.getInt("Max. Points", points);
                 latency = oCfg.getInt("NPC Delay", latency);
-                String controller = DFGetAllProvidersOf("CONTROLLER").get(0);
+                String controller = LARVADFGetAllProvidersOf("CONTROLLER").get(0);
                 outbox = new ACLMessage(ACLMessage.REQUEST);
                 outbox.setSender(getAID());
                 outbox.addReceiver(new AID(controller, AID.ISLOCALNAME));

@@ -59,7 +59,7 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
         super.setup();
         openXUITTY(); ///> Uses the XUI as a terminal
         deactivateSequenceDiagrams();
-        String who = DFGetAllProvidersOf("CONTROLLER").get(0);
+        String who = LARVADFGetAllProvidersOf("CONTROLLER").get(0);
         setFixedReceiver(who); //> Always send copies of messages to this agent
         myStatus = Status.WAIT;
         Dict = new Dictionary(); ///> Load Spanish Dictionary
@@ -155,8 +155,8 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * Introduces the agent inn the play, just by registering it in DF
      */
     public void getIn() {
-        if (!DFHasService(getLocalName(), Service)) {
-            DFAddMyServices(new String[]{Service});
+        if (!LARVADFHasService(getLocalName(), Service)) {
+            LARVADFAddMyServices(new String[]{Service});
         }
     }
 
@@ -164,8 +164,8 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * Excludes the agent from the play, simply by removing all services
      */
     public void getOut() {
-        if (DFHasService(getLocalName(), Service)) {
-            DFRemoveMyServices(new String[]{Service});
+        if (LARVADFHasService(getLocalName(), Service)) {
+            LARVADFRemoveMyServices(new String[]{Service});
         }
 
     }
@@ -214,7 +214,7 @@ public abstract class DialogicPlayer extends LARVADialogicalAgent {
      * @return A list of agent names registered in the game, ecluding my name
      */
     public ArrayList<String> findPlayers() {
-        ArrayList<String> res = DFGetAllProvidersOf(Service);
+        ArrayList<String> res = LARVADFGetAllProvidersOf(Service);
         if (res.contains(getLocalName())) {
             res.remove(getLocalName());
         }

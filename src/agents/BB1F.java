@@ -18,7 +18,7 @@ public class BB1F extends DroidShip {
     public void setup() {
         super.setup();
         myType = "BB1F";
-        this.DFAddMyServices(new String[]{"TYPE " + myType});
+        this.LARVADFAddMyServices(new String[]{"TYPE " + myType});
         getMyCPUProfiler().setTsvFileName("./"+myType+".tsv");
         //logger.onEcho(); showPerceptions=true;
 //        logger.offEcho();

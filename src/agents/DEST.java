@@ -19,7 +19,7 @@ public class DEST extends DroidShip {
     public void setup() {
         super.setup();
         myType = "DEST";
-        this.DFAddMyServices(new String[]{"TYPE " + myType});
+        this.LARVADFAddMyServices(new String[]{"TYPE " + myType});
         allowParking = true;
         //logger.onEcho(); showPerceptions=true;
         logger.offEcho();

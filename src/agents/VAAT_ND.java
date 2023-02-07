@@ -14,6 +14,6 @@ public class VAAT_ND extends DroidStarshipLevelA {
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE VAAT"});        
+        this.LARVADFAddMyServices(new String[]{"TYPE VAAT"});        
     }
 }

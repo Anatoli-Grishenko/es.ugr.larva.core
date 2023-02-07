@@ -14,7 +14,7 @@ public class BB1F_ND extends DroidStarshipLevelA {
     @Override
     public void setup() {
         super.setup();
-        this.DFAddMyServices(new String[]{"TYPE BB1F"});                      
+        this.LARVADFAddMyServices(new String[]{"TYPE BB1F"});                      
 
     }
 }

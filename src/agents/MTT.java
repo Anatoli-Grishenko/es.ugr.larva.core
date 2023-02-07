@@ -20,7 +20,7 @@ public class MTT extends DroidShip {
     public void setup() {
         super.setup();
         myType = "MTT";
-        this.DFAddMyServices(new String[]{
+        this.LARVADFAddMyServices(new String[]{
             "TYPE MTT"
         });
         //logger.onEcho(); showPerceptions=true;

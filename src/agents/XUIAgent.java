@@ -48,7 +48,7 @@ public class XUIAgent extends LARVAFirstAgent {
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
     TelegramBackdoor tgb;
-    boolean zip;
+    boolean zip, cancelRequested=false;
     String content;
     String Profilerprefix;
 
@@ -87,23 +87,23 @@ public class XUIAgent extends LARVAFirstAgent {
         this.frameDelay = 0;
         this.cont = true;
         start = new TimeHandler();
-        System.out.println("XUI" + Mission.sepMissions + "Date" + Mission.sepMissions
-                + "Milis" + Mission.sepMissions
-                + "Num Messages" + Mission.sepMissions
-                + "Msg Wait" + Mission.sepMissions
-                + "Msg loop" + Mission.sepMissions
-                + "Raw" + Mission.sepMissions
-                + "zip" + Mission.sepMissions
-                + "Num Agents" + Mission.sepMissions
-                + "Distance" + Mission.sepMissions
-                + "Targets" + Mission.sepMissions
-        );
+//        System.out.println("XUI" + Mission.sepMissions + "Date" + Mission.sepMissions
+//                + "Milis" + Mission.sepMissions
+//                + "Num Messages" + Mission.sepMissions
+//                + "Msg Wait" + Mission.sepMissions
+//                + "Msg loop" + Mission.sepMissions
+//                + "Raw" + Mission.sepMissions
+//                + "zip" + Mission.sepMissions
+//                + "Num Agents" + Mission.sepMissions
+//                + "Distance" + Mission.sepMissions
+//                + "Targets" + Mission.sepMissions
+//        );
         this.ignoreExceptions = false;
         this.allowEaryWarning = false;
-//        if (this.DFGetAllProvidersOf("STUDENTS").size() > 0) {
-//            telegramBot = this.DFGetAllProvidersOf("STUDENTS").get(0);
+//        if (this.LARVADFGetAllProvidersOf("STUDENTS").size() > 0) {
+//            telegramBot = this.LARVADFGetAllProvidersOf("STUDENTS").get(0);
 //        } else {
-//            telegramBot = "";
+        telegramBot = "";
 //        }
 //        tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
 //        tgb.setPreferredSize(new Dimension(100, 200));
@@ -112,23 +112,26 @@ public class XUIAgent extends LARVAFirstAgent {
         OleConfig oProfiler = new OleConfig();
         oProfiler.loadFile("config/profiler.json");
         Profilerprefix = "profiler/" + oProfiler.getString("C", "X") + oProfiler.getInt("S", 0) + "S" + oProfiler.getInt("K", 0) + "K" + oProfiler.getInt("NN", 0) + "NN";
-        getMyCPUProfiler().setActive(true);
+//        getMyCPUProfiler().setActive(true);
         getMyCPUProfiler().setOwner("XUI");
         activateMyCPUProfiler(Profilerprefix + "-" + "XUI-CPU");
-        getMyNetworkProfiler().setActive(true);
+//        getMyNetworkProfiler().setActive(true);
         getMyNetworkProfiler().setOwner("XUI");
         activateMyNetworkProfiler(Profilerprefix + "-" + "XUI-NETWORK");
 
         myDashBoard.refProfiler.setOwner("DASHBOARD");
         myDashBoard.refProfiler.setTsvFileName(Profilerprefix + "-" + "DASHBOARD.tsv");
         myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
+//logger.onEcho();
     }
 
     @Override
     public void Execute() {
         Info("Status: " + myStatus.name());
-        getMyCPUProfiler().setSeries(myStatus.name());
-        getMyNetworkProfiler().setSeries(myStatus.name());
+        if (isProfiling()) {
+            getMyCPUProfiler().setSeries(myStatus.name());
+            getMyNetworkProfiler().setSeries(myStatus.name());
+        }
         switch (myStatus) {
             case CHECKIN:
                 myStatus = MyCheckin();
@@ -158,9 +161,9 @@ public class XUIAgent extends LARVAFirstAgent {
         if (getMyNetworkProfiler().isActive()) {
             getMyNetworkProfiler().close();
             getMyNetworkProfiler().saveAll(Profilerprefix + "-NETWORK.tsv");
-            
+            myDashBoard.closeProfiler();
+
         }
-        myDashBoard.closeProfiler();
         myDashBoard.removeAll();
         MyCheckout();
         Info("Taking down and deleting agent");
@@ -173,7 +176,7 @@ public class XUIAgent extends LARVAFirstAgent {
             Error("Unable to checkin");
             return Status.EXIT;
         }
-        this.DFSetMyServices(new String[]{"XUI " + userID});
+        this.LARVADFSetMyServices(new String[]{"XUI " + userID});
 //        TheMap.clear();
         return Status.IDLE;
     }
@@ -186,8 +189,12 @@ public class XUIAgent extends LARVAFirstAgent {
     public Status myIdle() {
         String buffer[];
         zip = false;
-        inbox = this.LARVAblockingReceive(5000);
+        inbox = this.LARVAblockingReceive(1000);
         if (inbox != null) {
+            if (inbox.getPerformative() == ACLMessage.CANCEL) {
+                cancelRequested=true;
+                return Status.IDLE;
+            }
             if (!getMyNetworkProfiler().isActive()) {
                 getMyNetworkProfiler().setActive(true);
                 getMyNetworkProfiler().setOwner(inbox.getSender().getLocalName());
@@ -294,7 +301,8 @@ public class XUIAgent extends LARVAFirstAgent {
             return Status.IDLE;
         } else {
 //            return Status.IDLE;
-            if (getMyCPUProfiler().isActive()) {
+            if (cancelRequested) {
+//                return Status.IDLE;
                 return Status.EXIT;
             } else {
                 return Status.IDLE;

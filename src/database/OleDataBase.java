@@ -234,26 +234,26 @@ public class OleDataBase implements ReportableObject {
         return _sb.Op(o);
     }
 
-    protected OleTable DBSBquery(SentenceBuilder s) {
+    protected  synchronized OleTable DBSBquery(SentenceBuilder s) {
         return DBquery(s.toString());
     }
 
-    protected boolean DBSBupdate(SentenceBuilder s) {
+    protected  synchronized boolean DBSBupdate(SentenceBuilder s) {
         return DBupdate(s.toString());
     }
 
-    protected boolean DBSBinsert(SentenceBuilder s) {
+    protected  synchronized boolean DBSBinsert(SentenceBuilder s) {
         return DBinsert(s.toString());
     }
 
-    protected boolean DBSBdelete(SentenceBuilder s) {
+    protected  synchronized boolean DBSBdelete(SentenceBuilder s) {
         return DBdelete(s.toString());
     }
 
     //
     // Abstract object
     //
-    public OleTable DBObjectQuery(String table, OleQuery oq) {
+    public  synchronized OleTable DBObjectQuery(String table, OleQuery oq) {
         SentenceBuilder sb = new SentenceBuilder(this).Op(SELECT).Table(table);
         oq.getFieldList().forEach(f -> {
             sb.Condition(f, oq.getOle(f).getField("comp"),oq.getOle(f).getField("value"));
@@ -261,7 +261,7 @@ public class OleDataBase implements ReportableObject {
         return DBSBquery(sb);
     }
 
-    public boolean DBObjectDelete(String table, OleQuery oq) {
+    public  synchronized boolean DBObjectDelete(String table, OleQuery oq) {
         SentenceBuilder sb = new SentenceBuilder(this).Op(DELETE).Table(table);
         oq.getFieldList().forEach(f -> {
             sb.Condition(f, oq.getOle(f).getField("comp"),oq.getOle(f).getField("value"));
@@ -269,7 +269,7 @@ public class OleDataBase implements ReportableObject {
         return DBSBdelete(sb);
     }
 
-    public boolean DBObjectUpdate(String table, OleQuery find, OleQuery update) {
+    public synchronized  boolean DBObjectUpdate(String table, OleQuery find, OleQuery update) {
         SentenceBuilder sb = new SentenceBuilder(this);
         try {
         if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
@@ -293,7 +293,7 @@ public class OleDataBase implements ReportableObject {
         }
     }
 
-    public boolean DBObjectUpdateUnique(String table, OleQuery find, OleQuery update) {
+    public  synchronized  boolean DBObjectUpdateUnique(String table, OleQuery find, OleQuery update) {
         SentenceBuilder sb = new SentenceBuilder(this);
         if (find.isEmpty() || DBObjectQuery(table, find).size()==0) {
             sb.Op(INSERT).Table(table);
@@ -308,7 +308,7 @@ public class OleDataBase implements ReportableObject {
     //
     // Plain SQL sentences
     //
-    public OleTable DBquery(String sentence) {
+    public synchronized OleTable DBquery(String sentence) {
         OleTable res = new OleTable();
         openTransaction();
         countTransactions++;
@@ -330,7 +330,7 @@ public class OleDataBase implements ReportableObject {
         return res;
     }
 
-    public boolean DBupdate(String sentence) {
+    public synchronized boolean DBupdate(String sentence) {
         openTransaction();
         countTransactions++;
         lastTransaction = sentence;
@@ -348,7 +348,7 @@ public class OleDataBase implements ReportableObject {
         return count > 0;
     }
 
-    public boolean DBinsert(String sentence) {
+    public synchronized boolean DBinsert(String sentence) {
         openTransaction();
         countTransactions++;
         lastTransaction = sentence;
@@ -366,7 +366,7 @@ public class OleDataBase implements ReportableObject {
         return count > 0;
     }
 
-    public boolean DBdelete(String sentence) {
+    public synchronized boolean DBdelete(String sentence) {
         openTransaction();
         countTransactions++;
         lastTransaction = sentence;

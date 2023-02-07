@@ -52,7 +52,7 @@ public class NPCDialogic extends LARVADialogicalAgent {
     public void setup() {
         super.setup();
         deactivateSequenceDiagrams();
-        whoController = DFGetAllProvidersOf("CONTROLLER").get(0);
+        whoController = LARVADFGetAllProvidersOf("CONTROLLER").get(0);
         setFixedReceiver(whoController);
         myStatus = Status.WAIT;
         Dict = new Dictionary();
@@ -125,11 +125,11 @@ public class NPCDialogic extends LARVADialogicalAgent {
      * Introduces the agent inn the play, just by registering it in DF
      */
     public void getIn() {
-        if (!DFHasService(getLocalName(), Service)) {
-            DFAddMyServices(new String[]{Service});
+        if (!LARVADFHasService(getLocalName(), Service)) {
+            LARVADFAddMyServices(new String[]{Service});
         }
-        if (!DFHasService(getLocalName(), AutoService)) {
-            DFAddMyServices(new String[]{AutoService});
+        if (!LARVADFHasService(getLocalName(), AutoService)) {
+            LARVADFAddMyServices(new String[]{AutoService});
         }
     }
 
@@ -137,11 +137,11 @@ public class NPCDialogic extends LARVADialogicalAgent {
      * Excludes the agent from the play, simply by removing all services
      */
     public void getOut() {
-        if (DFHasService(getLocalName(), Service)) {
-            DFRemoveMyServices(new String[]{Service});
+        if (LARVADFHasService(getLocalName(), Service)) {
+            LARVADFRemoveMyServices(new String[]{Service});
         }
-        if (DFHasService(getLocalName(), AutoService)) {
-            DFRemoveMyServices(new String[]{AutoService});
+        if (LARVADFHasService(getLocalName(), AutoService)) {
+            LARVADFRemoveMyServices(new String[]{AutoService});
         }
     }
 
@@ -188,7 +188,7 @@ public class NPCDialogic extends LARVADialogicalAgent {
      * @return A list of agent names registered in the game, ecluding my name
      */
     public ArrayList<String> findPlayers() {
-        ArrayList<String> res = DFGetAllProvidersOf(Service);
+        ArrayList<String> res = LARVADFGetAllProvidersOf(Service);
         if (res.contains(getLocalName())) {
             res.remove(getLocalName());
         }

@@ -26,6 +26,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.ACLMID;
 import tools.TimeHandler;
@@ -115,6 +116,7 @@ public class LARVABaseAgent extends Agent {
 
     protected Profiler MyCPUProfiler, MyNetworkProfiler;
     protected boolean isProfiling = false;
+    protected static Semaphore smDF = new Semaphore(1);
 
     /**
      * Main constructor
@@ -145,6 +147,7 @@ public class LARVABaseAgent extends Agent {
 
     @Override
     public void takeDown() {
+        LB_DFRemoveAllMyServices();
         super.takeDown();
     }
 
@@ -208,6 +211,22 @@ public class LARVABaseAgent extends Agent {
         return this.LARVAprocessAnyMessage(msg);
     }
 
+    public void LARVAwait(int milis) {
+        try {
+            Thread.sleep(milis);
+        } catch (InterruptedException ex) {
+        }
+
+    }
+
+    public void LARVASleep(int milis) {
+        TimeHandler th1 = new TimeHandler(), th2 = th1;
+        while (th1.elapsedTimeMilisecsUntil(th2) < milis) {
+            th2 = new TimeHandler();
+        }
+
+    }
+
     //
     // DF+
     //
@@ -217,8 +236,8 @@ public class LARVABaseAgent extends Agent {
      * @return A list of agent names, each of whom provides one or more of the
      * services
      */
-    public ArrayList<String> DFGetProviderList() {
-        return DFGetAllProvidersOf("");
+    public synchronized ArrayList<String> LARVADFGetProviderList() {
+        return LARVADFGetAllProvidersOf("");
     }
 
     /**
@@ -226,8 +245,8 @@ public class LARVABaseAgent extends Agent {
      *
      * @return A list of service names
      */
-    public ArrayList<String> DFGetServiceList() {
-        return DFGetAllServicesProvidedBy("");
+    public synchronized ArrayList<String> LARVADFGetServiceList() {
+        return LARVADFGetAllServicesProvidedBy("");
     }
 
     /**
@@ -250,10 +269,15 @@ public class LARVABaseAgent extends Agent {
 //        }
 //        return res;
 //    }
-    public ArrayList<String> DFGetAllProvidersOf(String service) {
+    public synchronized ArrayList<String> LARVADFGetAllProvidersOf(String service) {
         ArrayList<String> res = new ArrayList<>();
+//        try {
+//            smDF.acquire(1);
+//        } catch (Exception ex) {
+//            return res;
+//        }
         DFAgentDescription list[];
-        list = this.DFQueryAllProviders(service);
+        list = this.LB_DFQueryAllProviders(service);
         if (list != null && list.length > 0) {
             for (DFAgentDescription list1 : list) {
                 if (!res.contains(list1.getName().getLocalName())) {
@@ -261,6 +285,7 @@ public class LARVABaseAgent extends Agent {
                 }
             }
         }
+//        smDF.release(1);
         return res;
     }
 
@@ -272,10 +297,15 @@ public class LARVABaseAgent extends Agent {
      * @return An array of Strings with the set of services, if any, provided by
      * the agent.
      */
-    public ArrayList<String> DFGetAllServicesProvidedBy(String agentName) {
+    public synchronized ArrayList<String> LARVADFGetAllServicesProvidedBy(String agentName) {
         ArrayList<String> res = new ArrayList<>();
+//        try {
+//            smDF.acquire(1);
+//        } catch (Exception ex) {
+//            return res;
+//        }
         DFAgentDescription list[];
-        list = this.DFQueryAllServicesProvided(agentName);
+        list = this.LB_DFQueryAllServicesProvided(agentName);
         if (list != null && list.length > 0) {
             for (DFAgentDescription list1 : list) {
                 Iterator sdi = list1.getAllServices();
@@ -287,6 +317,7 @@ public class LARVABaseAgent extends Agent {
                 }
             }
         }
+//        smDF.release(1);
         return res;
     }
 
@@ -299,8 +330,8 @@ public class LARVABaseAgent extends Agent {
      * @return true when the agent is registered as a known provider of the
      * service, false otherwise
      */
-    public boolean DFHasService(String agentName, String service) {
-        return DFGetAllProvidersOf(service).contains(agentName);
+    public synchronized boolean LARVADFHasService(String agentName, String service) {
+        return LARVADFGetAllProvidersOf(service).contains(agentName);
     }
 
     /**
@@ -314,32 +345,32 @@ public class LARVABaseAgent extends Agent {
      * by an agent.
      * @return
      */
-    public boolean DFSetMyServices(String[] services) {
+    public synchronized boolean LARVADFSetMyServices(String[] services) {
         Info("Services registered " + Transform.toArrayList(services).toString());
-        if (this.DFGetAllServicesProvidedBy(getLocalName()).size() > 0) {
-            DFRemoveAllMyServices();
+        if (this.LARVADFGetAllServicesProvidedBy(getLocalName()).size() > 0) {
+            LB_DFRemoveAllMyServices();
         }
-        if (this.DFSetServices(getLocalName(), services)) {
+        if (this.LB_DFSetServices(getLocalName(), services)) {
+//            LARVAwait(500);
             return true;
         }
-
         return false;
     }
 
-    public boolean DFAddMyServices(String[] services) {
+    public synchronized boolean LARVADFAddMyServices(String[] services) {
         ArrayList<String> prevServices;
         Info("Adding services " + new ArrayList(Transform.toArrayList(services)));
-        prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
+        prevServices = this.LARVADFGetAllServicesProvidedBy(getLocalName());
         prevServices.addAll(new ArrayList(Transform.toArrayList(services)));
-        return DFSetMyServices(Transform.toArrayString(prevServices));
+        return LARVADFSetMyServices(Transform.toArrayString(prevServices));
     }
 
-    public boolean DFRemoveMyServices(String[] services) {
+    public synchronized boolean LARVADFRemoveMyServices(String[] services) {
         ArrayList<String> prevServices;
         Info("Removing services " + new ArrayList(Transform.toArrayList(services)));
-        prevServices = this.DFGetAllServicesProvidedBy(getLocalName());
+        prevServices = this.LARVADFGetAllServicesProvidedBy(getLocalName());
         prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
-        return DFSetMyServices(Transform.toArrayString(prevServices));
+        return LARVADFSetMyServices(Transform.toArrayString(prevServices));
     }
 
     public Profiler getMyCPUProfiler() {
@@ -375,9 +406,7 @@ public class LARVABaseAgent extends Agent {
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
-        if (Profiler.isProfiler(incoming)){
-//                && (MyCPUProfiler != null && MyCPUProfiler.isActive()
-//                || MyNetworkProfiler != null && MyNetworkProfiler.isActive())) {
+        if (Profiler.isProfiler(incoming)) {
             NetworkCookie nc = Profiler.extractProfiler(incoming);
             Profiler.injectProfiler(outgoing, nc);
         }
@@ -387,22 +416,35 @@ public class LARVABaseAgent extends Agent {
     /**
      * It allows the de-registration of all services.
      */
-    public void DFRemoveAllMyServices() {
+    private void LB_DFRemoveAllMyServices() {
+        try {
+            smDF.acquire(1);
+        } catch (Exception ex) {
+            return;
+        }
+        //System.out.println(getLocalName() + ">>> REMOVEALLMYSERVICES");
         try {
             DFService.deregister(this);
         } catch (FIPAException ex) {
-
+            System.err.println(getLocalName() + ":" + ex.toString());
         }
+        //System.out.println(getLocalName() + "  < REMOVEALLMYSERVICES");
+        smDF.release(1);
     }
 
     //
     // DF Private
     //
-    private boolean DFSetServices(String agentname, String services[]) {
+    private boolean LB_DFSetServices(String agentname, String services[]) {
         DFAgentDescription dfd;
         ServiceDescription sd;
         boolean res = false;
-
+        try {
+            smDF.acquire(1);
+        } catch (Exception ex) {
+            return res;
+        }
+        //System.out.println(getLocalName() + ">>> SetSERVICES ");
         dfd = new DFAgentDescription();
         dfd.setName(new AID(agentname, AID.ISLOCALNAME));
         for (String s : services) {
@@ -417,14 +459,21 @@ public class LARVABaseAgent extends Agent {
         } catch (FIPAException ex) {
             MinorException(ex);
         }
+        //System.out.println(getLocalName() + "  < SetSERVICES");
+        smDF.release(1);
         return res;
     }
 
-    private DFAgentDescription[] DFQueryAllServicesProvided(String agentname) {
+    private DFAgentDescription[] LB_DFQueryAllServicesProvided(String agentname) {
         DFAgentDescription dfd;
         ServiceDescription sd;
         DFAgentDescription services[] = new DFAgentDescription[0];
-
+        try {
+            smDF.acquire(1);
+        } catch (Exception ex) {
+            return services;
+        }
+        //System.out.println(getLocalName() + ">>> QueryAgent " + agentname);
         dfd = new DFAgentDescription();
         if (!agentname.equals("")) {
             dfd.setName(new AID(agentname, AID.ISLOCALNAME));
@@ -438,13 +487,21 @@ public class LARVABaseAgent extends Agent {
         } catch (FIPAException ex) {
             MinorException(ex);
         }
+        //System.out.println(getLocalName() + "  < QueryAgent");
+        smDF.release(1);
         return services;
     }
 
-    private DFAgentDescription[] DFQueryAllProviders(String service) {
+    private DFAgentDescription[] LB_DFQueryAllProviders(String service) {
         DFAgentDescription dfd;
         ServiceDescription sd;
         DFAgentDescription agents[] = new DFAgentDescription[0];
+        try {
+            smDF.acquire(1);
+        } catch (Exception ex) {
+            return agents;
+        }
+        //System.out.println(getLocalName() + ">>> QueryService " + service);
         dfd = new DFAgentDescription();
         SearchConstraints c = new SearchConstraints();
         c.setMaxResults((long) -1);
@@ -458,6 +515,8 @@ public class LARVABaseAgent extends Agent {
         } catch (FIPAException ex) {
             MinorException(ex);
         }
+        //System.out.println(getLocalName() + "  < QueryService");
+        smDF.release(1);
         return agents;
     }
 
@@ -473,7 +532,7 @@ public class LARVABaseAgent extends Agent {
      * @return true if the aggent is right now connected to the platform, false
      * otherwise.
      */
-    public boolean AMSIsConnected(String agentName) {
+    public synchronized boolean AMSIsConnected(String agentName) {
         return AMSGetAllConnectedAgents().contains(agentName);
     }
 
@@ -485,7 +544,7 @@ public class LARVABaseAgent extends Agent {
      * @return The list of all agent names that seem to be connected to the
      * platform
      */
-    public ArrayList<String> AMSGetAllConnectedAgents() {
+    public synchronized ArrayList<String> AMSGetAllConnectedAgents() {
         ArrayList<String> res = new ArrayList<>();
         AMSAgentDescription list[];
         list = this.AMSQuery("");
@@ -495,7 +554,7 @@ public class LARVABaseAgent extends Agent {
         return res;
     }
 
-    private AMSAgentDescription[] AMSQuery(String agentname) {
+    private synchronized AMSAgentDescription[] AMSQuery(String agentname) {
         AMSAgentDescription amsd = new AMSAgentDescription(), amsdlist[] = null;
         if (!agentname.equals("")) {
             amsd.setName(new AID(agentname, AID.ISLOCALNAME));

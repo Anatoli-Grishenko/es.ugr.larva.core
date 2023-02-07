@@ -15,7 +15,7 @@ public class YV extends DroidShip {
     public void setup() {
         super.setup();
         myType = "YV";
-        this.DFAddMyServices(new String[]{
+        this.LARVADFAddMyServices(new String[]{
             "TYPE YV",
             "QUERY-IF <name>",
             "QUERY-REF <name>",

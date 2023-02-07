@@ -373,7 +373,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
     @Override
     protected boolean doLARVACheckin() {
         Info("Checking-in to LARVA");
-        if (DFGetAllProvidersOf("IDENTITY").isEmpty()) {
+        if (LARVADFGetAllProvidersOf("IDENTITY").isEmpty()) {
             Error("Unable to checkin at LARVA no identity manager service has been found");
         } else {
             if (mypassport == null || mypassport.length() == 0) {
@@ -382,7 +382,7 @@ public class LARVADialogicalAgent extends LARVAFirstAgent {
             }
             this.addMilestone("MILES16");
             ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
-            IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
+            IdentityManager = LARVADFGetAllProvidersOf("IDENTITY").get(0);
             Info("Found agent " + IdentityManager + " as Identity Manager");
             AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
             outbox.setSender(getAID());

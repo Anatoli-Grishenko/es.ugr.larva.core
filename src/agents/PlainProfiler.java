@@ -43,7 +43,7 @@ public class PlainProfiler extends LARVAFirstAgent implements Profiling {
 //        }
 //        OleTools.bootConfig(nap);
 //        logger.offEcho();
-//        String netmon = DFGetAllProvidersOf("PLAINNETMON").get(0);
+//        String netmon = LARVADFGetAllProvidersOf("PLAINNETMON").get(0);
 //        outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
 //        outbox.setSender(getAID());
 //        outbox.addReceiver(new AID(netmon, AID.ISLOCALNAME));

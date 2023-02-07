@@ -128,7 +128,7 @@ public class DroidShip extends LARVADialogicalAgent {
         inNegotiation = false;
         usePerformatives = true;
         this.frameDelay = 10;
-        this.DFSetMyServices(new String[]{"DROIDSHIP"});
+        this.LARVADFSetMyServices(new String[]{"DROIDSHIP"});
         if (Slave) {
             handleAlias();
         }
@@ -148,13 +148,13 @@ public class DroidShip extends LARVADialogicalAgent {
                 + "\nSession Alias " + getSessionAlias()
                 + "\nSession Manager " + sessionManager
         );
-        this.DFAddMyServices(new String[]{
+        this.LARVADFAddMyServices(new String[]{
             getSessionAlias(),
             sessionKey});
     }
 
     protected void defController() {
-        this.DFAddMyServices(new String[]{
+        this.LARVADFAddMyServices(new String[]{
             "OPENER",
             "CONTROLLER"});
     }
@@ -237,7 +237,7 @@ public class DroidShip extends LARVADialogicalAgent {
         OlePassport op = new OlePassport();
         op.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
         Info("Checking-in to LARVA");
-        IdentityManager = DFGetAllProvidersOf("IDENTITY").get(0);
+        IdentityManager = LARVADFGetAllProvidersOf("IDENTITY").get(0);
         outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
         AID IM = new AID(IdentityManager, AID.ISLOCALNAME);
         outbox.setSender(getAID());
@@ -1161,9 +1161,9 @@ public class DroidShip extends LARVADialogicalAgent {
     }
 
     public synchronized boolean getSharedSession(String prefix) {
-        if (DFGetAllProvidersOf("CONTROLLER").isEmpty()) {
-            sessionManager = DFGetAllProvidersOf("SESSION MANAGER " + getSessionAlias()).get(0);
-            for (String key : DFGetAllServicesProvidedBy(sessionManager)) {
+        if (LARVADFGetAllProvidersOf("CONTROLLER").isEmpty()) {
+            sessionManager = LARVADFGetAllProvidersOf("SESSION MANAGER " + getSessionAlias()).get(0);
+            for (String key : LARVADFGetAllServicesProvidedBy(sessionManager)) {
                 if (key.startsWith("SESSION::")) {
                     sessionKey = key;
                     return true;
@@ -1171,13 +1171,13 @@ public class DroidShip extends LARVADialogicalAgent {
             }
             return false;
         } else {
-            for (String controller : DFGetAllProvidersOf("CONTROLLER")) {
-                for (String service : DFGetAllServicesProvidedBy(controller)) {
+            for (String controller : LARVADFGetAllProvidersOf("CONTROLLER")) {
+                for (String service : LARVADFGetAllServicesProvidedBy(controller)) {
                     if (service.startsWith(prefix)) {
                         Controller = controller;
 //                    defSessionAlias(service);
-                        sessionManager = DFGetAllProvidersOf("SESSION MANAGER " + getSessionAlias()).get(0);
-                        for (String key : DFGetAllServicesProvidedBy(sessionManager)) {
+                        sessionManager = LARVADFGetAllProvidersOf("SESSION MANAGER " + getSessionAlias()).get(0);
+                        for (String key : LARVADFGetAllServicesProvidedBy(sessionManager)) {
                             if (key.startsWith("SESSION::")) {
                                 sessionKey = key;
                                 return true;
