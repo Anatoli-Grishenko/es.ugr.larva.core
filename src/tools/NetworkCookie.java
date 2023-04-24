@@ -15,7 +15,7 @@ public class NetworkCookie {
 
     protected String ID = "", payload = "",
             owner = "", accessPoint = "", description = "", replyID = "";
-    String tUpstream, tArrive, tSendBack, tReceive;
+    String tUpstream="", tArrive="", tSendBack="", tReceive="";
     protected boolean zipped = false;
     int size = -1, serie = -1, scale = -1, realSize = -1;
 
@@ -104,19 +104,28 @@ public class NetworkCookie {
     }
 
     public long getLatencyUp() {
-        try{
-        return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));
-        } catch(Exception ex) {
-        return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));            
+        try {
+            return new TimeHandler(this.gettUpstream()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettArrive()));
+        } catch (Exception ex) {
+            return -1;
         }
     }
 
     public long getLatencyDown() {
-        return new TimeHandler(this.gettSendBack()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettReceive()));
+        try {
+            return new TimeHandler(this.gettSendBack()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettReceive()));
+        } catch (Exception ex) {
+            return -1;
+        }
     }
 
     public long getLatencyServer() {
-        return new TimeHandler(this.gettArrive()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettSendBack()));
+        try {
+            return new TimeHandler(this.gettArrive()).elapsedTimeMilisecsUntil(new TimeHandler(this.gettSendBack()));
+        } catch (Exception ex) {
+            return -1;
+
+        }
     }
 
     public String getAccessPoint() {
@@ -158,6 +167,5 @@ public class NetworkCookie {
     public void setReplyID(String replyID) {
         this.replyID = replyID;
     }
-
 
 }

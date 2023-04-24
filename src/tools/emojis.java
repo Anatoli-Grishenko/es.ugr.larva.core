@@ -112,7 +112,9 @@ public class emojis {
             DEACTIVATE="⏹️",            
             JOIN="👏",
             PARTY="😎",
-            MISTAKE="😱";
+            MISTAKE="😱",
+            NEW="🆕",
+            CLOCK="🕙";
     public static final String AGENT = PASSPORT,
             DEAD = REDCIRCLE,
             ALIVE = GREENCIRCLE,

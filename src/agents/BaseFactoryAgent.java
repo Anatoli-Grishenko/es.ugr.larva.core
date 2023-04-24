@@ -91,9 +91,9 @@ public class BaseFactoryAgent implements ReportableObject {
             MicroRuntime.startAgent(name, c.getName(), args);
             AgentController ag = MicroRuntime.getAgent(name);
             myAgents.put(name, ag);
-        } catch (StaleProxyException ex) {
-            return false;
         } catch (Exception ex) {
+            creatorAgent.Message("FAIL");
+            return false;
         }
         return true;
     }
@@ -104,6 +104,7 @@ public class BaseFactoryAgent implements ReportableObject {
             ag.start();
             myAgents.put(name, ag);
         } catch (StaleProxyException ex) {
+            creatorAgent.Message("FAIL");
             return false;
         }
         return true;

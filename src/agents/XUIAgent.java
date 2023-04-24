@@ -113,15 +113,15 @@ public class XUIAgent extends LARVAFirstAgent {
         oProfiler.loadFile("config/profiler.json");
         Profilerprefix = "profiler/" + oProfiler.getString("C", "X") + oProfiler.getInt("S", 0) + "S" + oProfiler.getInt("K", 0) + "K" + oProfiler.getInt("NN", 0) + "NN";
 //        getMyCPUProfiler().setActive(true);
-        getMyCPUProfiler().setOwner("XUI");
-        activateMyCPUProfiler(Profilerprefix + "-" + "XUI-CPU");
+//        getMyCPUProfiler().setOwner("XUI");
+//        activateMyCPUProfiler(Profilerprefix + "-" + "XUI-CPU");
 //        getMyNetworkProfiler().setActive(true);
-        getMyNetworkProfiler().setOwner("XUI");
-        activateMyNetworkProfiler(Profilerprefix + "-" + "XUI-NETWORK");
+//        getMyNetworkProfiler().setOwner("XUI");
+//        activateMyNetworkProfiler(Profilerprefix + "-" + "XUI-NETWORK");
 
-        myDashBoard.refProfiler.setOwner("DASHBOARD");
-        myDashBoard.refProfiler.setTsvFileName(Profilerprefix + "-" + "DASHBOARD.tsv");
-        myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
+//        myDashBoard.refProfiler.setOwner("DASHBOARD");
+//        myDashBoard.refProfiler.setTsvFileName(Profilerprefix + "-" + "DASHBOARD.tsv");
+//        myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
 //logger.onEcho();
     }
 
@@ -195,11 +195,11 @@ public class XUIAgent extends LARVAFirstAgent {
                 cancelRequested=true;
                 return Status.IDLE;
             }
-            if (!getMyNetworkProfiler().isActive()) {
-                getMyNetworkProfiler().setActive(true);
-                getMyNetworkProfiler().setOwner(inbox.getSender().getLocalName());
-                getMyNetworkProfiler().setTsvFileName("XUI-SessionManager.tsv");
-            }
+//            if (!getMyNetworkProfiler().isActive()) {
+//                getMyNetworkProfiler().setActive(true);
+//                getMyNetworkProfiler().setOwner(inbox.getSender().getLocalName());
+//                getMyNetworkProfiler().setTsvFileName("XUI-SessionManager.tsv");
+//            }
 //        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
             if (inbox.getInReplyTo().equals("BCKTLGRM")) {
 //                this.tgb.write(inbox.getContent());
@@ -213,26 +213,26 @@ public class XUIAgent extends LARVAFirstAgent {
             }
 
             for (String rawcontent : buffer) {
-                getMyCPUProfiler().profileThis("PREUNZIP", "" + rawcontent.length(),
-                        () -> {
-                            if (zip) {
-                                content = unzipString(rawcontent);
-                            } else {
-                                content = rawcontent;
-                            }
-                        });
-                getMyCPUProfiler().profileThis("POSTUNZIP", "" + content.length(), () -> {
-                    sizezip = inbox.getContent().length();
-                    sizeraw = content.length();
-                });
+//                getMyCPUProfiler().profileThis("PREUNZIP", "" + rawcontent.length(),
+//                        () -> {
+//                            if (zip) {
+//                                content = unzipString(rawcontent);
+//                            } else {
+//                                content = rawcontent;
+//                            }
+//                        });
+//                getMyCPUProfiler().profileThis("POSTUNZIP", "" + content.length(), () -> {
+//                    sizezip = inbox.getContent().length();
+//                    sizeraw = content.length();
+//                });
 
 //            System.out.println("Received " + sizeraw + "/" + sizezip + " bytes");
 //        String content = new Ole().UnzipThis(new Ole(inbox.getContent()));
 //        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
 //        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
                 if (content.contains("filedata")) {
-                    getMyCPUProfiler().profileThis("filedata", "" + content.length(),
-                            () -> {
+//                    getMyCPUProfiler().profileThis("filedata", "" + content.length(),
+//                            () -> {
 
 //                System.out.println("Map received");
                                 oleConfig.loadFile("config/Configuration.conf");
@@ -242,15 +242,15 @@ public class XUIAgent extends LARVAFirstAgent {
                                 myDashBoard.setShowTrail(showTrail);
                                 this.sessionKey = inbox.getConversationId();
                                 myDashBoard.preProcessACLM(content);
-                            });
+//                            });
                 } else if (content.contains("perceptions")) {
-                    getMyCPUProfiler().profileThis("perceptions", "" + content.length(),
-                            () -> {
+//                    getMyCPUProfiler().profileThis("perceptions", "" + content.length(),
+//                            () -> {
                                 if (verbose) {
                                     Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
                                 }
                                 myDashBoard.preProcessACLM(content);
-                            });
+//                            });
                 } else if (content.contains("city")) {
 //                    getMyCPUProfiler().profileThis("cities", "" + content.length(),
 //                            () -> {

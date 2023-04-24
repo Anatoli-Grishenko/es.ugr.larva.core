@@ -18,6 +18,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.function.Consumer;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 
 /**
@@ -26,7 +27,7 @@ import javax.swing.JScrollPane;
  */
 public class OleScrollPane extends JScrollPane {
 
-    public double DragSpeed = 0.05, ZoomSpeed=0.05;
+    public double DragSpeed = 0.05, ZoomSpeed = 0.05;
     OleDrawPane odPane;
     double zoom;
     int x1, x2, y1, y2;
@@ -151,7 +152,7 @@ public class OleScrollPane extends JScrollPane {
         dragRelative(x1 - e.getX(), y1 - e.getY());
     }
 
-    protected void dragRelative(int deltax, int deltay) {
+    public void dragRelative(int deltax, int deltay) {
         view = getViewport().getViewRect();
         view.setLocation((int) (view.getX() + (deltax) * DragSpeed),
                 (int) (view.getY() + (deltay) * DragSpeed));
@@ -273,5 +274,18 @@ public class OleScrollPane extends JScrollPane {
                     (int) (view.getY() + this.getPaneY(deltay)));
             odPane.scrollRectToVisible(view);
         }
+    }
+
+    public void goTop() {
+        JScrollBar verticalScrollBar = this.getVerticalScrollBar();
+        JScrollBar horizontalScrollBar =this.getHorizontalScrollBar();
+        verticalScrollBar.setValue(verticalScrollBar.getMinimum());
+        horizontalScrollBar.setValue(horizontalScrollBar.getMinimum());
+    }
+    public void goBottom() {
+        JScrollBar verticalScrollBar = this.getVerticalScrollBar();
+        JScrollBar horizontalScrollBar =this.getHorizontalScrollBar();
+        verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+        horizontalScrollBar.setValue(horizontalScrollBar.getMinimum());
     }
 }

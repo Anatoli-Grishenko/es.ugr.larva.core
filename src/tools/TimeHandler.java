@@ -29,7 +29,7 @@ import org.apache.commons.net.ntp.TimeInfo;
 public class TimeHandler {
 
     public static final DateTimeFormatter inputdateformat = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss:SSS"),
-            outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("dd/MM/uuuu kk:mm:ss:SSS"),
+            outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("uuuu/MM/dd kk:mm:ss"),
             outputolddateformat = inputdateformat;
     public static final TimeHandler _baseTime = new TimeHandler("2020-01-01 00:00:00");
     public static int timeSlack = Integer.MAX_VALUE;
@@ -134,6 +134,16 @@ public class TimeHandler {
 
     }
 
+    public TimeHandler(String stime, String format) {
+        DateTimeFormatter dt = DateTimeFormatter.ofPattern(format);
+        try {
+            _theTime = LocalDateTime.parse(stime, dt);
+        } catch (DateTimeParseException ex) {
+            _theTime = new TimeHandler()._theTime;
+        }
+
+    }
+
     public TimeHandler(Date d) {
         try {
             fromDate(d);
@@ -189,6 +199,11 @@ public class TimeHandler {
     @Override
     public String toString() {
         return outputdateformat.format(_theTime);
+    }
+
+    public String toString(String format) {
+        DateTimeFormatter dt = DateTimeFormatter.ofPattern(format);
+        return dt.format(_theTime);
     }
 
     public String toString(TimeHandler other) {

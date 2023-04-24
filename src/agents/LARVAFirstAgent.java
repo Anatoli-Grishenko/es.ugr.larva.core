@@ -279,7 +279,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         doNotExit();
     }
 
-
     public void LARVAblock() {
         this.defaultBehaviour.block();
     }
@@ -344,7 +343,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                                     Execute();
                                 });
                         postExecute();
-                        ncycles++;
                     });
                     if (isExit()) {
                         doDelete();
@@ -368,7 +366,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                                 Execute();
                             });
                     postExecute();
-                    ncycles++;
                     if (isExit()) {
                         doDelete();
                     }
@@ -482,7 +479,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             getMyNetworkProfiler().close();
             getMyNetworkProfiler().saveAll(getLocalName() + "-NETWORK.tsv");
         }
-        ArrayList <String> xuis=LARVADFGetAllProvidersOf("XUI "+userID);
+        ArrayList<String> xuis = LARVADFGetAllProvidersOf("XUI " + userID);
         if (!xuis.isEmpty()) {
             outbox = new ACLMessage(ACLMessage.CANCEL);
             outbox.setSender(getAID());
@@ -754,6 +751,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
+        NetworkCookie lastCookie;
         msg = super.LARVAprocessSendMessage(msg);
         if (getFixedReceiver() != null) {
             ACLMessage ghost = new ACLMessage(msg.getPerformative());
@@ -784,6 +782,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (getMyNetworkProfiler().isActive()) {
             if (Profiler.isProfiler(msg)) {
                 lastCookie = Profiler.extractProfiler(msg);
+            } else {
+                lastCookie = getNewNetworkCookie();
             }
             if (lastCookie.getSize() < 0) {
                 lastCookie.setSize(msg.getContent().length());
@@ -793,7 +793,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             }
             lastCookie.settUpstream(TimeHandler.NetNow());
             msg = Profiler.injectProfiler(msg, lastCookie);
-//            System.out.println("SENDING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+//            System.out.println(getLocalName() + " SENDING: " + Ole.objectToOle(Profiler.extractProfiler(msg)).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
         }
         this.addSequenceDiagram(msg);
         checkDeepMilestones(msg);
@@ -816,10 +816,15 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         }
         this.addSequenceDiagram(msg);
 
-        if (Profiler.isProfiler(msg) && getMyNetworkProfiler().isActive()) {
+        if (getMyNetworkProfiler().isActive()) {
             String stime = TimeHandler.NetNow();
-            lastCookie = Profiler.extractProfiler(msg);
+            if (Profiler.isProfiler(msg)) {
+                lastCookie = Profiler.extractProfiler(msg);
+            } else {
+                lastCookie = getNewNetworkCookie();
+            }
             if (lastCookie.getSerie() < 0) {
+                lastCookie.setOwner(getLocalName());
                 lastCookie.setSerie((int) getNCycles());
             }
             lastCookie.settReceive(stime);
@@ -837,10 +842,13 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     + "\tSERVER\t" + lastCookie.getLatencyServer()
                     + "\tDOWNSTREAM\t" + lastCookie.getLatencyDown()
                     + "\tTimeline\t" + lastCookie.gettUpstream();
+//            System.out.println(getLocalName() + " receiving: " + Ole.objectToOle(Profiler.extractProfiler(msg)).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
             getMyNetworkProfiler().profileThis(label, label2, () -> {
 //                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
+            System.out.println("");
 //                System.out.println(label + "" + label2);
             });
+            msg = Profiler.injectProfiler(msg, lastCookie);
         }
         return msg;
     }
@@ -857,6 +865,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
      */
     protected void LARVAsend(ACLMessage msg) {
         msg = this.LARVAprocessSendMessage(msg);
+//        if (Profiler.isProfiler(msg)) {
+//            System.out.println(getLocalName() + "nCycles " + getNCycles() + " Profiling serie " + Profiler.extractProfiler(msg).getSerie());
+//        }
         this.send(msg);
         lastSend = msg;
         InfoACLM("⭕> Sending ACLM ", msg);
@@ -1180,7 +1191,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         addMilestone("MILES26");
         return super.LARVADFRemoveMyServices(services);
     }
-
 
     protected void addMilestone(String step) {
         if (!DeepMonitor) {
@@ -1678,6 +1688,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         for (int i = 0; i < n & res; i++) {
             res = doLaunchSubagent(c);
         }
+        LARVAwait(100);
         return res;
     }
 

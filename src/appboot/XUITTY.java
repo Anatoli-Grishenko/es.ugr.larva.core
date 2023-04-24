@@ -7,6 +7,7 @@ package appboot;
 
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -80,6 +81,7 @@ public class XUITTY extends JEditorPane implements KeyListener {
         this.setText("");
     }
 
+
     public int getXUIWidth() {
         return width;
     }
@@ -99,6 +101,25 @@ public class XUITTY extends JEditorPane implements KeyListener {
         width = this.getPreferredSize().width / f.getSize() * 2; // * 3 / 2;
         height = this.getPreferredSize().height / f.getSize() - 1;
         matrix = new String[height][width];
+        clearScreen();
+        this.setText("");
+        body = "";
+    }
+
+    public void init(Container c, int w, int h, int fontsize) {
+        cXui = c;
+        width = w;
+        height = h;
+        matrix = new String[height][width];
+        f = new Font("Monospaced", Font.BOLD, 16);
+        this.setFont(f);
+        this.setPreferredSize(new Dimension(w*fontsize, h*fontsize));
+        cXui.setPreferredSize(new Dimension(w*fontsize, h*fontsize));
+        cXui.removeAll();
+        cXui.add(this);
+        cXui.validate();
+        bold = false;
+        italic = false;
         clearScreen();
         this.setText("");
         body = "";

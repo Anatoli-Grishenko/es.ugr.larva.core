@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
+import org.json.XML;
 import swing.OleApplication;
 import swing.OleDialog;
 import swing.SwingTools;
@@ -294,6 +295,11 @@ public class Ole extends JsonObject {
         return Ole2PlainJson(this);
     }
 
+    public Ole fromXMLString(String s) {
+        this.set(XML.toJSONObject(s).toString());
+        return this;
+    }
+
     @Override
     public String toString(WriterConfig wcon) {
         if (this.isEncrypted()) {
@@ -318,6 +324,10 @@ public class Ole extends JsonObject {
                 definit = s;
             }
 
+            if (definit.charAt(0) == '<') // /el string es XML
+            {
+                definit = XML.toJSONObject(definit).toString();
+            }
             jsole = Json.parse(definit).asObject();
             if (jsole.get(oletype.OLEMETA.name()) != null) {
                 return fromFullJson(jsole);

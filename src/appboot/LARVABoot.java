@@ -566,6 +566,8 @@ public class LARVABoot {
             _host = oleConfig.getTab("Connection").getField("Hostname");
             _port = oleConfig.getTab("Connection").getInt("Port");
             Info("Applied config " + this._configFileName);
+        } else {
+            oleConfig = new OleConfig();
         }
         Info("%% BOOTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
         doCompleted("CONFIGURE");

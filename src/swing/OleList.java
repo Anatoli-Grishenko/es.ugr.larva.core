@@ -65,6 +65,23 @@ public class OleList extends JList implements ListSelectionListener, ActionListe
         return this;
     }
 
+    public OleList init(Type type) {
+        listModel = new DefaultListModel();
+        add = new JButton("+");
+        add.addActionListener(this);
+        remove = new JButton("-");
+        remove.addActionListener(this);
+        mytype = type;
+        this.setModel(listModel);
+        addListSelectionListener(this);
+
+        listPane = new JScrollPane(this);
+        listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        listPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        listPane.setPreferredSize(new Dimension(this.getWidth(),this.getHeight()));
+        return this;
+    }
+
     public OleList addElement(String element) {
         listModel.addElement(element);
         return this;
@@ -163,6 +180,22 @@ public class OleList extends JList implements ListSelectionListener, ActionListe
                 }
                 break;
         }
+    }
+
+    public DefaultListModel getListModel() {
+        return listModel;
+    }
+
+    public void setListModel(DefaultListModel listModel) {
+        this.listModel = listModel;
+    }
+
+    public Type getMytype() {
+        return mytype;
+    }
+
+    public void setMytype(Type mytype) {
+        this.mytype = mytype;
     }
 
 }

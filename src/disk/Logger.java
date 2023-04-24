@@ -60,7 +60,7 @@ public class Logger {
         _outTo = System.out;
         _errTo = System.err;
         _textColor = white;
-        _maxLength = -1; //350; ///350;
+        _maxLength = 255; //350; ///350;
         _owner = "";
         _qualifier = "";
         _indent = "";

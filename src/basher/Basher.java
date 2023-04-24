@@ -84,11 +84,30 @@ public class Basher {
         return res;
     }
 
+    public Basher grepvr(String regex) {
+        Basher res = new Basher();
+        for (String line : _lines) {
+            if (!line.matches(regex)) {
+                res._lines.add(line);
+            }
+        }
+        return res;
+    }
+
     public Basher sed(String regexp, String replace) {
         Basher res = new Basher();
         Basher aux = new Basher(this).grepr(".*" + regexp + ".*");
         for (String line : aux._lines) {
             res._lines.add(line.replaceFirst(regexp, replace));
+        }
+        return res;
+    }
+
+    public Basher sedg(String regexp, String replace) {
+        Basher res = new Basher();
+        Basher aux = new Basher(this).grepr(".*" + regexp + ".*");
+        for (String line : aux._lines) {
+            res._lines.add(line.replaceAll(regexp, replace));
         }
         return res;
     }

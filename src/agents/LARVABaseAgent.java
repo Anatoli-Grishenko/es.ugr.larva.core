@@ -147,7 +147,7 @@ public class LARVABaseAgent extends Agent {
 
     @Override
     public void takeDown() {
-        LB_DFRemoveAllMyServices();
+        LARVADFRemoveAllMyServices();
         super.takeDown();
     }
 
@@ -163,13 +163,12 @@ public class LARVABaseAgent extends Agent {
     }
 
     public void preExecute() {
-        lastCookie = new NetworkCookie();
-        lastCookie.setOwner(getLocalName());
-        lastCookie.setSerie((int) getNCycles());
+
 
     }
 
     public void postExecute() {
+        ncycles++;
         lastCookie = null;
 
     }
@@ -372,6 +371,15 @@ public class LARVABaseAgent extends Agent {
         prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
         return LARVADFSetMyServices(Transform.toArrayString(prevServices));
     }
+    public synchronized boolean LARVADFRemoveAllMyServices() {
+        ArrayList<String> prevServices;
+        Info("Removing all services " );
+        prevServices = this.LARVADFGetAllServicesProvidedBy(getLocalName());
+        if (!prevServices.isEmpty())  {
+            LB_DFRemoveAllMyServices();
+        }
+        return true;
+    }
 
     public Profiler getMyCPUProfiler() {
         return MyCPUProfiler;
@@ -402,13 +410,24 @@ public class LARVABaseAgent extends Agent {
     public void deactivateMyNetworkProfiler() {
         getMyNetworkProfiler().setActive(true);
     }
+    
+    public NetworkCookie getNewNetworkCookie() {
+        NetworkCookie nc = new NetworkCookie();
+        nc.setOwner(getLocalName());
+        nc.setSerie((int)getNCycles());
+        return nc;
+    }
 
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
-        if (Profiler.isProfiler(incoming)) {
+        if (Profiler.isProfiler(incoming)) {            
             NetworkCookie nc = Profiler.extractProfiler(incoming);
-            Profiler.injectProfiler(outgoing, nc);
+            if (nc.gettReceive().length()!=0) {
+                nc = getNewNetworkCookie();
+            }
+                
+            outgoing = Profiler.injectProfiler(outgoing, nc);
         }
         return outgoing;
     }
@@ -423,6 +442,7 @@ public class LARVABaseAgent extends Agent {
             return;
         }
         //System.out.println(getLocalName() + ">>> REMOVEALLMYSERVICES");
+       
         try {
             DFService.deregister(this);
         } catch (FIPAException ex) {
@@ -642,7 +662,6 @@ public class LARVABaseAgent extends Agent {
                 preExecute();
                 Execute();
                 postExecute();
-                ncycles++;
                 if (isExit()) {
                     doDelete();
                 }
