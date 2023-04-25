@@ -18,7 +18,7 @@ import tools.TimeHandler;
  * @author Anatoli Grishenko <Anatoli.Grishenko@gmail.com>
  */
 public class DatasetHeader extends JsonObject {
-
+    ArrayList <DATATYPE> coltypes=new ArrayList();
 
     public DatasetHeader() {
         super();
@@ -33,6 +33,7 @@ public class DatasetHeader extends JsonObject {
 
     public DatasetHeader addColumn(String colname, DATATYPE coltype) {
         this.add(colname,coltype.name());
+        coltypes.add(coltype);
         return this;
     }
     
@@ -54,31 +55,31 @@ public class DatasetHeader extends JsonObject {
     }
     
     public ArrayList<DATATYPE> getColumnTypes() {
-        return null;
+            return coltypes;
 //        return getColumnNames().stream().
 //                map(DatasetHeader::getColumnType).
 //                collect(Collectors.toList());                
     }
     
-    public DatasetRow getEmptyRow() {
-        DatasetRow row = new DatasetRow();
-        for (String scolname : this.getColumnNames()) {
-            switch (this.getColumnType(scolname)) {
-                case BOOLEAN:
-                    row.add(scolname, false);
-                    break;
-                case STRING:
-                    row.add(scolname, "");
-                    break;
-                case DATE:
-                    row.add(scolname, TimeHandler.Now());
-                    break;
-                case NUMBER:
-                    row.add(scolname, 0.0);
-                    break;
-            }
-        }
-        return row;
-    }
+//    public DatasetRow getEmptyRow() {
+//        DatasetRow row = new DatasetRow();
+//        for (String scolname : this.getColumnNames()) {
+//            switch (this.getColumnType(scolname)) {
+//                case BOOLEAN:
+//                    row.add(scolname, false);
+//                    break;
+//                case STRING:
+//                    row.add(scolname, "");
+//                    break;
+//                case DATE:
+//                    row.add(scolname, TimeHandler.Now());
+//                    break;
+//                case NUMBER:
+//                    row.add(scolname, 0.0);
+//                    break;
+//            }
+//        }
+//        return row;
+//    }
     
 }

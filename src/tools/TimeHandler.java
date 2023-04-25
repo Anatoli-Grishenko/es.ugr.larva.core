@@ -27,12 +27,14 @@ import org.apache.commons.net.ntp.TimeInfo;
  * @author lcv
  */
 public class TimeHandler {
-
-    public static final DateTimeFormatter inputdateformat = DateTimeFormatter.ofPattern("uuuu-MM-dd kk:mm:ss:SSS"),
+    public static final String DateTemplate="uuuu-MM-dd kk:mm:ss:SSS";
+    public static final DateTimeFormatter inputdateformat = DateTimeFormatter.ofPattern(DateTemplate),
             outputdateformat = inputdateformat, inputolddateformat = DateTimeFormatter.ofPattern("uuuu/MM/dd kk:mm:ss"),
             outputolddateformat = inputdateformat;
-    public static final TimeHandler _baseTime = new TimeHandler("2020-01-01 00:00:00");
+    public static final TimeHandler _baseTime = new TimeHandler("2010-01-01 00:00:00:000", DateTemplate);
     public static int timeSlack = Integer.MAX_VALUE;
+    public static double secsRatio=3600.0;
+    protected LocalDateTime _theTime;
 
     public static int getTimeSlack() {
         if (!isSynchro()) {
@@ -47,6 +49,10 @@ public class TimeHandler {
 
     public static String Now() {
         return new TimeHandler().toString();
+    }
+
+    public static String Now(String DateFormat) {
+        return new TimeHandler().toString(DateFormat);
     }
 
     public static String NetNow() {
@@ -91,7 +97,6 @@ public class TimeHandler {
         return new TimeHandler().plusSeconds(secs);
     }
 
-    protected LocalDateTime _theTime;
 
     public TimeHandler() {
         _theTime = LocalDateTime.now();
@@ -144,6 +149,20 @@ public class TimeHandler {
 
     }
 
+    public TimeHandler(double ddate) {
+        _theTime = new TimeHandler().fromNumber(ddate)._theTime;
+    }
+
+    public static TimeHandler getBaseTime() {
+        return _baseTime;
+    }
+
+//    public static void setBaseTime(TimeHandler _baseTime) {
+//        TimeHandler._baseTime = _baseTime;
+//    }
+//    
+    
+
     public TimeHandler(Date d) {
         try {
             fromDate(d);
@@ -151,6 +170,15 @@ public class TimeHandler {
         }
     }
 
+    public double toNumber() {
+        return getBaseTime().elapsedTimeSecsUntil(this)/secsRatio;
+    }
+    
+    public TimeHandler fromNumber(double ddate) {
+        _theTime = _baseTime._theTime.plusSeconds((long)(ddate*secsRatio));
+        return this;
+    }
+    
     public Date toDate() {
         return this.asDate(_theTime);
     }

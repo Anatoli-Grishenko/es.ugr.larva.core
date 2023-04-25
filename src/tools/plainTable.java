@@ -622,7 +622,7 @@ public class plainTable {
     public String toString() {
         String result = "";
         if (getID() != null) {
-            result += getID() + "\n";
+            result += getID() + "("+this.getHeight()+")\n";
         }
         if (!_xLabel.isEmpty()) {
             if (!_yLabel.isEmpty()) {
