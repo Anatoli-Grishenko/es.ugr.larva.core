@@ -12,11 +12,10 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/tools/plainTable.java</file>
-            <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/data/DatasetHeader.java</file>
+            <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/data/DatasetStream.java</file>
             <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/data/DatasetRow.java</file>
+            <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/algebra/DirectedAcyclicGraph.java</file>
             <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/data/Dataset.java</file>
-            <file>file:/home/lcv/Dropbox/Teaching/DBA/es.ugr.larva.core/src/agents/XUIAgent.java</file>
         </group>
     </open-files>
 </project-private>
