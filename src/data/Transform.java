@@ -7,6 +7,7 @@ package data;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import static java.lang.Enum.valueOf;
 import java.util.ArrayList;
@@ -14,7 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 import data.Ole;
 import data.Ole.oletype;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Map;
 // JsonArray <--> ArrayList <--> Array <-- Enum
 
 /**
@@ -158,17 +162,18 @@ public class Transform {
         return new ArrayList(Arrays.asList(aux));
     }
 
-    public static  <E extends Enum<E>> String getEnumField(E myenum, Field f) {
+    public static <E extends Enum<E>> String getEnumField(E myenum, Field f) {
         for (Enum<E> enumVal : myenum.getClass().getEnumConstants()) {
             if (enumVal.toString().equalsIgnoreCase(f.toString())) {
-               return enumVal.toString();
+                return enumVal.toString();
             }
         }
         return null;
 //            sensors s= sensors.valueOf(jsv.asString());
 
     }
-    public static  <E extends Enum<E>> E getEnum(E myenum, String value) {
+
+    public static <E extends Enum<E>> E getEnum(E myenum, String value) {
         for (Enum<E> enumVal : myenum.getClass().getEnumConstants()) {
             if (enumVal.toString().equalsIgnoreCase(value)) {
                 return (E) enumVal;
@@ -230,6 +235,15 @@ public class Transform {
         return jsamatrix;
     }
 
+    public static JsonArray Matrix2JsonArray(String[] raw) {
+        int w = raw.length;
+        JsonArray jsamatrix = new JsonArray(), jsarow;
+        for (int x = 0; x < w; x++) {
+            jsamatrix.add(raw[x]);
+        }
+        return jsamatrix;
+    }
+
     public static JsonArray Matrix2JsonArray(double[][] raw) {
         int w = raw.length, h = raw[0].length;
         JsonArray jsamatrix = new JsonArray(), jsarow;
@@ -255,5 +269,165 @@ public class Transform {
     public static String outOf(String v[]) {
         return v[(int) (Math.random() * v.length)];
     }
+
+    public static boolean isWithin(String v[], String value) {
+        return Arrays.deepToString(v).matches(value);
+    }
+
+    public static JsonArray toJsonArray(Object o) {
+        JsonArray res = null;
+        Class arrayClass = o.getClass();
+        Class itemType;
+        Object item;
+        if (isArrayObject(o)) {
+            res = new JsonArray();
+            itemType = arrayClass.getComponentType();
+            for (int i = 0; i < Array.getLength(o); i++) {
+                item = Array.get(o, i);
+                switch (itemType.getSimpleName()) {
+                    case "int":
+                    case "Integer":
+                        res.add((int) item);
+                        break;
+                    case "Double":
+                    case "double":
+                        res.add((int) item);
+                        break;
+                    case "bolean":
+                        res.add((char) item);
+                    case "char":
+                        res.add((char) item);
+                        break;
+                    case "String":
+                        res.add((String) item);
+                        break;
+                    default:
+                        res.add((String) item.toString());
+                        break;
+                }
+            }
+        }
+        if (isCollectionObject(o)) {
+            res = new JsonArray();
+            itemType = arrayClass.getComponentType();
+            Collection cobject = ((Collection) o);
+            ArrayList l = new ArrayList((Collection) o);
+            for (int i = 0; i <cobject.size(); i++) {
+                item = l.get(i);
+                switch (item.getClass().getSimpleName()) {
+                    case "int":
+                    case "Integer":
+                        res.add((int) item);
+                        break;
+                    case "Double":
+                    case "double":
+                        res.add((int) item);
+                        break;
+                    case "bolean":
+                        res.add((char) item);
+                    case "char":
+                        res.add((char) item);
+                        break;
+                    case "String":
+                        res.add((String) item);
+                        break;
+                    default:
+                        res.add((String) item.toString());
+                        break;
+                }
+            }
+        }
+        return res;
+    }
+
+
+    public static Object[] toArray(Object o) {
+        Object res []= null;
+        Class arrayClass = o.getClass();
+        Class itemType;
+        Object item;
+        if (isCollectionObject(o)) {
+            res = ((Collection)o).toArray(new String[((Collection)o).size()]);
+        }
+        if (isJsonArray(o)) {
+            res = toArray(toArrayList((JsonArray)o));
+        }
+        return res;
+    }
+    
+    public static List<Object> toList(Object o) {
+        List res = null;
+        Class arrayClass = o.getClass();
+        Class itemType;
+        Object item;
+        if (isArrayObject(o)) {
+            res = Arrays.asList(o);
+        }
+        if (isJsonArray(o)) {
+            res = toArrayList((JsonArray)o);
+        }
+        return res;
+    }
+    
+    
+
+
+    public static boolean isPrimitiveObject(Object obj) {
+//        return ;
+//        return c == int.class || c == double.class || c == boolean.class || c == String.class;
+        return (obj instanceof Integer
+                || obj instanceof Character
+                || obj instanceof Double
+                || obj instanceof Boolean
+                || obj instanceof String);
+
+    }
+    
+    public static boolean isOleObject(Object o){
+        Ole oo= new Ole();
+        try {
+            oo.set(o.toString());
+            return true;
+        } catch(Exception ex) {
+            return false;
+        }
+//        if (jso.get(oletype.OLEMETA.name()) != null) {
+//            return jso.get(oletype.OLEMETA.name()).asObject().getBoolean("ole", false);
+//        } else {
+//            return false;
+//        }
+
+    }
+
+
+    public static boolean isArrayObject(Object obj) {
+        return obj.getClass().isArray();
+    }
+
+    public static boolean isCollectionObject(Object obj) {
+        return obj instanceof Collection<?>;
+    }
+
+    public static boolean isMapObject(Object obj) {
+        return obj instanceof Map<?, ?>;
+    }
+
+    public static boolean isEnumObject(Object obj) {
+        return obj.getClass().isEnum();
+    }
+
+    public static boolean isClassObject(Object obj) {
+        return !isPrimitiveObject(obj) && !isArrayObject(obj) && !isEnumObject(obj);
+    }
+    
+    public static boolean isJsonObject(Object obj) {
+        return obj instanceof JsonObject;
+    }
+    
+    public static boolean isJsonArray(Object obj) {
+        return obj instanceof JsonArray;
+    }
+    
+    
 
 }

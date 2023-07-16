@@ -18,10 +18,6 @@ import data.OleConfig;
 import data.OlePassport;
 import data.OleSet;
 import data.OleTools;
-import static data.OleTools.editConfig;
-import static data.OleTools.loadConfig;
-import static data.OleTools.saveConfig;
-import static data.OleTools.viewConfig;
 import data.Transform;
 import disk.Logger;
 import static disk.Logger.trimFullString;
@@ -1156,7 +1152,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return super.LARVADFGetAllServicesProvidedBy(agentName);
     }
 
-    public ArrayList<String> DFGetAllMyServices() {
+    public ArrayList<String> LARVADFGetAllMyServices() {
         addMilestone("MILES25");
         return super.LARVADFGetAllServicesProvidedBy(getLocalName());
     }
@@ -1792,43 +1788,43 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     }
 
     public void activateProfiling(String service) {
-        doSwingWait(() -> {
-            if (Confirm("Please confirm the activation of profiling tools")) {
-                profileDescription = service;
-                nap = new NetworkData("./config/");
-                if (OleTools.isConfig(nap)) {
-                    loadConfig(nap);
-                }
-                if (Confirm("Do you grant permission to read your private IP, please?")) {
-                    String extIP = Internet.getExtIPAddress();
-                    nap.setExtIP(extIP);
-                    nap.setLocalIP(Internet.getLocalIPAddress());
-                }
-                saveConfig(nap);
-                loadConfig(nap);
-                boolean good;
-                do {
-                    editConfig(nap);
-                    good = nap.validate();
-                    if (!good) {
-                        good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
-                    }
-                } while (!good);
-                viewConfig(nap);
-                saveConfig(nap);
-                if (!LARVADFGetAllProvidersOf(service).isEmpty()) {
-                    profilingType = service;
-                    netMon = LARVADFGetAllProvidersOf(profilingType).get(0);
-                    Message("It is ok, network monitor service has been found:\n" + netMon
-                            + "\n\nprofiling active");
-                    profiling = true;
-                } else {
-                    Alert("Sorry, network monitor service not found. Profiling is disabled");
-                    profiling = false;
-                    profilingType = null;
-                }
-            }
-        });
+//        doSwingWait(() -> {
+//            if (Confirm("Please confirm the activation of profiling tools")) {
+//                profileDescription = service;
+//                nap = new NetworkData("./config/");
+//                if (OleTools.isConfig(nap)) {
+//                    loadConfig(nap);
+//                }
+//                if (Confirm("Do you grant permission to read your private IP, please?")) {
+//                    String extIP = Internet.getExtIPAddress();
+//                    nap.setExtIP(extIP);
+//                    nap.setLocalIP(Internet.getLocalIPAddress());
+//                }
+//                saveConfig(nap);
+//                loadConfig(nap);
+//                boolean good;
+//                do {
+//                    editConfig(nap);
+//                    good = nap.validate();
+//                    if (!good) {
+//                        good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
+//                    }
+//                } while (!good);
+//                viewConfig(nap);
+//                saveConfig(nap);
+//                if (!LARVADFGetAllProvidersOf(service).isEmpty()) {
+//                    profilingType = service;
+//                    netMon = LARVADFGetAllProvidersOf(profilingType).get(0);
+//                    Message("It is ok, network monitor service has been found:\n" + netMon
+//                            + "\n\nprofiling active");
+//                    profiling = true;
+//                } else {
+//                    Alert("Sorry, network monitor service not found. Profiling is disabled");
+//                    profiling = false;
+//                    profilingType = null;
+//                }
+//            }
+//        });
     }
 
     public void deactivateProfiling() {

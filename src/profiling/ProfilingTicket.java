@@ -118,7 +118,7 @@ public class ProfilingTicket {
     public NetworkData decodeNetworkData() {
         if (getPayload() != null) {
             NetworkData nap = new NetworkData();
-            Ole.oleToObject(new Ole(getPayload()), nap, NetworkData.class);
+            nap = (NetworkData) Ole.oleToObject(new Ole(getPayload()), NetworkData.class);
             return nap;
         } else {
             return null;

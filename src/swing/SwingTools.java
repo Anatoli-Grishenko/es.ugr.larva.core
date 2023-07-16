@@ -17,6 +17,7 @@ import jade.lang.acl.ACLMessage;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Polygon;
@@ -77,14 +78,14 @@ public class SwingTools {
         }
     }
 
- public static ImageIcon toIcon(String image, int nw, int nh) {
+    public static ImageIcon toIcon(String image, int nw, int nh) {
         ImageIcon res;
         Image aux;
         if (image.startsWith("/resources")) {
             try {
                 aux = new ImageIcon(getFileResource(image.substring(1)).readAllBytes()).getImage();
             } catch (IOException ex) {
-                aux=null;
+                aux = null;
             }
         } else {
             aux = new ImageIcon(image).getImage();
@@ -93,7 +94,7 @@ public class SwingTools {
         return res;
     }
 
- public static ImageIcon toIcon(Image image, int nw, int nh) {
+    public static ImageIcon toIcon(Image image, int nw, int nh) {
         ImageIcon res;
         res = new ImageIcon(image.getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
         return res;
@@ -106,8 +107,8 @@ public class SwingTools {
 //        res = new ImageIcon(aux.getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
 //        return res;
 //    }
-
     public static void initLookAndFeel(String UI) {
+
         try {
             switch (UI.toUpperCase()) {
                 case "LIGHT":
@@ -122,6 +123,8 @@ public class SwingTools {
         } catch (Exception ex) {
             System.err.println("Failed to initialize look-and-feel");
         }
+        UIManager.getLookAndFeelDefaults()
+                .put("defaultFont", new Font("UbuntuMono", Font.PLAIN, 16));
     }
 
     public static void Info(String message) {
@@ -144,7 +147,6 @@ public class SwingTools {
         return sResult;
     }
 
-
     public static void Message(String message) {
         Info(message);
     }
@@ -156,12 +158,12 @@ public class SwingTools {
     public static int input_int(String message) {
         String sResult;
         boolean exit = false;
-        int iRes=Integer.MIN_VALUE;
+        int iRes = Integer.MIN_VALUE;
         while (!exit) {
             sResult = JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE);
             try {
                 iRes = Integer.parseInt(sResult);
-                exit=true;
+                exit = true;
             } catch (Exception ex) {
                 Error("El dato introducido: " + sResult + " no parece ser un número entero");
             }
@@ -172,12 +174,12 @@ public class SwingTools {
     public static double input_double(String message) {
         String sResult;
         boolean exit = false;
-        double iRes=Integer.MIN_VALUE;
+        double iRes = Integer.MIN_VALUE;
         while (!exit) {
             sResult = JOptionPane.showInputDialog(null, message, "Please input data", JOptionPane.QUESTION_MESSAGE);
             try {
                 iRes = Double.parseDouble(sResult);
-                exit=true;
+                exit = true;
             } catch (Exception ex) {
                 Error("El dato introducido: " + sResult + " no parece ser un número real");
             }
@@ -188,12 +190,13 @@ public class SwingTools {
     public static boolean input_boolean(String message) {
         String sResult;
         boolean exit = false;
-        double iRes=Integer.MIN_VALUE;
-            sResult = inputSelect("Introduce un valor lógico", new String[]{"true", "false"}, "");
-            if (sResult!=null)
-                return sResult.equals("true");
-            else
-                return false;
+        double iRes = Integer.MIN_VALUE;
+        sResult = inputSelect("Introduce un valor lógico", new String[]{"true", "false"}, "");
+        if (sResult != null) {
+            return sResult.equals("true");
+        } else {
+            return false;
+        }
     }
 
     public static String inputSelect(String message, String[] options, String value) {

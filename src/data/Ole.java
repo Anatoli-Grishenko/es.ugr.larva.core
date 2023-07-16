@@ -13,7 +13,11 @@ import com.eclipsesource.json.WriterConfig;
 import crypto.Cryptor;
 import crypto.Keygen;
 import data.Transform;
+import static data.Transform.isArrayObject;
+import static data.Transform.isClassObject;
+import static data.Transform.isEnumObject;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -32,6 +36,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -44,6 +49,7 @@ import swing.SwingTools;
 import static swing.SwingTools.getFileResource;
 import tools.TimeHandler;
 import zip.ZipTools;
+import static data.Transform.isPrimitiveObject;
 
 /**
  * Generic class for exchanging complex objects and disk files by using JSon as
@@ -192,8 +198,22 @@ public class Ole extends JsonObject {
      * @brief Import constructor
      * @param jsole
      */
-    public Ole(JsonObject jsole) {
+    public Ole(JsonObject jsole, boolean mirror) {
+        super(jsole, mirror);
+        this.merge(jsole);
         fromJson(jsole);
+    }
+
+    /**
+     * @brief Import constructor
+     * @param jsole
+     */
+    public Ole(JsonObject jsole) {
+        super(jsole, false);
+        Init();
+//        this.merge(jsole);
+//        fromJson(jsole);
+//        Init();
     }
 
     /**
@@ -225,7 +245,7 @@ public class Ole extends JsonObject {
     }
 
     protected void Init() {
-        clear();
+//        clear();
         set(oletype.OLEMETA.name(), new JsonObject());
         meta().set("id", Keygen.getAlphaNumKey(16));
         meta().set("type", oletype.OLE.name());
@@ -234,6 +254,11 @@ public class Ole extends JsonObject {
         meta().set("description", "JSON Object Linked and Embeded");
         meta().set("ole", true);
         meta().set("crypto", "");
+        for (String n : this.names()) {
+            if (!n.equals(oletype.OLEMETA.name())) {
+                addField(n);
+            }
+        }
     }
 
 //////////////////////////////////////////// Export/Import    
@@ -250,6 +275,10 @@ public class Ole extends JsonObject {
         return this;
     }
 
+//    public Ole set(JsonObject jso) {
+//        parse(jso.toString());
+//        return this;
+//    }
     public Ole fromJson(JsonObject jsole) {
         if (jsole.get(oletype.OLEMETA.name()) != null) {
             fromFullJson(jsole);
@@ -261,32 +290,33 @@ public class Ole extends JsonObject {
 
     protected Ole fromPlainJson(JsonObject jsole) {
         Init();
-        for (String jsf : jsole.names()) {
-            if (jsf.equals(oletype.OLEMETA.name())) {
-                continue;
-            }
-            if (jsole.get(jsf).isBoolean()) {
-                set(jsf, jsole.get(jsf).asBoolean());
-            } else if (jsole.get(jsf).isNumber()) {
-                if (jsole.get(jsf).toString().contains(".") || jsole.get(jsf).toString().contains(",")) {
-                    set(jsf, jsole.get(jsf).asDouble());
-                } else {
-                    set(jsf, jsole.get(jsf).asInt());
-                }
-            } else if (jsole.get(jsf).isString()) {
-                set(jsf, jsole.get(jsf).asString());
-            } else if (jsole.get(jsf).isObject()) {
-                set(jsf, new Ole(jsole.get(jsf).asObject()));
-            } else if (jsole.get(jsf).isArray()) {
-                set(jsf, jsole.get(jsf).asArray());
-            }
-        }
+//        set(jsole.toString());
+//        for (String jsf : jsole.names()) {
+//            if (jsf.equals(oletype.OLEMETA.name())) {
+//                continue;
+//            }
+//            if (jsole.get(jsf).isBoolean()) {
+//                set(jsf, jsole.get(jsf).asBoolean());
+//            } else if (jsole.get(jsf).isNumber()) {
+//                if (jsole.get(jsf).toString().contains(".") || jsole.get(jsf).toString().contains(",")) {
+//                    set(jsf, jsole.get(jsf).asDouble());
+//                } else {
+//                    set(jsf, jsole.get(jsf).asInt());
+//                }
+//            } else if (jsole.get(jsf).isString()) {
+//                set(jsf, jsole.get(jsf).asString());
+//            } else if (jsole.get(jsf).isObject()) {
+//                set(jsf, new Ole(jsole.get(jsf).asObject()));
+//            } else if (jsole.get(jsf).isArray()) {
+//                set(jsf, jsole.get(jsf).asArray());
+//            }
+//        }
         return this;
     }
 
     protected Ole fromFullJson(JsonObject jsole) {
-        clear();
-        fromPlainJson(jsole);
+//        clear();
+//        fromPlainJson(jsole);
         set(oletype.OLEMETA.name(), jsole.get(oletype.OLEMETA.name()).asObject());
         return this;
     }
@@ -319,7 +349,7 @@ public class Ole extends JsonObject {
             JsonObject jsole;
             String definit;
             if (this.isEncrypted()) {
-                definit = myCryptor.deCrypt(s);
+                definit = myCryptor.deCrypt64(s);
             } else {
                 definit = s;
             }
@@ -464,9 +494,10 @@ public class Ole extends JsonObject {
 
     public final Ole getOle(String field) {
         if (get(field) != null && get(field).isObject()) { // && isOle(get(field).asObject())) {
-            return (Ole) get(field).asObject();
+//            return (Ole) get(field).asObject();
+            return new Ole(get(field).asObject(), true);
         } else {
-            return new Ole(new JsonObject());
+            return new Ole(); //new Ole(new JsonObject());
         }
 
     }
@@ -746,87 +777,135 @@ public class Ole extends JsonObject {
      * Ole
      * @return A reference to the instance
      */
-    public final Ole setField(String fieldname, String value) {
+    public final Ole setField(String fieldname, Object o) {
         addField(fieldname);
-        set(fieldname, value);
+        if (o.getClass().getSimpleName().equals("int")
+                || o.getClass().getSimpleName().equals("Integer")) {
+            set(fieldname, (int) o);
+        } else if (o.getClass().getSimpleName().equals("double")
+                || o.getClass().getSimpleName().equals("Double")) {
+            set(fieldname, (double) o);
+        } else if (o.getClass().getSimpleName().equals("boolean")
+                || o.getClass().getSimpleName().equals("Boolean")) {
+            set(fieldname, (boolean) o);
+        } else if (o.getClass().getSimpleName().equals("String")) {
+            set(fieldname, (String) o);
+        } else if (isArrayObject(o)) {
+            set(fieldname, Transform.toJsonArray(o));
+        } else if (Transform.isCollectionObject(o)) {
+            set(fieldname, Transform.toJsonArray(o));
+        } else if (Transform.isJsonArray(o)) {
+            set(fieldname, (JsonArray) o);
+        } else if (Transform.isOleObject(o)) {
+            set(fieldname, Transform.toJsonArray(o));
+        }
         return this;
     }
-
-    /**
-     * It sets the value of the field
-     *
-     * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list
-     * @param value Value of the field. It can be any of the types supported by
-     * Ole
-     * @return A reference to the instance
-     */
-    public final Ole setField(String fieldname, int value) {
-        addField(fieldname);
-        set(fieldname, value);
-        return this;
-    }
-
-    /**
-     * It sets the value of the field
-     *
-     * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list
-     * @param value Value of the field. It can be any of the types supported by
-     * Ole
-     * @return A reference to the instance
-     */
-    public final Ole setField(String fieldname, double value) {
-        addField(fieldname);
-        set(fieldname, value);
-        return this;
-    }
-
-    /**
-     * It sets the value of the field
-     *
-     * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list
-     * @param value Value of the field. It can be any of the types supported by
-     * Ole
-     * @return A reference to the instance
-     */
-    public final Ole setField(String fieldname, boolean value) {
-        addField(fieldname);
-        set(fieldname, value);
-        return this;
-    }
-
-    /**
-     * It sets the value of the field
-     *
-     * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list. The elements of the array can only be those
-     * supported by Ole, otherwise, they are stored as their toString().
-     * @param value Value of the field. It can be any of the types supported by
-     * Ole
-     * @return A reference to the instance
-     */
-    public final Ole setField(String fieldname, ArrayList<Object> value) {
-        addField(fieldname);
-        set(fieldname, Transform.toJsonArray(value));
-        return this;
-    }
-
-    /**
-     * It sets the value of the field
-     *
-     * @param fieldname The name of the field. If the field does not exist, it
-     * adds it to the fields list
-     * @param value Value of the field. It can be any of the types supported by
-     * Ole
-     * @return A reference to the instance
-     */
-    public final Ole setField(String fieldname, Ole value) {
-        addField(fieldname);
-        set(fieldname, value);
-        return this;
-    }
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, String value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
+//
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, int value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
+//
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, double value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
+//
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, boolean value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
+//
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list. The elements of the array can only be those
+//     * supported by Ole, otherwise, they are stored as their toString().
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, ArrayList<Object> value) {
+//        addField(fieldname);
+//        set(fieldname, Transform.toJsonArray(value));
+//        return this;
+//    }
+//
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list. The elements of the array can only be those
+//     * supported by Ole, otherwise, they are stored as their toString().
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, JsonArray value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
+//    /**
+//     * It sets the value of the field
+//     *
+//     * @param fieldname The name of the field. If the field does not exist, it
+//     * adds it to the fields list
+//     * @param value Value of the field. It can be any of the types supported by
+//     * Ole
+//     * @return A reference to the instance
+//     */
+//    public final Ole setField(String fieldname, Ole value) {
+//        addField(fieldname);
+//        set(fieldname, value);
+//        return this;
+//    }
 
     public final Ole addToField(String fieldname, String v) {
         if (get(fieldname).isArray()) {
@@ -863,26 +942,25 @@ public class Ole extends JsonObject {
         return this;
     }
 
-    public Ole setFieldGeneric(String field, Object s) {
-        if (s instanceof String) {
-            setField(field, (String) s);
-        } else if (s instanceof Integer) {
-            setField(field, (Integer) s);
-        } else if (s instanceof Double) {
-            setField(field, (Double) s);
-        } else if (s instanceof Boolean) {
-            setField(field, (Boolean) s);
-        } else if (s instanceof Enum) {
-//            String sc = ((<E extends <Enum E>> Class <E>) s).;
-//            setField(field, getEnumString(s));
-        } else if (s instanceof Ole) {
-            setField(field, (Ole) s);
-        } else {
-            setField(field, (String) s.toString());
-        }
-        return this;
-    }
-
+//    public Ole setFieldGeneric(String field, Object s) {
+//        if (s instanceof String) {
+//            setField(field, (String) s);
+//        } else if (s instanceof Integer) {
+//            setField(field, (Integer) s);
+//        } else if (s instanceof Double) {
+//            setField(field, (Double) s);
+//        } else if (s instanceof Boolean) {
+//            setField(field, (Boolean) s);
+//        } else if (s instanceof Enum) {
+////            String sc = ((<E extends <Enum E>> Class <E>) s).;
+////            setField(field, getEnumString(s));
+//        } else if (s instanceof Ole) {
+//            setField(field, (Ole) s);
+//        } else {
+//            setField(field, (String) s.toString());
+//        }
+//        return this;
+//    }
     public Ole setFieldGeneric2(String field, Object s, Class c) {
         if (String.class.isInstance(s)) {
             setField(field, (String) s);
@@ -1302,44 +1380,21 @@ public class Ole extends JsonObject {
         return obj;
     }
 
-    public static boolean isSimpleObject(Object obj) {
-//        return ;
-//        return c == int.class || c == double.class || c == boolean.class || c == String.class;
-        return (obj instanceof Integer
-                || obj instanceof Character
-                || obj instanceof Double
-                || obj instanceof Boolean
-                || obj instanceof String);
-
-    }
-
-    public static boolean isArrayObject(Object obj) {
-        return obj.getClass().isArray();
-    }
-
-    public static boolean isEnumObject(Object obj) {
-        return obj.getClass().isEnum();
-    }
-
-    public static boolean isClassObject(Object obj) {
-        return !isSimpleObject(obj) && !isArrayObject(obj) && !isEnumObject(obj);
-    }
-
     public static Ole simpleToOle(Object obj) {
         Ole res = new Ole();
 
-        if (isSimpleObject(obj)) {
+        if (isPrimitiveObject(obj)) {
             res.setDescription(obj.getClass().getName());
             if (obj instanceof Character) {
-                res.setField("value", "" + (char) obj + "");
+                res.setField("options", "" + (char) obj + "");
             } else if (obj instanceof Integer) {
-                res.set("value", (int) obj);
+                res.set("options", (int) obj);
             } else if (obj instanceof Double) {
-                res.set("value", (double) obj);
+                res.set("options", (double) obj);
             } else if (obj instanceof Boolean) {
-                res.set("value", (boolean) obj);
+                res.set("options", (boolean) obj);
             } else if (obj instanceof String) {
-                res.set("value", (String) obj);
+                res.set("options", (String) obj);
             }
         }
         return res;
@@ -1347,13 +1402,14 @@ public class Ole extends JsonObject {
 
     public static Ole arrayToOle(Object obj) {
         Ole res = new Ole();
-        JsonArray jsares = new JsonArray();
+        JsonArray jsares;
 
         if (isArrayObject(obj)) {
-            for (int i = 0; i < Array.getLength(obj); i++) {
-                jsares.add(objectToOle(Array.get(obj, i)).get("value"));
-            }
-            res.set("value", jsares);
+//            for (int i = 0; i < Array.getLength(obj); i++) {
+//                jsares.add(objectToOle(Array.get(obj, i)).get("options"));
+//            }
+            jsares = Transform.toJsonArray(obj);
+            res.set("options", jsares);
             if (Array.getLength(obj) > 0) {
                 res.setDescription(Array.get(obj, 0).getClass().getSimpleName() + "[]");
             }
@@ -1364,7 +1420,7 @@ public class Ole extends JsonObject {
     public static Ole enumToOle(Object obj) {
         Ole res = new Ole();
         if (isEnumObject(obj)) {
-            res.set("value", (String) obj.toString());
+            res.set("options", (String) obj.toString());
             res.setDescription("enum " + obj.getClass().getName());
         }
         return res;
@@ -1375,7 +1431,7 @@ public class Ole extends JsonObject {
     }
 
     public static Ole objectToOle(Object obj, int maxdepth) {
-        if (isSimpleObject(obj)) {
+        if (isPrimitiveObject(obj)) {
             return simpleToOle(obj);
         } else if (isArrayObject(obj)) {
             return arrayToOle(obj);
@@ -1405,9 +1461,9 @@ public class Ole extends JsonObject {
         for (Field f : myFields) {
             try {
                 f.setAccessible(true);
-                if (isSimpleObject(f.get(obj))) {
+                if (isPrimitiveObject(f.get(obj))) {
                     if (f.get(obj) != null) {
-                        oOptions.set(f.getName(), objectToOle(f.get(obj)).toPlainJson().get("value"));
+                        oOptions.set(f.getName(), objectToOle(f.get(obj)).toPlainJson().get("options"));
                     }
                 } else if (f.getType().isEnum()) {
 //                    String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
@@ -1422,13 +1478,13 @@ public class Ole extends JsonObject {
 //                    oProp.add(f.getName(), new JsonObject().add("select", Transform.toJsonArray(new ArrayList(alValues))));
                 } else if (f.getType().isArray()) {
                     if (f.get(obj) != null) {
-                        oOptions.set(f.getName(), arrayToOle(f.get(obj)).get("value").asArray());
+                        oOptions.set(f.getName(), arrayToOle(f.get(obj)).get("options").asArray());
                     }
                 } else {
                     if (maxdepth > 0 && !f.getType().getTypeName().startsWith("java")) {
                         if (f.get(obj) != null) {
                             Ole onested = classToOle(f.get(obj), maxdepth - 1);
-                            oOptions.set(f.getName(), onested.get("value").asObject());
+                            oOptions.set(f.getName(), onested.get("options").asObject());
                         }
                     }
                 }
@@ -1439,44 +1495,47 @@ public class Ole extends JsonObject {
         res = new Ole();
 
         res.add(
-                "value", oOptions.toPlainJson());
+                "options", oOptions.toPlainJson());
         return res;
     }
 
-    public static Object oleToSimple(Ole o, Object obj, Class c) {
+    public static Object oleToSimple(Ole o, Class c) {
+        Object obj;
+        try {
+            obj = c.newInstance();
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+            return null;
+        }
         if (c == int.class) {
-            int ires = o.get("value").asInt();
-            obj = ires;
+            int ires = o.get("options").asInt();
             return ires;
         } else if (obj instanceof Double) {
-            double dres = o.get("value").asDouble();
-            obj = dres;
+            double dres = o.get("options").asDouble();
             return dres;
         } else if (obj instanceof Boolean) {
-            boolean bres = o.get("value").asBoolean();
-            obj = bres;
+            boolean bres = o.get("options").asBoolean();
             return bres;
         } else if (c == String.class) {
-            String sres = o.get("value").asString();
-            obj = sres;
+            String sres = o.get("options").asString();
             return sres;
         }
         return new Object();
     }
 
 //    public static Object oleToSimple(Ole o, Class c) {
-//        if (isSimpleObject(c)) {
+//        if (isPrimitiveObject(c)) {
 //            if (c == int.class) {
-//                int ires = o.get("value").asInt();
+//                int ires = o.get("options").asInt();
 //                return ires;
 //            } else if (c == double.class) {
-//                double dres = o.get("value").asDouble();
+//                double dres = o.get("options").asDouble();
 //                return dres;
 //            } else if (c == boolean.class) {
-//                boolean bres = o.get("value").asBoolean();
+//                boolean bres = o.get("options").asBoolean();
 //                return bres;
 //            } else if (c == String.class) {
-//                String sres = o.get("value").asString();
+//                String sres = o.get("options").asString();
 //                return sres;
 //            }
 //        }
@@ -1488,21 +1547,36 @@ public class Ole extends JsonObject {
 //        }
 //        return obj;
 //    }
-    public static void oleToObject(Ole ole, Object obj, Class c) {
-        if (isSimpleObject(obj)) {
-            obj = oleToSimple(ole, obj, c);
-        } else if (isArrayObject(obj)) {
-            oleToArray(ole, obj, c);
-        } else if (isEnumObject(obj)) {
-            oleToEnum(ole, obj, c);
-        } else if (isClassObject(obj)) {
-            oleToClass(ole, obj, c);
+    public static Object oleToObject(Ole ole, Class c) {
+        Object obj;
+        try {
+            obj = c.newInstance();
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+            return null;
         }
+        if (isPrimitiveObject(obj)) {
+            return oleToSimple(ole, c);
+        } else if (isArrayObject(obj)) {
+            return oleToArray(ole, c);
+        } else if (isEnumObject(obj)) {
+            return oleToEnum(ole, c);
+        } else if (isClassObject(obj)) {
+            return oleToClass(ole, c);
+        }
+        return null;
     }
 
-    public static void oleToClass(Ole ole, Object o, Class c) {
+    public static Object oleToClass(Ole ole, Class c) {
+        Object o;
         try {
-            ole = new Ole(ole.get("value").asObject());
+            ole = new Ole(ole.get("options").asObject());
+            try {
+                o = c.newInstance();
+            } catch (Exception ex) {
+                System.err.println(ex.toString());
+                return null;
+            }
             ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
             Field f;
             for (String s : ole.getFieldList()) {
@@ -1525,23 +1599,23 @@ public class Ole extends JsonObject {
 
 //                        f.set(o, oleToArray(ole, o, c))
 //                            Ole oaux = new Ole();
-//                            oaux.add("value",ole.get(f.getName()).asArray());
+//                            oaux.add("options",ole.get(f.getName()).asArray());
 //                            oleToArray(ole, o, c);
-                    } else {
-
                     }
                 } catch (Exception ex) {
                     System.err.println(ex.toString());
+                    return null;
                 }
 
             }
-
         } catch (Exception ex) {
             System.err.println(ex.toString());
+            return null;
         }
+        return o;
     }
     //    public <T> T[] oleToArray(T[] obj) {
-    //        JsonArray jsa = get("value").asArray();
+    //        JsonArray jsa = get("options").asArray();
     //        int size = jsa.size();
     //        T[] res;
     //        res = (T[])new Object[size];
@@ -1549,7 +1623,7 @@ public class Ole extends JsonObject {
     //        if (isArrayObject(obj)) {
     //            for (int i = 0; i < size; i++) {
     //                Ole ovalue = new Ole();
-    //                ovalue.add("value", jsa.get(i));
+    //                ovalue.add("options", jsa.get(i));
     //                oelement = oleToSimple(ovalue, Array.get(obj, 0));
     //                Array.set(res, i, oelement);
     //            }
@@ -1559,9 +1633,16 @@ public class Ole extends JsonObject {
     //        return res;
     //    }
 
-    public static void oleToArray(Ole ole, Object obj, Class c) {
-        JsonArray jsa = ole.get("value").asArray();
+    public static Object oleToArray(Ole ole, Class c) {
+        JsonArray jsa = ole.get("options").asArray();
         int size = jsa.size();
+        Object obj;
+        try {
+            obj = c.newInstance();
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+            return null;
+        }
 //            c = Array.get(obj, 0).getClass();
 //            c = Array.get(obj, 0).getClass();
 //            Object res = Array.newInstance(c, size);
@@ -1570,27 +1651,27 @@ public class Ole extends JsonObject {
         try {
             for (int i = 0; i < size; i++) {
                 Ole ovalue = new Ole();
-                ovalue.add("value", jsa.get(i));
+                ovalue.add("options", jsa.get(i));
                 if (c == int.class) {
                     int iaux = 0;
-                    iaux = (int) oleToSimple(ovalue, iaux, int.class);
+                    iaux = (int) oleToSimple(ovalue, int.class);
                     Array.set(obj, i, iaux);
                 } else if (c == double.class) {
                     double daux = 0;
-                    daux = (double) oleToSimple(ovalue, daux, double.class);
+                    daux = (double) oleToSimple(ovalue, double.class);
                     Array.set(obj, i, daux);
                 } else if (c == boolean.class) {
                     boolean baux = false;
-                    baux = (boolean) oleToSimple(ovalue, baux, boolean.class);
+                    baux = (boolean) oleToSimple(ovalue, boolean.class);
                     Array.set(obj, i, baux);
                 } else if (c == String.class) {
                     String saux = "";
-                    saux = (String) oleToSimple(ovalue, saux, String.class);
+                    saux = (String) oleToSimple(ovalue, String.class);
                     Array.set(obj, i, saux);
                 } else if (isClassObject(c)) {
                     Class ctemp = Class.forName(c.getCanonicalName());
                     Object cobj = ctemp.newInstance();
-                    oleToClass(ovalue, cobj, c);
+                    oleToClass(ovalue, c);
                     Array.set(obj, i, cobj);
                 }
             }
@@ -1599,15 +1680,22 @@ public class Ole extends JsonObject {
         }
 //            obj = (Object[]) new Object[size];
 //        System.arraycopy(res, 0, obj, 0, size);
-
+        return obj;
     }
 
-    public static Object oleToEnum(Ole ole, Object obj, Class c) {
+    public static Object oleToEnum(Ole ole, Class c) {
+        Object obj;
+        try {
+            obj = c.newInstance();
+        } catch (Exception ex) {
+            System.err.println(ex.toString());
+            return null;
+        }
         if (isEnumObject(obj)) {
-            obj = Enum.valueOf(c, ole.get("value").asString());
-            return Enum.valueOf(c, ole.get("value").asString());
+            obj = Enum.valueOf(c, ole.get("options").asString());
+            return Enum.valueOf(c, ole.get("options").asString());
         } else {
-            return new Object();
+            return null;
         }
     }
 
@@ -1636,7 +1724,7 @@ public class Ole extends JsonObject {
     }
 
 //    public static Ole objectToOle(Object obj) {
-//        if (isSimpleObject(obj)) {
+//        if (isPrimitiveObject(obj)) {
 //            return simpleToOle(obj);
 //        } else if (isArrayObject(obj)) {
 //            return arrayToOle(obj);
@@ -1659,7 +1747,7 @@ public class Ole extends JsonObject {
 //            try {
 //                f.setAccessible(true);
 //                if (f.get(obj) != null) {
-//                    oOptions.set(f.getName(), objectToOle(f.get(obj)).toPlainJson().get("value"));
+//                    oOptions.set(f.getName(), objectToOle(f.get(obj)).toPlainJson().get("options"));
 ////                    if (f.getType().isEnum()) {
 ////                        ArrayList<String> alValues = new ArrayList();
 ////                        for (Object ov : f.getType().getEnumConstants()) {
@@ -1675,7 +1763,7 @@ public class Ole extends JsonObject {
 //        res = new Ole();
 //
 //        res.add(
-//                "value", oOptions.toPlainJson());
+//                "options", oOptions.toPlainJson());
 //        return res;
 //    }
 //
@@ -1741,23 +1829,36 @@ public class Ole extends JsonObject {
         return obj;
     }
 
-    public Ole edit(OleApplication parent) {
-        SwingTools.doSwingWait(() -> {
-            OleDialog oDlg = new OleDialog(parent, "Edit ");
-            oDlg.setEdit(true);
-            if (oDlg.run(new OleConfig(this))) {
-                this.set(oDlg.getResult().toPlainJson().toString());
-            }
-        });
-        return this;
-    }
-
-    public void view(OleApplication parent) {
-        OleDialog oDlg = new OleDialog(parent, "View ");
-        oDlg.setEdit(false);
-        oDlg.run(new OleConfig(this));
-    }
-
+//    public Ole edit(OleApplication parent) {
+//        SwingTools.doSwingWait(() -> {
+//            OleDialog oDlg = new OleDialog(parent, "Edit ");
+//            oDlg.setEdit(true);
+//            if (oDlg.run(new OleConfig(this))) {
+//                this.set(oDlg.getResult().toPlainJson().toString());
+//            } else {
+//                this.set(this.toPlainJson().toString());
+//            }
+//        });
+//        return this;
+//    }
+//  public Ole edit(OleApplication parent, BiConsumer<ActionEvent, OleConfig>validator) {
+////        SwingTools.doSwingWait(() -> {
+//            OleDialog oDlg = new OleDialog(parent, "Edit ");
+//            oDlg.addActionListener(validator);
+//            oDlg.setEdit(true);
+//             if (oDlg.run(new OleConfig(this))) {
+//                this.set(oDlg.getResult().toPlainJson().toString());
+//                return this;
+//            }
+////        });
+//        return null;
+//    }
+//
+//    public void view(OleApplication parent) {
+//        OleDialog oDlg = new OleDialog(parent, "View ");
+//        oDlg.setEdit(false);
+//        oDlg.run(new OleConfig(this));
+//    }
 //    public static AutoOle fromOle(Ole ole, AutoOle obj) {
 //        Class c = obj.myClass();
 //        ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));

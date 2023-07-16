@@ -4,9 +4,11 @@
  */
 package map2D;
 
+import data.OleFile;
 import geometry.Point3D;
 import geometry.SimpleVector3D;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -15,6 +17,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -543,15 +549,15 @@ public class Map2DColor {
                 Color c = this.getColor((int) (x), (int) y);
                 if (alpha01 < 0) {
                     calpha = new Color(
-                            (int) (Math.min(255,Math.max(0,c.getRed() * alpha01))),
-                            (int) (Math.min(255,Math.max(0,c.getGreen()* alpha01))),
-                            (int) (Math.min(255,Math.max(0,c.getBlue()* alpha01)))
+                            (int) (Math.min(255, Math.max(0, c.getRed() * alpha01))),
+                            (int) (Math.min(255, Math.max(0, c.getGreen() * alpha01))),
+                            (int) (Math.min(255, Math.max(0, c.getBlue() * alpha01)))
                     );
                 } else {
                     calpha = new Color(
-                            (int) (Math.min(255,Math.max(0,c.getRed() / alpha01))),
-                            (int) (Math.min(255,Math.max(0,c.getGreen()/ alpha01))),
-                            (int) (Math.min(255,Math.max(0,c.getBlue()/ alpha01)))
+                            (int) (Math.min(255, Math.max(0, c.getRed() / alpha01))),
+                            (int) (Math.min(255, Math.max(0, c.getGreen() / alpha01))),
+                            (int) (Math.min(255, Math.max(0, c.getBlue() / alpha01)))
                     );
                 }
                 setColor(x, y, calpha);
@@ -671,4 +677,40 @@ public class Map2DColor {
         return res;
     }
 
+    @Override
+    public String toString() {
+        OleFile of = new OleFile();
+        try {
+            saveMap("tmp.png");
+            of.loadFile("tmp.png");
+            return of.toPlainJson().toString();
+        } catch (IOException ex) {
+            return null;
+        }
+
+    }
+
+    public Map2DColor fromString(String serial) {
+        OleFile of = new OleFile();
+        try {
+            of.set(serial);
+            of.saveFile("./");
+            this.loadMapRaw("./" + of.getFileName());
+            return this;
+        } catch (IOException ex) {
+            return null;
+        }
+
+    }
+
+    public void show() {
+        
+        JLabel label = new JLabel(new ImageIcon(getMap()));
+        JOptionPane.showMessageDialog(null, label, "Word Debaser!", JOptionPane.PLAIN_MESSAGE, null);
+//        JFrame frame = new JFrame();
+//        frame.getContentPane().setLayout(new FlowLayout());
+//        frame.getContentPane().add(new JLabel(new ImageIcon(this.getMap())));
+//        frame.pack();
+//        frame.setVisible(true);
+    }
 }

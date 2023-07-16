@@ -65,6 +65,12 @@ public class OleList extends JList implements ListSelectionListener, ActionListe
         return this;
     }
 
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        this.add.setEnabled(b);
+        this.remove.setEnabled(b);
+    }
     public OleList init(Type type) {
         listModel = new DefaultListModel();
         add = new JButton("+");

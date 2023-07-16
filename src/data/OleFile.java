@@ -104,7 +104,7 @@ public class OleFile extends Ole {
      */
     public boolean saveFile(String outputfolder) {
         boolean res = false;
-        if (getType().equals(oletype.OLEFILE.name())) {
+//        if (getType().equals(oletype.OLEFILE.name())) {
             String filename = get("filename").asString();
             JsonArray content = get("filedata").asArray();
             byte[] bytedata = new byte[content.size()];
@@ -125,7 +125,7 @@ public class OleFile extends Ole {
                 res = true;
             } catch (Exception ex) {
             }
-        }
+//        }
         return res;
     }
 

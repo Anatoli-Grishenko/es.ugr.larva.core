@@ -5,33 +5,27 @@
  */
 package swing;
 
-import com.eclipsesource.json.JsonArray;
+import AutoConfiguration.WebCam;
 import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;
 import data.OleFile;
-import data.OleSet;
 import data.Transform;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
-import static java.nio.file.FileSystems.getDefault;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -47,21 +41,14 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import static swing.SwingTools.doSwingLater;
-import static swing.SwingTools.doSwingWait;
+import map2D.Map2DColor;
+import tools.ExceptionHandler;
 
 /**
  *
@@ -73,13 +60,16 @@ public class OleDialog extends JDialog implements ActionListener {
     HashMap<String, Component> components;
     JTabbedPane tpMain;
     JPanel flMain, flButtons;
-    JButton bOK, bCancel;
+    JScrollPane scrollPane;
+    JButton bOK, bCancel, baux;
     int spacing = 5, fieldheight = 20, fieldwidth = 160;
     boolean bresult;
 //    JFrame parent;
     BiConsumer<ActionEvent, OleConfig> buttonListener;
+    BiConsumer<Object, ActionEvent> objectListener;
     int listsize = 5;
     boolean edit = true;
+    Class c;
 
     public static String doSelectFile(String currentfolder, String extension) {
         JFileChooser choose;
@@ -139,8 +129,69 @@ public class OleDialog extends JDialog implements ActionListener {
 
     }
 
+//    public OleDialog(JFrame parent, String title) {
+//        super(parent, title, true);
+//        
+//        tpMain = new JTabbedPane();
+//        tpMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+//        flMain = new JPanel();
+//        flMain.setLayout(new BoxLayout(flMain, BoxLayout.Y_AXIS));
+//        flButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+//        flMain.add(tpMain);
+//        bOK = new JButton("OK");
+//        bOK.addActionListener(e -> actionPerformed(e));
+//        bCancel = new JButton("Cancel");
+//        bCancel.addActionListener(e -> actionPerformed(e));
+//        flButtons.add(bOK);
+//        flButtons.add(bCancel);
+//        flMain.add(flButtons);
+//        this.getRootPane().setDefaultButton(bOK);
+//
+////        setBounds(100, 100, 450, 300);
+//        components = new HashMap();
+//        getContentPane().setLayout(new BorderLayout(0, 0));
+////        getContentPane().add(scrollPane, BorderLayout.CENTER);
+//        setModalityType(ModalityType.MODELESS);
+//        scrollPane = new JScrollPane();
+//        scrollPane.add(getContentPane());
+//        setContentPane(scrollPane);
+//    } 
+//    
+    public OleDialog addActionListener(BiConsumer<ActionEvent, OleConfig> l) {
+        buttonListener = l;
+        return this;
+    }
+
+    public OleDialog addObjectListener(BiConsumer<Object, ActionEvent> l) {
+        objectListener = l;
+        return this;
+    }
+//    public OleDialog(JFrame parent, String title) {
+//        super(parent, title, true);
+//        
+//        tpMain = new JTabbedPane();
+//        tpMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
+//        flMain = new JPanel();
+//        flMain.setLayout(new BoxLayout(flMain, BoxLayout.Y_AXIS));
+//        flButtons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+//        flMain.add(tpMain);
+//        bOK = new JButton("OK");
+//        bOK.addActionListener(e -> actionPerformed(e));
+//        bCancel = new JButton("Cancel");
+//        bCancel.addActionListener(e -> actionPerformed(e));
+//        flButtons.add(bOK);
+//        flButtons.add(bCancel);
+//        flMain.add(flButtons);
+//        this.getRootPane().setDefaultButton(bOK);
+//        components = new HashMap();
+//        scrollPane = new JScrollPane();
+//        scrollPane.add(flMain);
+//        getContentPane().add(scrollPane);
+//    }
+
     public OleDialog(JFrame parent, String title) {
         super(parent, title, true);
+
         tpMain = new JTabbedPane();
         tpMain.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         flMain = new JPanel();
@@ -158,11 +209,6 @@ public class OleDialog extends JDialog implements ActionListener {
 
         components = new HashMap();
         getContentPane().add(flMain);
-    }
-
-    public OleDialog addActionListener(BiConsumer<ActionEvent, OleConfig> l) {
-        buttonListener = l;
-        return this;
     }
 
     @Override
@@ -195,7 +241,7 @@ public class OleDialog extends JDialog implements ActionListener {
                         try {
                             final Process p = pb.start();
                         } catch (IOException ex) {
-                            
+                            new ExceptionHandler(ex);
                         }
                     }
                 } else if (e.getActionCommand().startsWith(".../")) { //select folder
@@ -232,16 +278,74 @@ public class OleDialog extends JDialog implements ActionListener {
                         buttonListener.accept(e, input);
                         setValues(input);
                     }
+                } else {
+                    Ole oControls = input.getProperties().getOle("control");
+                    try {
+                        c = Class.forName(oControls.getOle(e.getActionCommand()).getField("class"));
+                        if (!oControls.getField(e.getActionCommand()).isEmpty()) {
+                            if (objectListener != null) {
+                                output = getValues(output);
+                                Object o = OleConfig.toObject(output, c);
+                                objectListener.accept(o, e);
+                                setValues(input);
+                            }
+                        }
+                    } catch (ClassNotFoundException ex) {
+                        new ExceptionHandler(ex);
+                    }
+
                 }
-
         }
-
     }
+//                            input = getValues(input);
+//                            Class c = Class.forName(oControls.getOle(e.getActionCommand()).getField("class"));
+//                            Object obj = OleConfig.toObject(input, c);
+//                            BiConsumer<Object, ActionEvent> validator = new BiConsumer<Object, ActionEvent>() {
+//                                @Override
+//                                public void accept(Object t, ActionEvent ae) {
+//                                    switch (ae.getActionCommand()) {
+//                                        case "webcam":
+//                                            WebCam wcTemp = new WebCam(obj.getWebcam());
+//                                            wcTemp.init(obj.getWebcam());
+//                                            wcTemp.read();
+//                                            Map2DColor maux = new Map2DColor().fromString(wcTemp.getLastRead());
+//                                            maux.show();
+//                                            break;
+//
+//                                    }
+//                                }
+//                            } //                            try {
+//                                    //                                Class c = Class.forName(oControls.getOle(e.getActionCommand()).getField("class"));
+//                                    //                                Method mval = null;
+//                                    //                                for (Method m : c.getDeclaredMethods()) {
+//                                    //                                    System.out.println(m.getName());
+//                                    //                                    if (m.getName().equals(oControls.getOle(e.getActionCommand()))) {
+//                                    //                                        mval = m;
+//                                    //                                        break;
+//                                    //                                    }
+//                                    //                                }
+//                                    //                                Object o = OleConfig.toObject(input, c);
+//                                    //                                mval.invoke(null, o, e);
+//                                    //                            } catch (Exception ex) {
+//                                    //                                new ExceptionHandler(ex);
+//                                    //                            }
+//                            try {
+//                                Class c = Class.forName(oControls.getOle(e.getActionCommand()).getField("class"));
+//                                Object o = OleConfig.toObject(input, c);
+//                                objectListener.accept(o, e);
+//                                setValues(input);
+//                            } catch (Exception ex) {
+//                            }
 
     public boolean run(OleConfig o) {
         SwingTools.doSwingWait(() -> {
-            run(o, "");
-        });
+            try {
+                run(o, "");
+            } catch (Exception ex) {
+                new ExceptionHandler(ex);
+            }
+        }
+        );
         return this.bresult;
 //        tpMain.removeAll();
 //        output = new OleConfig(o);
@@ -254,6 +358,9 @@ public class OleDialog extends JDialog implements ActionListener {
     }
 
     public boolean run(OleConfig o, String defaulttab) {
+//        if (o.getDescription() != null && o.getDescription().length() > 0) {
+//            this.setTitle(o.getDescription());
+//        }
         tpMain.removeAll();
         output = new OleConfig(o);
         input = new OleConfig(o);
@@ -291,6 +398,17 @@ public class OleDialog extends JDialog implements ActionListener {
             tooltip = fieldproperties.getString("tooltip");
             if (tooltip != null) {
                 tpMain.setToolTipTextAt(tpMain.getTabCount() - 1, tooltip);
+            }
+        }
+        if (olecfg.getProperties().get("control") != null) {
+            Ole oControls = olecfg.getProperties().getOle("control");
+            JButton bAux;
+            for (String n : oControls.getFieldList()) {
+                Ole oleControl = oControls.getOle(n);
+                bAux = new JButton(oleControl.getField("label"));
+                bAux.setActionCommand(n);
+                bAux.addActionListener(this);
+                flButtons.add(bAux);
             }
         }
     }
@@ -428,7 +546,7 @@ public class OleDialog extends JDialog implements ActionListener {
 //                        if (edit) {
 //                            oButton = new OleButton((OleApplication) getParent(), "EDIT " + sfield, "settings");
 //                        } else {
-                            oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "settings");
+                        oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "settings");
 //                        }
                     } else if (oaux.getType().equals(oletype.OLEFILE.name())) {
                         oButton = new OleButton((OleApplication) getParent(), "VIEW " + sfield, "article");
@@ -511,6 +629,7 @@ public class OleDialog extends JDialog implements ActionListener {
                 gc.gridx = 0;
                 gc.gridy++;
             }
+
         }
         return dataPanel;
     }
@@ -644,6 +763,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     iv = Integer.parseInt(text.getText());
                     currentTab.setField(sfield, iv);
                 } catch (Exception ex) {
+                    new ExceptionHandler(ex);
                 }
             } else if (currentTab.getFieldType(sfield).equals(oletype.DOUBLE.name())) {
                 text = (JTextField) components.get(sfield);
@@ -652,6 +772,7 @@ public class OleDialog extends JDialog implements ActionListener {
                     dv = Double.parseDouble(text.getText());
                     currentTab.setField(sfield, dv);
                 } catch (Exception ex) {
+                    new ExceptionHandler(ex);
                 }
             } else if (currentTab.getFieldType(sfield).equals(oletype.BOOLEAN.name())) {
                 checkbox = (JCheckBox) components.get(sfield);
@@ -660,12 +781,15 @@ public class OleDialog extends JDialog implements ActionListener {
                 ArrayList<String> sList = new ArrayList();
                 OleList mlist = (OleList) components.get(sfield);
                 DefaultListModel mlm = mlist.getListMode();
+                String slist[] = new String[mlm.size()];
                 for (int i = 0; i < mlm.size(); i++) {
                     sList.add((String) mlm.getElementAt(i));
+                    slist[i] = (String) mlm.getElementAt(i);
                 }
-                currentTab.setField(sfield, new ArrayList(sList));
+//                currentTab.setField(sfield, new ArrayList<String>(sList));
+                currentTab.setField(sfield, slist);
                 if (mlist.getSelectedValue() != null) {
-                    fieldproperties.setField("selected", new ArrayList(mlist.getSelectedValuesList()));
+                    fieldproperties.setField("selected", (String) mlist.getSelectedValue());
                 }
             } else if (currentTab.getFieldType(sfield).equals(oletype.OLE.name())) {
                 olecfg = getValues(currentTab.getOle(sfield), olecfg);
@@ -955,5 +1079,8 @@ public class OleDialog extends JDialog implements ActionListener {
 
     public void setEdit(boolean edit) {
         this.edit = edit;
+        for (Component c : components.values()) {
+            c.setEnabled(edit);
+        }
     }
 }

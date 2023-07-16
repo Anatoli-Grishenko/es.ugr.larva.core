@@ -54,7 +54,7 @@ public class Profiler {
         NetworkCookie nc = new NetworkCookie();
         if (isProfiler(msg)) {
             Ole ocookie = new Ole(msg.getUserDefinedParameter(MONITORMARK));
-            Ole.oleToObject(ocookie, nc, NetworkCookie.class);
+            nc = (NetworkCookie) Ole.oleToObject(ocookie, NetworkCookie.class);
         }
         return nc;
     }

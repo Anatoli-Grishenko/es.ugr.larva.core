@@ -75,7 +75,7 @@ public class AgentReport {
             String getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
             try {
                 Method getter = c.getDeclaredMethod(getterName);
-                res.setFieldGeneric(f.getName(), getter.invoke(this));
+                res.setField(f.getName(), getter.invoke(this));
             } catch (Exception ex) {
             }
         }
