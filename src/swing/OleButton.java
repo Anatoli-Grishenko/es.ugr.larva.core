@@ -12,6 +12,8 @@ import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import tools.emojis;
 
@@ -30,11 +32,13 @@ public class OleButton extends JButton {
     String style, type, command, texto;
     Color foreground;
     Component parent;
+    Dimension iconDimension;
 
     public OleButton(ActionListener p, String command, String text) {
         super();
         parent = (Component) p;
         foreground = this.getForeground();
+        iconDimension = new Dimension(24,24);
         texto = text;
         setText(text);
         setRegular();
@@ -77,7 +81,7 @@ public class OleButton extends JButton {
         }
         if (getStyle().equals("extraflat") && getType().equals("icon")) {
             if (this.isEnabled()) {
-                this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, this.getSize()));
+                this.setIcon(((OleApplication) parent).getIconSet().getHighlightIcon(texto, iconDimension));
             }
         }
     }
@@ -89,7 +93,7 @@ public class OleButton extends JButton {
         }
         if (getStyle().equals("extraflat") && getType().equals("icon")) {
             if (this.isEnabled()) {
-                this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, this.getSize()));
+                this.setIcon(((OleApplication) parent).getIconSet().getRegularIcon(texto, iconDimension));
             }
         }
     }
@@ -122,7 +126,7 @@ public class OleButton extends JButton {
     }
 
     public OleButton setIcon(Dimension d) {
-        setPreferredSize(d);
+        iconDimension = d;
         setType("icon");
         return this;
     }
@@ -171,11 +175,11 @@ public class OleButton extends JButton {
             if (parent instanceof OleApplication) {
                 OleApplication oapp = (OleApplication) parent;
                 if (getStyle().equals("extraflat")) {
-                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, this.getSize().width, this.getSize().height));
+                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, (int)iconDimension.getWidth(),(int)iconDimension.getHeight()));
                     this.setText("");
                 }
                 if (getStyle().equals("flat")) {
-                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, 24,24));
+                    this.setIcon(oapp.getIconSet().getRegularIcon(texto, (int)iconDimension.getWidth(),(int)iconDimension.getHeight()));
                     this.setText(command);
                 }
                 
@@ -188,6 +192,5 @@ public class OleButton extends JButton {
         super.setPreferredSize(d);
         OleApplication oapp = (OleApplication) parent;
         this.setIcon(oapp.getIconSet().getRegularIcon(texto, d.width, d.height));
-
     }
 }

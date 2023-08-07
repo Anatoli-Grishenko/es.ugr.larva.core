@@ -6,9 +6,9 @@
 package agents;
 
 import ai.Mission;
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.Json;
+import JsonObject.JsonObject;
+import JsonObject.WriterConfig;
 import jade.lang.acl.ACLMessage;
 import world.Thing;
 import world.ThingSet;

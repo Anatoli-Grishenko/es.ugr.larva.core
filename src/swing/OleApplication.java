@@ -118,7 +118,7 @@ public abstract class OleApplication extends OleFrame {
                 pHeader = new JPanel() {
                     @Override
                     public void paintComponent(Graphics g) {
-                        g.drawImage(watermarkHeader.getMap(), 0, 0, watermarkHeader.getWidth(), watermarkHeader.getHeight(), pHeader);
+                        g.drawImage(watermarkHeader.getColorImage(), 0, 0, watermarkHeader.getWidth(), watermarkHeader.getHeight(), pHeader);
                     }
                 };
             } catch (IOException ex) {

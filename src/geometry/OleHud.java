@@ -5,7 +5,7 @@
  */
 package geometry;
 
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -133,7 +133,7 @@ public class OleHud extends OleSensor {
             return this;
         }
         if (myDash.getMyDecoder().getWorldMap() != null) {
-            scale = viewPort.getWidth() / this.myDash.getMyDecoder().getWorldMap().getMap().getWidth();
+            scale = viewPort.getWidth() / this.myDash.getMyDecoder().getWorldMap().getColorImage().getWidth();
         }
         g.setColor(Color.WHITE);
         g.draw(screenPort);
@@ -339,7 +339,7 @@ public class OleHud extends OleSensor {
         p.addPoint(pHead.getXInt(), pHead.getYInt());
         g.draw(p);
 //        } else {
-//            g.drawImage(sprites.get(0).getMap(), center.getXInt() - 18, center.getYInt() - 12, 36, 36, null);
+//            g.drawImage(sprites.get(0).getColorImage(), center.getXInt() - 18, center.getYInt() - 12, 36, 36, null);
 //
 //        }
         g.clip(screenPort);
@@ -455,7 +455,7 @@ public class OleHud extends OleSensor {
 //            }
 
 //        System.out.print("\n\nHud " + (this.countHud++) + "\n\n");
-        g.drawImage(terrain.getMap(), screenPort.x + 10, viewPort.height - 90, null);
+        g.drawImage(terrain.getColorImage(), screenPort.x + 10, viewPort.height - 90, null);
         g.setColor(Color.WHITE);
         g.drawRect(screenPort.x + 9, viewPort.height - 91, terrain.getWidth() + 2, terrain.getHeight() + 2);
 //        System.out.print("\n\nTerrain " + (this.countTerrain++) + "\n\n");

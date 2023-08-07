@@ -5,11 +5,9 @@
  */
 package data;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import static java.lang.Enum.valueOf;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
+import JsonObject.JsonValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +17,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
+import javax.xml.bind.annotation.W3CDomHandler;
 // JsonArray <--> ArrayList <--> Array <-- Enum
 
 /**
@@ -48,7 +47,7 @@ public class Transform {
             } else if (s instanceof Boolean) {
                 res.add((Boolean) s);
             } else if (s instanceof Ole) {
-                res.add((Ole) s);
+                res.add((JsonObject) s);    //////////////////////////////////////////
             } else {
                 res.add((String) s.toString());
             }
@@ -88,6 +87,12 @@ public class Transform {
                 res.add(jsv.asString());
             }
         }
+        return res;
+    }
+
+    public static ArrayList<String> toArrayListString(String what) {
+        ArrayList<String> res = new ArrayList();
+        res.add(what);
         return res;
     }
 

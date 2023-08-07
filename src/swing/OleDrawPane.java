@@ -38,6 +38,7 @@ public abstract class OleDrawPane extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         myg = (Graphics2D) g;
+
         drawer.accept(myg);
     }
 

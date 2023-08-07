@@ -5,8 +5,8 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonValue;
+import JsonObject.JsonArray;
+import JsonObject.JsonValue;
 import java.util.ArrayList;
 
 /**

@@ -5,16 +5,19 @@
  */
 package telegram2;
 
+import crypto.Keygen;
 import data.OleFile;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
+import map2D.Map2DColor;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import static org.telegram.telegrambots.meta.api.methods.ParseMode.HTML;
+import org.telegram.telegrambots.meta.api.methods.send.SendAnimation;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -189,13 +192,67 @@ public class Bot extends TelegramLongPollingBot {
             msgTelegram.setText(message);
             msgTelegram.setParseMode(HTML);
 //            if (feed.getKeyboardID() != null) {
-            if (ContextKeyboard.get(cid)!= null) {
+            if (ContextKeyboard.get(cid) != null) {
                 msgTelegram.setReplyMarkup(getKeyboard(ContextKeyboard.get(cid)).getKeyboard());
             }
             try {
                 this.execute(msgTelegram);
             } catch (Exception ex) {
                 System.err.println("Exception " + ex.toString());
+            }
+        }
+    }
+
+    public void sendFeed(Long cid, String message, OleFile doc, OleFile photo) throws Exception {
+        SendMessage msgTelegram;
+        SendPhoto picTelegram;
+        SendAnimation gifTelegram;
+
+        if (photo != null) {
+            Map2DColor m2show = new Map2DColor();
+            String k = Keygen.getHexaKey();
+            photo.saveAsFile("./downloads/", k, true);
+
+            InputFile fi = new InputFile();
+            if (photo.getFileName().endsWith("png")) {
+                fi.setMedia(new File("./downloads/" + k + ".png"));
+                picTelegram = new SendPhoto();
+                picTelegram.setChatId("" + cid);
+                picTelegram.setPhoto(fi);
+                picTelegram.setParseMode(ParseMode.HTML);
+                picTelegram.setCaption(message);
+                if (ContextKeyboard.get(cid) != null) {
+                    picTelegram.setReplyMarkup(Keyboards.get(ContextKeyboard.get(cid)).getKeyboard());
+                }
+                this.execute(picTelegram);
+            } else if (photo.getFileName().endsWith("gif")) {
+                fi.setMedia(new File("./downloads/" + k + ".gif"));
+                gifTelegram = new SendAnimation();
+                gifTelegram.setChatId("" + cid);
+                gifTelegram.setAnimation(fi);
+                gifTelegram.setParseMode(ParseMode.HTML);
+                gifTelegram.setCaption(message);
+                if (ContextKeyboard.get(cid) != null) {
+                    gifTelegram.setReplyMarkup(Keyboards.get(ContextKeyboard.get(cid)).getKeyboard());
+                }
+                this.execute(gifTelegram);
+            }
+
+        } else if (doc != null) {
+
+        } else if (message != null) {
+            msgTelegram = new SendMessage();
+            msgTelegram.setChatId("" + cid);
+            msgTelegram.setText(message);
+            msgTelegram.setParseMode(HTML);
+//            if (feed.getKeyboardID() != null) {
+            if (ContextKeyboard.get(cid) != null) {
+                msgTelegram.setReplyMarkup(getKeyboard(ContextKeyboard.get(cid)).getKeyboard());
+            }
+            try {
+                this.execute(msgTelegram);
+            } catch (Exception ex) {
+                System.err.println("Exception sending "+message+ ex.toString());
             }
         }
     }

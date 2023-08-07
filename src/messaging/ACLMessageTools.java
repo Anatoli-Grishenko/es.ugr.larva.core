@@ -5,8 +5,8 @@
  */
 package messaging;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.Json;
+import JsonObject.JsonObject;
 import crypto.Cryptor;
 import static crypto.Keygen.getHexaKey;
 import static disk.Logger.trimString;

@@ -5,8 +5,8 @@
  */
 package swing;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
 import geometry.Point3D;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -288,7 +288,7 @@ public class AirTrafficControl extends MyDrawPane {
             preDecorateMap(g);
         }
         System.out.println("   Map repaint");
-          g.drawImage(m2dMap.getMap(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
+          g.drawImage(m2dMap.getColorImage(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
         if (redecorate) {
             postDecorateMap(g);
         }

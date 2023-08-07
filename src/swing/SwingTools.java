@@ -5,7 +5,7 @@
  */
 package swing;
 
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;

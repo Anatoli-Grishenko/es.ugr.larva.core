@@ -5,14 +5,11 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
-import crypto.Keygen;
+
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
+import JsonObject.WriterConfig;
 import static data.Ole.classToOle;
-import static data.Ole.getAllFields;
-import static data.Ole.objectToOle;
 import static data.Transform.isPrimitiveObject;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Array;
@@ -22,127 +19,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import javax.swing.JFrame;
 import swing.OleApplication;
 import swing.OleDialog;
-import swing.SwingTools;
 
-//public class OleConfig extends Ole {
-//
-//    private void cleanUp() {
-////        for (String n : new ArrayList<String>(names())) {
-////            if (get(n) != null) {
-////                if (n.equals(oletype.OLEMETA.name())) {
-////                    remove(n);
-////                }
-////            }
-////        }
-//    }
-//
-//    public OleConfig() {
-//        super();
-//        cleanUp();
-//        init();
-//    }
-//
-//    public OleConfig(Ole o) {
-//        super(o);
-//        cleanUp();
-//        init();
-//    }
-//
-//    public OleConfig(JsonObject jso) {
-//        super(jso);
-//        cleanUp();
-//        init();
-//    }
-//
-//    public OleConfig(JsonValue jso) {
-//        super(jso.asObject());
-//        init();
-//    }
-//
-//    public void init() {
-//        setType(oletype.OLECONFIG.name());
-//        cleanUp();
-////        setField("options", new Ole());
-////        setField("properties", new Ole());
-//
-//    }
-//
-//    //--------------------
-//    public OleConfig getProperties() {
-//        if (getProperties().getFieldList().size() != 0) {
-//            return new OleConfig(getOle("properties"));
-//        } else {
-//            return null;
-//        }
-//    }
-//
-//    public OleConfig getProperties(String sfield) {
-//        return new OleConfig(getProperties().getOle(sfield));
-//    }
-//
-//    public OleConfig getOptions() {
-//        if (get("options") != null) {
-//            return new OleConfig(getOle("options"));
-//        } else {
-//            return this;
-//        }
-//    }
-//
-////    @Override
-////    public List<String> getFieldList() {
-////        return names();
-////    }
-////    
-//    protected List<String> getTabList() {
-//        OleConfig options = getOptions();
-//        ArrayList<String> res = new ArrayList();
-//        for (String s : options.getFieldList()) {
-//            if (options.getFieldType(s).equals(oletype.OLE.name())) {
-//                res.add(s);
-//            }
-//        }
-//        return res;
-//    }
-////--------------------------------
-//
-//    public int numTabs() {
-//        return getTabList().size();
-//    }
-//
-//    public List<String> getAllTabNames() {
-//        ArrayList<String> res = new ArrayList();
-//        if (numTabs() == 0) {
-//            res.add("Options");
-//        } else {
-//            res = new ArrayList(this.getTabList());
-//        }
-//        return res;
-//    }
-//
-//    public OleConfig getTab(String stab) {
-//        if (numTabs() == 0) {
-//            return getOptions();
-//        } else if (getAllTabNames().contains(stab)) {
-//            return new OleConfig(getOptions().get(stab));
-//        } else {
-//            return null;
-//        }
-//    }
-//
-//    public OleConfig getArrayConf(String field) {
-//        OleConfig ores = new OleConfig();
-//        ores.set("options", get(field).asArray());
-//        return ores;
-//    }
-//
-//    public List<String> getAllTabFields(String stab) {
-//        ArrayList<String> res = new ArrayList();
-//        return getTab(stab).getFieldList();
-//    }
 public class OleConfig extends Ole {
 
     public OleConfig() {
@@ -680,8 +559,8 @@ public class OleConfig extends Ole {
 // */
 //package data;
 //
-//import com.eclipsesource.json.JsonObject;
-//import com.eclipsesource.json.JsonValue;
+//import JsonObject.JsonObject;
+//import JsonObject.JsonValue;
 //import java.util.ArrayList;
 //import java.util.List;
 //import javax.swing.JFrame;

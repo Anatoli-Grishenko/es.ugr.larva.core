@@ -13,7 +13,10 @@ import data.OleFile;
  */
 public class TelegramFeed {
     protected String cid;
-    protected String choice, message, keyboardID, context;
+    protected String choice, 
+            message, 
+            keyboardID,
+            context;
     protected OleFile oFile;
     
     public TelegramFeed(String mycid) {

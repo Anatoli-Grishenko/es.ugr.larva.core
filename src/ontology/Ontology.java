@@ -5,8 +5,8 @@
  */
 package ontology;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.JsonObject;
+import JsonObject.WriterConfig;
 import java.util.HashMap;
 import java.util.Map.Entry;
 

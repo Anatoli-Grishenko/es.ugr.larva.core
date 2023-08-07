@@ -9,6 +9,12 @@ import geometry.Point3D;
 import geometry.SimpleVector3D;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import static java.awt.Font.BOLD;
+import static java.awt.Font.PLAIN;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,11 +22,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.formats.tiff.TiffImageParser;
+import org.apache.commons.imaging.formats.tiff.TiffImagingParameters;
+import swing.SwingTools;
+import tools.StringTools;
+import static tools.StringTools.cureFilename;
 
 /**
  *
@@ -40,12 +54,17 @@ import javax.swing.JOptionPane;
  */
 public class Map2DColor {
 
+    public static enum Channel {
+        RED, GREEN, BLUE
+    };
     public static final Color BADVALUE = new Color(100, 0, 0);
     public static final int MAXLEVEL = 255, MINLEVEL = 0;
     protected BufferedImage _map;
     protected int _lmax, _lmin;
     protected double k = 2.261566516;
-
+    protected Color penColor;
+    protected Font font;
+    Graphics myG;
     /**
      *
      * Default builder
@@ -53,6 +72,8 @@ public class Map2DColor {
     public Map2DColor() {
         _map = null;
         _lmax = _lmin = -1;
+        penColor = Color.GREEN;
+        font = new Font("Monospaced", 12, PLAIN);
     }
 
     /**
@@ -64,6 +85,9 @@ public class Map2DColor {
     public Map2DColor(int width, int height) {
         _lmax = _lmin = -1;
         _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        myG = this._map.getGraphics();
+        penColor = Color.GREEN;
+        font = new Font("Arial", 12, Font.BOLD);
     }
 
     /**
@@ -77,11 +101,14 @@ public class Map2DColor {
     public Map2DColor(int width, int height, int level) {
         _lmax = _lmin = -1;
         _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        myG = this._map.getGraphics();
         for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, new Color(level, level, level));
             }
         }
+        penColor = Color.GREEN;
+        font = new Font("Monospaced", 12, PLAIN);
     }
 
     /**
@@ -94,27 +121,49 @@ public class Map2DColor {
     public Map2DColor(int width, int height, Color c) {
         _lmax = _lmin = -1;
         _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < getWidth(); x++) {
+           myG = this._map.getGraphics();
+    for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, c);
             }
         }
+        penColor = Color.GREEN;
+        font = new Font("Monospaced", 12, PLAIN);
     }
 
     public Map2DColor(BufferedImage img) {
         _lmax = _lmin = -1;
         _map = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < getWidth(); x++) {
+          myG = this._map.getGraphics();
+      for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, new Color(img.getRGB(x, y)));
             }
         }
+        penColor = Color.GREEN;
+        font = new Font("Monospaced", 12, PLAIN);
+    }
+
+    public Map2DColor(Map2DGrayscale red, Map2DGrayscale green,Map2DGrayscale blue) {
+        _lmax = _lmin = -1;
+        _map = new BufferedImage(red.getWidth(), red.getHeight(), BufferedImage.TYPE_INT_RGB);
+                myG = this._map.getGraphics();
+for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                setColor(x, y, new Color(red.getLevel(x, y),green.getLevel(x,y),
+                blue.getLevel(x, y)));
+            }
+        }
+        penColor = Color.GREEN;
+        font = new Font("Monospaced", 12, PLAIN);
     }
 
     public Map2DColor readFrom(byte[] stream) {
         try {
             InputStream in = new ByteArrayInputStream(stream);
             BufferedImage bufImage = ImageIO.read(in);
+            penColor = Color.GREEN;
+            font = new Font("Monospaced", 12, PLAIN);
             return new Map2DColor(bufImage);
         } catch (Exception ex) {
             return new Map2DColor();
@@ -150,6 +199,7 @@ public class Map2DColor {
         File f;
         f = new File(filename);
         this._map = ImageIO.read(f);
+        myG = this._map.getGraphics();
         _lmax = _lmin = -1;
         normalize();
 //        this.getExtremeHeights();
@@ -161,9 +211,28 @@ public class Map2DColor {
         File f;
         f = new File(filename);
         this._map = ImageIO.read(f);
+        myG = this._map.getGraphics();
         _lmax = _lmin = -1;
-
+        System.out.println("MAP=" + _map.getType());
         return this;
+    }
+
+    public Map2DColor loadFIT(String filename) throws IOException {
+        final TiffImagingParameters params = new TiffImagingParameters();
+
+        try {
+            this._map = new TiffImageParser().getBufferedImage(new File(filename), params);
+        myG = this._map.getGraphics();
+            
+            return this;
+        } catch (ImageReadException ex) {
+            return null;
+        }
+    }
+
+    public void setMap(BufferedImage _map) {
+        this._map = _map;
+        myG = this._map.getGraphics();
     }
 
     public Map2DColor shiftLeft(int pix) {
@@ -207,7 +276,7 @@ public class Map2DColor {
     public Map2DColor saveMap(String filename) throws IOException {
         File f;
 
-        f = new File(filename);
+        f = new File(cureFilename(filename));
 //        for (int y = 0; y < getHeight(); y++) {
 //            for (int x = 0; x < getWidth(); x++) {
 //                Color c = new Color(getStepLevel(x, y), getStepLevel(x, y), getStepLevel(x, y));
@@ -272,8 +341,87 @@ public class Map2DColor {
         }
     }
 
-    public BufferedImage getMap() {
+    public BufferedImage getColorImage() {
         return _map;
+    }
+
+    public BufferedImage getGrayscaleImage() {
+        BufferedImage mapgr = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                Color c = this.getColor(x, y);
+                mapgr.setRGB(x, y, _map.getRGB(x, y));
+            }
+        }
+        return mapgr;
+    }
+
+//    public Map2DColor getChannel(Channel channel) {
+//        Map2DColor mapgr = new Map2DColor(getWidth(), getHeight());
+//        for (int x = 0; x < getWidth(); x++) {
+//            for (int y = 0; y < getHeight(); y++) {
+//                Color c = this.getColor(x, y);
+//                if (channel == Channel.RED) {
+//                    mapgr.setLevel(x, y, c.getRed());
+//                } else if (channel == Channel.GREEN) {
+//                    mapgr.setLevel(x, y, c.getGreen());
+//                } else {
+//                    mapgr.setLevel(x, y, c.getBlue());
+//                }
+//            }
+//        }
+//        return mapgr;
+//    }
+    public Map2DGrayscale getChannel(Channel channel) {
+        Map2DGrayscale mapgr = new Map2DGrayscale(getWidth(), getHeight());
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                Color c = this.getColor(x, y);
+                if (channel == Channel.RED) {
+                    mapgr.setLevel(x, y, c.getRed());
+                } else if (channel == Channel.GREEN) {
+                    mapgr.setLevel(x, y, c.getGreen());
+                } else {
+                    mapgr.setLevel(x, y, c.getBlue());
+                }
+            }
+        }
+        return mapgr;
+    }
+
+    public Map2DColor toGrayscale() {
+        Map2DColor gray = new Map2DColor(getWidth(), getHeight());
+        BufferedImage mapgr = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                Color c = this.getColor(x, y);
+                mapgr.setRGB(x, y, _map.getRGB(x, y));
+            }
+        }
+        gray.setMap(mapgr);
+        return gray;
+    }
+
+    public Map2DColor resize(int width, int height) {
+        int realw, realh;
+        if (width <= 0) {
+            realh = height;
+            realw = (int) (getWidth() * height * 1.0 / getHeight());
+        } else if (height <= 0) {
+            realw = width;
+            realh = (int) (getHeight() * width * 1.0 / getWidth());
+        } else {
+            realw = width;
+            realh = height;
+        }
+        Map2DColor res = new Map2DColor(realw, realh);
+        BufferedImage _map2 = new BufferedImage(realw, realh, res.getColorImage().getType());
+        Image mapres = _map.getScaledInstance(realw, realh, Image.SCALE_SMOOTH);
+        Graphics2D g2d = _map2.createGraphics();
+        g2d.drawImage(mapres, 0, 0, null);
+        g2d.dispose();
+        res.setMap(_map2);
+        return res;
     }
 
     /**
@@ -615,15 +763,15 @@ public class Map2DColor {
         return res;
     }
 
-    public Map2DColor reduce(int n) {
-        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
-        for (int x = 0; x < getWidth(); x++) {
-            for (int y = 0; y < getHeight(); y++) {
-                res.setLevel(x, y, this.getRawLevel(x, y) >> n << n);
-            }
-        }
-        return res;
-    }
+//    public Map2DColor reduce(int n) {
+//        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
+//        for (int x = 0; x < getWidth(); x++) {
+//            for (int y = 0; y < getHeight(); y++) {
+//                res.setLevel(x, y, this.getRawLevel(x, y) >> n << n);
+//            }
+//        }
+//        return res;
+//    }
 
     public Map2DColor threshold(int level) {
         Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
@@ -681,8 +829,8 @@ public class Map2DColor {
     public String toString() {
         OleFile of = new OleFile();
         try {
-            saveMap("tmp.png");
-            of.loadFile("tmp.png");
+            saveMap("export-map2dcolor.png");
+            of.loadFile("export-map2dcolor.png");
             return of.toPlainJson().toString();
         } catch (IOException ex) {
             return null;
@@ -695,7 +843,7 @@ public class Map2DColor {
         try {
             of.set(serial);
             of.saveFile("./");
-            this.loadMapRaw("./" + of.getFileName());
+            this.loadMapRaw("./"+of.getFileName());
             return this;
         } catch (IOException ex) {
             return null;
@@ -703,14 +851,46 @@ public class Map2DColor {
 
     }
 
-    public void show() {
-        
-        JLabel label = new JLabel(new ImageIcon(getMap()));
-        JOptionPane.showMessageDialog(null, label, "Word Debaser!", JOptionPane.PLAIN_MESSAGE, null);
-//        JFrame frame = new JFrame();
-//        frame.getContentPane().setLayout(new FlowLayout());
-//        frame.getContentPane().add(new JLabel(new ImageIcon(this.getMap())));
-//        frame.pack();
-//        frame.setVisible(true);
+    public Map2DColor drawText(int x, int y, String text) {
+        myG.setColor(getPenColor());
+        myG.setFont(myG.getFont().deriveFont(BOLD));
+        myG.drawString(text, x, y);
+
+        return this;
+    }
+
+    public Color getPenColor() {
+        return penColor;
+    }
+
+    public void setPenColor(Color penColor) {
+        this.penColor = penColor;
+    }
+
+    public Font getFont() {
+        return font;
+    }
+
+    public void setFont(Font font) {
+        this.font = font;
+    }
+
+    public void showAndWait(String title) {
+        try {
+            JLabel label = new JLabel(new ImageIcon(resize(512, -1).getColorImage()));
+            JOptionPane.showMessageDialog(null, label, title, JOptionPane.PLAIN_MESSAGE, null);
+        } catch (Exception ex) {
+            SwingTools.Error("Sorry. The image cannot be displayed at this moment");
+        }
+    }
+
+    public void show(String title) {
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                showAndWait(title);
+            }
+        });
+        t.start();
+
     }
 }

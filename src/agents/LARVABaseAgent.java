@@ -6,6 +6,7 @@
 package agents;
 
 import crypto.Keygen;
+import data.Ole;
 import data.OleFile;
 import data.OlePassport;
 import data.Transform;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import messaging.ACLMPayload;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.ACLMID;
 import tools.TimeHandler;
@@ -118,6 +120,23 @@ public class LARVABaseAgent extends Agent {
     protected boolean isProfiling = false;
     protected static Semaphore smDF = new Semaphore(1);
 
+    protected static ACLMessage attachPayload(ACLMessage msg, ACLMPayload payload) {
+        Class c = payload.getClass();
+        msg.addUserDefinedParameter(ACLMPayload.Payload.PAYLOADCLASS.name(), c.getName());
+        msg.addUserDefinedParameter(ACLMPayload.Payload.PAYLOAD.name(), Ole.objectToOle(payload).toPlainJson().toString());
+        return msg;
+    }
+
+    protected static Object dettachPayload(ACLMessage msg) {
+        Object res = null;
+//        if (msg.getUserDefinedParameter(ACLMPayload.Payload.PAYLOADCLASS.name()) != null) {
+//            Class c;
+//            c= Class.forName(msg.getUserDefinedParameter(ACLMPayload.Payload.PAYLOADCLASS.name()));
+//            msg.addUserDefinedParameter("payload", Ole.objectToOle(payload).toPlainJson().toString());
+//        }
+        return res;
+    }
+
     /**
      * Main constructor
      */
@@ -163,7 +182,6 @@ public class LARVABaseAgent extends Agent {
     }
 
     public void preExecute() {
-
 
     }
 
@@ -258,7 +276,7 @@ public class LARVABaseAgent extends Agent {
 //    public ArrayList<String> BDFGetAllProvidersOf(String service) {
 //        ArrayList<String> res = new ArrayList<>();
 //        DFAgentDescription list[];
-//        list = this.DFQueryAllProviders(service);
+//        list = this.LARVADFQueryAllProviders(service);
 //        if (list != null && list.length > 0) {
 //            for (DFAgentDescription list1 : list) {
 //                if (!res.contains(list1.getName().getLocalName())) {
@@ -371,11 +389,12 @@ public class LARVABaseAgent extends Agent {
         prevServices.removeAll(new ArrayList(Transform.toArrayList(services)));
         return LARVADFSetMyServices(Transform.toArrayString(prevServices));
     }
+
     public synchronized boolean LARVADFRemoveAllMyServices() {
         ArrayList<String> prevServices;
-        Info("Removing all services " );
+        Info("Removing all services ");
         prevServices = this.LARVADFGetAllServicesProvidedBy(getLocalName());
-        if (!prevServices.isEmpty())  {
+        if (!prevServices.isEmpty()) {
             LB_DFRemoveAllMyServices();
         }
         return true;
@@ -410,23 +429,24 @@ public class LARVABaseAgent extends Agent {
     public void deactivateMyNetworkProfiler() {
         getMyNetworkProfiler().setActive(true);
     }
-    
+
     public NetworkCookie getNewNetworkCookie() {
         NetworkCookie nc = new NetworkCookie();
         nc.setOwner(getLocalName());
-        nc.setSerie((int)getNCycles());
+        nc.setSerie((int) getNCycles());
         return nc;
     }
 
     protected ACLMessage LARVAcreateReply(ACLMessage incoming) {
         ACLMessage outgoing = incoming.createReply();
         outgoing.setSender(getAID());
-        if (Profiler.isProfiler(incoming)) {            
+        outgoing.setEncoding(incoming.getEncoding());
+        if (Profiler.isProfiler(incoming)) {
             NetworkCookie nc = Profiler.extractProfiler(incoming);
-            if (nc.gettReceive().length()!=0) {
+            if (nc.gettReceive().length() != 0) {
                 nc = getNewNetworkCookie();
             }
-                
+
             outgoing = Profiler.injectProfiler(outgoing, nc);
         }
         return outgoing;
@@ -442,7 +462,7 @@ public class LARVABaseAgent extends Agent {
             return;
         }
         //System.out.println(getLocalName() + ">>> REMOVEALLMYSERVICES");
-       
+
         try {
             DFService.deregister(this);
         } catch (FIPAException ex) {

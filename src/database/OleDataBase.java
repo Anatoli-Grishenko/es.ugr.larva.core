@@ -5,8 +5,7 @@
  */
 package database;
 
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.JsonValue;
 import data.Ole;
 import data.OleQuery;
 import data.OleTable;

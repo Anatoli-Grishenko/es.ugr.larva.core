@@ -240,15 +240,15 @@ public class TimeHandler {
         if (secs < 20) {
             res = "" + secs + " s"; //Less than one minute ago";
         } else if (secs < 60) {
-            res = " < 1 min"; //Less than one minute ago";
+            res = " menos de 1 min"; //Less than one minute ago";
         } else if (secs < 3600) {
-            res = "< " + secs / 60 + " mins"; //Less than "+secs/60+" minutes ago";
+            res = "menos de " + secs / 60 + " mins"; //Less than "+secs/60+" minutes ago";
         } else if (secs < 24 * 3600) {
-            res = "< " + secs / 3600 + " hours";//"Less than "+secs/3600+" hours ago";
+            res = "hasta " + secs / 3600 + " hours";//"Less than "+secs/3600+" hours ago";
         } else if (secs < 24 * 3600 * 7) {
-            res = "< " + secs / (3600 * 24) + " days";//"Less than "+secs/(3600*24)+" days ago";
+            res = "hasta " + secs / (3600 * 24) + " days";//"Less than "+secs/(3600*24)+" days ago";
         } else {
-            res = "< " + secs / (3600 * 24 * 7) + " weeks";
+            res = "hasta " + secs / (3600 * 24 * 7) + " weeks";
         }
         return res;
     }

@@ -5,30 +5,20 @@
  */
 package data;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.*;
 import crypto.Cryptor;
 import crypto.Keygen;
-import data.Transform;
 import static data.Transform.isArrayObject;
 import static data.Transform.isClassObject;
 import static data.Transform.isEnumObject;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -36,20 +26,13 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.function.BiConsumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.swing.JFrame;
-import org.json.XML;
-import swing.OleApplication;
-import swing.OleDialog;
-import swing.SwingTools;
 import static swing.SwingTools.getFileResource;
 import tools.TimeHandler;
 import zip.ZipTools;
 import static data.Transform.isPrimitiveObject;
+import org.json.XML;
+import tools.ExceptionHandler;
+import tools.StringTools;
 
 /**
  * Generic class for exchanging complex objects and disk files by using JSon as
@@ -128,15 +111,14 @@ public class Ole extends JsonObject {
 
     }
 
-    /**
-     * @brief Import a plain JsonObject into a valie Ole Object
-     * @param jsole The JsonObject
-     * @return A valid importation to a Ole Object
-     */
-    public static Ole Json2Ole(JsonObject jsole) {
-        return new Ole(jsole);
-    }
-
+//    /**
+//     * @brief Import a plain JsonObject into a valie Ole Object
+//     * @param jsole The JsonObject
+//     * @return A valid importation to a Ole Object
+//     */
+//    public static Ole Json2Ole(JsonObject jsole) {
+//        return new Ole(jsole);
+//    }
     protected static JsonValue Ole2JsonValue(JsonValue jsobject) {
         JsonValue jsvres;
         if (jsobject.isArray()) {
@@ -168,23 +150,22 @@ public class Ole extends JsonObject {
         return Ole2JsonValue(odata).asObject();
     }
 
-    /**
-     * @brief Gives all fieldnames included in a, poissible nested, JsonObject
-     * @param jso the JsonObject
-     * @return A list of all field names
-     */
-    public static List<String> allNames(JsonObject jso) {
-        List<String> res = new ArrayList();
-        for (String s : jso.names()) {
-            if (!jso.get(s).isObject()) {
-                res.add(s);
-            } else {
-                res.addAll(allNames(jso.get(s).asObject()));
-            }
-        }
-        return res;
-    }
-
+//    /**
+//     * @brief Gives all fieldnames included in a, poissible nested, JsonObject
+//     * @param jso the JsonObject
+//     * @return A list of all field names
+//     */
+//    public static List<String> allNames(JsonObject jso) {
+//        List<String> res = new ArrayList();
+//        for (String s : jso.names()) {
+//            if (!jso.get(s).isObject()) {
+//                res.add(s);
+//            } else {
+//                res.addAll(allNames(jso.get(s).asObject()));
+//            }
+//        }
+//        return res;
+//    }
     //////////////////////////////////////////// Constructors
     /**
      * @brief Basic constructor.
@@ -200,8 +181,9 @@ public class Ole extends JsonObject {
      */
     public Ole(JsonObject jsole, boolean mirror) {
         super(jsole, mirror);
-        this.merge(jsole);
-        fromJson(jsole);
+        Init();
+//        this.merge(jsole);
+//        fromJson(jsole);
     }
 
     /**
@@ -289,6 +271,8 @@ public class Ole extends JsonObject {
     }
 
     protected Ole fromPlainJson(JsonObject jsole) {
+        clear();
+        Fuse(jsole);
         Init();
 //        set(jsole.toString());
 //        for (String jsf : jsole.names()) {
@@ -315,9 +299,8 @@ public class Ole extends JsonObject {
     }
 
     protected Ole fromFullJson(JsonObject jsole) {
-//        clear();
-//        fromPlainJson(jsole);
-        set(oletype.OLEMETA.name(), jsole.get(oletype.OLEMETA.name()).asObject());
+        clear();
+        Fuse(jsole);
         return this;
     }
 
@@ -345,30 +328,25 @@ public class Ole extends JsonObject {
     }
 
     public Ole parse(String s) {
-        try {
-            JsonObject jsole;
-            String definit;
-            if (this.isEncrypted()) {
-                definit = myCryptor.deCrypt64(s);
-            } else {
-                definit = s;
-            }
-
-            if (definit.charAt(0) == '<') // /el string es XML
-            {
-                definit = XML.toJSONObject(definit).toString();
-            }
-            jsole = Json.parse(definit).asObject();
-            if (jsole.get(oletype.OLEMETA.name()) != null) {
-                return fromFullJson(jsole);
-            } else {
-                return fromPlainJson(jsole);
-            }
-
-        } catch (Exception ex) {
-            System.err.println(ex.toString());
-            return null;
+        JsonObject jsole;
+        String definit;
+        if (this.isEncrypted()) {
+            definit = myCryptor.deCrypt64(s);
+        } else {
+            definit = s;
         }
+
+        if (definit.charAt(0) == '<') // /el string es XML
+        {
+            definit = XML.toJSONObject(definit).toString();
+        }
+        jsole = Json.parse(definit).asObject();
+        if (jsole.get(oletype.OLEMETA.name()) != null) {
+            return fromFullJson(jsole);
+        } else {
+            return fromPlainJson(jsole);
+        }
+
     }
 //////////////////////////////////////////// Fields
 
@@ -586,6 +564,7 @@ public class Ole extends JsonObject {
      * @return A reference to the instance
      */
     public Ole loadFile(String fullfilename) {
+        fullfilename = StringTools.cureFilename(fullfilename);
         if (fullfilename.startsWith("/resources")) {
             loadFile(getFileResource(fullfilename.substring(1)));
             return this;
@@ -663,7 +642,7 @@ public class Ole extends JsonObject {
     public boolean saveAsFile(String outputfolder, String newname, boolean plainJson) {
         PrintWriter outfile;
         try {
-            outfile = new PrintWriter(new BufferedWriter(new FileWriter(outputfolder + "/" + newname)));
+            outfile = new PrintWriter(new BufferedWriter(new FileWriter(StringTools.cureFilename(outputfolder + "/" + newname))));
         } catch (IOException ex) {
             return false;
         }
@@ -779,6 +758,8 @@ public class Ole extends JsonObject {
      */
     public final Ole setField(String fieldname, Object o) {
         addField(fieldname);
+        if (o == null)
+            o= "";
         if (o.getClass().getSimpleName().equals("int")
                 || o.getClass().getSimpleName().equals("Integer")) {
             set(fieldname, (int) o);
@@ -790,122 +771,17 @@ public class Ole extends JsonObject {
             set(fieldname, (boolean) o);
         } else if (o.getClass().getSimpleName().equals("String")) {
             set(fieldname, (String) o);
+        } else if (Transform.isJsonArray(o)) {
+            set(fieldname, (JsonArray) o);
         } else if (isArrayObject(o)) {
             set(fieldname, Transform.toJsonArray(o));
         } else if (Transform.isCollectionObject(o)) {
             set(fieldname, Transform.toJsonArray(o));
-        } else if (Transform.isJsonArray(o)) {
-            set(fieldname, (JsonArray) o);
         } else if (Transform.isOleObject(o)) {
-            set(fieldname, Transform.toJsonArray(o));
+            set(fieldname, (Ole) o);
         }
         return this;
     }
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, String value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
-//
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, int value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
-//
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, double value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
-//
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, boolean value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
-//
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list. The elements of the array can only be those
-//     * supported by Ole, otherwise, they are stored as their toString().
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, ArrayList<Object> value) {
-//        addField(fieldname);
-//        set(fieldname, Transform.toJsonArray(value));
-//        return this;
-//    }
-//
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list. The elements of the array can only be those
-//     * supported by Ole, otherwise, they are stored as their toString().
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, JsonArray value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
-//    /**
-//     * It sets the value of the field
-//     *
-//     * @param fieldname The name of the field. If the field does not exist, it
-//     * adds it to the fields list
-//     * @param value Value of the field. It can be any of the types supported by
-//     * Ole
-//     * @return A reference to the instance
-//     */
-//    public final Ole setField(String fieldname, Ole value) {
-//        addField(fieldname);
-//        set(fieldname, value);
-//        return this;
-//    }
 
     public final Ole addToField(String fieldname, String v) {
         if (get(fieldname).isArray()) {
@@ -942,25 +818,6 @@ public class Ole extends JsonObject {
         return this;
     }
 
-//    public Ole setFieldGeneric(String field, Object s) {
-//        if (s instanceof String) {
-//            setField(field, (String) s);
-//        } else if (s instanceof Integer) {
-//            setField(field, (Integer) s);
-//        } else if (s instanceof Double) {
-//            setField(field, (Double) s);
-//        } else if (s instanceof Boolean) {
-//            setField(field, (Boolean) s);
-//        } else if (s instanceof Enum) {
-////            String sc = ((<E extends <Enum E>> Class <E>) s).;
-////            setField(field, getEnumString(s));
-//        } else if (s instanceof Ole) {
-//            setField(field, (Ole) s);
-//        } else {
-//            setField(field, (String) s.toString());
-//        }
-//        return this;
-//    }
     public Ole setFieldGeneric2(String field, Object s, Class c) {
         if (String.class.isInstance(s)) {
             setField(field, (String) s);
@@ -987,11 +844,6 @@ public class Ole extends JsonObject {
         return this;
     }
 
-//    public static 
-//            String getEnumString(Object o) {
-//        return ((<E extends Enum<E>>)o).
-//    }
-//
     public static <E extends Enum<E>>
             String getEnumString(Class<E> clazz, String s) {
         for (E en : EnumSet.allOf(clazz)) {
@@ -1002,29 +854,6 @@ public class Ole extends JsonObject {
         return null;
     }
 
-//    public void serialize(Object o, Class c) {
-//        Ole res = new Ole();
-//        String getterName;
-//        ArrayList<Field> myFields,
-//                fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
-//        myFields = fullFields;
-//        for (Field f : myFields) {
-//            try {
-//                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-//                Method getter = c.getDeclaredMethod(getterName);
-//                if (f.getType() == boolean.class
-//                        || f.getType() == int.class
-//                        || f.getType() == long.class
-//                        || f.getType() == double.class
-//                        || f.getType() == String.class) {
-//                    res.setFieldGeneric(f.getName(), getter.invoke(this));
-//                }
-//            } catch (Exception ex) {
-//            }
-//        }
-//        return res;
-//
-//    }
     public String forceFieldString(String field) {
         if (get(field) == null) {
             return null;
@@ -1148,32 +977,6 @@ public class Ole extends JsonObject {
         return "";
     }
 
-//    public static Ole toOle(AutoOle obj) {
-//        Ole res = new Ole();
-//        Class c = obj.myClass();
-//        ArrayList<Field> myFields, fullFields = new ArrayList(Transform.toArrayList(c.getDeclaredFields()));
-//        myFields = fullFields;
-//        for (Field f : myFields) {
-//            String getterName;
-//            if (f.getType() == boolean.class) {
-//                getterName = "is" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-//            } else {
-//                getterName = "get" + f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-//            }
-//            try {
-//                Method getter = c.getDeclaredMethod(getterName);
-//                if (f.getType() == boolean.class
-//                        || f.getType() == int.class
-//                        || f.getType() == long.class
-//                        || f.getType() == double.class
-//                        || f.getType() == String.class) {
-//                    res.setFieldGeneric(f.getName(), getter.invoke(obj));
-//                }
-//            } catch (Exception ex) {
-//            }
-//        }
-//        return res;
-//    }
     public static Ole toOle2(Object obj) {
         Ole res = new Ole();
         Class c = obj.getClass();

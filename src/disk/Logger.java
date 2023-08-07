@@ -5,7 +5,7 @@ import static console.Console.defText;
 import static console.Console.lightgreen;
 import static console.Console.lightred;
 import static console.Console.white;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -43,7 +43,7 @@ public class Logger {
             _echo, /// If true, it echoes everything on screen, otherwise is silent
             _tabular, /// If true, the echo is arranged as a tabulated output
             _overwrite;         /// If true, the log file on disk contains only the last run, otherwise it appends run after run
-    protected int _maxLength=255, /// If the logged message exceeds this length, it is trimmed
+    protected int _maxLength=-1, /// If the logged message exceeds this length, it is trimmed
             _textColor;             /// Color of the echoed texts
     protected PrintStream _outTo, ///  Default output stream for echoing messages. Std.out
             _errTo;                 /// Default output for errors. Std.err

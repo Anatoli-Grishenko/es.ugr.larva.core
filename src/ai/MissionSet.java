@@ -5,9 +5,9 @@
  */
 package ai;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
+import JsonObject.JsonValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 

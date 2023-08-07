@@ -6,7 +6,7 @@
 package world;
 
 import world.Thing.PROPERTY;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 
 /**
  *

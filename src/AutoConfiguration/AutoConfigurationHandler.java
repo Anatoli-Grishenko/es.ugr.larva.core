@@ -5,9 +5,9 @@
  */
 package AutoConfiguration;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
+import JsonObject.WriterConfig;
 import crypto.Cryptor;
 import data.Ole;
 import static data.Ole.classToOle;
@@ -15,13 +15,19 @@ import data.OleConfig;
 import data.OleSerializer;
 import data.Transform;
 import static data.Transform.isPrimitiveObject;
+import java.awt.Font;
+import static java.awt.Font.PLAIN;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.UIManager;
 import swing.SwingTools;
 import tools.ExceptionHandler;
 
@@ -37,18 +43,16 @@ public abstract class AutoConfigurationHandler {
     Cryptor myCryptor;
     Ole properties, controllers;
     ArrayList<Field> fullFields;
-    Object currentObject;
+//    Object currentObject;
     OleConfig currentObjectJSON;
     Method Validator;
     String name;
 
     public AutoConfigurationHandler(String myConfigFolder, Class myConfigType) {
-        SwingTools.initLookAndFeel("Light");
         configFolder = myConfigFolder;
-        configType = myConfigType;
+        configType = this.getClass(); //myConfigType;
         this.verbose = false;
-        properties = new Ole();
-        controllers = new Ole();
+        reset();
 //        currentObject = this;
 //        currentObjectJSON = this.toJson();
 //        fullFields = new ArrayList(Transform.toArrayList(myConfigType.getDeclaredFields()));
@@ -107,16 +111,18 @@ public abstract class AutoConfigurationHandler {
 //        }
     }
 
-    protected OleConfig reset() {
+    protected AutoConfigurationHandler reset() {
         properties = new Ole();
         controllers = new Ole();
-        currentObject = this;
-        currentObjectJSON = this.toJson();
+        try{
         initProperties();
-        return currentObjectJSON;
+        } catch (Exception ex) {
+            new ExceptionHandler(ex);
+        }
+        return this;
     }
 
-    protected void initProperties() {
+    protected void initProperties() throws Exception {
         fullFields = new ArrayList(Transform.toArrayList(getConfigType().getDeclaredFields()));
         if (getConfigType().isAnnotationPresent(OleSerializer.class)) {
             Ole oField = new Ole();
@@ -144,13 +150,9 @@ public abstract class AutoConfigurationHandler {
                         for (Method m : getConfigType().getDeclaredMethods()) {
                             if (m.getName().equals(selectWith)) {
                                 String values[];
-                                try {
-                                    values = (String[]) m.invoke(null);
-                                    oField.set("select", Transform.toJsonArray(values));
-                                } catch (Exception ex) {
-                                    new ExceptionHandler(ex);
-//                                    SwingTools.Error("Call to method " + m.getName() + " failed:\n" + ex.toString());
-                                }
+                                values = (String[]) m.invoke(null);
+                                oField.set("select", Transform.toJsonArray(values));
+
                             }
                         }
 
@@ -171,7 +173,7 @@ public abstract class AutoConfigurationHandler {
             }
             properties.set("control", controllers.toPlainJson());
         }
-        currentObjectJSON.set("properties", properties);
+//        currentObjectJSON.set("properties", properties);
     }
 
     public String getPasswd() {
@@ -240,7 +242,16 @@ public abstract class AutoConfigurationHandler {
     //
     // Configuration
     //
-    public boolean isConfiguration(String name) {
+//    public Object newInstance() {
+//        try {
+//            //        getConfigType().newInstance();
+//            return getConfigType().getDeclaredConstructor().newInstance();
+//        } catch (Exception ex) {
+//            new ExceptionHandler(ex);
+//        }
+//        return null;
+//    }
+    public boolean existsConfiguration(String name) {
         String fullFileName = getFullFileName(name);
         if (new File(fullFileName).exists()) {
             return true;
@@ -250,33 +261,33 @@ public abstract class AutoConfigurationHandler {
     }
 
     public boolean loadConfiguration(String name) {
-        OleConfig oleCfg = new OleConfig();
         try {
             String fullFileName = getFullFileName(name);
             try {
                 if (isVerbose()) {
                     System.out.println("Loading configuration from " + fullFileName);
                 }
-                if (!isConfiguration(name)) {
+                if (!existsConfiguration(name)) {
                     if (!SwingTools.Confirm("The config filename " + fullFileName + " does not exist yet.\nDo you want to create it right now?")) {
                         return false;
-                    }
-                    if (isEncrypted()) {
-                        oleCfg.onEncryption(myCryptor);
                     }
                     if (!saveConfiguration(name)) {
                         SwingTools.Error("Error while saving configuration " + name + " to disk");
                     }
                 }
                 if (isEncrypted()) {
-                    oleCfg.onEncryption(myCryptor);
+                    currentObjectJSON.onEncryption(myCryptor);
                 }
+                currentObjectJSON = new OleConfig();
                 currentObjectJSON.loadFile(fullFileName);
-                this.name = name;
+//                currentObject = newInstance();
+                setName(name);
+                fromJson(currentObjectJSON);
+//                currentObjectJSON.set("properties",this.properties);
                 return true;
             } catch (Exception ex) {
                 if (verbose) {
-                    SwingTools.Error("Faield to load configuration from " + fullFileName);
+                    SwingTools.Error("Failed to load configuration from " + fullFileName);
                 }
                 new ExceptionHandler(ex);
             }
@@ -286,9 +297,20 @@ public abstract class AutoConfigurationHandler {
         return false;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public boolean saveConfiguration(String name) {
         String fullFilename = this.getFullFileName(name);
-        reset();
+        currentObjectJSON = toJson();
+        if (isEncrypted()) {
+            currentObjectJSON.onEncryption(myCryptor);
+        }
         return currentObjectJSON.saveAsFile("./", fullFilename, true);
     }
 
@@ -301,8 +323,8 @@ public abstract class AutoConfigurationHandler {
     }
 
     public boolean editConfiguration() {
-        reset();
         Ole oControls = null, ocfgAux = null;
+        currentObjectJSON = toJson();
         if (currentObjectJSON.getProperties().get("control") != null) {
             oControls = currentObjectJSON.getOle("control");
         }
@@ -315,7 +337,6 @@ public abstract class AutoConfigurationHandler {
                     public void accept(Object o, ActionEvent t) {
                         validateDialog(o, t);
                     }
-
                 };
                 ocfgAux = currentObjectJSON.edit(null, consum);
             } catch (Exception ex) {
@@ -342,12 +363,9 @@ public abstract class AutoConfigurationHandler {
     }
 
     public void fromString(String s) {
-        Object o;
         try {
-            o = getConfigType().newInstance();
-            if (isVerbose()) {
-                System.out.println("Deserializing ");
-            }
+            Ole os = new Ole(s);
+            fromJson(os.toPlainJson());
 //            o = getConfigType().newInstance();
 //            o=Ole.oleToObject(new JsonObject().set(s), getConfigType());
 //            this = (getConfigType())o;
@@ -378,7 +396,7 @@ public abstract class AutoConfigurationHandler {
 
     public OleConfig toJson() {
 
-        OleConfig res = new OleConfig();
+        OleConfig res;
         OleConfig oOptions = new OleConfig(), oProp = new OleConfig();
 
         Class c = this.getClass();
@@ -400,9 +418,13 @@ public abstract class AutoConfigurationHandler {
                     Object oenum = f.get(this);
                     oOptions.setField(f.getName(), (String) oenum.toString());
                 } else if (f.getType().isArray()) {
+                    JsonArray jsa;
                     if (f.get(this) != null) {
-                        oOptions.setField(f.getName(), Transform.toJsonArray(f.get(this)));
+                        jsa = Transform.toJsonArray(f.get(this));
+                    } else {
+                        jsa = new JsonArray();
                     }
+                    oOptions.setField(f.getName(), Transform.toJsonArray(f.get(this)));
                 } else {
                     if (!f.getType().getTypeName().startsWith("java")) {
                         if (f.get(this) != null) {
@@ -413,11 +435,12 @@ public abstract class AutoConfigurationHandler {
                 }
             } catch (Exception ex) {
                 System.err.println(ex.toString());
+                new ExceptionHandler(ex);
             }
         }
         res = new OleConfig();
-
         res.set("options", oOptions.toPlainJson());
+        res.set("properties", this.properties);
         return res;
     }
 
@@ -440,7 +463,7 @@ public abstract class AutoConfigurationHandler {
         ArrayList<Field> fullFields = new ArrayList(Transform.toArrayList(getClass().getDeclaredFields()));
         Field f;
         for (String s : ocfg.getOptions().names()) {
-            System.out.println(s + "  ");
+//            System.out.println(s + "  ");
             if (!s.equals(Ole.oletype.OLEMETA.name())) {
                 try {
                     f = getField(getClass(), s);
@@ -457,8 +480,11 @@ public abstract class AutoConfigurationHandler {
                         Class enc = f.getType();
                         f.set(this, Enum.valueOf(enc, ocfg.getOptions().getField(f.getName())));
                     } else if (f.getType().isArray()) {
+                        Class arraytype = f.getType().getComponentType();
                         Object a = toArray(ocfg, f.getName());
-
+                        if (a == null) {
+                            a = Array.newInstance(arraytype, 0);
+                        }
                         f.set(this, a);
                     }
                 } catch (Exception ex) {
@@ -510,6 +536,7 @@ public abstract class AutoConfigurationHandler {
             obj = c.newInstance();
         } catch (Exception ex) {
             System.err.println(ex.toString());
+            new ExceptionHandler(ex);
             return null;
         }
         if (Transform.isEnumObject(obj)) {

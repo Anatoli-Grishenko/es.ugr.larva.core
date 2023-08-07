@@ -5,10 +5,9 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
+
+import JsonObject.JsonArray;
+import JsonObject.JsonValue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.ResultSet;

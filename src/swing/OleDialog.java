@@ -5,7 +5,6 @@
  */
 package swing;
 
-import AutoConfiguration.WebCam;
 import data.Ole;
 import data.Ole.oletype;
 import data.OleConfig;

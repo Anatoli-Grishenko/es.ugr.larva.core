@@ -5,10 +5,10 @@
  */
 package world;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
+import JsonObject.JsonValue;
+import JsonObject.WriterConfig;
 import data.Ole;
 import data.OleTable;
 import data.Transform;

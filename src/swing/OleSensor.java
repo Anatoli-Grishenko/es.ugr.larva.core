@@ -6,7 +6,7 @@
 package swing;
 
 import Environment.Environment;
-import com.eclipsesource.json.JsonArray;
+import JsonObject.JsonArray;
 import geometry.AngleTransporter;
 import geometry.Point3D;
 import geometry.SimpleVector3D;

@@ -5,8 +5,7 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonArray;
 import crypto.Cryptor;
 import java.io.FileOutputStream;
 import java.io.IOException;

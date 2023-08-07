@@ -5,9 +5,9 @@
  */
 package map2D;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.Json;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
 import static crypto.Keygen.getHexaKey;
 import java.awt.Color;
 import java.awt.Dimension;

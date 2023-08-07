@@ -5,8 +5,8 @@
  */
 package geometry;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonArray;
+import JsonObject.JsonObject;
 import data.Ole;
 import data.Ole.oletype;
 import world.Perceptor;

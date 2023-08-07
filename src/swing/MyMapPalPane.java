@@ -253,7 +253,7 @@ public class MyMapPalPane extends MyDrawPane {
         }
         if (redecorate) {
             preDecorateMap(g);
-            g.drawImage(m2dMap.getMap(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
+            g.drawImage(m2dMap.getColorImage(), offsetimg, offsetimg, this.getMapWidth() * zoom, this.getMapHeight() * zoom, null);
             postDecorateMap(g);
         }
         if (trail) {

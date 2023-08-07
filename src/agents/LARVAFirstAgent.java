@@ -10,8 +10,8 @@ import ai.Choice;
 import ai.DecisionSet;
 import ai.Mission;
 import appboot.XUITTY;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.WriterConfig;
+import JsonObject.JsonObject;
+import JsonObject.WriterConfig;
 import static crypto.Keygen.getHexaKey;
 import data.Ole;
 import data.OleConfig;
@@ -35,10 +35,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
@@ -46,6 +49,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import messaging.ACLMPayload;
 import messaging.ACLMessageTools;
 import static messaging.ACLMessageTools.ACLMID;
 import messaging.SequenceDiagram;
@@ -155,6 +159,8 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
     protected NetworkData nap;
     protected String netMon = "", myGMap, profileDescription = "", profilingType;
     private ACLMessage message;
+    protected ArrayList<ACLMessage> inboxFullList;
+    protected Consumer<Exception> ExceptionHandler;
 
     protected Choice Ag(Environment E, DecisionSet A) {
         if (G(E)) {
@@ -296,18 +302,34 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             LARVAexit = true;
 //                doDelete();
         } catch (Exception ex) {
-            JsonObject res = logger.logException(ex);
-            String message = "";
-            message += emojis.CALENDAR + " " + res.getString("date", "") + "\n";
-            res = res.get("record").asObject();
-            message += emojis.ROBOT + " " + res.getString("agent", "") + "\n";
-            message += emojis.WARNING + " UNCAUGHT EXCEPTION\n" + res.getString("uncaught-exception", "") + "\n";
-            message += emojis.INFO + " INFO\n" + res.getString("info", title) + "\n";
-            this.Alert(message);
+            if (ExceptionHandler == null) {
+                JsonObject res = logger.logException(ex);
+                String message = "";
+                message += emojis.CALENDAR + " " + res.getString("date", "") + "\n";
+                res = res.get("record").asObject();
+                message += emojis.ROBOT + " " + res.getString("agent", "") + "\n";
+                message += emojis.WARNING + " UNCAUGHT EXCEPTION\n" + res.getString("uncaught-exception", "") + "\n";
+                message += emojis.INFO + " INFO\n" + res.getString("info", title) + "\n";
+                this.Alert(message);
+            } else {
+                ExceptionHandler.accept(ex);
+            }
             if (!ignoreExceptions) {
                 LARVAexit = true;
             }
         }
+    }
+
+    public String getExceptionDetails(Exception ex) {
+        StringWriter sexc = new StringWriter();
+        PrintWriter psexc = new PrintWriter(sexc);
+        ex.printStackTrace(psexc);
+        return "uncaught-exception:\n" + ex.toString() + "\n\n"
+                + "info:\n" + sexc.toString() + "\n\n";
+    }
+
+    public void setExceptionHandler(Consumer<Exception> mh) {
+        ExceptionHandler = mh;
     }
 
     public void doExit() {
@@ -841,7 +863,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 //            System.out.println(getLocalName() + " receiving: " + Ole.objectToOle(Profiler.extractProfiler(msg)).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
             getMyNetworkProfiler().profileThis(label, label2, () -> {
 //                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-            System.out.println("");
+                System.out.println("");
 //                System.out.println(label + "" + label2);
             });
             msg = Profiler.injectProfiler(msg, lastCookie);
@@ -887,11 +909,27 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return msg;
     }
 
+    protected ArrayList<ACLMessage> LARVAblockingDialogue(ACLMessage toSend, int miliseconds) {
+        boolean repeat;
+        int nreceivers = ACLMessageTools.getReceiverList(toSend).size();
+        ArrayList<ACLMessage> res = new ArrayList();
+        String key = getHexaKey(4);
+        toSend.setEncoding(key);
+        LARVAsend(toSend);
+        do {
+            message = LARVAblockingReceive(MessageTemplate.MatchEncoding(key), miliseconds);
+            if (message != null) {
+//                InfoACLM("⭕< Received ACLM ", message);
+//                message = this.LARVAprocessReceiveMessage(message);
+                res.add(message);
+            }
+        } while (message == null || res.size() < nreceivers);
+        return res;
+    }
+
     protected ACLMessage LARVAblockingReceive() {
         boolean repeat;
-        getMyCPUProfiler().profileThis("WAITING ANSWERS LF", () -> {
-            message = blockingReceive();
-        });
+        message = blockingReceive();
         if (message != null) {
             InfoACLM("⭕< Received ACLM ", message);
             message = this.LARVAprocessReceiveMessage(message);
@@ -901,9 +939,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     protected ACLMessage LARVAblockingReceive(long milis) {
         boolean repeat = false;
-        getMyCPUProfiler().profileThis("WAITING ANSWERS LF", () -> {
-            message = blockingReceive(milis);
-        });
+        message = blockingReceive(milis);
         if (message != null) {
             InfoACLM("⭕< Received ACLM ", message);
             message = this.LARVAprocessReceiveMessage(message);

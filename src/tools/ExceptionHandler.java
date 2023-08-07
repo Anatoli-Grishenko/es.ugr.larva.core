@@ -5,7 +5,7 @@
  */
 package tools;
 
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import swing.SwingTools;

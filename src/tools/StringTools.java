@@ -93,5 +93,16 @@ public class StringTools {
         return res;
     }
 
-
+    public static String cureAllFilename(String filename){
+        filename = filename.replaceAll(" ", "_");
+        filename = filename.replaceAll(":", "_");
+        filename = filename.replaceAll("/", "_");
+        return filename;
+    }
+    public static String cureFilename(String filename){
+        filename = filename.replaceAll(" ", "_");
+//        filename = filename.replaceAll(":", "_");
+//        filename = filename.replaceAll("/", "_");
+        return filename;
+    }
 }

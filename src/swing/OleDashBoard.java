@@ -7,8 +7,8 @@ package swing;
 
 import Environment.Environment;
 import agents.LARVAFirstAgent;
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.Json;
+import JsonObject.JsonObject;
 import data.Ole;
 import data.OleFile;
 import geometry.OleBag;

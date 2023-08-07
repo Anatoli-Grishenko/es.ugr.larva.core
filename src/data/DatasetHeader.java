@@ -5,8 +5,8 @@
  */
 package data;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import JsonObject.JsonObject;
+import JsonObject.JsonValue;
 import data.Dataset.DATATYPE;
 import java.util.ArrayList;
 import java.util.HashMap;

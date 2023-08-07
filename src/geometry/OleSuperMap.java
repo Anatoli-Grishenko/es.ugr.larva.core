@@ -6,7 +6,7 @@
 package geometry;
 
 import Environment.Environment;
-import com.eclipsesource.json.JsonObject;
+import JsonObject.JsonObject;
 import data.OleConfig;
 import glossary.Sensors;
 import glossary.TrailSet;
@@ -251,7 +251,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
         if (map != null) {
 //            g.setClip(viewPort);
             if (myDash.getMyDecoder().getWorldMap() != null) {
-//                scale = odPane.getPreferredSize().getWidth() / this.myDash.getMyDecoder().getWorldMap().getMap().getWidth();
+//                scale = odPane.getPreferredSize().getWidth() / this.myDash.getMyDecoder().getWorldMap().getColorImage().getWidth();
                 scale = osPane.getZoom();
                 if (scale < limitScale) {
                     hasGrid = false;
@@ -312,8 +312,8 @@ public class OleSuperMap extends OleSensor implements ActionListener {
 //            RescaleOp darken = new RescaleOp(0.5f, 0, null);
             int nw = (int) (odPane.getPreferredSize().getWidth()),
                     nh = (int) (odPane.getPreferredSize().getHeight());
-//            g.drawImage(darken.filter(mapView.getMap(), null), 0, 0, nw, nh, null);
-            g.drawImage(mapView.getMap(), 0, 0, nw, nh, null);
+//            g.drawImage(darken.filter(mapView.getColorImage(), null), 0, 0, nw, nh, null);
+            g.drawImage(mapView.getColorImage(), 0, 0, nw, nh, null);
             SimpleVector3D ptrail, prevTrail, ptext, ppoint;
             double xVP, yVP;
             Color c;
@@ -359,7 +359,7 @@ public class OleSuperMap extends OleSensor implements ActionListener {
                 p = this.TraceCourse(ptrail, 15);
                 g.drawPolygon(p);
 //                } else {
-//                    g.drawImage(sprites.get(myDash.getMyDecoder().getCompass() / 45).getMap(),
+//                    g.drawImage(sprites.get(myDash.getMyDecoder().getCompass() / 45).getColorImage(),
 //                            (int) viewX(ptrail.getSource().getXInt() - 0.5),
 //                            (int) viewY(ptrail.getSource().getYInt() - 0.5),
 //                            (int) scale, (int) scale, null);

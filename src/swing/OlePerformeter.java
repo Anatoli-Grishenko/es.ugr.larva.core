@@ -39,7 +39,7 @@ public class OlePerformeter extends JLabel {
         background = parent.getBackground();
         grid = Color.BLACK;
         data = OleApplication.DodgerBlue;
-        this.setIcon(new ImageIcon(chart.getMap()));
+        this.setIcon(new ImageIcon(chart.getColorImage()));
         init();
     }
 
@@ -49,7 +49,7 @@ public class OlePerformeter extends JLabel {
         drawBackground(0);
         drawGrid(0);
         drawData(0, value);
-        this.setIcon(new ImageIcon(chart.getMap()));
+        this.setIcon(new ImageIcon(chart.getColorImage()));
         this.repaint();
     }
 
@@ -90,7 +90,7 @@ public class OlePerformeter extends JLabel {
 //    @Override
 //    protected void paintComponent(Graphics g) {
 //        super.paintComponent(g);
-//        g.drawImage(chart.getMap(), 0, 0, null);
+//        g.drawImage(chart.getColorImage(), 0, 0, null);
 //    }
 
 }

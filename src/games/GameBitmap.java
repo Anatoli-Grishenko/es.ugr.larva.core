@@ -42,7 +42,7 @@ public class GameBitmap extends GameObject {
         w = getWidth()*gs.getCell();
         h = getHeight()*gs.getCell();
         
-        gs.getG().drawImage(bitmap.getMap(), (int) x, (int) y, w, h, null);
+        gs.getG().drawImage(bitmap.getColorImage(), (int) x, (int) y, w, h, null);
     }
 
     
