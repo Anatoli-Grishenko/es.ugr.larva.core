@@ -42,13 +42,13 @@ public class XUIAgent extends LARVAFirstAgent {
     protected boolean showTrail = false;
     protected int trailSize = 0;
     JPanel _XUI, _Server;
-    boolean profiler = false, verbose = false;
+    boolean profiler = false, verbose = true;
     int nmessages = 0, miliswait, milisnext, sizeraw, sizezip, nagents = 0,
             totaldistance = 0, totaltargets = 0, runSecs = 60;
     long Milis = 0;
     TimeHandler premesg, postmesg, start;
     TelegramBackdoor tgb;
-    boolean zip, cancelRequested=false;
+    boolean zip, cancelRequested = false;
     String content;
     String Profilerprefix;
 
@@ -108,30 +108,11 @@ public class XUIAgent extends LARVAFirstAgent {
 //        tgb = new TelegramBackdoor("Telgram", (s) -> this.backSendTelegram(s));
 //        tgb.setPreferredSize(new Dimension(100, 200));
         loadSessionAlias();
-        // Profiling
-        OleConfig oProfiler = new OleConfig();
-        oProfiler.loadFile("config/profiler.json");
-        Profilerprefix = "profiler/" + oProfiler.getString("C", "X") + oProfiler.getInt("S", 0) + "S" + oProfiler.getInt("K", 0) + "K" + oProfiler.getInt("NN", 0) + "NN";
-//        getMyCPUProfiler().setActive(true);
-//        getMyCPUProfiler().setOwner("XUI");
-//        activateMyCPUProfiler(Profilerprefix + "-" + "XUI-CPU");
-//        getMyNetworkProfiler().setActive(true);
-//        getMyNetworkProfiler().setOwner("XUI");
-//        activateMyNetworkProfiler(Profilerprefix + "-" + "XUI-NETWORK");
-
-//        myDashBoard.refProfiler.setOwner("DASHBOARD");
-//        myDashBoard.refProfiler.setTsvFileName(Profilerprefix + "-" + "DASHBOARD.tsv");
-//        myDashBoard.refProfiler.setActive(getMyCPUProfiler().isActive());
-//logger.onEcho();
     }
 
     @Override
     public void Execute() {
         Info("Status: " + myStatus.name());
-        if (isProfiling()) {
-            getMyCPUProfiler().setSeries(myStatus.name());
-            getMyNetworkProfiler().setSeries(myStatus.name());
-        }
         switch (myStatus) {
             case CHECKIN:
                 myStatus = MyCheckin();
@@ -155,15 +136,6 @@ public class XUIAgent extends LARVAFirstAgent {
 
     @Override
     public void takeDown() {
-        if (getMyCPUProfiler().isActive()) {
-            getMyCPUProfiler().close();
-        }
-        if (getMyNetworkProfiler().isActive()) {
-            getMyNetworkProfiler().close();
-            getMyNetworkProfiler().saveAll(Profilerprefix + "-NETWORK.tsv");
-            myDashBoard.closeProfiler();
-
-        }
         myDashBoard.removeAll();
         MyCheckout();
         Info("Taking down and deleting agent");
@@ -192,15 +164,10 @@ public class XUIAgent extends LARVAFirstAgent {
         inbox = this.LARVAblockingReceive(1000);
         if (inbox != null) {
             if (inbox.getPerformative() == ACLMessage.CANCEL) {
-                cancelRequested=true;
+                cancelRequested = true;
                 return Status.IDLE;
             }
-//            if (!getMyNetworkProfiler().isActive()) {
-//                getMyNetworkProfiler().setActive(true);
-//                getMyNetworkProfiler().setOwner(inbox.getSender().getLocalName());
-//                getMyNetworkProfiler().setTsvFileName("XUI-SessionManager.tsv");
-//            }
-//        Info(">>>>>>>>>>>>>>>>" + inbox.getContent().substring(0, 10));
+
             if (inbox.getInReplyTo().equals("BCKTLGRM")) {
 //                this.tgb.write(inbox.getContent());
                 return myStatus;
@@ -211,63 +178,41 @@ public class XUIAgent extends LARVAFirstAgent {
                 buffer = new String[]{inbox.getContent()};
                 zip = false;
             }
-
+            System.out.println("Received " + sizeraw + "/" + sizezip + " bytes");
+            String content = buffer[0]; //new Ole().UnzipThis(new Ole(inbox.getContent()));
+            Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
+            System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
             for (String rawcontent : buffer) {
-//                getMyCPUProfiler().profileThis("PREUNZIP", "" + rawcontent.length(),
-//                        () -> {
-//                            if (zip) {
-//                                content = unzipString(rawcontent);
-//                            } else {
-//                                content = rawcontent;
-//                            }
-//                        });
-//                getMyCPUProfiler().profileThis("POSTUNZIP", "" + content.length(), () -> {
-//                    sizezip = inbox.getContent().length();
-//                    sizeraw = content.length();
-//                });
-
-//            System.out.println("Received " + sizeraw + "/" + sizezip + " bytes");
-//        String content = new Ole().UnzipThis(new Ole(inbox.getContent()));
-//        Info("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
-//        System.out.println("Received: " + ACLMessageTools.fancyWriteACLM(inbox, false));
+                if (zip) {
+                    content = unzipString(rawcontent);
+                } else {
+                    content = rawcontent;
+                }
+                sizezip = inbox.getContent().length();
+                sizeraw = content.length();
                 if (content.contains("filedata")) {
-//                    getMyCPUProfiler().profileThis("filedata", "" + content.length(),
-//                            () -> {
-
-//                System.out.println("Map received");
-                                oleConfig.loadFile("config/Configuration.conf");
-                                showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
-                                trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
-                                myDashBoard.setTrailSize(trailSize);
-                                myDashBoard.setShowTrail(showTrail);
-                                this.sessionKey = inbox.getConversationId();
-                                myDashBoard.preProcessACLM(content);
-//                            });
+                    oleConfig.loadFile("config/Configuration.conf");
+                    showTrail = oleConfig.getTab("Display").getBoolean("Show trail", false);
+                    trailSize = oleConfig.getTab("Display").getInt("Trail length", 0);
+                    myDashBoard.setTrailSize(trailSize);
+                    myDashBoard.setShowTrail(showTrail);
+                    this.sessionKey = inbox.getConversationId();
+                    myDashBoard.preProcessACLM(content);
                 } else if (content.contains("perceptions")) {
-//                    getMyCPUProfiler().profileThis("perceptions", "" + content.length(),
-//                            () -> {
-                                if (verbose) {
-                                    Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
-                                }
-                                myDashBoard.preProcessACLM(content);
-//                            });
+                    if (verbose) {
+                        Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Perceptions received");
+                    }
+                    myDashBoard.preProcessACLM(content);
                 } else if (content.contains("city")) {
-//                    getMyCPUProfiler().profileThis("cities", "" + content.length(),
-//                            () -> {
                     if (verbose) {
                         Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "Cities received");
                     }
                     myDashBoard.preProcessACLM(content);
-//                            });
                 } else if (content.contains("people")) {
-//                    getMyCPUProfiler().profileThis("people", "" + content.length(),
-//                            () -> {
-
                     if (verbose) {
                         Info("\n\nXXXXXXXXXXXXXXXXXXXXXXX\nXUI Agent" + "People received");
                     }
                     myDashBoard.preProcessACLM(content);
-//                            });
                 }
                 _XUI.repaint();
                 nagents = myDashBoard.decoderSet.keySet().size();
@@ -278,18 +223,6 @@ public class XUIAgent extends LARVAFirstAgent {
                 }
                 totaldistance = distance;
                 totaltargets += goals;
-//            Milis = start.elapsedTimeMilisecsUntil(new TimeHandler());
-//            System.out.println("XUI" + Mission.sepMissions + TimeHandler.Now() + Mission.sepMissions
-//                    + Milis + Mission.sepMissions
-//                    + nmessages + Mission.sepMissions
-//                    + miliswait + Mission.sepMissions
-//                    + milisnext + Mission.sepMissions
-//                    + sizeraw + Mission.sepMissions
-//                    + sizezip + Mission.sepMissions
-//                    + nagents + Mission.sepMissions
-//                    + totaldistance + Mission.sepMissions
-//                    + totaltargets + Mission.sepMissions
-//            );
             }
 //        if (Milis / 1000 > runSecs) {
 //            return Status.EXIT;

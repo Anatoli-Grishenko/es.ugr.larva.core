@@ -110,7 +110,7 @@ public class CameraSensor extends DeviceSensor {
         lastCapture.setFont(new Font("Mono", 12, BOLD));
 //            lastCapture = lastCapture.resize(256, -1);
         lastCapture.drawText(20, 20, getName());
-//        lastCapture.drawText(20, 40, TimeHandler.Now());
+        lastCapture.drawText(20, 40, TimeHandler.Now());
         String filecamname = folder + cureAllFilename(getName()) + "_last.png";
         lastCapture.saveMap(filecamname);
 //            lastCapture.saveMap(folder + cureAllFilename(getName() + "_"+TimeHandler.Now()) + ".png");

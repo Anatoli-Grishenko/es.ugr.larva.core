@@ -64,7 +64,14 @@ public class Map2DColor {
     protected double k = 2.261566516;
     protected Color penColor;
     protected Font font;
+    public static int PIX_TYPE = BufferedImage.TYPE_INT_RGB,
+            BIT_MASK = 0xff,
+            BIT_SHIFT = 8,
+            BIT_LENGTH = BIT_SHIFT,
+            PIX_MAX = (int) Math.pow(2, BIT_LENGTH) - 1,
+            PIX_MIN = 0;
     Graphics myG;
+
     /**
      *
      * Default builder
@@ -84,8 +91,8 @@ public class Map2DColor {
      */
     public Map2DColor(int width, int height) {
         _lmax = _lmin = -1;
-        _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        myG = this._map.getGraphics();
+        _map = new BufferedImage(width, height, PIX_TYPE);
+//        myG = this._map.getGraphics();
         penColor = Color.GREEN;
         font = new Font("Arial", 12, Font.BOLD);
     }
@@ -100,8 +107,8 @@ public class Map2DColor {
      */
     public Map2DColor(int width, int height, int level) {
         _lmax = _lmin = -1;
-        _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        myG = this._map.getGraphics();
+        _map = new BufferedImage(width, height, PIX_TYPE);
+//        myG = this._map.getGraphics();
         for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, new Color(level, level, level));
@@ -120,9 +127,9 @@ public class Map2DColor {
      */
     public Map2DColor(int width, int height, Color c) {
         _lmax = _lmin = -1;
-        _map = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-           myG = this._map.getGraphics();
-    for (int x = 0; x < getWidth(); x++) {
+        _map = new BufferedImage(width, height, PIX_TYPE);
+//        myG = this._map.getGraphics();
+        for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, c);
             }
@@ -133,9 +140,9 @@ public class Map2DColor {
 
     public Map2DColor(BufferedImage img) {
         _lmax = _lmin = -1;
-        _map = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
-          myG = this._map.getGraphics();
-      for (int x = 0; x < getWidth(); x++) {
+        _map = new BufferedImage(img.getWidth(), img.getHeight(), PIX_TYPE);
+//        myG = this._map.getGraphics();
+        for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 setColor(x, y, new Color(img.getRGB(x, y)));
             }
@@ -144,14 +151,14 @@ public class Map2DColor {
         font = new Font("Monospaced", 12, PLAIN);
     }
 
-    public Map2DColor(Map2DGrayscale red, Map2DGrayscale green,Map2DGrayscale blue) {
+    public Map2DColor(Map2DGrayscale red, Map2DGrayscale green, Map2DGrayscale blue) {
         _lmax = _lmin = -1;
-        _map = new BufferedImage(red.getWidth(), red.getHeight(), BufferedImage.TYPE_INT_RGB);
-                myG = this._map.getGraphics();
-for (int x = 0; x < getWidth(); x++) {
+        _map = new BufferedImage(red.getWidth(), red.getHeight(), PIX_TYPE);
+//        myG = this._map.getGraphics();
+        for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
-                setColor(x, y, new Color(red.getLevel(x, y),green.getLevel(x,y),
-                blue.getLevel(x, y)));
+                setColor(x, y, new Color(red.getLevel(x, y), green.getLevel(x, y),
+                        blue.getLevel(x, y)));
             }
         }
         penColor = Color.GREEN;
@@ -199,7 +206,7 @@ for (int x = 0; x < getWidth(); x++) {
         File f;
         f = new File(filename);
         this._map = ImageIO.read(f);
-        myG = this._map.getGraphics();
+//        myG = this._map.getGraphics();
         _lmax = _lmin = -1;
         normalize();
 //        this.getExtremeHeights();
@@ -211,7 +218,7 @@ for (int x = 0; x < getWidth(); x++) {
         File f;
         f = new File(filename);
         this._map = ImageIO.read(f);
-        myG = this._map.getGraphics();
+//        myG = this._map.getGraphics();
         _lmax = _lmin = -1;
         System.out.println("MAP=" + _map.getType());
         return this;
@@ -222,8 +229,8 @@ for (int x = 0; x < getWidth(); x++) {
 
         try {
             this._map = new TiffImageParser().getBufferedImage(new File(filename), params);
-        myG = this._map.getGraphics();
-            
+//            myG = this._map.getGraphics();
+
             return this;
         } catch (ImageReadException ex) {
             return null;
@@ -232,7 +239,7 @@ for (int x = 0; x < getWidth(); x++) {
 
     public void setMap(BufferedImage _map) {
         this._map = _map;
-        myG = this._map.getGraphics();
+//        myG = this._map.getGraphics();
     }
 
     public Map2DColor shiftLeft(int pix) {
@@ -263,6 +270,29 @@ for (int x = 0; x < getWidth(); x++) {
         level = (int) (Math.pow(level / (1.0 * maxlevel), k) * maxlevel);
         newlevel = (int) Math.round(level);
         return newlevel;
+    }
+
+    public Map2DColor setAlpha(int alphastep) {
+        double step = 0.05, rlevel, glevel, blevel;
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                Color C = getColor(x, y);
+                rlevel = C.getRed() / 255.0;
+                glevel = C.getGreen() / 255.0;
+                blevel = C.getBlue() / 255.0;
+
+//                if ((alphastep<0 && getRawLevel(x, y) > 180) || 
+//                        (alphastep>0 && getRawLevel(x,y)<70)) {
+//                if ((alphastep<0 && (rlevel + blevel + glevel) / 3 > 0.7) || 
+//                        (alphastep>0 && (rlevel + blevel + glevel) / 3 < 0.3)) {
+                rlevel = Math.min(255, rlevel * (1 + alphastep * step) * 255);
+                blevel = Math.min(255, blevel * (1 + alphastep * step) * 255);
+                glevel = Math.min(255, glevel * (1 + alphastep * step) * 255);
+                setColor(x, y, new Color((int) rlevel, (int) glevel, (int) blevel));
+//                }
+            }
+        }
+        return this;
     }
 
     /**
@@ -346,14 +376,19 @@ for (int x = 0; x < getWidth(); x++) {
     }
 
     public BufferedImage getGrayscaleImage() {
-        BufferedImage mapgr = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        for (int x = 0; x < getWidth(); x++) {
-            for (int y = 0; y < getHeight(); y++) {
-                Color c = this.getColor(x, y);
-                mapgr.setRGB(x, y, _map.getRGB(x, y));
-            }
-        }
-        return mapgr;
+//        BufferedImage mapgr = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+//        for (int x = 0; x < getWidth(); x++) {
+//            for (int y = 0; y < getHeight(); y++) {
+//                Color c = this.getColor(x, y);
+//                mapgr.setRGB(x, y, _map.getRGB(x, y));
+//            }
+//        }
+//        return mapgr;
+        BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics g = img.getGraphics();
+        g.drawImage(this._map, 0, 0, null);
+        g.dispose();
+        return img;
     }
 
 //    public Map2DColor getChannel(Channel channel) {
@@ -391,14 +426,11 @@ for (int x = 0; x < getWidth(); x++) {
 
     public Map2DColor toGrayscale() {
         Map2DColor gray = new Map2DColor(getWidth(), getHeight());
-        BufferedImage mapgr = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        for (int x = 0; x < getWidth(); x++) {
-            for (int y = 0; y < getHeight(); y++) {
-                Color c = this.getColor(x, y);
-                mapgr.setRGB(x, y, _map.getRGB(x, y));
-            }
-        }
-        gray.setMap(mapgr);
+        BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics g = img.getGraphics();
+        g.drawImage(this._map, 0, 0, null);
+        g.dispose();
+        gray.setMap(img);
         return gray;
     }
 
@@ -679,7 +711,7 @@ for (int x = 0; x < getWidth(); x++) {
         }
     }
 
-    public Map2DColor toGrayScale() {
+    public Map2DGrayscale toGrayScale() {
 //        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
 //        for (int x = 0; x < getWidth(); x++) {
 //            for (int y = 0; y < getHeight(); y++) {
@@ -715,8 +747,8 @@ for (int x = 0; x < getWidth(); x++) {
         return this;
     }
 
-    public Map2DColor toGrayScale(double scale) {
-        Map2DColor res = new Map2DColor((int) (this.getWidth() * scale), (int) (this.getHeight() * scale));
+    public Map2DGrayscale toGrayScale(double scale) {
+        Map2DGrayscale res = new Map2DGrayscale((int) (this.getWidth() * scale), (int) (this.getHeight() * scale));
         for (int x = 0; x < getWidth() * scale; x++) {
             for (int y = 0; y < getHeight() * scale; y++) {
                 Color c = this.getColor((int) (x / scale), (int) (y / scale));
@@ -772,7 +804,6 @@ for (int x = 0; x < getWidth(); x++) {
 //        }
 //        return res;
 //    }
-
     public Map2DColor threshold(int level) {
         Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight());
         for (int x = 0; x < getWidth(); x++) {
@@ -787,41 +818,42 @@ for (int x = 0; x < getWidth(); x++) {
         return res;
     }
 
-    public Map2DColor findEdges() {
-        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight()),
-                bw = this.toGrayScale();
-        int leftPixel;
-        int rightPixel;
-        int bottomPixel;
-        int rightColor;
-        boolean black;
-        int distance = 40;
-        for (int row = 0; row < this.getHeight(); row++) {
-            for (int col = 0;
-                    col < this.getWidth(); col++) {
-                black = false;
-                leftPixel = getRawLevel(col, row);
-                if (col < getHeight() - 1) {
-                    rightPixel = getRawLevel(col + 1, row);
-                    if (Math.abs(leftPixel - rightPixel) > distance) {
-                        black = true;
-                    }
-                }
-                if (row < getWidth() - 1) {
-                    bottomPixel = getRawLevel(col, row);
-                    if (Math.abs(leftPixel - bottomPixel) > distance) {
-                        bottomPixel = getRawLevel(col, row + 1);
-                        black = true;
-                    }
-
-                }
-                if (black) {
-                    res.setLevel(col, row, 0);
-                } else {
-                    res.setLevel(col, row, 255);
-                }
-            }
-        }
+    public Map2DGrayscale findEdges() {
+        Map2DGrayscale res = new Map2DGrayscale();
+//        Map2DColor res = new Map2DColor(this.getWidth(), this.getHeight()),
+//                bw = this.toGrayScale();
+//        int leftPixel;
+//        int rightPixel;
+//        int bottomPixel;
+//        int rightColor;
+//        boolean black;
+//        int distance = 40;
+//        for (int row = 0; row < this.getHeight(); row++) {
+//            for (int col = 0;
+//                    col < this.getWidth(); col++) {
+//                black = false;
+//                leftPixel = getRawLevel(col, row);
+//                if (col < getHeight() - 1) {
+//                    rightPixel = getRawLevel(col + 1, row);
+//                    if (Math.abs(leftPixel - rightPixel) > distance) {
+//                        black = true;
+//                    }
+//                }
+//                if (row < getWidth() - 1) {
+//                    bottomPixel = getRawLevel(col, row);
+//                    if (Math.abs(leftPixel - bottomPixel) > distance) {
+//                        bottomPixel = getRawLevel(col, row + 1);
+//                        black = true;
+//                    }
+//
+//                }
+//                if (black) {
+//                    res.setLevel(col, row, 0);
+//                } else {
+//                    res.setLevel(col, row, 255);
+//                }
+//            }
+//        }
         return res;
     }
 
@@ -843,7 +875,7 @@ for (int x = 0; x < getWidth(); x++) {
         try {
             of.set(serial);
             of.saveFile("./");
-            this.loadMapRaw("./"+of.getFileName());
+            this.loadMapRaw("./" + of.getFileName());
             return this;
         } catch (IOException ex) {
             return null;
@@ -852,10 +884,11 @@ for (int x = 0; x < getWidth(); x++) {
     }
 
     public Map2DColor drawText(int x, int y, String text) {
+        myG = this._map.getGraphics();
         myG.setColor(getPenColor());
         myG.setFont(myG.getFont().deriveFont(BOLD));
         myG.drawString(text, x, y);
-
+        myG.dispose();
         return this;
     }
 
@@ -884,6 +917,81 @@ for (int x = 0; x < getWidth(); x++) {
         }
     }
 
+    public Map2DColor soften(int iterations, int width) {
+        Color cinit = null, caux = null;
+        Map2DColor aux = new Map2DColor(getWidth(), getHeight());
+        double rinit, raux, cx = getWidth() / 2, cy = getHeight() / 2;
+        System.out.println("Softening ...");
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
+                cinit = getColor(x, y);
+                rinit = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                caux = null;
+                for (int fx = x - width / 2; fx <= x + width / 2; fx++) {
+                    for (int fy = y - width / 2; fy <= y + width / 2; fy++) {
+                        raux = Math.sqrt((fx - cx) * (fx - cx) + (fy - cy) * (fy - cy));
+                        if (0 <= fx && fx < getWidth() && 0 <= fy && fy < getHeight() && raux <= rinit) {
+                            if (caux == null) {
+                                caux = getColor(fx, fy);
+                            }
+                            caux = SwingTools.blend(caux, getColor(fx, fy), 0.5f);
+                        }
+                    }
+                }
+                setColor(x, y, SwingTools.blend(cinit, caux, 0.5f));
+            }
+        }
+        for (int i = 1; i < iterations; i++) {
+            System.out.println("Softening ..." + i);
+            for (int x = 0; x < getWidth(); x++) {
+                for (int y=0; y < getHeight(); y++) {
+                    aux.setColor(x,y,getColor(x,y));
+                }
+            }
+            for (int x = 0; x < getWidth(); x++) {
+                for (int y = 0; y < getHeight(); y++) {
+                    cinit = aux.getColor(x, y);
+                    rinit = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                    caux = null;
+                    for (int fx = x - width / 2; fx <= x + width / 2; fx++) {
+                        for (int fy = y - width / 2; fy <= y + width / 2; fy++) {
+                            raux = Math.sqrt((fx - cx) * (fx - cx) + (fy - cy) * (fy - cy));
+                            if (0 <= fx && fx < getWidth() && 0 <= fy && fy < getHeight() && raux <= rinit) {
+                                if (caux == null) {
+                                    caux = aux.getColor(fx, fy);
+                                }
+                                caux = SwingTools.blend(caux, aux.getColor(fx, fy), 0.5f);
+                            }
+                        }
+                    }
+                    setColor(x, y, SwingTools.blend(cinit, caux, 0.5f));
+                }
+            }
+        }
+        return this;
+
+    }
+
+//    public Map2DColor soften(int iterations, int width) {
+//        Color c;
+//        for (int i = 0; i < iterations; i++) {
+//            System.out.println("Softening ..."+i);
+//            for (int x = 0; x < getWidth(); x++) {
+//                for (int y = 0; y < getHeight(); y++) {
+//                    c = getColor(x, y);
+//                    for (int fx = x - width / 2; fx <= x + width / 2; fx++) {
+//                        for (int fy = y - width / 2; fy <= y + width / 2; fy++) {
+//                            if (0<= fx && fx < getWidth() && 0 <= fy && fy <getHeight()) {
+//                                c = SwingTools.blend(c, getColor(fx,fy), 0.5f);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return this;
+//
+//    }
     public void show(String title) {
         Thread t = new Thread(new Runnable() {
             public void run() {

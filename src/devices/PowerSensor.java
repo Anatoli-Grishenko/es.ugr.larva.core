@@ -48,13 +48,13 @@ public class PowerSensor extends DeviceSensor {
             String s, msg;
             while ((s = stdInput.readLine()) != null) {
                 if (s.contains("state")) {
-                    if (s.contains("discharging")) {
+                    if (s.contains("discharging") || s.contains("pending")) {
                         if (!warn) {
                             warn = true;
                             setTimeLastRead(TimeHandler.Now());
                         }
                         setLastRead("OFF");
-                    } else {
+                    } else if (s.contains("charging") || s.contains("charged")){
                         if (warn) {
                             warn = false;
                             setTimeLastRead(TimeHandler.Now());

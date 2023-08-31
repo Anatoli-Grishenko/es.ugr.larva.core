@@ -250,7 +250,7 @@ public class World {
                 Thing e = setEnvironment(name).getEnvironment();
                 e.setPosition(new Point3D(0, 0, 0));
                 e.setOrientation(Compass.NORTH);
-                Map2DColor terrain = new Map2DColor(10, 10, 0);
+                Map2DColor terrain = new Map2DColor();
                 setSurfaceName(oaux.getField("surface"));
                 spalette = oaux.getField("palette");
                 terrain.loadMapRaw(getSurfaceName());

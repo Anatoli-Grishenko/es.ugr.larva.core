@@ -39,7 +39,7 @@ public class JADEBoot {
     protected HashMap<String, AgentController> _controllers;
     protected ArrayList<String> _agentNames;
     protected String _host, _virtualhost, _containerName, _platformId, _username, _password;
-    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock", 
+    protected final String _lockShutDownFilename = ".DeleteThisToReset.lock",
             _lockRebootFilename = ".Reboot.lock", _lockWaitFilename = ".Wait.lock";
     protected FileWriter _lockCloseSession, _lockReboot;
     protected int _port;
@@ -139,10 +139,10 @@ public class JADEBoot {
         Info("Processing arguments:");
         if (_args.length > 0) {
             for (int i = 0; i < _args.length; i++) {
-                switch ((String)_args[i]) {
+                switch ((String) _args[i]) {
                     case "-config":
                         if (i + 1 < _args.length) {
-                            configfilename = (String)_args[++i];
+                            configfilename = (String) _args[++i];
                         } else {
                             Abort("Error, missing argument in call");
                         }
@@ -169,6 +169,12 @@ public class JADEBoot {
         config.setField("rebootjade", this._lockRebootFilename);
         config.setField("shutdownjade", this._lockShutDownFilename);
         doCompleted("ARGUMENTS");
+        if (!(new File("jade.lock").exists())) {
+            try {
+                new File("jade.lock").createNewFile();
+            } catch (Exception ex) {
+            }
+        }
         return this;
     }
 
@@ -287,7 +293,7 @@ public class JADEBoot {
 
     /**
      * Analyzes the inet connection and sets upa a JADEBoot or jade.Microboot
- conection, the most appropriate one
+     * conection, the most appropriate one
      *
      * @param host The target host
      * @param port The target port
@@ -481,6 +487,7 @@ public class JADEBoot {
         ShutDown();
         return this;
     }
+
     public JADEBoot ShutDown() {
         Close();
         Info("Turning off JadeBoot");
@@ -490,6 +497,12 @@ public class JADEBoot {
 //        } catch (Exception e) {
 //        }
         //turnOff(_secondContainer);
+        if (new File("jade.lock").exists()) {
+            try {
+                new File("jade.lock").delete();
+            } catch (Exception ex) {
+            }
+        }
         System.exit(0);
         return this;
     }

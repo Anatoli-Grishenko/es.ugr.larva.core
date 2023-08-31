@@ -356,10 +356,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 public void action() {
                     doShield(() -> {
                         preExecute();
-                        getMyCPUProfiler().profileThis("" + getNCycles(),
-                                () -> {
-                                    Execute();
-                                });
+                        Execute();
                         postExecute();
                     });
                     if (isExit()) {
@@ -379,10 +376,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                 @Override
                 public void action() {
                     preExecute();
-                    getMyCPUProfiler().profileThis("BODY", "CYCLE" + getNCycles(),
-                            () -> {
-                                Execute();
-                            });
+                    Execute();
                     postExecute();
                     if (isExit()) {
                         doDelete();
@@ -490,21 +484,14 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.saveSequenceDiagram(getName() + ".seqd");
             this.drawSequenceDiagram();
         }
-        if (getMyCPUProfiler().isActive()) {
-            getMyCPUProfiler().close();
-        }
-        if (getMyNetworkProfiler().isActive()) {
-            getMyNetworkProfiler().close();
-            getMyNetworkProfiler().saveAll(getLocalName() + "-NETWORK.tsv");
-        }
-        ArrayList<String> xuis = LARVADFGetAllProvidersOf("XUI " + userID);
-        if (!xuis.isEmpty()) {
-            outbox = new ACLMessage(ACLMessage.CANCEL);
-            outbox.setSender(getAID());
-            outbox.addReceiver(new AID(xuis.get(0), AID.ISLOCALNAME));
-            outbox.setContent("CANCEL");
-            LARVAsend(outbox);
-        }
+//        ArrayList<String> xuis = LARVADFGetAllProvidersOf("XUI " + userID);
+//        if (!xuis.isEmpty()) {
+//            outbox = new ACLMessage(ACLMessage.CANCEL);
+//            outbox.setSender(getAID());
+//            outbox.addReceiver(new AID(xuis.get(0), AID.ISLOCALNAME));
+//            outbox.setContent("CANCEL");
+//            LARVAsend(outbox);
+//        }
 //        if (problemName != null) {
 //            this.saveSequenceDiagram(problemName + ".seqd");
 //        }
@@ -769,7 +756,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
 
     @Override
     protected ACLMessage LARVAprocessSendMessage(ACLMessage msg) {
-        NetworkCookie lastCookie;
         msg = super.LARVAprocessSendMessage(msg);
         if (getFixedReceiver() != null) {
             ACLMessage ghost = new ACLMessage(msg.getPerformative());
@@ -797,22 +783,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             msg.setConversationId(this.mySessionID);
             msg.setReplyWith("MyReport");
         }
-        if (getMyNetworkProfiler().isActive()) {
-            if (Profiler.isProfiler(msg)) {
-                lastCookie = Profiler.extractProfiler(msg);
-            } else {
-                lastCookie = getNewNetworkCookie();
-            }
-            if (lastCookie.getSize() < 0) {
-                lastCookie.setSize(msg.getContent().length());
-            }
-            if (lastCookie.getSerie() < 0) {
-                lastCookie.setSerie((int) getNCycles());
-            }
-            lastCookie.settUpstream(TimeHandler.NetNow());
-            msg = Profiler.injectProfiler(msg, lastCookie);
-//            System.out.println(getLocalName() + " SENDING: " + Ole.objectToOle(Profiler.extractProfiler(msg)).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-        }
         this.addSequenceDiagram(msg);
         checkDeepMilestones(msg);
         msg.addUserDefinedParameter("XINREPLYTO", msg.getInReplyTo());
@@ -833,41 +803,6 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             this.secureReceive(msg);
         }
         this.addSequenceDiagram(msg);
-
-        if (getMyNetworkProfiler().isActive()) {
-            String stime = TimeHandler.NetNow();
-            if (Profiler.isProfiler(msg)) {
-                lastCookie = Profiler.extractProfiler(msg);
-            } else {
-                lastCookie = getNewNetworkCookie();
-            }
-            if (lastCookie.getSerie() < 0) {
-                lastCookie.setOwner(getLocalName());
-                lastCookie.setSerie((int) getNCycles());
-            }
-            lastCookie.settReceive(stime);
-            if (ACLMessageTools.isZipped(msg)) {
-                lastCookie.setSize(ZipTools.unzipString(msg.getContent().replace("ZIPDATA", "")).length());
-            } else {
-                lastCookie.setSize(msg.getContent().length());
-            }
-            String label, label2;
-            label = "PING\t" + lastCookie.getSerie() + "\tTARGET\t" + lastCookie.getOwner()
-                    + "\tSIZE\t" + lastCookie.getSize() + "\tPAYLOAD\t"
-                    + msg.getContent().length()
-                    + "\tZIP\t" + ACLMessageTools.isZipped(msg) + "\t";
-            label2 = "UPSTREAM\t" + lastCookie.getLatencyUp()
-                    + "\tSERVER\t" + lastCookie.getLatencyServer()
-                    + "\tDOWNSTREAM\t" + lastCookie.getLatencyDown()
-                    + "\tTimeline\t" + lastCookie.gettUpstream();
-//            System.out.println(getLocalName() + " receiving: " + Ole.objectToOle(Profiler.extractProfiler(msg)).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-            getMyNetworkProfiler().profileThis(label, label2, () -> {
-//                System.out.println("RECEIVING: " + Ole.objectToOle(lastCookie).toPlainJson().toString(WriterConfig.PRETTY_PRINT));
-                System.out.println("");
-//                System.out.println(label + "" + label2);
-            });
-            msg = Profiler.injectProfiler(msg, lastCookie);
-        }
         return msg;
     }
 
@@ -1823,60 +1758,4 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         return sessionAlias;
     }
 
-    public void activateProfiling(String service) {
-//        doSwingWait(() -> {
-//            if (Confirm("Please confirm the activation of profiling tools")) {
-//                profileDescription = service;
-//                nap = new NetworkData("./config/");
-//                if (OleTools.isConfig(nap)) {
-//                    loadConfig(nap);
-//                }
-//                if (Confirm("Do you grant permission to read your private IP, please?")) {
-//                    String extIP = Internet.getExtIPAddress();
-//                    nap.setExtIP(extIP);
-//                    nap.setLocalIP(Internet.getLocalIPAddress());
-//                }
-//                saveConfig(nap);
-//                loadConfig(nap);
-//                boolean good;
-//                do {
-//                    editConfig(nap);
-//                    good = nap.validate();
-//                    if (!good) {
-//                        good = !Confirm("Your Google Maps reference does not seem to be right. Do you want to modify it?");
-//                    }
-//                } while (!good);
-//                viewConfig(nap);
-//                saveConfig(nap);
-//                if (!LARVADFGetAllProvidersOf(service).isEmpty()) {
-//                    profilingType = service;
-//                    netMon = LARVADFGetAllProvidersOf(profilingType).get(0);
-//                    Message("It is ok, network monitor service has been found:\n" + netMon
-//                            + "\n\nprofiling active");
-//                    profiling = true;
-//                } else {
-//                    Alert("Sorry, network monitor service not found. Profiling is disabled");
-//                    profiling = false;
-//                    profilingType = null;
-//                }
-//            }
-//        });
-    }
-
-    public void deactivateProfiling() {
-        profiling = false;
-    }
-
-    public boolean isProfiling() {
-//        if (profiling) {
-//            Alert("Your profiling is active");
-//        } else {
-//            Message("Your profiling is not currently active");
-//        }
-        return profiling;
-    }
-
-    public void setProfileDescription(String des) {
-        profileDescription = des;
-    }
 }
