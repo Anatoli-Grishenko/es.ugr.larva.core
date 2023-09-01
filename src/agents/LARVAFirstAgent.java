@@ -248,7 +248,7 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
             }
             if (payload.getOlecfg() != null) {
                 oleConfig = payload.getOlecfg();
-                if (oleConfig.getTab("Log activity") != null) {
+                if (!oleConfig.getTab("Log activity").isEmpty()) {
                     logger.setEcho(!oleConfig.getTab("Log activity").getBoolean("Silent", false));
                     if (oleConfig.getTab("Log activity").getBoolean("Save log", false)) {
                         String logfile = oleConfig.getTab("Log activity").getString("File log", "./default.log");
@@ -640,9 +640,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
                     checkedin = true;
                     Info(checkin.getContent());
                     this.getUserData(checkin.getContent());
-                    if (getSessionAlias().length() == 0) {
-                        defSessionAlias("");
-                    }
+//                    if (getSessionAlias().length() == 0) {
+//                        defSessionAlias("");
+//                    }
                     return true;
                 } else if (checkin.getPerformative() == ACLMessage.REFUSE) {
                     Error("Checkin at LARVA refused.\nDetails: " + checkin.getContent());

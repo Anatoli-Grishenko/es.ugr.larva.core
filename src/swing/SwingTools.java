@@ -397,7 +397,7 @@ public class SwingTools {
             JarFile jf = new JarFile("dist/lib/es.ugr.larva.core.jar");
             ArrayList<JarEntry> allEntries = Collections.list(jf.entries());
             InputStream is;
-            System.out.println("Exploring entries in " + originalResource);
+//            System.out.println("Exploring entries in " + originalResource);
             for (JarEntry je : allEntries) {
                 if (je.getName().startsWith(originalResource) && je.getName().length() > originalResource.length() + 1) { // Avoids the parent folder
 //                    System.out.println(je.getName());
