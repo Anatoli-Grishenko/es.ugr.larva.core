@@ -59,6 +59,7 @@ import swing.OleDrawPane;
 import swing.OleFoldableList;
 import swing.OleToolBar;
 import swing.SwingTools;
+import tools.ExceptionHandler;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 import tools.emojis;
@@ -314,7 +315,7 @@ public class LARVABoot {
             oleConfig = new OleConfig();
 
             if (oleConfig.loadFile(_configFileName).isEmpty()) {
-                appMain.Error("Error loading configuration file " + _configFileName);
+                appMain.Error("LARVA Boot", "Error loading configuration file " + _configFileName);
                 Exit();
             }
             if (oleConfig.getTab("Identity").getBoolean("Autoload", false)) {
@@ -348,7 +349,7 @@ public class LARVABoot {
         }
 //        System.out.println("Listener  working");
         if (e.getActionCommand().equals("Exit")) {
-            if (appMain.Confirm("Kill all agents and exit?")) {
+            if (appMain.Confirm("LARVA Boot", "Kill all agents and exit?")) {
 //                this.Exit();
                 this.sShutdown.release();
             }
@@ -433,7 +434,7 @@ public class LARVABoot {
         oPassport = new OlePassport();
         oPassport.loadPassport(oleConfig.getTab("Identity").getString("Passport file", ""));
         if (oPassport.isEmpty()) {
-            appMain.Error("Error loading passport file " + oleConfig.getTab("Identity").getString("Pasport file", ""));
+            appMain.Error("LARVA Boot", "Error loading passport file " + oleConfig.getTab("Identity").getString("Pasport file", ""));
         } else {
             _xuiName = "XUI" + oPassport.getName(); //+getHexaKey(4);
 //            _xuiName = _xuiName.substring(0, 10);
@@ -802,9 +803,21 @@ public class LARVABoot {
                 _tiles.get(name).doActivate();
             }
         }
-        if (oPassport != null && _tiles.get(_xuiName) == null && this.oleConfig.getTab("Identity").getBoolean("Open XUI", false)) {
-            launchAgent(_xuiName, XUIAgent.class);
-        }
+        boolean retry = true;
+//        do {
+            try {
+                if (oPassport != null && _tiles.get(_xuiName) == null && this.oleConfig.getTab("Identity").getBoolean("Open XUI", false)) {
+                    launchAgent(_xuiName, XUIAgent.class);
+                    retry = false;
+                }
+            } catch (Exception ex) {
+                if (!Confirm("There was an error trying to launch agent "+name+"\n\nWould you like to retry?")) {
+                    retry=false;
+                }
+            }
+
+//        } while (retry);
+
         return this;
     }
 
@@ -817,7 +830,7 @@ public class LARVABoot {
     protected void Error(String s) {
         logger.logError(s);
         taMessages.append(logger.getLastlog()); //logger.getLastlog());
-        appMain.Error(s);
+        appMain.Error("LARVA Boot", s);
     }
 
     protected void Exception(Exception ex) {
@@ -1016,7 +1029,7 @@ public class LARVABoot {
     }
 
     protected void Abort(String s) {
-        appMain.Error(s);
+        appMain.Error("LARVA Boot", s);
         Exit();
     }
 
@@ -1046,19 +1059,29 @@ public class LARVABoot {
     }
 
     public void Alert(String message) {
-        appMain.Warning(message);
+        appMain.Warning("LARVA Boot", message);
     }
 
     public String inputLine(String message) {
-        return appMain.inputLine(message);
+        String res = appMain.inputLine("LARVA Boot", message);
+        if (res != null) {
+            return res;
+        } else {
+            return "";
+        }
     }
 
     public String inputSelect(String message, String[] options, String value) {
-        return appMain.inputSelect(message, options, value);
+        String res = appMain.inputSelect("LARVA Boot", message, options, value);
+        if (res != null) {
+            return res;
+        } else {
+            return value;
+        }
     }
 
     public boolean Confirm(String message) {
-        return appMain.Confirm(message);
+        return appMain.Confirm("LARVA Boot", message);
     }
 
     protected String clearMarkDowns(String original) {

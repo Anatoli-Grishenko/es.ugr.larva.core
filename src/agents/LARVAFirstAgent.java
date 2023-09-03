@@ -1555,9 +1555,9 @@ public class LARVAFirstAgent extends LARVABaseAgent implements ActionListener {
         if (msg.getUserDefinedParameter(ACLMID) == null) {
             secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Irregular message sent. Not a LARVA secure message");
         }
-//        if (dupSend(msg)) {
-//            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive messages sent\n"+ACLMessageTools.fancyWriteACLM(msg));
-//        }
+        if (dupSend(msg)) {
+            secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "Too many consecutive messages sent\n"+ACLMessageTools.fancyWriteACLM(msg));
+        }
         if (msg.getContent() == null) {
             secureExit(emojis.WARNING + "SECURE MESSAGING SYSTEM\n" + "You are sending a message with an empty content. Please use .setContent() properly");
         }

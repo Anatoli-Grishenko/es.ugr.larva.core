@@ -63,12 +63,20 @@ public class OleConfig extends Ole {
     }
 
     public Ole getOptions() {
-        if (!getOle("options").isEmpty()) { //.getFieldList().size() != 0) {
+        if (get("options")!= null) { //.getFieldList().size() != 0) {
             return getOle("options");
         } else {
             return this;
         }
     }
+    
+//    public Ole getOptions() {
+//        if (!getOle("options").isEmpty()) { //.getFieldList().size() != 0) {
+//            return getOle("options");
+//        } else {
+//            return this;
+//        }
+//    }
 
     public Ole getMetadata() {
         if (getOle("metadata").getFieldList().size() != 0) {

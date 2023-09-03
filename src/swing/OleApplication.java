@@ -176,10 +176,11 @@ public abstract class OleApplication extends OleFrame {
 
         getMainPanel().add(osDiagram, BorderLayout.CENTER);
         getMainPanel().validate();
-       for (KeyListener kl : this.getKeyListeners()) {
+        for (KeyListener kl : this.getKeyListeners()) {
             this.removeKeyListener(kl);
         }
-        this.addKeyListener(this);        this.pack();
+        this.addKeyListener(this);
+        this.pack();
         return this;
     }
 
@@ -437,6 +438,12 @@ public abstract class OleApplication extends OleFrame {
         }
     }
 
+    public boolean Confirm(String message) {
+        boolean bResult = JOptionPane.showConfirmDialog(this,
+                message, "Confirm", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        return bResult;
+    }
+
     public void Info(String message) {
         JOptionPane.showMessageDialog(this,
                 message, "Alert", JOptionPane.INFORMATION_MESSAGE);
@@ -462,9 +469,34 @@ public abstract class OleApplication extends OleFrame {
         return res;
     }
 
-    public boolean Confirm(String message) {
+    public void Info(String caption, String message) {
+        JOptionPane.showMessageDialog(this,
+                message, caption, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void Warning(String caption, String message) {
+        JOptionPane.showMessageDialog(this,
+                message, caption, JOptionPane.WARNING_MESSAGE);
+    }
+
+    public void Error(String caption, String message) {
+        JOptionPane.showMessageDialog(this,
+                message, caption, JOptionPane.ERROR_MESSAGE);
+    }
+
+    public String inputLine(String caption, String message) {
+        String sResult = JOptionPane.showInputDialog(this, message, caption, JOptionPane.QUESTION_MESSAGE);
+        return sResult;
+    }
+
+    public String inputSelect(String caption, String message, String[] options, String value) {
+        String res = (String) JOptionPane.showInputDialog(this, message, caption, JOptionPane.QUESTION_MESSAGE, null, options, value);
+        return res;
+    }
+
+    public boolean Confirm(String caption, String message) {
         boolean bResult = JOptionPane.showConfirmDialog(this,
-                message, "Confirm", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+                message, caption, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
         return bResult;
     }
 

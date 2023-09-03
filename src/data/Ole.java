@@ -351,7 +351,11 @@ public class Ole extends JsonObject {
 //////////////////////////////////////////// Fields
 
     public boolean checkField(String fieldName) {
-        return meta().get("fields").asObject().names().contains(fieldName);
+        try {
+            return meta().get("fields").asObject().names().contains(fieldName);
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public Ole addField(String fieldName) {
@@ -758,8 +762,9 @@ public class Ole extends JsonObject {
      */
     public final Ole setField(String fieldname, Object o) {
         addField(fieldname);
-        if (o == null)
-            o= "";
+        if (o == null) {
+            o = "";
+        }
         if (o.getClass().getSimpleName().equals("int")
                 || o.getClass().getSimpleName().equals("Integer")) {
             set(fieldname, (int) o);

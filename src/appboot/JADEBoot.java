@@ -4,7 +4,6 @@
  */
 package appboot;
 
-import data.Ole;
 import data.OleConfig;
 import disk.Logger;
 import jade.core.MicroRuntime;
@@ -15,10 +14,9 @@ import jade.wrapper.ContainerController;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import static java.lang.System.in;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
+import swing.SwingTools;
 import static tools.Internet.getExtIPAddress;
 import static tools.Internet.getLocalIPAddress;
 
@@ -612,4 +610,34 @@ public class JADEBoot {
         }
         return true;
     }
+
+    
+    public boolean Confirm(String message) {
+        return SwingTools.Confirm("JADE Boot", message);
+    }
+    
+    public void Alert(String message) {
+        SwingTools.Warning("JADE Boot", message);
+    }
+
+    public void Message(String message) {
+        SwingTools.Info("JADE Boot", message);
+    }
+
+    public String inputLine(String message) {
+        String res= SwingTools.inputLine("Jade Boot", message);
+        if (res != null)
+            return res;
+        else
+            return "";
+    }
+
+    public String inputSelect(String message, String[] options, String value) {
+        String res= SwingTools.inputSelect("JADE Boot",message, options, value);
+        if (res != null)
+            return res;
+        else
+            return value;
+    }
+
 }

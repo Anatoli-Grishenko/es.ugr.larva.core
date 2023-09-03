@@ -127,7 +127,38 @@ public class SwingTools {
             System.err.println("Failed to initialize look-and-feel");
         }
         UIManager.getLookAndFeelDefaults()
-                .put("defaultFont", new Font("UbuntuMono", Font.PLAIN, 16));
+                .put("defaultFont", new Font("UbuntuMono", Font.PLAIN, 14));
+    }
+
+    public static void Info(String caption, String message) {
+        JOptionPane.showMessageDialog(null,
+                message, caption, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void Error(String caption, String message) {
+        JOptionPane.showMessageDialog(null,
+                message, caption, JOptionPane.ERROR_MESSAGE);
+    }
+
+    public static void Warning(String caption, String message) {
+        JOptionPane.showMessageDialog(null,
+                message, caption, JOptionPane.WARNING_MESSAGE);
+    }
+
+    public static String inputLine(String caption, String message) {
+        String sResult = JOptionPane.showInputDialog(null, message, caption, JOptionPane.QUESTION_MESSAGE);
+        return sResult;
+    }
+
+    public static boolean Confirm(String caption, String message) {
+        boolean bResult = JOptionPane.showConfirmDialog(null,
+                message, caption, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        return bResult;
+    }
+
+    public static String inputSelect(String caption, String message, String[] options, String value) {
+        String res = (String) JOptionPane.showInputDialog(null, message, caption, JOptionPane.QUESTION_MESSAGE, null, options, value);
+        return res;
     }
 
     public static void Info(String message) {
@@ -493,25 +524,24 @@ public class SwingTools {
 
         return new Color(a << 24 | r << 16 | g << 8 | b);
     }
-    
-    
+
     public static Color toGrayscale(Color crgb) {
         int rgb = crgb.getRGB();
-        int r = (rgb >> BIT_SHIFT*2) & BIT_MASK;
-        int g = (rgb >> BIT_SHIFT*1) & BIT_MASK;
+        int r = (rgb >> BIT_SHIFT * 2) & BIT_MASK;
+        int g = (rgb >> BIT_SHIFT * 1) & BIT_MASK;
         int b = (rgb) & BIT_MASK;
 
         // Normalize and gamma correct:
-        double rr = Math.pow(r *1.0/ PIX_MAX, 2.2);
-        double gg = Math.pow(g *1.0/ PIX_MAX, 2.2);
-        double bb = Math.pow(b *1.0/ PIX_MAX, 2.2);
+        double rr = Math.pow(r * 1.0 / PIX_MAX, 2.2);
+        double gg = Math.pow(g * 1.0 / PIX_MAX, 2.2);
+        double bb = Math.pow(b * 1.0 / PIX_MAX, 2.2);
 
         // Calculate luminance:
         double lum = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb;
 
         // Gamma compand and rescale to byte range:
         int grayLevel = (int) (PIX_MAX * Math.pow(lum, 1.0 / 2.2));
-        int gray = (grayLevel << 2*BIT_SHIFT) + (grayLevel << BIT_SHIFT) + grayLevel; 
+        int gray = (grayLevel << 2 * BIT_SHIFT) + (grayLevel << BIT_SHIFT) + grayLevel;
         return new Color(gray);
     }
 }
